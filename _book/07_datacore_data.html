@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>8&nbsp; DataCore Data – Tidy Finance in Vietnam</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./08_beta_estimation.html" rel="next">
+<link href="./06_accessing_and_managing_financial_data.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-50a4fa9e9ef121803c2355a2deb1af4d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./07_datacore_data.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">DataCore Data</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Tidy Finance in Vietnam</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./00_institutional_background.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Institutional Background and Market Structure of Vietnam’s Equity Market</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01_working_with_stock_returns.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Constructing and Analyzing Equity Return Series</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02_modern_portfolio_theory.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03_capm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">The Capital Asset Pricing Model</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04_financial_statement_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Financial Statement Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05_discounted_cash_flow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Discounted Cash Flow Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06_accessing_and_managing_financial_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Accessing and Managing Financial Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07_datacore_data.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">DataCore Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08_beta_estimation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Beta Estimation</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12_fama_french.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./20_conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#accessing-datacore" id="toc-accessing-datacore" class="nav-link active" data-scroll-target="#accessing-datacore"><span class="header-section-number">8.1</span> Accessing DataCore</a></li>
+  <li><a href="#preparing-company-fundamentals-data" id="toc-preparing-company-fundamentals-data" class="nav-link" data-scroll-target="#preparing-company-fundamentals-data"><span class="header-section-number">8.2</span> Preparing Company Fundamentals Data</a></li>
+  <li><a href="#downloading-and-preparing-stock-data" id="toc-downloading-and-preparing-stock-data" class="nav-link" data-scroll-target="#downloading-and-preparing-stock-data"><span class="header-section-number">8.3</span> Downloading and Preparing Stock Data</a></li>
+  <li><a href="#first-glimpse-of-the-stock-sample" id="toc-first-glimpse-of-the-stock-sample" class="nav-link" data-scroll-target="#first-glimpse-of-the-stock-sample"><span class="header-section-number">8.4</span> First Glimpse of the Stock Sample</a></li>
+  <li><a href="#daily-stock-data" id="toc-daily-stock-data" class="nav-link" data-scroll-target="#daily-stock-data"><span class="header-section-number">8.5</span> Daily Stock Data</a></li>
+  <li><a href="#merging-stock-with-company-fundamentals" id="toc-merging-stock-with-company-fundamentals" class="nav-link" data-scroll-target="#merging-stock-with-company-fundamentals"><span class="header-section-number">8.6</span> Merging Stock with Company Fundamentals</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">8.7</span> Key Takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">DataCore Data</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This chapter shows how to connect to <a href="https://datacore.vn/">DataCore</a> a provider of financial and economic data for research applications. We use this connection to download the most commonly used data for stock and firm characteristics (i.e., Stock Data and Public Companies). Unfortunately, this data is not freely available, but most students and researchers typically have access to DataCore through their university libraries. Assuming that you have access to DataCore, we show you how to prepare and merge the databases and store them in the SQLite database introduced in the previous chapter. We conclude this chapter by providing some tips for working with the DataCore database.</p>
+<p>If you don’t have access to DataCore but still want to run the code in this book, we refer to <a href="https://datacore.vn/demo/dataset-groups">DataCore Demo Data</a>, where we show how to create a dummy database that contains the DataCore tables and corresponding columns. With this database at hand, all code chunks in this book can be executed with this dummy database.</p>
+<p>First, we load the Python packages that we use throughout this chapter. Later on, we load more packages in the sections where we need them. The last two packages are used for plotting.</p>
+<div id="6b442ed0" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tidyfinance <span class="im">as</span> tf</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sqlite3</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotnine <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> mizani.formatters <span class="im">import</span> comma_format, percent_format</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> datetime</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>tidy_finance <span class="op">=</span> sqlite3.<span class="ex">connect</span>(database<span class="op">=</span><span class="st">"data/tidy_finance_python.sqlite"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We use the same date range as in the previous chapter to ensure consistency. However, we have to use the date format that the DataCore database expects.</p>
+<div id="7161bcaa" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>start_date <span class="op">=</span> <span class="st">"01/01/1960"</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>end_date <span class="op">=</span> <span class="st">"12/31/2024"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="accessing-datacore" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="accessing-datacore"><span class="header-section-number">8.1</span> Accessing DataCore</h2>
+<p>DataCore is the most widely used source for asset and firm-specific financial data used in academic settings. DataCore is a data platform that provides data validation, flexible delivery options, and access to many different data sources.</p>
+</section>
+<section id="preparing-company-fundamentals-data" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="preparing-company-fundamentals-data"><span class="header-section-number">8.2</span> Preparing Company Fundamentals Data</h2>
+<p>Firm accounting data are an important source of information that we use in portfolio analyses in subsequent chapters.</p>
+<p>To access Company Fundamentals data, we can again tap DataCore, which hosts the <code>funda</code> data table that contains annual firm-level information on Vietnam companies. We follow the typical filter conventions and pull only data that we actually need: (i) we get only records in industrial data format, which includes companies that are primarily involved in manufacturing, services, and other non-financial business activities,<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, (ii) in the standard format (i.e., consolidated information in standard presentation).</p>
+<div id="405d4833" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> io <span class="im">import</span> BytesIO</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> datetime <span class="im">as</span> dt</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> boto3</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> botocore.client <span class="im">import</span> Config</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ConnectMinio:</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.MINIO_ENDPOINT <span class="op">=</span> os.environ[<span class="st">"MINIO_ENDPOINT"</span>]</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.MINIO_ACCESS_KEY <span class="op">=</span> os.environ[<span class="st">"MINIO_ACCESS_KEY"</span>]</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.MINIO_SECRET_KEY <span class="op">=</span> os.environ[<span class="st">"MINIO_SECRET_KEY"</span>]</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.REGION <span class="op">=</span> os.getenv(<span class="st">"MINIO_REGION"</span>, <span class="st">"us-east-1"</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.s3 <span class="op">=</span> boto3.client(</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>            <span class="st">"s3"</span>,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            endpoint_url<span class="op">=</span><span class="va">self</span>.MINIO_ENDPOINT,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            aws_access_key_id<span class="op">=</span><span class="va">self</span>.MINIO_ACCESS_KEY,</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>            aws_secret_access_key<span class="op">=</span><span class="va">self</span>.MINIO_SECRET_KEY,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>            region_name<span class="op">=</span><span class="va">self</span>.REGION,</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            config<span class="op">=</span>Config(signature_version<span class="op">=</span><span class="st">"s3v4"</span>),</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> test_connection(<span class="va">self</span>):</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        resp <span class="op">=</span> <span class="va">self</span>.s3.list_buckets()</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"Connected. Buckets:"</span>)</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> b <span class="kw">in</span> resp.get(<span class="st">"Buckets"</span>, []):</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">" -"</span>, b[<span class="st">"Name"</span>])</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>conn <span class="op">=</span> ConnectMinio()</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>s3 <span class="op">=</span> conn.s3</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>conn.test_connection()</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>bucket_name <span class="op">=</span> os.environ[<span class="st">"MINIO_BUCKET"</span>]</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> [</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="st">"fundamental_annual_1767674486317/fundamental_annual_1.xlsx"</span>,</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    <span class="st">"fundamental_annual_1767674486317/fundamental_annual_2.xlsx"</span>,</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    <span class="st">"fundamental_annual_1767674486317/fundamental_annual_3.xlsx"</span>,</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>dfs <span class="op">=</span> []</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> key <span class="kw">in</span> paths:</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    obj <span class="op">=</span> s3.get_object(Bucket<span class="op">=</span>bucket_name, Key<span class="op">=</span>key)</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    df_tmp <span class="op">=</span> pd.read_excel(BytesIO(obj[<span class="st">"Body"</span>].read()))</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>    dfs.append(df_tmp)</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>df_company_fundamental <span class="op">=</span> pd.concat(dfs, ignore_index<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Connected. Buckets:
+ - dsteam-data
+ - rawbctc</code></pre>
+</div>
+</div>
+<div id="88dc429a" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df_company_fundamental.copy()</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># core keys</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"symbol"</span>] <span class="op">=</span> df[<span class="st">"symbol"</span>].astype(<span class="bu">str</span>).<span class="bu">str</span>.upper().<span class="bu">str</span>.strip()</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"year"</span>] <span class="op">=</span> pd.to_numeric(df[<span class="st">"year"</span>], errors<span class="op">=</span><span class="st">"coerce"</span>).astype(<span class="st">"Int64"</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># drop rows with missing keys</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.dropna(subset<span class="op">=</span>[<span class="st">"symbol"</span>, <span class="st">"year"</span>])</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># if some numeric columns are objects, force numeric for the ones we will use</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>need <span class="op">=</span> [</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"total_asset"</span>,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"total_equity"</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"total_liabilities"</span>,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"total_current_liabilities"</span>,</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"is_net_revenue"</span>,</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"is_cogs"</span>,</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"is_manage_expense"</span>,</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"is_interest_expense"</span>,</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"na_tax_deferred"</span>,</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"nl_tax_deferred"</span>,</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"e_preferred_stock"</span>,</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"capex"</span>,</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"total_cfo"</span>,</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"is_eat"</span>,</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">"total_current_asset"</span>, </span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ca_cce"</span>, </span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="st">"total_equity"</span>, </span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="st">"cfo_interest_expense"</span>,</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ca_total_inventory"</span>, </span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ca_acc_receiv"</span>,</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="co"># The is_net_business_profit field captures the core profitability of a company's business activities before accounting for "other" non-core incomes and expenses, and before corporate income tax.</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>    <span class="st">"is_net_business_profit"</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> c <span class="kw">in</span> need:</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> c <span class="kw">in</span> df.columns:</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>        df[c] <span class="op">=</span> pd.to_numeric(df[c], errors<span class="op">=</span><span class="st">"coerce"</span>)</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep the row with the most non missing fields.</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"_non_missing"</span>] <span class="op">=</span> df.notna().<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> (</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>    df.sort_values([<span class="st">"symbol"</span>, <span class="st">"year"</span>, <span class="st">"_non_missing"</span>])</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>      .drop_duplicates(subset<span class="op">=</span>[<span class="st">"symbol"</span>, <span class="st">"year"</span>], keep<span class="op">=</span><span class="st">"last"</span>)</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>      .drop(columns<span class="op">=</span><span class="st">"_non_missing"</span>)</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>      .reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Remaining duplicates:"</span>,</span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>      df.duplicated([<span class="st">"symbol"</span>, <span class="st">"year"</span>]).<span class="bu">sum</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Remaining duplicates: 0</code></pre>
+</div>
+</div>
+<div id="9151b6ac" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># preferably use Tax ID as Identifer</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- Firm identifier and fiscal date ----</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"datadate"</span>] <span class="op">=</span> pd.to_datetime(df[<span class="st">"year"</span>].astype(<span class="bu">str</span>) <span class="op">+</span> <span class="st">"-12-31"</span>)  <span class="co"># Fiscal year-end date</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- Core balance sheet ----</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"at"</span>]  <span class="op">=</span> df[<span class="st">"total_asset"</span>]                                      <span class="co"># Total assets</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"act"</span>] <span class="op">=</span> df[<span class="st">"total_current_asset"</span>] <span class="co"># Total Current Assets</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"lt"</span>]  <span class="op">=</span> df[<span class="st">"total_liabilities"</span>]                                 <span class="co"># Total liabilities</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"lct"</span>] <span class="op">=</span> df[<span class="st">"total_current_liabilities"</span>] <span class="co"># Total Current Liabilities</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"seq"</span>] <span class="op">=</span> df[<span class="st">"total_equity"</span>]                                      <span class="co"># Stockholders' equity</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"ceq"</span>] <span class="op">=</span> df[<span class="st">"e_equity"</span>] <span class="cf">if</span> <span class="st">"e_equity"</span> <span class="kw">in</span> df.columns <span class="cf">else</span> np.nan  <span class="co"># Common equity (fallback)</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- Deferred taxes ----</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"txditc"</span>] <span class="op">=</span> df[<span class="st">"na_tax_deferred"</span>] <span class="cf">if</span> <span class="st">"na_tax_deferred"</span> <span class="kw">in</span> df.columns <span class="cf">else</span> <span class="dv">0</span>  <span class="co"># Deferred tax assets</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"txdb"</span>]   <span class="op">=</span> df[<span class="st">"nl_tax_deferred"</span>] <span class="cf">if</span> <span class="st">"nl_tax_deferred"</span> <span class="kw">in</span> df.columns <span class="cf">else</span> <span class="dv">0</span>  <span class="co"># Deferred tax liabilities</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"itcb"</span>]   <span class="op">=</span> <span class="dv">0</span>                                                                <span class="co"># Investment tax credit (rare, set 0)</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- Preferred stock (Compustat has multiple versions, we map one) ----</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>pref <span class="op">=</span> df[<span class="st">"e_preferred_stock"</span>] <span class="cf">if</span> <span class="st">"e_preferred_stock"</span> <span class="kw">in</span> df.columns <span class="cf">else</span> <span class="dv">0</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"pstk"</span>]   <span class="op">=</span> pref</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"pstkrv"</span>] <span class="op">=</span> pref</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"pstkl"</span>]  <span class="op">=</span> pref</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- Income statement ----</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"sale"</span>] <span class="op">=</span> df[<span class="st">"is_net_revenue"</span>]                                                <span class="co"># Sales</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"cogs"</span>] <span class="op">=</span> df[<span class="st">"is_cogs"</span>] <span class="cf">if</span> <span class="st">"is_cogs"</span> <span class="kw">in</span> df.columns <span class="cf">else</span> <span class="dv">0</span>                    <span class="co"># Cost of goods sold</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"xsga"</span>] <span class="op">=</span> df[<span class="st">"is_manage_expense"</span>] <span class="cf">if</span> <span class="st">"is_manage_expense"</span> <span class="kw">in</span> df.columns <span class="cf">else</span> <span class="dv">0</span><span class="co"># SG&amp;A proxy</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"xint"</span>] <span class="op">=</span> df[<span class="st">"is_interest_expense"</span>] <span class="cf">if</span> <span class="st">"is_interest_expense"</span> <span class="kw">in</span> df.columns <span class="cf">else</span> <span class="dv">0</span>  <span class="co"># Interest expense</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- Cash flow and investment ----</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"oancf"</span>] <span class="op">=</span> df[<span class="st">"total_cfo"</span>] <span class="cf">if</span> <span class="st">"total_cfo"</span> <span class="kw">in</span> df.columns <span class="cf">else</span> np.nan  <span class="co"># Operating cash flow</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"capx"</span>]  <span class="op">=</span> df[<span class="st">"capex"</span>] <span class="cf">if</span> <span class="st">"capex"</span> <span class="kw">in</span> df.columns <span class="cf">else</span> np.nan          <span class="co"># Capital expenditures</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>comp_vn <span class="op">=</span> df</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>comp_vn.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">symbol</th>
+<th data-quarto-table-cell-role="th">year</th>
+<th data-quarto-table-cell-role="th">total_current_asset</th>
+<th data-quarto-table-cell-role="th">ca_fin</th>
+<th data-quarto-table-cell-role="th">ca_cce</th>
+<th data-quarto-table-cell-role="th">ca_cash</th>
+<th data-quarto-table-cell-role="th">ca_cash_inbank</th>
+<th data-quarto-table-cell-role="th">ca_cash_attransit</th>
+<th data-quarto-table-cell-role="th">ca_cash_equivalent</th>
+<th data-quarto-table-cell-role="th">ca_fin_invest</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">itcb</th>
+<th data-quarto-table-cell-role="th">pstk</th>
+<th data-quarto-table-cell-role="th">pstkrv</th>
+<th data-quarto-table-cell-role="th">pstkl</th>
+<th data-quarto-table-cell-role="th">sale</th>
+<th data-quarto-table-cell-role="th">cogs</th>
+<th data-quarto-table-cell-role="th">xsga</th>
+<th data-quarto-table-cell-role="th">xint</th>
+<th data-quarto-table-cell-role="th">oancf</th>
+<th data-quarto-table-cell-role="th">capx</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>A32</td>
+<td>2016</td>
+<td>3.432787e+11</td>
+<td>NaN</td>
+<td>1.397735e+11</td>
+<td>1.006804e+10</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1.297055e+11</td>
+<td>0.0</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>6.292595e+11</td>
+<td>5.636144e+11</td>
+<td>3.108361e+10</td>
+<td>0.0</td>
+<td>-3.127942e+10</td>
+<td>2.369143e+10</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>A32</td>
+<td>2017</td>
+<td>3.741267e+11</td>
+<td>NaN</td>
+<td>1.456583e+11</td>
+<td>5.095282e+10</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>9.470550e+10</td>
+<td>0.0</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>6.118207e+11</td>
+<td>5.462587e+11</td>
+<td>2.972820e+10</td>
+<td>0.0</td>
+<td>-6.679452e+09</td>
+<td>1.598215e+10</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>A32</td>
+<td>2018</td>
+<td>3.358630e+11</td>
+<td>NaN</td>
+<td>5.829081e+10</td>
+<td>1.229081e+10</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>4.600000e+10</td>
+<td>0.0</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>6.461948e+11</td>
+<td>5.837470e+11</td>
+<td>1.852045e+10</td>
+<td>0.0</td>
+<td>5.224003e+10</td>
+<td>1.405200e+10</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>A32</td>
+<td>2019</td>
+<td>2.987680e+11</td>
+<td>NaN</td>
+<td>6.051375e+10</td>
+<td>4.451375e+10</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1.600000e+10</td>
+<td>0.0</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>6.914857e+11</td>
+<td>6.092057e+11</td>
+<td>3.032093e+10</td>
+<td>0.0</td>
+<td>1.120983e+10</td>
+<td>1.296578e+10</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>A32</td>
+<td>2020</td>
+<td>3.566913e+11</td>
+<td>NaN</td>
+<td>4.435908e+10</td>
+<td>2.235908e+10</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>2.200000e+10</td>
+<td>0.0</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>7.285810e+11</td>
+<td>6.489849e+11</td>
+<td>3.222692e+10</td>
+<td>0.0</td>
+<td>4.279751e+09</td>
+<td>5.433554e+09</td>
+</tr>
+</tbody>
+</table>
+
+<p>5 rows × 327 columns</p>
+</div>
+</div>
+</div>
+<div id="e3eb0030" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep only firm-years with core fundamentals present</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Required for most accounting ratios</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>req <span class="op">=</span> [<span class="st">"at"</span>, <span class="st">"lt"</span>, <span class="st">"seq"</span>, <span class="st">"sale"</span>]</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>comp_vn <span class="op">=</span> comp_vn.dropna(subset<span class="op">=</span>req)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>comp_vn <span class="op">=</span> comp_vn[comp_vn[<span class="st">"at"</span>] <span class="op">&gt;</span> <span class="dv">0</span>]          <span class="co"># assets must be positive</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>comp_vn <span class="op">=</span> comp_vn[comp_vn[<span class="st">"sale"</span>] <span class="op">&gt;=</span> <span class="dv">0</span>]       <span class="co"># sales cannot be negative</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Quick diagnostics</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Rows:"</span>, <span class="bu">len</span>(comp_vn))</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Firms:"</span>, comp_vn[<span class="st">"symbol"</span>].nunique())</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Years:"</span>, comp_vn[<span class="st">"datadate"</span>].dt.year.<span class="bu">min</span>(), <span class="st">"-"</span>, comp_vn[<span class="st">"datadate"</span>].dt.year.<span class="bu">max</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 20091
+Firms: 1502
+Years: 1998 - 2023</code></pre>
+</div>
+</div>
+<p>Next, we calculate the book value of preferred stock and equity <code>be</code> and the operating profitability <code>op</code> inspired by the <a href="https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html">variable definitions in Kenneth French’s data library.</a> Note that we set negative or zero equity to missing, which is a common practice when working with book-to-market ratios <span class="citation" data-cites="Fama1992">(see <a href="references.html#ref-Fama1992" role="doc-biblioref">Fama and French 1992</a> for details)</span>.</p>
+<div id="743ef75a" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>comp_vn <span class="op">=</span> (comp_vn</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  .assign(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    be<span class="op">=</span><span class="kw">lambda</span> x: </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>      (x[<span class="st">"seq"</span>].combine_first(x[<span class="st">"ceq"</span>]<span class="op">+</span>x[<span class="st">"pstk"</span>])</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>       .combine_first(x[<span class="st">"at"</span>]<span class="op">-</span>x[<span class="st">"lt"</span>])<span class="op">+</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>       x[<span class="st">"txditc"</span>].combine_first(x[<span class="st">"txdb"</span>]<span class="op">+</span>x[<span class="st">"itcb"</span>]).fillna(<span class="dv">0</span>)<span class="op">-</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>       x[<span class="st">"pstkrv"</span>].combine_first(x[<span class="st">"pstkl"</span>])</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>       .combine_first(x[<span class="st">"pstk"</span>]).fillna(<span class="dv">0</span>))</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  .assign(</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    be<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"be"</span>].<span class="bu">apply</span>(<span class="kw">lambda</span> y: np.nan <span class="cf">if</span> y <span class="op">&lt;=</span> <span class="dv">0</span> <span class="cf">else</span> y)</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  .assign(</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    op<span class="op">=</span><span class="kw">lambda</span> x: </span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>      ((x[<span class="st">"sale"</span>]<span class="op">-</span>x[<span class="st">"cogs"</span>].fillna(<span class="dv">0</span>)<span class="op">-</span> </span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>        x[<span class="st">"xsga"</span>].fillna(<span class="dv">0</span>)<span class="op">-</span>x[<span class="st">"xint"</span>].fillna(<span class="dv">0</span>))<span class="op">/</span>x[<span class="st">"be"</span>])</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We keep only the last available information for each firm-year group (by using the <code>tail(1)</code> pandas function for each group). Note that <code>datadate</code> defines the time the corresponding financial data refers to (e.g., annual report as of December 31, 2022). Therefore, <code>datadate</code> is not the date when data was made available to the public. Check out the Exercises for more insights into the peculiarities of <code>datadate</code>.</p>
+<div id="db651e70" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>comp_vn <span class="op">=</span> (comp_vn</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  .assign(year<span class="op">=</span><span class="kw">lambda</span> x: pd.DatetimeIndex(x[<span class="st">"datadate"</span>]).year)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  .sort_values(<span class="st">"datadate"</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  .groupby([<span class="st">"symbol"</span>, <span class="st">"year"</span>])</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  .tail(<span class="dv">1</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  .reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="734e7307" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>comp_vn_lag <span class="op">=</span> (comp_vn</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  .get([<span class="st">"symbol"</span>, <span class="st">"year"</span>, <span class="st">"at"</span>])</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  .assign(year<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"year"</span>]<span class="op">+</span><span class="dv">1</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  .rename(columns<span class="op">=</span>{<span class="st">"at"</span>: <span class="st">"at_lag"</span>})</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>comp_vn <span class="op">=</span> (comp_vn</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  .merge(comp_vn_lag, how<span class="op">=</span><span class="st">"left"</span>, on<span class="op">=</span>[<span class="st">"symbol"</span>, <span class="st">"year"</span>])</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  .assign(inv<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"at"</span>]<span class="op">/</span>x[<span class="st">"at_lag"</span>]<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  .assign(inv<span class="op">=</span><span class="kw">lambda</span> x: np.where(x[<span class="st">"at_lag"</span>] <span class="op">&lt;=</span> <span class="dv">0</span>, np.nan, x[<span class="st">"inv"</span>]))</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>In a standard Vietnamese financial report, the <strong>LIABILITIES</strong> section (<code>total_liabilities</code>) includes all forms of debt, including non-interest-bearing items like <strong>Accounts Payable</strong> (<code>cl_acc_payable</code>) and <strong>Taxes payable</strong> (<code>cl_tax_state_payable</code>).</p>
+<p>To get what financial analysts call “Total Debt” (interest-bearing debt), you must manually aggregate the specific loan and lease variables from your dataset:</p>
+<ul>
+<li><p><strong>Short-term interest-bearing debt</strong>: Sum of <code>cl_loan</code> and <code>cl_finlease</code>.</p></li>
+<li><p><strong>Current portion of long-term debt</strong>: <code>cl_due_long_debt</code>.</p></li>
+<li><p><strong>Long-term interest-bearing debt</strong>: Sum of <code>nl_loan</code> and <code>nl_finlease</code>.</p></li>
+</ul>
+<div id="fef732f9" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>comp_vn <span class="op">=</span> comp_vn.assign(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    total_debt <span class="op">=</span> <span class="kw">lambda</span> x: (</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>        x[<span class="st">"cl_loan"</span>].fillna(<span class="dv">0</span>) <span class="op">+</span> </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        x[<span class="st">"cl_finlease"</span>].fillna(<span class="dv">0</span>) <span class="op">+</span> </span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        x[<span class="st">"cl_due_long_debt"</span>].fillna(<span class="dv">0</span>) <span class="op">+</span> </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        x[<span class="st">"nl_loan"</span>].fillna(<span class="dv">0</span>) <span class="op">+</span> </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        x[<span class="st">"nl_finlease"</span>].fillna(<span class="dv">0</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    ), </span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    selling_general_and_administrative_expenses <span class="op">=</span> <span class="kw">lambda</span> x: (</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        x[<span class="st">"is_cos_of_sales"</span>].fillna(<span class="dv">0</span>) <span class="op">+</span> x[<span class="st">"is_manage_expense"</span>].fillna(<span class="dv">0</span>)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>With the last step, we are already done preparing the firm fundamentals. Thus, we can store them in our local database.</p>
+<div id="019f67c1" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(comp_vn</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  .to_sql(name<span class="op">=</span><span class="st">"comp_vn"</span>, </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>          con<span class="op">=</span>tidy_finance, </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>          if_exists<span class="op">=</span><span class="st">"replace"</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>          index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="downloading-and-preparing-stock-data" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="downloading-and-preparing-stock-data"><span class="header-section-number">8.3</span> Downloading and Preparing Stock Data</h2>
+<div id="04b5aaa9" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> io <span class="im">import</span> BytesIO</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> datetime <span class="im">as</span> dt</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> boto3</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> botocore.client <span class="im">import</span> Config</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ConnectMinio:</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.MINIO_ENDPOINT <span class="op">=</span> os.environ[<span class="st">"MINIO_ENDPOINT"</span>]</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.MINIO_ACCESS_KEY <span class="op">=</span> os.environ[<span class="st">"MINIO_ACCESS_KEY"</span>]</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.MINIO_SECRET_KEY <span class="op">=</span> os.environ[<span class="st">"MINIO_SECRET_KEY"</span>]</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.REGION <span class="op">=</span> os.getenv(<span class="st">"MINIO_REGION"</span>, <span class="st">"us-east-1"</span>)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.s3 <span class="op">=</span> boto3.client(</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>            <span class="st">"s3"</span>,</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>            endpoint_url<span class="op">=</span><span class="va">self</span>.MINIO_ENDPOINT,</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>            aws_access_key_id<span class="op">=</span><span class="va">self</span>.MINIO_ACCESS_KEY,</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>            aws_secret_access_key<span class="op">=</span><span class="va">self</span>.MINIO_SECRET_KEY,</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>            region_name<span class="op">=</span><span class="va">self</span>.REGION,</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>            config<span class="op">=</span>Config(signature_version<span class="op">=</span><span class="st">"s3v4"</span>),</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> test_connection(<span class="va">self</span>):</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>        resp <span class="op">=</span> <span class="va">self</span>.s3.list_buckets()</span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"Connected. Buckets:"</span>)</span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> b <span class="kw">in</span> resp.get(<span class="st">"Buckets"</span>, []):</span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">" -"</span>, b[<span class="st">"Name"</span>])</span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>conn <span class="op">=</span> ConnectMinio()</span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a>s3 <span class="op">=</span> conn.s3</span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a>conn.test_connection()</span>
+<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a>bucket_name <span class="op">=</span> os.environ[<span class="st">"MINIO_BUCKET"</span>]</span>
+<span id="cb15-37"><a href="#cb15-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-38"><a href="#cb15-38" aria-hidden="true" tabindex="-1"></a>prices <span class="op">=</span> pd.read_csv(</span>
+<span id="cb15-39"><a href="#cb15-39" aria-hidden="true" tabindex="-1"></a>    BytesIO(</span>
+<span id="cb15-40"><a href="#cb15-40" aria-hidden="true" tabindex="-1"></a>        s3.get_object(</span>
+<span id="cb15-41"><a href="#cb15-41" aria-hidden="true" tabindex="-1"></a>            Bucket<span class="op">=</span>bucket_name,</span>
+<span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a>            Key<span class="op">=</span><span class="st">"historycal_price/dataset_historical_price.csv"</span></span>
+<span id="cb15-43"><a href="#cb15-43" aria-hidden="true" tabindex="-1"></a>        )[<span class="st">"Body"</span>].read()</span>
+<span id="cb15-44"><a href="#cb15-44" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a>    low_memory<span class="op">=</span><span class="va">False</span></span>
+<span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-47"><a href="#cb15-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a>prices[<span class="st">"date"</span>] <span class="op">=</span> pd.to_datetime(prices[<span class="st">"date"</span>])</span>
+<span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a>prices[<span class="st">"adjusted_close"</span>] <span class="op">=</span> prices[<span class="st">"close_price"</span>] <span class="op">*</span> prices[<span class="st">"adj_ratio"</span>]</span>
+<span id="cb15-51"><a href="#cb15-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-52"><a href="#cb15-52" aria-hidden="true" tabindex="-1"></a>prices <span class="op">=</span> prices.rename(columns<span class="op">=</span>{</span>
+<span id="cb15-53"><a href="#cb15-53" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_total"</span>: <span class="st">"volume"</span>,</span>
+<span id="cb15-54"><a href="#cb15-54" aria-hidden="true" tabindex="-1"></a>    <span class="st">"open_price"</span>: <span class="st">"open"</span>,</span>
+<span id="cb15-55"><a href="#cb15-55" aria-hidden="true" tabindex="-1"></a>    <span class="st">"low_price"</span>: <span class="st">"low"</span>,</span>
+<span id="cb15-56"><a href="#cb15-56" aria-hidden="true" tabindex="-1"></a>    <span class="st">"high_price"</span>: <span class="st">"high"</span>,</span>
+<span id="cb15-57"><a href="#cb15-57" aria-hidden="true" tabindex="-1"></a>    <span class="st">"close_price"</span>: <span class="st">"close"</span></span>
+<span id="cb15-58"><a href="#cb15-58" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb15-59"><a href="#cb15-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-60"><a href="#cb15-60" aria-hidden="true" tabindex="-1"></a>prices <span class="op">=</span> prices.sort_values([<span class="st">"symbol"</span>, <span class="st">"date"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Connected. Buckets:
+ - dsteam-data
+ - rawbctc</code></pre>
+</div>
+</div>
+<div id="b4cb171c" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>prices <span class="op">=</span> prices.sort_values([<span class="st">"symbol"</span>, <span class="st">"date"</span>])</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>prices[<span class="st">"ret"</span>] <span class="op">=</span> (</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    prices.groupby(<span class="st">"symbol"</span>)[<span class="st">"adjusted_close"</span>]</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    .pct_change()</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove impossible crashes beyond -100 percent</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>prices[<span class="st">"ret"</span>] <span class="op">=</span> prices[<span class="st">"ret"</span>].clip(lower<span class="op">=-</span><span class="fl">0.99</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now, we have all the relevant daily price data in memory and proceed with preparing the data for future analyses. We perform the preparation step at the current stage since we want to avoid executing the same mutations every time we use the data in subsequent chapters.</p>
+<p>The first additional variable we create is market capitalization (<code>mktcap</code>), which is the product of the number of outstanding shares (<code>shrout</code>) and the last traded price in a month (<code>prc</code>). Note that in contrast to returns (<code>ret</code>), these two variables are not adjusted ex-post for any corporate actions like stock splits. Therefore, if you want to use a stock’s price, you need to adjust it with a cumulative adjustment factor. We also keep the market cap in millions of VND just for convenience, as we do not want to print huge numbers in our figures and tables. In addition, we set zero market capitalization to missing as it makes conceptually little sense (i.e., the firm would be bankrupt).</p>
+<div id="fa056d2f" class="cell" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Calculate the Share Count Proxy from Annual Fundamentals</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co"># df represents your fundamental_annual dataset</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"shrout"</span>] <span class="op">=</span> (</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"is_shareholders_eat"</span>] <span class="op">/</span> df[<span class="st">"basic_eps"</span>]</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Merge with Daily Prices</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co"># We join on 'symbol' and 'year' so every daily row in 'prices' </span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co"># receives the share count corresponding to that fiscal year.</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>prices <span class="op">=</span> prices.merge(</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    df[[<span class="st">"symbol"</span>, <span class="st">"year"</span>, <span class="st">"shrout"</span>]],</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    on<span class="op">=</span>[<span class="st">"symbol"</span>, <span class="st">"year"</span>],</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    how<span class="op">=</span><span class="st">"left"</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Calculate Daily Market Cap</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Market Cap = Daily Close Price * Annual Shares Outstanding</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="co"># We use 'close' (unadjusted) to reflect the actual market value.</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>prices[<span class="st">"mktcap"</span>] <span class="op">=</span> prices[<span class="st">"close"</span>] <span class="op">*</span> prices[<span class="st">"shrout"</span>]</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Filter and Scale</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="co"># scales values to millions for readability</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>prices[<span class="st">"mktcap"</span>] <span class="op">=</span> (prices[<span class="st">"mktcap"</span>] <span class="op">/</span> <span class="dv">1000000</span>).replace(<span class="dv">0</span>, np.nan)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="4d4cd4c6" class="cell" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Resample to Monthly Frequency</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co"># We group by symbol and resample the date to Month End (ME).</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># .last() picks the final available data point for each month.</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>prices_monthly <span class="op">=</span> (</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    prices.sort_values([<span class="st">"symbol"</span>, <span class="st">"date"</span>])</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    .groupby(<span class="st">"symbol"</span>)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    .resample(<span class="st">"ME"</span>, on<span class="op">=</span><span class="st">"date"</span>)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    .last()</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="co"># After .last(), 'symbol' is index level 0 and 'date' is index level 1.</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="co"># We remove 'symbol' and 'date' from the index to make them regular columns.</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>prices_monthly <span class="op">=</span> prices_monthly.drop(columns<span class="op">=</span>[<span class="st">"symbol"</span>, <span class="st">"date"</span>], errors<span class="op">=</span><span class="st">"ignore"</span>).reset_index()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The next variable we frequently use is the one-month <em>lagged</em> market capitalization. Lagged market capitalization is typically used to compute value-weighted portfolio returns, as we demonstrate in a later chapter. The most simple and consistent way to add a column with lagged market cap values is to add one month to each observation and then join the information to our monthly data.</p>
+<div id="c0104016" class="cell" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Lagged Market Capitalization</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># We calculate the market cap at t-1 to use for weighting returns at t.</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>prices_monthly[<span class="st">"mktcap_lag"</span>] <span class="op">=</span> (</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    prices_monthly.groupby(<span class="st">"symbol"</span>)[<span class="st">"mktcap"</span>]</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    .shift(<span class="dv">1</span>)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="1be57741" class="cell" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># remove rows missing returns or capitalization data.</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>prices_monthly <span class="op">=</span> (</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    prices_monthly</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    .dropna(subset<span class="op">=</span>[<span class="st">"ret"</span>, <span class="st">"mktcap"</span>, <span class="st">"mktcap_lag"</span>])</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Next, we transform primary listing exchange codes to explicit exchange names.</p>
+<div id="542dc696" class="cell" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> map_vn_exchange(row):</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># This assumes you have an exchange column or can derive it from the symbol</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Adjust the logic based on your specific metadata availability.</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">hasattr</span>(row, <span class="st">'exchange_code'</span>):</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> row.exchange_code <span class="op">==</span> <span class="st">"HOSE"</span>: <span class="cf">return</span> <span class="st">"NYSE_Equiv"</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> row.exchange_code <span class="op">==</span> <span class="st">"HNX"</span>: <span class="cf">return</span> <span class="st">"AMEX_Equiv"</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">"Other"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Next, we compute excess returns by subtracting the monthly risk-free rate provided by our Fama-French data. As we base all our analyses on the excess returns, we can drop the risk-free rate from our data frame. Note that we ensure excess returns are bounded by -1 from below as a return less than -100% makes no sense conceptually.</p>
+<p>To implement a placeholder for the Vietnam risk-free rate, we use an annualized value of 4.0% (0.04), which closely approximates the 10-year Vietnam Government Bond yield observed in early 2026. In professional asset pricing research for emerging markets, the 1-year or 10-year government bond rate is a standard proxy when a dedicated monthly Fama-French risk-free rate is unavailable.</p>
+<div id="4942b583" class="cell" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a date range covering your prices_monthly sample</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>all_dates <span class="op">=</span> pd.date_range(</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    start<span class="op">=</span>prices_monthly[<span class="st">'date'</span>].<span class="bu">min</span>(), </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    end<span class="op">=</span>prices_monthly[<span class="st">'date'</span>].<span class="bu">max</span>(), </span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    freq<span class="op">=</span><span class="st">'ME'</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Professional Proxy: 4% Annualized (0.04)</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Monthly rate = 0.04 / 12</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>annual_rf <span class="op">=</span> <span class="fl">0.04</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>monthly_rf <span class="op">=</span> annual_rf <span class="op">/</span> <span class="dv">12</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>rf_monthly <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">'date'</span>: all_dates,</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">'risk_free'</span>: monthly_rf</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>prices_monthly <span class="op">=</span> (prices_monthly</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># we don't have Fama-French data for Vietnam</span></span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>  .merge(rf_monthly, how<span class="op">=</span><span class="st">"left"</span>, on<span class="op">=</span><span class="st">"date"</span>)</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>  .assign(ret_excess<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"ret"</span>]<span class="op">-</span>x[<span class="st">"risk_free"</span>])</span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>  .assign(ret_excess<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"ret_excess"</span>].clip(lower<span class="op">=-</span><span class="dv">1</span>))</span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># .drop(columns=["risk_free"])</span></span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean the infinite values before replication</span></span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>prices_monthly <span class="op">=</span> prices_monthly.replace([np.inf, <span class="op">-</span>np.inf], np.nan).dropna(subset<span class="op">=</span>[<span class="st">'ret_excess'</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="a249ad2d" class="cell" data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check for non-finite values (NaN or Inf)</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Missing or Infinite Values:"</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(prices_monthly[[<span class="st">'ret_excess'</span>, <span class="st">'mktcap_lag'</span>]].isna().<span class="bu">sum</span>())</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.isinf(prices_monthly[<span class="st">'ret_excess'</span>]).<span class="bu">sum</span>())</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Basic summary statistics to catch outliers</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Ret_excess Summary Statistics:"</span>)</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(prices_monthly[<span class="st">'ret_excess'</span>].describe())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Missing or Infinite Values:
+ret_excess    0
+mktcap_lag    0
+dtype: int64
+0
+
+Ret_excess Summary Statistics:
+count    165468.000000
+mean         -0.001458
+std           0.041601
+min          -0.993333
+25%          -0.006044
+50%          -0.003333
+75%           0.002764
+max           4.139524
+Name: ret_excess, dtype: float64</code></pre>
+</div>
+</div>
+<p>Interpretation: Excess returns in a monthly dataset should typically fall between -1.0 and 1.0. If your max value is extremely high, it indicates an error in your return calculation or the risk-free rate merge. Any inf values will cause the np.average in your replication code to fail.</p>
+<div id="62d89b2e" class="cell" data-execution_count="22">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean data for plotting</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>plot_data <span class="op">=</span> prices_monthly[<span class="st">'ret_excess'</span>].dropna()</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>plot_data <span class="op">=</span> plot_data[np.isfinite(plot_data)]</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Histogram with fixed range</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>plt.hist(plot_data, bins<span class="op">=</span><span class="dv">100</span>, <span class="bu">range</span><span class="op">=</span>(<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span>), color<span class="op">=</span><span class="st">'skyblue'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Distribution of Monthly Excess Returns (Vietnam)'</span>)</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Excess Return'</span>)</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Frequency'</span>)</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="07_datacore_data_files/figure-html/cell-22-output-1.png" width="833" height="523" class="figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Interpretation: A healthy distribution should be centered slightly above 0 and look roughly “bell-shaped” but with fatter tails (kurtosis). If the distribution is heavily skewed toward one side, check if your monthly_rf_placeholder was applied correctly.</p>
+<p>Since excess returns and market capitalization are crucial for all our analyses, we can safely exclude all observations with missing returns or market capitalization.</p>
+<div id="f0ea05d8" class="cell" data-execution_count="23">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>prices_monthly <span class="op">=</span> (prices_monthly</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  .dropna(subset<span class="op">=</span>[<span class="st">"ret_excess"</span>, <span class="st">"mktcap"</span>, <span class="st">"mktcap_lag"</span>])</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Finally, we store the monthly Stock prices data file in our database.</p>
+<div id="9da4f8fc" class="cell" data-execution_count="24">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>(prices_monthly</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  .to_sql(name<span class="op">=</span><span class="st">"prices_monthly"</span>, </span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>          con<span class="op">=</span>tidy_finance, </span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>          if_exists<span class="op">=</span><span class="st">"replace"</span>,</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>          index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="first-glimpse-of-the-stock-sample" class="level2" data-number="8.4">
+<h2 data-number="8.4" class="anchored" data-anchor-id="first-glimpse-of-the-stock-sample"><span class="header-section-number">8.4</span> First Glimpse of the Stock Sample</h2>
+<p>Before we move on to other data sources, let us look at some descriptive statistics of the Stock sample, which is our main source for stock returns.</p>
+<p><a href="#fig-211" class="quarto-xref">Figure&nbsp;<span>8.1</span></a> shows the monthly number of securities by listing exchange over time. NYSE has the longest history in the data, but NASDAQ lists a considerably large number of stocks.</p>
+<div id="fig-211" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="25">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-211-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>securities_per_exchange <span class="op">=</span> (prices_monthly</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  .groupby([<span class="st">"exchange"</span>, <span class="st">"date"</span>])</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  .size()</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  .reset_index(name<span class="op">=</span><span class="st">"n"</span>)</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>securities_per_exchange_figure <span class="op">=</span> (</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  ggplot(</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    securities_per_exchange, </span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>    aes(x<span class="op">=</span><span class="st">"date"</span>, y<span class="op">=</span><span class="st">"n"</span>, color<span class="op">=</span><span class="st">"exchange"</span>, linetype<span class="op">=</span><span class="st">"exchange"</span>)</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_line()</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> labs(</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>      x<span class="op">=</span><span class="st">""</span>, y<span class="op">=</span><span class="st">""</span>, color<span class="op">=</span><span class="st">""</span>, linetype<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>      title<span class="op">=</span><span class="st">"Monthly number of securities by listing exchange"</span></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_x_datetime(date_breaks<span class="op">=</span><span class="st">"10 years"</span>, date_labels<span class="op">=</span><span class="st">"%Y"</span>)</span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>comma_format())</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>securities_per_exchange_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-211-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.1
+</figcaption>
+</figure>
+</div>
+<p>Next, we look at the aggregate market capitalization grouped by the respective listing exchanges in <a href="#fig-212" class="quarto-xref">Figure&nbsp;<span>8.2</span></a>. To ensure that we look at meaningful data that is comparable over time, we adjust the nominal values for inflation. In fact, we can use the tables that are already in our database to calculate aggregate market caps by listing exchange. All values in <a href="#fig-212" class="quarto-xref">Figure&nbsp;<span>8.2</span></a> are in terms of the end of 2024 USD to ensure intertemporal comparability. NYSE-listed stocks have by far the largest market capitalization, followed by NASDAQ-listed stocks.</p>
+<div id="fig-212" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="26">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-212-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>cpi_monthly <span class="op">=</span> pd.read_sql_query(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  sql<span class="op">=</span><span class="st">"SELECT * FROM cpi_monthly"</span>,</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  con<span class="op">=</span>tidy_finance,</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  parse_dates<span class="op">=</span>{<span class="st">"date"</span>}</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>market_cap_per_exchange <span class="op">=</span> (prices_monthly</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>  .merge(cpi_monthly, how<span class="op">=</span><span class="st">"left"</span>, on<span class="op">=</span><span class="st">"date"</span>)</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  .groupby([<span class="st">"date"</span>, <span class="st">"exchange"</span>])</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  .<span class="bu">apply</span>(</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> group: pd.Series({</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>      <span class="st">"mktcap"</span>: group[<span class="st">"mktcap"</span>].<span class="bu">sum</span>()<span class="op">/</span>group[<span class="st">"cpi"</span>].mean()</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>  .reset_index()</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>market_cap_per_exchange_figure <span class="op">=</span> (</span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>  ggplot(</span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>    market_cap_per_exchange, </span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>    aes(x<span class="op">=</span><span class="st">"date"</span>, y<span class="op">=</span><span class="st">"mktcap/1000"</span>, color<span class="op">=</span><span class="st">"exchange"</span>, linetype<span class="op">=</span><span class="st">"exchange"</span>)</span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_line()</span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> labs(</span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>      x<span class="op">=</span><span class="st">""</span>, y<span class="op">=</span><span class="st">""</span>, color<span class="op">=</span><span class="st">""</span>, linetype<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a>      title<span class="op">=</span><span class="st">"Monthly market cap by listing exchange"</span></span>
+<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_x_datetime(date_breaks<span class="op">=</span><span class="st">"10 years"</span>, date_labels<span class="op">=</span><span class="st">"%Y"</span>)</span>
+<span id="cb30-29"><a href="#cb30-29" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>comma_format())</span>
+<span id="cb30-30"><a href="#cb30-30" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb30-31"><a href="#cb30-31" aria-hidden="true" tabindex="-1"></a>market_cap_per_exchange_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-212-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.2
+</figcaption>
+</figure>
+</div>
+<p>Next, we look at the same descriptive statistics by industry. <a href="#fig-213" class="quarto-xref">Figure&nbsp;<span>8.3</span></a> plots the number of stocks in the sample for each of the VSIC industry classifiers. For most of the sample period, the largest share of stocks is in manufacturing, albeit the number peaked somewhere in the 90s. The number of firms associated with public administration seems to be the only category on the rise in recent years, even surpassing manufacturing at the end of our sample period.</p>
+<div id="fig-213" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="27">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-213-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>securities_per_industry <span class="op">=</span> (prices_monthly</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  .groupby([<span class="st">"industry"</span>, <span class="st">"date"</span>])</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  .size()</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  .reset_index(name<span class="op">=</span><span class="st">"n"</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>linetypes <span class="op">=</span> [<span class="st">"-"</span>, <span class="st">"--"</span>, <span class="st">"-."</span>, <span class="st">":"</span>]</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>n_industries <span class="op">=</span> securities_per_industry[<span class="st">"industry"</span>].nunique()</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>securities_per_industry_figure <span class="op">=</span> (</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>  ggplot(</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>    securities_per_industry, </span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>    aes(x<span class="op">=</span><span class="st">"date"</span>, y<span class="op">=</span><span class="st">"n"</span>, color<span class="op">=</span><span class="st">"industry"</span>, linetype<span class="op">=</span><span class="st">"industry"</span>)</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_line()</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> labs(</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>      x<span class="op">=</span><span class="st">""</span>, y<span class="op">=</span><span class="st">""</span>, color<span class="op">=</span><span class="st">""</span>, linetype<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>      title<span class="op">=</span><span class="st">"Monthly number of securities by industry"</span></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_x_datetime(date_breaks<span class="op">=</span><span class="st">"10 years"</span>, date_labels<span class="op">=</span><span class="st">"%Y"</span>)</span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>comma_format())</span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_linetype_manual(</span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>      values<span class="op">=</span>[linetypes[l <span class="op">%</span> <span class="bu">len</span>(linetypes)] <span class="cf">for</span> l <span class="kw">in</span> <span class="bu">range</span>(n_industries)]</span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>    ) </span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a>securities_per_industry_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-213-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.3
+</figcaption>
+</figure>
+</div>
+<p>We also compute the market cap of all stocks belonging to the respective industries and show the evolution over time in <a href="#fig-214" class="quarto-xref">Figure&nbsp;<span>8.4</span></a>. At all points in time, manufacturing firms comprise of the largest portion of market capitalization. Toward the end of the sample, however, financial firms and services begin to make up a substantial portion of the market cap.</p>
+<div id="fig-214" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="28">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-214-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>market_cap_per_industry <span class="op">=</span> (prices_monthly</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  .merge(cpi_monthly, how<span class="op">=</span><span class="st">"left"</span>, on<span class="op">=</span><span class="st">"date"</span>)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  .groupby([<span class="st">"date"</span>, <span class="st">"industry"</span>])</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  .<span class="bu">apply</span>(</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> group: pd.Series({</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>      <span class="st">"mktcap"</span>: (group[<span class="st">"mktcap"</span>].<span class="bu">sum</span>()<span class="op">/</span>group[<span class="st">"cpi"</span>].mean())</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  .reset_index()</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>market_cap_per_industry_figure <span class="op">=</span> (</span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>  ggplot(</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>    market_cap_per_industry, </span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>    aes(x<span class="op">=</span><span class="st">"date"</span>, y<span class="op">=</span><span class="st">"mktcap/1000"</span>, color<span class="op">=</span><span class="st">"industry"</span>, linetype<span class="op">=</span><span class="st">"industry"</span>)</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_line()</span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> labs(</span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>      x<span class="op">=</span><span class="st">""</span>, y<span class="op">=</span><span class="st">""</span>, color<span class="op">=</span><span class="st">""</span>, linetype<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>      title<span class="op">=</span><span class="st">"Monthly market cap by industry in billions of Dec 2024 USD"</span></span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_x_datetime(date_breaks<span class="op">=</span><span class="st">"10 years"</span>, date_labels<span class="op">=</span><span class="st">"%Y"</span>)</span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>comma_format())</span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_linetype_manual(</span>
+<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a>      values<span class="op">=</span>[linetypes[l <span class="op">%</span> <span class="bu">len</span>(linetypes)] <span class="cf">for</span> l <span class="kw">in</span> <span class="bu">range</span>(n_industries)]</span>
+<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a>    ) </span>
+<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-28"><a href="#cb32-28" aria-hidden="true" tabindex="-1"></a>market_cap_per_industry_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-214-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.4
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="daily-stock-data" class="level2" data-number="8.5">
+<h2 data-number="8.5" class="anchored" data-anchor-id="daily-stock-data"><span class="header-section-number">8.5</span> Daily Stock Data</h2>
+<p>Before we turn to accounting data, we provide a proposal for downloading daily Stock data with the same filters used for the monthly data. While the monthly data from above typically fit into your memory and can be downloaded in a meaningful amount of time, this is usually not true for daily return data. The daily Stock data file is substantially larger than monthly data. This has two important implications: you cannot hold all the daily return data in your memory (hence it is not possible to copy the entire dataset to your local database), and in our experience, the download usually crashes (or never stops).</p>
+<p>There is a solution to this challenge. As with many <em>big data</em> problems, you can split up the big task into several smaller tasks that are easier to handle. That is, instead of downloading data about all stocks at once, download the data in small batches of stocks consecutively. Such operations can be implemented in <code>for</code>-loops, where we download, prepare, and store the data for a small number of stocks in each iteration. This operation might nonetheless take around 5 minutes, depending on your internet connection. To keep track of the progress, we create ad-hoc progress updates using <code>print()</code>. Notice that we also use the method <code>to_sql()</code> here with the option to append the new data to an existing table, when we process the second and all following batches.</p>
+<div id="d77dff5c" class="cell" data-execution_count="29">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>factors_ff3_daily <span class="op">=</span> pd.read_sql(</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  sql<span class="op">=</span><span class="st">"SELECT * FROM factors_ff3_daily"</span>, </span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  con<span class="op">=</span>tidy_finance,</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  parse_dates<span class="op">=</span>{<span class="st">"date"</span>}</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>permnos <span class="op">=</span> pd.read_sql(</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  sql<span class="op">=</span><span class="st">"SELECT DISTINCT permno FROM crsp.stksecurityinfohist"</span>, </span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  con<span class="op">=</span>DataCore,</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>  dtype<span class="op">=</span>{<span class="st">"permno"</span>: <span class="bu">int</span>}</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>permnos <span class="op">=</span> <span class="bu">list</span>(permnos[<span class="st">"permno"</span>].astype(<span class="bu">str</span>))</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>batch_size <span class="op">=</span> <span class="dv">500</span></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>batches <span class="op">=</span> np.ceil(<span class="bu">len</span>(permnos)<span class="op">/</span>batch_size).astype(<span class="bu">int</span>)</span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, batches<span class="op">+</span><span class="dv">1</span>):  </span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>  permno_batch <span class="op">=</span> permnos[</span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>    ((j<span class="op">-</span><span class="dv">1</span>)<span class="op">*</span>batch_size):(<span class="bu">min</span>(j<span class="op">*</span>batch_size, <span class="bu">len</span>(permnos)))</span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>  ]</span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>  permno_batch_formatted <span class="op">=</span> (</span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">", "</span>.join(<span class="ss">f"'</span><span class="sc">{</span>permno<span class="sc">}</span><span class="ss">'"</span> <span class="cf">for</span> permno <span class="kw">in</span> permno_batch)</span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a>  permno_string <span class="op">=</span> <span class="ss">f"(</span><span class="sc">{</span>permno_batch_formatted<span class="sc">}</span><span class="ss">)"</span></span>
+<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb33-29"><a href="#cb33-29" aria-hidden="true" tabindex="-1"></a>  crsp_daily_sub_query <span class="op">=</span> (</span>
+<span id="cb33-30"><a href="#cb33-30" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SELECT dsf.permno, dlycaldt AS date, dlyret AS ret "</span></span>
+<span id="cb33-31"><a href="#cb33-31" aria-hidden="true" tabindex="-1"></a>      <span class="st">"FROM crsp.dsf_v2 AS dsf "</span></span>
+<span id="cb33-32"><a href="#cb33-32" aria-hidden="true" tabindex="-1"></a>      <span class="st">"INNER JOIN crsp.stksecurityinfohist AS ssih "</span></span>
+<span id="cb33-33"><a href="#cb33-33" aria-hidden="true" tabindex="-1"></a>      <span class="st">"ON dsf.permno = ssih.permno AND "</span></span>
+<span id="cb33-34"><a href="#cb33-34" aria-hidden="true" tabindex="-1"></a>         <span class="st">"ssih.secinfostartdt &lt;= dsf.dlycaldt AND "</span></span>
+<span id="cb33-35"><a href="#cb33-35" aria-hidden="true" tabindex="-1"></a>         <span class="st">"dsf.dlycaldt &lt;= ssih.secinfoenddt "</span></span>
+<span id="cb33-36"><a href="#cb33-36" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f"WHERE dsf.permno IN </span><span class="sc">{</span>permno_string<span class="sc">}</span><span class="ss"> "</span></span>
+<span id="cb33-37"><a href="#cb33-37" aria-hidden="true" tabindex="-1"></a>           <span class="ss">f"AND dlycaldt BETWEEN '</span><span class="sc">{</span>start_date<span class="sc">}</span><span class="ss">' AND '</span><span class="sc">{</span>end_date<span class="sc">}</span><span class="ss">' "</span></span>
+<span id="cb33-38"><a href="#cb33-38" aria-hidden="true" tabindex="-1"></a>            <span class="st">"AND ssih.sharetype = 'NS' "</span></span>
+<span id="cb33-39"><a href="#cb33-39" aria-hidden="true" tabindex="-1"></a>            <span class="st">"AND ssih.securitytype = 'EQTY' "</span>  </span>
+<span id="cb33-40"><a href="#cb33-40" aria-hidden="true" tabindex="-1"></a>            <span class="st">"AND ssih.securitysubtype = 'COM' "</span> </span>
+<span id="cb33-41"><a href="#cb33-41" aria-hidden="true" tabindex="-1"></a>            <span class="st">"AND ssih.usincflg = 'Y' "</span> </span>
+<span id="cb33-42"><a href="#cb33-42" aria-hidden="true" tabindex="-1"></a>            <span class="st">"AND ssih.issuertype in ('ACOR', 'CORP') "</span> </span>
+<span id="cb33-43"><a href="#cb33-43" aria-hidden="true" tabindex="-1"></a>            <span class="st">"AND ssih.primaryexch in ('N', 'A', 'Q') "</span></span>
+<span id="cb33-44"><a href="#cb33-44" aria-hidden="true" tabindex="-1"></a>            <span class="st">"AND ssih.conditionaltype in ('RW', 'NW') "</span></span>
+<span id="cb33-45"><a href="#cb33-45" aria-hidden="true" tabindex="-1"></a>            <span class="st">"AND ssih.tradingstatusflg = 'A'"</span></span>
+<span id="cb33-46"><a href="#cb33-46" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb33-47"><a href="#cb33-47" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb33-48"><a href="#cb33-48" aria-hidden="true" tabindex="-1"></a>  crsp_daily_sub <span class="op">=</span> (pd.read_sql_query(</span>
+<span id="cb33-49"><a href="#cb33-49" aria-hidden="true" tabindex="-1"></a>      sql<span class="op">=</span>crsp_daily_sub_query,</span>
+<span id="cb33-50"><a href="#cb33-50" aria-hidden="true" tabindex="-1"></a>      con<span class="op">=</span>DataCore,</span>
+<span id="cb33-51"><a href="#cb33-51" aria-hidden="true" tabindex="-1"></a>      dtype<span class="op">=</span>{<span class="st">"permno"</span>: <span class="bu">int</span>},</span>
+<span id="cb33-52"><a href="#cb33-52" aria-hidden="true" tabindex="-1"></a>      parse_dates<span class="op">=</span>{<span class="st">"date"</span>}</span>
+<span id="cb33-53"><a href="#cb33-53" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb33-54"><a href="#cb33-54" aria-hidden="true" tabindex="-1"></a>    .dropna()</span>
+<span id="cb33-55"><a href="#cb33-55" aria-hidden="true" tabindex="-1"></a>   )</span>
+<span id="cb33-56"><a href="#cb33-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-57"><a href="#cb33-57" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="kw">not</span> crsp_daily_sub.empty:</span>
+<span id="cb33-58"><a href="#cb33-58" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb33-59"><a href="#cb33-59" aria-hidden="true" tabindex="-1"></a>      crsp_daily_sub <span class="op">=</span> (crsp_daily_sub</span>
+<span id="cb33-60"><a href="#cb33-60" aria-hidden="true" tabindex="-1"></a>        .merge(factors_ff3_daily[[<span class="st">"date"</span>, <span class="st">"risk_free"</span>]], </span>
+<span id="cb33-61"><a href="#cb33-61" aria-hidden="true" tabindex="-1"></a>               on<span class="op">=</span><span class="st">"date"</span>, how<span class="op">=</span><span class="st">"left"</span>)</span>
+<span id="cb33-62"><a href="#cb33-62" aria-hidden="true" tabindex="-1"></a>        .assign(</span>
+<span id="cb33-63"><a href="#cb33-63" aria-hidden="true" tabindex="-1"></a>          ret_excess <span class="op">=</span> <span class="kw">lambda</span> x: </span>
+<span id="cb33-64"><a href="#cb33-64" aria-hidden="true" tabindex="-1"></a>            ((x[<span class="st">"ret"</span>] <span class="op">-</span> x[<span class="st">"risk_free"</span>]).clip(lower<span class="op">=-</span><span class="dv">1</span>))</span>
+<span id="cb33-65"><a href="#cb33-65" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb33-66"><a href="#cb33-66" aria-hidden="true" tabindex="-1"></a>        .get([<span class="st">"permno"</span>, <span class="st">"date"</span>, <span class="st">"ret_excess"</span>])</span>
+<span id="cb33-67"><a href="#cb33-67" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb33-68"><a href="#cb33-68" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb33-69"><a href="#cb33-69" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> j <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb33-70"><a href="#cb33-70" aria-hidden="true" tabindex="-1"></a>        if_exists_string <span class="op">=</span> <span class="st">"replace"</span></span>
+<span id="cb33-71"><a href="#cb33-71" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span>:</span>
+<span id="cb33-72"><a href="#cb33-72" aria-hidden="true" tabindex="-1"></a>        if_exists_string <span class="op">=</span> <span class="st">"append"</span></span>
+<span id="cb33-73"><a href="#cb33-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-74"><a href="#cb33-74" aria-hidden="true" tabindex="-1"></a>      crsp_daily_sub.to_sql(</span>
+<span id="cb33-75"><a href="#cb33-75" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span><span class="st">"crsp_daily"</span>, </span>
+<span id="cb33-76"><a href="#cb33-76" aria-hidden="true" tabindex="-1"></a>        con<span class="op">=</span>tidy_finance, </span>
+<span id="cb33-77"><a href="#cb33-77" aria-hidden="true" tabindex="-1"></a>        if_exists<span class="op">=</span>if_exists_string, </span>
+<span id="cb33-78"><a href="#cb33-78" aria-hidden="true" tabindex="-1"></a>        index<span class="op">=</span><span class="va">False</span></span>
+<span id="cb33-79"><a href="#cb33-79" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb33-80"><a href="#cb33-80" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb33-81"><a href="#cb33-81" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f"Batch </span><span class="sc">{</span>j<span class="sc">}</span><span class="ss"> out of </span><span class="sc">{</span>batches<span class="sc">}</span><span class="ss"> done (</span><span class="sc">{</span>(j<span class="op">/</span>batches)<span class="op">*</span><span class="dv">100</span><span class="sc">:.2f}</span><span class="ss">%)</span><span class="ch">\n</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="merging-stock-with-company-fundamentals" class="level2" data-number="8.6">
+<h2 data-number="8.6" class="anchored" data-anchor-id="merging-stock-with-company-fundamentals"><span class="header-section-number">8.6</span> Merging Stock with Company Fundamentals</h2>
+<p>To link the two datasets, we need to use the stock symbol.</p>
+<p>Before we close this chapter, let us look at an interesting descriptive statistic of our data. As the book value of equity plays a crucial role in many asset pricing applications, it is interesting to know for how many of our stocks this information is available. Hence, <a href="#fig-215" class="quarto-xref">Figure&nbsp;<span>8.5</span></a> plots the share of securities with book equity values for each exchange.</p>
+<div id="cell-fig-215" class="cell" data-execution_count="30">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>share_with_be <span class="op">=</span> (prices_monthly</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  .assign(year<span class="op">=</span><span class="kw">lambda</span> x: pd.DatetimeIndex(x[<span class="st">"date"</span>]).year)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  .sort_values(<span class="st">"date"</span>)</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  .groupby([<span class="st">"symbol"</span>, <span class="st">"year"</span>])</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  .tail(<span class="dv">1</span>)</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  .reset_index()</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  .merge(comp_vn, how<span class="op">=</span><span class="st">"left"</span>, on<span class="op">=</span>[<span class="st">"symbol"</span>, <span class="st">"year"</span>])</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Group by year only for now; easy to add "exchange" later</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  .groupby([<span class="st">"year"</span>]) </span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # .groupby(["exchange", "year"]) # Uncomment this later</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>  .<span class="bu">apply</span>(</span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> x: pd.Series({</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>      <span class="st">"share"</span>: x[<span class="st">"symbol"</span>][x[<span class="st">"be"</span>].notnull()].nunique() <span class="op">/</span> x[<span class="st">"symbol"</span>].nunique()</span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>    }),</span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>    include_groups<span class="op">=</span><span class="va">False</span> <span class="co"># Recommended for newer pandas versions</span></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>  .reset_index()</span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Professional visualization check</span></span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a>share_with_be_figure <span class="op">=</span> (</span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a>  ggplot(</span>
+<span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a>    share_with_be, </span>
+<span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a>    aes(x<span class="op">=</span><span class="st">"year"</span>, y<span class="op">=</span><span class="st">"share"</span>) </span>
+<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a>    <span class="co"># aes(x="year", y="share", color="exchange", linetype="exchange")</span></span>
+<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb34-29"><a href="#cb34-29" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_line(size<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb34-30"><a href="#cb34-30" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> labs(</span>
+<span id="cb34-31"><a href="#cb34-31" aria-hidden="true" tabindex="-1"></a>      x<span class="op">=</span><span class="st">"Year"</span>, y<span class="op">=</span><span class="st">"Share with BE"</span>,</span>
+<span id="cb34-32"><a href="#cb34-32" aria-hidden="true" tabindex="-1"></a>      title<span class="op">=</span><span class="st">"Share of securities with book equity values"</span></span>
+<span id="cb34-33"><a href="#cb34-33" aria-hidden="true" tabindex="-1"></a>      <span class="co"># title="Share of securities with book equity values by exchange"</span></span>
+<span id="cb34-34"><a href="#cb34-34" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb34-35"><a href="#cb34-35" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb34-36"><a href="#cb34-36" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> coord_cartesian(ylim<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">1</span>))</span>
+<span id="cb34-37"><a href="#cb34-37" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> theme_minimal()</span>
+<span id="cb34-38"><a href="#cb34-38" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-39"><a href="#cb34-39" aria-hidden="true" tabindex="-1"></a>share_with_be_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-215" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: Share of securities with book equity values by exchange. The figure shows a line chart of end-of-year shares of securities with book equity values by exchange with years on the horizontal axis and the corresponding share on the vertical axis.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-215-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="07_datacore_data_files/figure-html/fig-215-output-1.png" alt="Title: Share of securities with book equity values by exchange. The figure shows a line chart of end-of-year shares of securities with book equity values by exchange with years on the horizontal axis and the corresponding share on the vertical axis." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-215-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.5: The figure shows the end-of-year share of securities with book equity values by listing exchange.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level2" data-number="8.7">
+<h2 data-number="8.7" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">8.7</span> Key Takeaways</h2>
+<ul>
+<li>DataCore provides secure access to essential financial databases like Stock and Company Fundamentals, which are critical for empirical finance research.</li>
+<li>Stock data provides return, market capitalization and industry data for US common stocks listed.</li>
+<li>Company Fundamentals provides firm-level accounting data such as book equity, profitability, and investment.</li>
+</ul>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Fama1992" class="csl-entry" role="listitem">
+Fama, Eugene F., and Kenneth R. French. 1992. <span>“<span class="nocase">The cross-section of expected stock returns</span>.”</span> <em><span>The Journal of Finance</span></em> 47 (2): 427–65. <a href="https://doi.org/2329112">https://doi.org/2329112</a>.
+</div>
+</div>
+</section>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn1"><p>Companies that operate in the banking, insurance, or utilities sector typically report in different industry formats that reflect their specific regulatory requirements.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./06_accessing_and_managing_financial_data.html" class="pagination-link" aria-label="Accessing and Managing Financial Data">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Accessing and Managing Financial Data</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./08_beta_estimation.html" class="pagination-link" aria-label="Beta Estimation">
+        <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Beta Estimation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

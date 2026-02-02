@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>9&nbsp; Beta Estimation – Tidy Finance in Vietnam</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./12_fama_french.html" rel="next">
+<link href="./07_datacore_data.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-50a4fa9e9ef121803c2355a2deb1af4d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./08_beta_estimation.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Beta Estimation</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Tidy Finance in Vietnam</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./00_institutional_background.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Institutional Background and Market Structure of Vietnam’s Equity Market</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01_working_with_stock_returns.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Constructing and Analyzing Equity Return Series</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02_modern_portfolio_theory.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03_capm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">The Capital Asset Pricing Model</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04_financial_statement_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Financial Statement Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05_discounted_cash_flow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Discounted Cash Flow Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06_accessing_and_managing_financial_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Accessing and Managing Financial Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07_datacore_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">DataCore Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08_beta_estimation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Beta Estimation</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12_fama_french.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./20_conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#estimating-beta-using-monthly-returns" id="toc-estimating-beta-using-monthly-returns" class="nav-link active" data-scroll-target="#estimating-beta-using-monthly-returns"><span class="header-section-number">9.1</span> Estimating Beta Using Monthly Returns</a></li>
+  <li><a href="#rolling-window-estimation" id="toc-rolling-window-estimation" class="nav-link" data-scroll-target="#rolling-window-estimation"><span class="header-section-number">9.2</span> Rolling-Window Estimation</a></li>
+  <li><a href="#parallelized-rolling-window-estimation" id="toc-parallelized-rolling-window-estimation" class="nav-link" data-scroll-target="#parallelized-rolling-window-estimation"><span class="header-section-number">9.3</span> Parallelized Rolling-Window Estimation</a></li>
+  <li><a href="#estimating-beta-using-daily-returns" id="toc-estimating-beta-using-daily-returns" class="nav-link" data-scroll-target="#estimating-beta-using-daily-returns"><span class="header-section-number">9.4</span> Estimating Beta Using Daily Returns</a></li>
+  <li><a href="#comparing-beta-estimates" id="toc-comparing-beta-estimates" class="nav-link" data-scroll-target="#comparing-beta-estimates"><span class="header-section-number">9.5</span> Comparing Beta Estimates</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">9.6</span> Key Takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Beta Estimation</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In this chapter, we introduce an important concept in financial economics: The exposure of an individual stock to changes in the market portfolio. According to the Capital Asset Pricing Model (CAPM) of <span class="citation" data-cites="Sharpe1964">Sharpe (<a href="references.html#ref-Sharpe1964" role="doc-biblioref">1964</a>)</span>, <span class="citation" data-cites="Lintner1965">Lintner (<a href="references.html#ref-Lintner1965" role="doc-biblioref">1965</a>)</span>, and <span class="citation" data-cites="Mossin1966">Mossin (<a href="references.html#ref-Mossin1966" role="doc-biblioref">1966</a>)</span>, cross-sectional variation in expected asset returns should be a function of the covariance between the excess return of the asset and the excess return on the market portfolio. The regression coefficient of excess market returns on excess stock returns is usually called the market beta. We show an estimation procedure for the market betas. We provide details about all the functions that we use to compute the results. In particular, we leverage useful computational concepts: Rolling-window estimation and parallelization.</p>
+<p>We use the following Python packages throughout this chapter:</p>
+<div id="513bd053" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sqlite3</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotnine <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> mizani.formatters <span class="im">import</span> percent_format</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> joblib <span class="im">import</span> Parallel, delayed, cpu_count</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> product</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dateutil.relativedelta <span class="im">import</span> relativedelta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Compared to previous chapters, we introduce <code>statsmodels</code> <span class="citation" data-cites="seabold2010statsmodels">(<a href="references.html#ref-seabold2010statsmodels" role="doc-biblioref"><strong>seabold2010statsmodels?</strong></a>)</span> for regression analysis and for sliding-window regressions and <code>joblib</code> <span class="citation" data-cites="joblib">(<a href="references.html#ref-joblib" role="doc-biblioref"><strong>joblib?</strong></a>)</span> for parallelization.</p>
+<section id="estimating-beta-using-monthly-returns" class="level2" data-number="9.1">
+<h2 data-number="9.1" class="anchored" data-anchor-id="estimating-beta-using-monthly-returns"><span class="header-section-number">9.1</span> Estimating Beta Using Monthly Returns</h2>
+<p>The estimation procedure is based on a rolling-window estimation, where we may use either monthly or daily returns and different window lengths. First, let us start with loading the monthly Stock data from our SQLite database introduced in <a href="accessing-and-managing-financial-data.qmd">Accessing and Managing Financial Data</a> and <a href="datacore_data.qmd">DataCore</a>.</p>
+<div id="3c3c916c" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>tidy_finance <span class="op">=</span> sqlite3.<span class="ex">connect</span>(database<span class="op">=</span><span class="st">"data/tidy_finance_python.sqlite"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare accounting data with a 'year' column for merging</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>comp_vn <span class="op">=</span> (pd.read_sql_query(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    sql<span class="op">=</span><span class="st">"SELECT symbol, datadate, icb_name_vi FROM comp_vn"</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    con<span class="op">=</span>tidy_finance,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    parse_dates<span class="op">=</span>{<span class="st">"datadate"</span>})</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  .assign(year<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"datadate"</span>].dt.year)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  .dropna()</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure prices_monthly has a 'year' column and is merged correctly</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>prices_monthly <span class="op">=</span> (pd.read_sql_query(</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    sql<span class="op">=</span><span class="st">"SELECT symbol, date, ret_excess FROM prices_monthly"</span>,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    con<span class="op">=</span>tidy_finance,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    parse_dates<span class="op">=</span>{<span class="st">"date"</span>})</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  .assign(year<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"date"</span>].dt.year)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>factors_ff3_monthly <span class="op">=</span> pd.read_sql_query(</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  sql<span class="op">=</span><span class="st">"SELECT date, mkt_excess FROM factors_ff3_monthly"</span>,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  con<span class="op">=</span>tidy_finance,</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  parse_dates<span class="op">=</span>{<span class="st">"date"</span>}</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>prices_monthly <span class="op">=</span> (prices_monthly</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  .merge(factors_ff3_monthly, how<span class="op">=</span><span class="st">"left"</span>, on<span class="op">=</span><span class="st">"date"</span>)</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  .merge(comp_vn, how<span class="op">=</span><span class="st">"left"</span>, on<span class="op">=</span>[<span class="st">"symbol"</span>, <span class="st">"year"</span>])</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  .dropna()</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="b7f9bf22" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats.mstats <span class="im">import</span> winsorize</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Apply 1% winsorization to returns</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>prices_monthly <span class="op">=</span> (prices_monthly</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  .assign(</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    ret_excess <span class="op">=</span> <span class="kw">lambda</span> x: winsorize(x[<span class="st">"ret_excess"</span>], limits<span class="op">=</span>[<span class="fl">0.01</span>, <span class="fl">0.01</span>]),</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    mkt_excess <span class="op">=</span> <span class="kw">lambda</span> x: winsorize(x[<span class="st">"mkt_excess"</span>], limits<span class="op">=</span>[<span class="fl">0.01</span>, <span class="fl">0.01</span>])</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>To estimate the CAPM regression coefficients</p>
+<p><span id="eq-capm-equation"><span class="math display">\[
+r_{i, t} - r_{f, t} = \alpha_i + \beta_i(r_{m, t}-r_{f,t})+\varepsilon_{i, t},
+\tag{9.1}\]</span></span></p>
+<p>we regress stock excess returns <code>ret_excess</code> on excess returns of the market portfolio <code>mkt_excess</code>.</p>
+<p>Python provides a simple solution to estimate (linear) models with the function <code>smf.ols()</code>. The function requires a formula as input that is specified in a compact symbolic form. An expression of the form <code>y ~ model</code> is interpreted as a specification that the response <code>y</code> is modeled by a linear predictor specified symbolically by <code>model</code>. Such a model consists of a series of terms separated by <code>+</code> operators. In addition to standard linear models, <code>smf.ols()</code> provides a lot of flexibility. To start, we restrict the data only to the time series of observations in Stock data that correspond to a company’s stock and compute <span class="math inline">\(\hat\alpha_i\)</span> as well as <span class="math inline">\(\hat\beta_i\)</span>.</p>
+<div id="d7f3dd87" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>model_fit <span class="op">=</span> smf.ols(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    formula<span class="op">=</span><span class="st">"ret_excess ~ mkt_excess"</span>, </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>prices_monthly.query(<span class="st">"symbol == 'VIN'"</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>).fit()</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>coefficients <span class="op">=</span> model_fit.summary2().tables[<span class="dv">1</span>]</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>coefficients</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Coef.</th>
+<th data-quarto-table-cell-role="th">Std.Err.</th>
+<th data-quarto-table-cell-role="th">t</th>
+<th data-quarto-table-cell-role="th">P&gt;|t|</th>
+<th data-quarto-table-cell-role="th">[0.025</th>
+<th data-quarto-table-cell-role="th">0.975]</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Intercept</th>
+<td>0.015495</td>
+<td>0.016506</td>
+<td>0.938751</td>
+<td>0.349934</td>
+<td>-0.017220</td>
+<td>0.048210</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">mkt_excess</th>
+<td>3.133326</td>
+<td>1.865697</td>
+<td>1.679440</td>
+<td>0.095931</td>
+<td>-0.564424</td>
+<td>6.831076</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p><code>smf.ols()</code> returns an object of class <code>RegressionModel</code>, which contains all the information we usually care about with linear models. <code>summary2()</code> returns information about the estimated parameters. The output above indicates that Apple moves excessively with the market as the estimated <span class="math inline">\(\hat\beta_i\)</span> is above one (<span class="math inline">\(\hat\beta_i \approx 1.4\)</span>).</p>
+</section>
+<section id="rolling-window-estimation" class="level2" data-number="9.2">
+<h2 data-number="9.2" class="anchored" data-anchor-id="rolling-window-estimation"><span class="header-section-number">9.2</span> Rolling-Window Estimation</h2>
+<p>After we estimated the regression coefficients on an example, we scale the estimation of <span class="math inline">\(\beta_i\)</span> to a whole different level and perform rolling-window estimations for the entire CRSP sample. The following function implements the CAPM regression for a data frame (or a part thereof) containing at least <code>min_obs</code> observations to avoid huge fluctuations if the time series is too short. The function conveniently returns the regression results as a data frame, which ensures that our approach is scalable. If the <code>min_obs</code>-condition is violated, that is, the time series is too short, the function returns an empty data frame for consistency.</p>
+<div id="b614f466" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> estimate_capm(data, min_obs<span class="op">=</span><span class="dv">1</span>):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> data.shape[<span class="dv">0</span>] <span class="op">&lt;</span> min_obs:</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        capm <span class="op">=</span> pd.DataFrame()</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        fit <span class="op">=</span> smf.ols(formula<span class="op">=</span><span class="st">"ret_excess ~ mkt_excess"</span>, data<span class="op">=</span>data).fit()</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        coefficients <span class="op">=</span> fit.summary2().tables[<span class="dv">1</span>]</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        capm <span class="op">=</span> pd.DataFrame(</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>            {</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                <span class="st">"coefficient"</span>: coefficients.index,</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                <span class="st">"estimate"</span>: coefficients[<span class="st">"Coef."</span>],</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                <span class="st">"t_statistic"</span>: coefficients[<span class="st">"t"</span>],</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>            }</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        ).assign(</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>            coefficient<span class="op">=</span><span class="kw">lambda</span> x: np.where(</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>                x[<span class="st">"coefficient"</span>] <span class="op">==</span> <span class="st">"Intercept"</span>, <span class="st">"alpha"</span>, x[<span class="st">"coefficient"</span>]</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> capm</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Next, we define a function that does the rolling estimation. We use a simple for-loop to implement the sliding window estimation in a straightforward manner. The following function takes input data and slides across the <code>date</code> vector, considering only a total of <code>look_back</code> months. The function essentially performs three steps: (i) arrange all rows, (ii) compute betas by sliding across months, and (iii) return a tibble with dates and corresponding parameter estimates. As we demonstrate further below, we can also apply the same function to daily return data.</p>
+<div id="6aed049a" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> roll_capm_estimation(data, look_back<span class="op">=</span><span class="dv">60</span>, min_obs<span class="op">=</span><span class="dv">48</span>):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> []</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    dates <span class="op">=</span> data[<span class="st">"date"</span>].sort_values().drop_duplicates()</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(look_back <span class="op">-</span> <span class="dv">1</span>, <span class="bu">len</span>(dates)):</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        end_date <span class="op">=</span> dates.iloc[i]</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        start_date <span class="op">=</span> end_date <span class="op">-</span> relativedelta(months<span class="op">=</span>look_back <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        window_data <span class="op">=</span> data.query(<span class="st">"date &gt;= @start_date &amp; date &lt;= @end_date"</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        result <span class="op">=</span> estimate_capm(window_data, min_obs<span class="op">=</span>min_obs)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        result[<span class="st">"date"</span>] <span class="op">=</span> np.<span class="bu">max</span>(window_data[<span class="st">"date"</span>])</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        results.append(result)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> results:</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        rolling_capm_estimation <span class="op">=</span> pd.concat(results, ignore_index<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        rolling_capm_estimation <span class="op">=</span> pd.DataFrame()</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rolling_capm_estimation</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Before we approach the whole Stock sample, let us focus on a couple of examples for well-known firms.</p>
+<div id="5e515aab" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>examples <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"symbol"</span>: [<span class="st">"FPT"</span>, <span class="st">"VNM"</span>, <span class="st">"VIC"</span>, <span class="st">"HPG"</span>],</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"company"</span>: [<span class="st">"FPT Corporation"</span>, <span class="st">"Vinamilk"</span>, <span class="st">"Vingroup"</span>, <span class="st">"Hoa Phat Group"</span>]</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="5bebf577" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check how many months of data each example firm has</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>(prices_monthly</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  .query(<span class="st">"symbol in @examples['symbol']"</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  .groupby(<span class="st">"symbol"</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  .size()</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  .reset_index(name<span class="op">=</span><span class="st">"obs_count"</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>prices_monthly[prices_monthly[<span class="st">'symbol'</span>] <span class="op">==</span> <span class="st">"FPT"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">symbol</th>
+<th data-quarto-table-cell-role="th">date</th>
+<th data-quarto-table-cell-role="th">ret_excess</th>
+<th data-quarto-table-cell-role="th">year</th>
+<th data-quarto-table-cell-role="th">mkt_excess</th>
+<th data-quarto-table-cell-role="th">datadate</th>
+<th data-quarto-table-cell-role="th">icb_name_vi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">41646</th>
+<td>FPT</td>
+<td>2011-07-31</td>
+<td>0.194583</td>
+<td>2011</td>
+<td>-0.011287</td>
+<td>2011-12-31</td>
+<td>Công nghệ phần mềm</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">41647</th>
+<td>FPT</td>
+<td>2011-08-31</td>
+<td>-0.038116</td>
+<td>2011</td>
+<td>0.007856</td>
+<td>2011-12-31</td>
+<td>Công nghệ phần mềm</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">41648</th>
+<td>FPT</td>
+<td>2011-09-30</td>
+<td>-0.093421</td>
+<td>2011</td>
+<td>-0.006501</td>
+<td>2011-12-31</td>
+<td>Công nghệ phần mềm</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">41649</th>
+<td>FPT</td>
+<td>2011-10-31</td>
+<td>-0.042168</td>
+<td>2011</td>
+<td>-0.005363</td>
+<td>2011-12-31</td>
+<td>Công nghệ phần mềm</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">41650</th>
+<td>FPT</td>
+<td>2011-11-30</td>
+<td>-0.011414</td>
+<td>2011</td>
+<td>-0.009524</td>
+<td>2011-12-31</td>
+<td>Công nghệ phần mềm</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">...</th>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">41791</th>
+<td>FPT</td>
+<td>2023-08-31</td>
+<td>0.113277</td>
+<td>2023</td>
+<td>0.004178</td>
+<td>2023-12-31</td>
+<td>Công nghệ phần mềm</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">41792</th>
+<td>FPT</td>
+<td>2023-09-30</td>
+<td>-0.043664</td>
+<td>2023</td>
+<td>-0.000150</td>
+<td>2023-12-31</td>
+<td>Công nghệ phần mềm</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">41793</th>
+<td>FPT</td>
+<td>2023-10-31</td>
+<td>-0.108937</td>
+<td>2023</td>
+<td>-0.024628</td>
+<td>2023-12-31</td>
+<td>Công nghệ phần mềm</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">41794</th>
+<td>FPT</td>
+<td>2023-11-30</td>
+<td>0.103896</td>
+<td>2023</td>
+<td>-0.009693</td>
+<td>2023-12-31</td>
+<td>Công nghệ phần mềm</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">41795</th>
+<td>FPT</td>
+<td>2023-12-31</td>
+<td>0.042369</td>
+<td>2023</td>
+<td>-0.000822</td>
+<td>2023-12-31</td>
+<td>Công nghệ phần mềm</td>
+</tr>
+</tbody>
+</table>
+
+<p>150 rows × 7 columns</p>
+</div>
+</div>
+</div>
+<p>The main idea is to apply the function to each stock individually and then combine the results into a single data frame. First, we nest the data by <code>symbol</code>. Nested data means we now have a list of <code>symbol</code> with corresponding grouped time series data. We get one row of output for each unique combination of non-nested variables which is only <code>symbol</code> in this case.</p>
+<div id="de854ce5" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>capm_examples_nested <span class="op">=</span> (prices_monthly</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">"symbol in @examples['symbol']"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    .groupby(<span class="st">"symbol"</span>, group_keys<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>capm_examples_nested</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<pre><code>&lt;pandas.api.typing.DataFrameGroupBy object at 0x7fe4337e7250&gt;</code></pre>
+</div>
+</div>
+<p>Next, we want to apply the <code>roll_capm_estimation()</code> function to each stock. This situation is an ideal use case for <code>apply()</code>, which takes a list or vector as input and returns an object of the same length as the input. In our case, <code>apply()</code> returns a single data frame with a time series of beta estimates for each stock. Therefore, we use <code>reset_index()</code> to transform the list of outputs to a tidy data frame.</p>
+<div id="0a2244ee" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># use this after fixing the data</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>capm_examples <span class="op">=</span> (capm_examples_nested</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> x: roll_capm_estimation(x), include_groups<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    .get([<span class="st">"symbol"</span>, <span class="st">"date"</span>, <span class="st">"coefficient"</span>, <span class="st">"estimate"</span>, <span class="st">"t_statistic"</span>])</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><a href="#fig-601" class="quarto-xref">Figure&nbsp;<span>9.1</span></a> displays the resulting beta estimates, focusing exclusively on the coefficient fo <code>"mkt_excess"</code>.</p>
+<div id="cell-fig-601" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>beta_examples_sub <span class="op">=</span> capm_examples.merge(examples, how<span class="op">=</span><span class="st">"left"</span>, on<span class="op">=</span><span class="st">"symbol"</span>).query(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"coefficient == 'mkt_excess'"</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>beta_figure <span class="op">=</span> (</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    ggplot(</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        beta_examples_sub,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        aes(x<span class="op">=</span><span class="st">"date"</span>, y<span class="op">=</span><span class="st">"estimate"</span>, color<span class="op">=</span><span class="st">"company"</span>, linetype<span class="op">=</span><span class="st">"company"</span>),</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_line()</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>        y<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>        linetype<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"Monthly beta estimates for example stocks using 5 years of data"</span>,</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_x_datetime(date_breaks<span class="op">=</span><span class="st">"5 year"</span>, date_labels<span class="op">=</span><span class="st">"%Y"</span>)</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>beta_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-601" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: Monthly beta estimates for example stocks using five years of data. The figure shows a time series of beta estimates based on five years of monthly data. The estimated betas vary over time and across varies but are always positive for each stock." data-fig-pos="htb">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-601-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="08_beta_estimation_files/figure-html/fig-601-output-1.png" data-fig-pos="htb" alt="Title: Monthly beta estimates for example stocks using five years of data. The figure shows a time series of beta estimates based on five years of monthly data. The estimated betas vary over time and across varies but are always positive for each stock." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-601-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.1: The figure shows monthly beta estimates for example stocks using five years of data. The CAPM betas are estimated with monthly data and a rolling window of length five years based on adjusted excess returns from Stock Data.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="parallelized-rolling-window-estimation" class="level2" data-number="9.3">
+<h2 data-number="9.3" class="anchored" data-anchor-id="parallelized-rolling-window-estimation"><span class="header-section-number">9.3</span> Parallelized Rolling-Window Estimation</h2>
+<p>Even though we could now just apply the function using <code>.groubby()</code> on the whole Stock sample, we advise against doing it as it is computationally quite expensive. Remember that we have to perform rolling-window estimations across all stocks and time periods. However, this estimation problem is an ideal scenario to employ the power of parallelization. Parallelization means that we split the tasks which perform rolling-window estimations across different workers (or cores on your local machine).</p>
+<p>If you have a Windows or Mac machine, it makes most sense use the default parallelization backend of <code>joblib</code>, which means that separate Python processes are running in the background on the same machine to perform the individual jobs. If you check out the documentation of <code>joblib.parallel_config()</code>, you can also see other ways to resolve the parallelization in different environments. Note that we use <code>availableCores()</code> to determine the number of cores available for parallelization, but keep one core free for other tasks. Some machines might freeze if all cores are busy with Python jobs.</p>
+<div id="9594e42a" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>n_cores <span class="op">=</span> cpu_count() <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>n_cores</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<pre><code>3</code></pre>
+</div>
+</div>
+<p>You can speed up things considerably by having more cores available to share the workload or by having more powerful cores. Instead of using <code>.apply()</code> on groups, we use <code>Parallel()</code> to execute multiple tasks concurrently and <code>delayed()</code> to wrap each function call, allowing the calls to be queued and distributed to worker processes rather than executed immediately.</p>
+<div id="c4337dd0" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>prices_monthly_nested <span class="op">=</span> (prices_monthly</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    .groupby(<span class="st">"symbol"</span>, group_keys<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>capm_monthly <span class="op">=</span> pd.concat(</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    Parallel(n_jobs<span class="op">=</span>n_cores)(</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>        delayed(</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>            <span class="kw">lambda</span> name, group: roll_capm_estimation(group).assign(symbol<span class="op">=</span>name)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        )(</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>            name, group</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> name, group <span class="kw">in</span> prices_monthly_nested</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>).get([<span class="st">"symbol"</span>, <span class="st">"date"</span>, <span class="st">"coefficient"</span>, <span class="st">"estimate"</span>, <span class="st">"t_statistic"</span>])</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>capm_monthly</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="f39b947e" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(capm_monthly</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  .to_sql(name<span class="op">=</span><span class="st">"capm_monthly"</span>, </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>          con<span class="op">=</span>tidy_finance, </span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>          if_exists<span class="op">=</span><span class="st">"replace"</span>,</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>          index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="ba7f8df1" class="cell" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>capm_monthly <span class="op">=</span> pd.read_sql_query(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    sql<span class="op">=</span><span class="st">"SELECT * FROM capm_monthly"</span>, </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    con<span class="op">=</span>tidy_finance,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    parse_dates<span class="op">=</span>{<span class="st">"date"</span>}</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>capm_monthly.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">symbol</th>
+<th data-quarto-table-cell-role="th">date</th>
+<th data-quarto-table-cell-role="th">coefficient</th>
+<th data-quarto-table-cell-role="th">estimate</th>
+<th data-quarto-table-cell-role="th">t_statistic</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>A32</td>
+<td>2023-10-31</td>
+<td>alpha</td>
+<td>-0.003802</td>
+<td>-0.735962</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>A32</td>
+<td>2023-10-31</td>
+<td>mkt_excess</td>
+<td>0.685640</td>
+<td>1.218415</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>A32</td>
+<td>2023-11-30</td>
+<td>alpha</td>
+<td>-0.003740</td>
+<td>-0.721261</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>A32</td>
+<td>2023-11-30</td>
+<td>mkt_excess</td>
+<td>0.674715</td>
+<td>1.205106</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>A32</td>
+<td>2023-12-31</td>
+<td>alpha</td>
+<td>-0.003796</td>
+<td>-0.734142</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="estimating-beta-using-daily-returns" class="level2" data-number="9.4">
+<h2 data-number="9.4" class="anchored" data-anchor-id="estimating-beta-using-daily-returns"><span class="header-section-number">9.4</span> Estimating Beta Using Daily Returns</h2>
+<p>Before we provide some descriptive statistics of our beta estimates, we implement the estimation for the daily CRSP sample as well. Depending on the application, you might either use longer horizon beta estimates based on monthly data or shorter horizon estimates based on daily returns. As loading the full daily CRSP data requires relatively large amounts of memory, we split the beta estimation into smaller chunks. The logic follows the approach that we use to download the daily CRSP data (see <a href="wrds-crsp-and-compustat.qmd">WRDS, CRSP, and Compustat</a>).</p>
+<p>First, we load the daily Fama-French market excess returns and extract the vector of dates.</p>
+<div id="902299e2" class="cell" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>factors_ff3_daily <span class="op">=</span> pd.read_sql_query(</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  sql<span class="op">=</span><span class="st">"SELECT date, mkt_excess FROM factors_ff3_daily"</span>,</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  con<span class="op">=</span>tidy_finance,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  parse_dates<span class="op">=</span>{<span class="st">"date"</span>}</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We use the stocks from the monthly Stock dataset as our reference point and process them in batches of 500. To estimate the CAPM over a consistent lookback window while accommodating different return frequencies, we adjust the minimum required number of observations accordingly. Specifically, we require at least 1,000 daily returns over a five‑year period for a valid estimation. This threshold is consistent with the monthly requirement of 48 observations out of 60 months, given that there are roughly 252 trading days in a year.</p>
+<div id="130747da" class="cell" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>symbols <span class="op">=</span> <span class="bu">list</span>(prices_monthly[<span class="st">"symbol"</span>].unique().astype(<span class="bu">str</span>))</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>batch_size <span class="op">=</span> <span class="dv">500</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>batches <span class="op">=</span> np.ceil(<span class="bu">len</span>(symbols)<span class="op">/</span>batch_size).astype(<span class="bu">int</span>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>min_obs <span class="op">=</span> <span class="dv">1_000</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We then proceed to perform the same steps as with the monthly Stock data, just in batches: Load in daily returns, nest the data by stock, and parallelize the beta estimation across stocks. Note that we also convert the daily date to the beginning of the month so that we can still look back over 60 months and get one beta estimate per month, even though we are using daily data.</p>
+<div id="ac7e4038" class="cell" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>capm_daily <span class="op">=</span> []</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, batches<span class="op">+</span><span class="dv">1</span>):  </span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    symbol_batch <span class="op">=</span> symbols[</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>      ((j<span class="op">-</span><span class="dv">1</span>)<span class="op">*</span>batch_size):(<span class="bu">min</span>(j<span class="op">*</span>batch_size, <span class="bu">len</span>(symbols)))</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    symbol_batch_formatted <span class="op">=</span> (</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>      <span class="st">", "</span>.join(<span class="ss">f"'</span><span class="sc">{</span>symbol<span class="sc">}</span><span class="ss">'"</span> <span class="cf">for</span> symbol <span class="kw">in</span> symbol_batch)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    symbol_string <span class="op">=</span> <span class="ss">f"(</span><span class="sc">{</span>symbol_batch_formatted<span class="sc">}</span><span class="ss">)"</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    prices_daily_sub_query <span class="op">=</span> (</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>      <span class="st">"SELECT symbol, date, ret_excess "</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"FROM prices_daily "</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>       <span class="ss">f"WHERE symbol IN </span><span class="sc">{</span>symbol_string<span class="sc">}</span><span class="ss">"</span> </span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    prices_daily_sub <span class="op">=</span> pd.read_sql_query(</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>      sql<span class="op">=</span>prices_daily_sub_query,</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>      con<span class="op">=</span>tidy_finance,</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>      dtype<span class="op">=</span>{<span class="st">"symbol"</span>: <span class="bu">int</span>},</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>      parse_dates<span class="op">=</span>{<span class="st">"date"</span>}</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>    prices_daily_sub_nested <span class="op">=</span> (prices_daily_sub</span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>      .merge(factors_ff3_daily, how<span class="op">=</span><span class="st">"inner"</span>, on<span class="op">=</span><span class="st">"date"</span>)</span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>      .assign(</span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>          date <span class="op">=</span> <span class="kw">lambda</span> x: </span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>            x[<span class="st">"date"</span>].dt.to_period(<span class="st">"M"</span>).dt.to_timestamp()</span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>      .groupby(<span class="st">"symbol"</span>, group_keys<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> Parallel(n_jobs<span class="op">=</span>n_cores)(</span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>        delayed(</span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>            <span class="kw">lambda</span> name, group: roll_capm_estimation(group, min_obs<span class="op">=</span>min_obs).assign(symbol<span class="op">=</span>name)</span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>        )(</span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>            name, group</span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> name, group <span class="kw">in</span> prices_daily_sub_nested</span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> results:</span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>        capm_daily_sub <span class="op">=</span> pd.concat(results).get(</span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>            [<span class="st">"symbol"</span>, <span class="st">"date"</span>, <span class="st">"coefficient"</span>, <span class="st">"estimate"</span>, <span class="st">"t_statistic"</span>]</span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>        capm_daily.append(capm_daily_sub)</span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Warning: Batch </span><span class="sc">{</span>j<span class="sc">}</span><span class="ss"> produced no results (insufficient data)"</span>)</span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>              </span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Batch </span><span class="sc">{</span>j<span class="sc">}</span><span class="ss"> out of </span><span class="sc">{</span>batches<span class="sc">}</span><span class="ss"> done (</span><span class="sc">{</span>(j<span class="op">/</span>batches)<span class="op">*</span><span class="dv">100</span><span class="sc">:.2f}</span><span class="ss">%)</span><span class="ch">\n</span><span class="ss">"</span>)</span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a>capm_daily <span class="op">=</span> pd.concat(capm_daily)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="comparing-beta-estimates" class="level2" data-number="9.5">
+<h2 data-number="9.5" class="anchored" data-anchor-id="comparing-beta-estimates"><span class="header-section-number">9.5</span> Comparing Beta Estimates</h2>
+<p>What is a typical value for stock betas? First, let us extract the relevant estimates from our CAPM results based on monthly returns.</p>
+<div id="ecae41bd" class="cell" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>beta_monthly <span class="op">=</span> (capm_monthly</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">"coefficient == 'mkt_excess'"</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    .get([<span class="st">"symbol"</span>, <span class="st">"date"</span>, <span class="st">"estimate"</span>])</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    .rename(columns<span class="op">=</span>{<span class="st">"estimate"</span>: <span class="st">"beta"</span>})</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    .assign(return_type<span class="op">=</span><span class="st">"monthly"</span>)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="f4a5d53b" class="cell" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(beta_monthly.to_sql(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  name<span class="op">=</span><span class="st">"beta_monthly"</span>, </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  con<span class="op">=</span>tidy_finance, </span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  if_exists<span class="op">=</span><span class="st">"replace"</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  index<span class="op">=</span><span class="va">False</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="16">
+<pre><code>71488</code></pre>
+</div>
+</div>
+<p>To get some feeling, we illustrate the dispersion of the estimated <span class="math inline">\(\hat\beta_i\)</span> across different industries and across time below. <a href="#fig-602" class="quarto-xref">Figure&nbsp;<span>9.2</span></a> shows that typical business models across industries imply different exposure to the general market economy.</p>
+<div id="cell-fig-602" class="cell" data-fig.alt="Title: Firm-specific beta distributions by industry. The figure shows box plots for each industry. Firms with the highest average CAPM beta belong to the public administration industry. Firms from the utility sector have the lowest average CAPM beta. The figure indicates very few outliers with negative CAPM betas. The large majority of all stocks has CAPM betas between 0.5 and 1.5." data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>beta_industries <span class="op">=</span> (beta_monthly</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    .merge(prices_monthly, how<span class="op">=</span><span class="st">"inner"</span>, on<span class="op">=</span>[<span class="st">"symbol"</span>, <span class="st">"date"</span>])</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    .dropna(subset<span class="op">=</span><span class="st">"beta"</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    .groupby([<span class="st">"icb_name_vi"</span>, <span class="st">"symbol"</span>])[<span class="st">"beta"</span>]</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    .aggregate(<span class="st">"mean"</span>)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>industry_order <span class="op">=</span> (beta_industries</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    .groupby(<span class="st">"icb_name_vi"</span>)[<span class="st">"beta"</span>]</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    .aggregate(<span class="st">"median"</span>)</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    .sort_values()</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    .index.tolist()</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a><span class="co"># To show the 10 industries with the highest median beta</span></span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>top_10_industries <span class="op">=</span> industry_order[<span class="op">-</span><span class="dv">10</span>:]</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a><span class="co"># To show the 10 industries with the lowest median beta</span></span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>bottom_10_industries <span class="op">=</span> industry_order[:<span class="dv">10</span>]</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Update the plot call</span></span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>beta_industries_figure <span class="op">=</span> (</span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>    ggplot(beta_industries, aes(x<span class="op">=</span><span class="st">"icb_name_vi"</span>, y<span class="op">=</span><span class="st">"beta"</span>))</span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_boxplot()</span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> coord_flip()</span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_x_discrete(limits<span class="op">=</span>top_10_industries) <span class="co"># Use the sliced list here</span></span>
+<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(title<span class="op">=</span><span class="st">"Top 10 Industries by Beta"</span>)</span>
+<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a><span class="co"># beta_industries_figure = (</span></span>
+<span id="cb24-32"><a href="#cb24-32" aria-hidden="true" tabindex="-1"></a><span class="co">#     ggplot(</span></span>
+<span id="cb24-33"><a href="#cb24-33" aria-hidden="true" tabindex="-1"></a><span class="co">#         beta_industries, </span></span>
+<span id="cb24-34"><a href="#cb24-34" aria-hidden="true" tabindex="-1"></a><span class="co">#         aes(x="icb_name_vi", y="beta") </span></span>
+<span id="cb24-35"><a href="#cb24-35" aria-hidden="true" tabindex="-1"></a><span class="co">#     )</span></span>
+<span id="cb24-36"><a href="#cb24-36" aria-hidden="true" tabindex="-1"></a><span class="co">#     + geom_boxplot()</span></span>
+<span id="cb24-37"><a href="#cb24-37" aria-hidden="true" tabindex="-1"></a><span class="co">#     + coord_flip()</span></span>
+<span id="cb24-38"><a href="#cb24-38" aria-hidden="true" tabindex="-1"></a><span class="co">#     + labs(</span></span>
+<span id="cb24-39"><a href="#cb24-39" aria-hidden="true" tabindex="-1"></a><span class="co">#         x="",</span></span>
+<span id="cb24-40"><a href="#cb24-40" aria-hidden="true" tabindex="-1"></a><span class="co">#         y="Beta", </span></span>
+<span id="cb24-41"><a href="#cb24-41" aria-hidden="true" tabindex="-1"></a><span class="co">#         title="Firm-specific beta distributions by industry"</span></span>
+<span id="cb24-42"><a href="#cb24-42" aria-hidden="true" tabindex="-1"></a><span class="co">#     )</span></span>
+<span id="cb24-43"><a href="#cb24-43" aria-hidden="true" tabindex="-1"></a><span class="co">#     + scale_x_discrete(limits=industry_order)</span></span>
+<span id="cb24-44"><a href="#cb24-44" aria-hidden="true" tabindex="-1"></a><span class="co"># )</span></span>
+<span id="cb24-45"><a href="#cb24-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-46"><a href="#cb24-46" aria-hidden="true" tabindex="-1"></a>beta_industries_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-602" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="htb">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-602-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="08_beta_estimation_files/figure-html/fig-602-output-1.png" data-fig-pos="htb" width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-602-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.2: The box plots show the average firm-specific beta estimates by industry.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Next, we illustrate the time-variation in the cross-section of estimated betas. <a href="#fig-603" class="quarto-xref">Figure&nbsp;<span>9.3</span></a> shows the monthly deciles of estimated betas (based on monthly data) and indicates an interesting pattern: First, betas seem to vary over time in the sense that during some periods, there is a clear trend across all deciles. Second, the sample exhibits periods where the dispersion across stocks increases in the sense that the lower decile decreases and the upper decile increases, which indicates that for some stocks the correlation with the market increases while for others it decreases. Note also here: stocks with negative betas are a rare exception.</p>
+<div id="cell-fig-603" class="cell" data-execution_count="22">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>beta_quantiles <span class="op">=</span> (</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    beta_monthly.groupby(<span class="st">"date"</span>)[<span class="st">"beta"</span>]</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    .quantile(q<span class="op">=</span>np.arange(<span class="fl">0.1</span>, <span class="fl">1.0</span>, <span class="fl">0.1</span>))</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    .rename(columns<span class="op">=</span>{<span class="st">"level_1"</span>: <span class="st">"quantile"</span>})</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    .assign(quantile<span class="op">=</span><span class="kw">lambda</span> x: (x[<span class="st">"quantile"</span>] <span class="op">*</span> <span class="dv">100</span>).astype(<span class="bu">int</span>))</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    .dropna()</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>linetypes <span class="op">=</span> [<span class="st">"-"</span>, <span class="st">"--"</span>, <span class="st">"-."</span>, <span class="st">":"</span>]</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>n_quantiles <span class="op">=</span> beta_quantiles[<span class="st">"quantile"</span>].nunique()</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>beta_quantiles_figure <span class="op">=</span> (</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    ggplot(</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>        beta_quantiles,</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>        aes(x<span class="op">=</span><span class="st">"date"</span>, y<span class="op">=</span><span class="st">"beta"</span>, color<span class="op">=</span><span class="st">"factor(quantile)"</span>, linetype<span class="op">=</span><span class="st">"factor(quantile)"</span>),</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_line()</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">""</span>, y<span class="op">=</span><span class="st">""</span>, color<span class="op">=</span><span class="st">""</span>, linetype<span class="op">=</span><span class="st">""</span>, title<span class="op">=</span><span class="st">"Monthly deciles of estimated betas"</span></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_x_datetime(date_breaks<span class="op">=</span><span class="st">"5 year"</span>, date_labels<span class="op">=</span><span class="st">"%Y"</span>)</span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_linetype_manual(</span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>        values<span class="op">=</span>[linetypes[l <span class="op">%</span> <span class="bu">len</span>(linetypes)] <span class="cf">for</span> l <span class="kw">in</span> <span class="bu">range</span>(n_quantiles)]</span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>beta_quantiles_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-603" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: Monthly deciles of estimated betas. The figure shows time series of deciles of estimated betas to illustrate the distribution of betas over time." data-fig-pos="htb">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-603-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="08_beta_estimation_files/figure-html/fig-603-output-1.png" data-fig-pos="htb" alt="Title: Monthly deciles of estimated betas. The figure shows time series of deciles of estimated betas to illustrate the distribution of betas over time." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-603-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.3: The figure shows monthly deciles of estimated betas. Each line corresponds to the monthly cross-sectional quantile of the estimated CAPM beta.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>To compare the difference between daily and monthly data, we combine beta estimates to a single table.</p>
+<div id="0c2705d9" class="cell" data-execution_count="23">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>beta_daily <span class="op">=</span> (capm_daily</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">"coefficient == 'mkt_excess'"</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    .get([<span class="st">"symbol"</span>, <span class="st">"date"</span>, <span class="st">"estimate"</span>])</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    .rename(columns<span class="op">=</span>{<span class="st">"estimate"</span>: <span class="st">"beta"</span>})</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    .assign(return_type<span class="op">=</span><span class="st">"daily"</span>)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>beta <span class="op">=</span> pd.concat([beta_monthly, beta_daily], ignore_index<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>To compare the difference between daily and monthly data, we combine beta estimates to a single table. Then, we use the table to plot a comparison of beta estimates for our example stocks in <a href="#fig-604" class="quarto-xref">Figure&nbsp;<span>9.4</span></a>.</p>
+<div id="fig-604" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="24">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-604-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>beta_comparison <span class="op">=</span> beta.merge(examples, how<span class="op">=</span><span class="st">"inner"</span>, on<span class="op">=</span><span class="st">"symbol"</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>beta_comparison_figure <span class="op">=</span> (</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    ggplot(</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>        beta_comparison,</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>        aes(x<span class="op">=</span><span class="st">"date"</span>, y<span class="op">=</span><span class="st">"beta"</span>, color<span class="op">=</span><span class="st">"return_type"</span>, linetype<span class="op">=</span><span class="st">"return_type"</span>),</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_line()</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> facet_wrap(<span class="st">"~company"</span>, ncol<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>        y<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>        linetype<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"Comparison of beta estimates using monthly and daily data"</span>,</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_x_datetime(date_breaks<span class="op">=</span><span class="st">"10 years"</span>, date_labels<span class="op">=</span><span class="st">"%Y"</span>)</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> theme(figure_size<span class="op">=</span>(<span class="fl">6.4</span>, <span class="fl">6.4</span>))</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>beta_comparison_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-604-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.4
+</figcaption>
+</figure>
+</div>
+<p>The estimates in <a href="#fig-604" class="quarto-xref">Figure&nbsp;<span>9.4</span></a> look as expected. As you can see, it really depends on the data frequency how your beta estimates turn out because the estimates based on daily data are much smoother due to the higher number of observations in each regression.</p>
+<p>Finally, we write the estimates to our database so that we can use them in later chapters.</p>
+<div id="c17a2913" class="cell" data-execution_count="25">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>(beta.to_sql(</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  name<span class="op">=</span><span class="st">"beta"</span>, </span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  con<span class="op">=</span>tidy_finance, </span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  if_exists<span class="op">=</span><span class="st">"replace"</span>,</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  index<span class="op">=</span><span class="va">False</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Whenever you perform some kind of estimation, it also makes sense to do rough plausibility tests. A possible check is to plot the share of stocks with beta estimates over time. This descriptive helps us discover potential errors in our data preparation or estimation procedure. For instance, suppose there was a gap in our output where we do not have any betas. In this case, we would have to go back and check all previous steps to find out what went wrong.</p>
+<div id="fig-605" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="26">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-605-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>return_types <span class="op">=</span> pd.DataFrame({<span class="st">"return_type"</span>: [<span class="st">"monthly"</span>, <span class="st">"daily"</span>]})</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>beta_coverage <span class="op">=</span> (</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    prices_monthly.merge(return_types, how<span class="op">=</span><span class="st">"cross"</span>)</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    .merge(beta, on<span class="op">=</span>[<span class="st">"symbol"</span>, <span class="st">"date"</span>, <span class="st">"return_type"</span>], how<span class="op">=</span><span class="st">"left"</span>)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    .groupby([<span class="st">"date"</span>, <span class="st">"return_type"</span>], as_index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> x: pd.Series({<span class="st">"share"</span>: x[<span class="st">"beta"</span>].notna().<span class="bu">sum</span>() <span class="op">/</span> <span class="bu">len</span>(x)}))</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>beta_coverage_figure <span class="op">=</span> (</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>    ggplot(</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>        beta_coverage,</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>        aes(x<span class="op">=</span><span class="st">"date"</span>, y<span class="op">=</span><span class="st">"share"</span>, color<span class="op">=</span><span class="st">"return_type"</span>, linetype<span class="op">=</span><span class="st">"return_type"</span>),</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_line()</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>        y<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>        linetype<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"End-of-month share of securities with beta estimates"</span>,</span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_x_datetime(date_breaks<span class="op">=</span><span class="st">"10 year"</span>, date_labels<span class="op">=</span><span class="st">"%Y"</span>)</span>
+<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a>beta_coverage_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-605-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.5
+</figcaption>
+</figure>
+</div>
+<p><a href="#fig-605" class="quarto-xref">Figure&nbsp;<span>9.5</span></a> shows no issues, as the two coverage lines track each other closely, so we can proceed to the next check.</p>
+<p>We also encourage everyone to always look at the distributional summary statistics of variables. You can easily spot outliers or weird distributions when looking at such tables.</p>
+<div id="a6f63b3a" class="cell" data-execution_count="27">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>(beta</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    .groupby(<span class="st">"return_type"</span>)[<span class="st">"beta"</span>]</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    .describe()</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">round</span>(<span class="dv">2</span>)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The summary statistics also look plausible for the two estimation procedures.</p>
+<p>Finally, since we have two different estimators for the same theoretical object, we expect the estimators to be at least positively correlated (although not perfectly as the estimators are based on different sample periods and frequencies).</p>
+<div id="4841c225" class="cell" data-execution_count="28">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>(beta</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    .pivot_table(index<span class="op">=</span>[<span class="st">"symbol"</span>, <span class="st">"date"</span>], columns<span class="op">=</span><span class="st">"return_type"</span>, values<span class="op">=</span><span class="st">"beta"</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    .get([<span class="st">"monthly"</span>, <span class="st">"daily"</span>])</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    .corr()</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">round</span>(<span class="dv">2</span>)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Indeed, we find a positive correlation between our beta estimates. In the subsequent chapters, we mainly use the estimates based on monthly data, as most readers should be able to replicate them due to potential memory limitations that might arise with the daily data.</p>
+</section>
+<section id="key-takeaways" class="level2" data-number="9.6">
+<h2 data-number="9.6" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">9.6</span> Key Takeaways</h2>
+<ul>
+<li>CAPM betas can be estimated using rolling-window estimation and processed in parallel via <code>joblib</code>.</li>
+<li>Both monthly and daily return data can be used to estimate betas with different frequencies and window lengths, depending on the application.</li>
+<li>Summary statistics, visualization, and plausibility checks help to validate beta estimates across time and industries.</li>
+</ul>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Lintner1965" class="csl-entry" role="listitem">
+Lintner, John. 1965. <span>“<span class="nocase">Security prices, risk, and maximal gains from diversification</span>.”</span> <em><span>The Journal of Finance</span></em> 20 (4): 587–615. <a href="https://doi.org/10.1111/j.1540-6261.1965.tb02930.x">https://doi.org/10.1111/j.1540-6261.1965.tb02930.x</a>.
+</div>
+<div id="ref-Mossin1966" class="csl-entry" role="listitem">
+Mossin, Jan. 1966. <span>“<span class="nocase">Equilibrium in a capital asset market</span>.”</span> <em><span>Econometrica</span></em> 34 (4): 768–83. <a href="https://doi.org/10.2307/1910098">https://doi.org/10.2307/1910098</a>.
+</div>
+<div id="ref-Sharpe1964" class="csl-entry" role="listitem">
+Sharpe, William F. 1964. <span>“<span class="nocase">Capital asset prices: A theory of market equilibrium under conditions of risk </span>.”</span> <em><span>The Journal of Finance</span></em> 19 (3): 425–42. <a href="https://doi.org/10.1111/j.1540-6261.1964.tb02865.x">https://doi.org/10.1111/j.1540-6261.1964.tb02865.x</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./07_datacore_data.html" class="pagination-link" aria-label="DataCore Data">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">DataCore Data</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./12_fama_french.html" class="pagination-link" aria-label="Fama-French Factors">
+        <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

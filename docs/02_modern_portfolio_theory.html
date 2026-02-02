@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>3&nbsp; Modern Portfolio Theory – Tidy Finance in Vietnam</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./03_capm.html" rel="next">
+<link href="./01_working_with_stock_returns.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-50a4fa9e9ef121803c2355a2deb1af4d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./02_modern_portfolio_theory.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Tidy Finance in Vietnam</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./00_institutional_background.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Institutional Background and Market Structure of Vietnam’s Equity Market</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01_working_with_stock_returns.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Constructing and Analyzing Equity Return Series</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02_modern_portfolio_theory.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03_capm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">The Capital Asset Pricing Model</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04_financial_statement_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Financial Statement Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05_discounted_cash_flow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Discounted Cash Flow Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06_accessing_and_managing_financial_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Accessing and Managing Financial Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07_datacore_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">DataCore Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08_beta_estimation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Beta Estimation</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12_fama_french.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./20_conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-core-insight-diversification-as-a-free-lunch" id="toc-the-core-insight-diversification-as-a-free-lunch" class="nav-link active" data-scroll-target="#the-core-insight-diversification-as-a-free-lunch"><span class="header-section-number">3.0.1</span> The Core Insight: Diversification as a Free Lunch</a></li>
+  <li><a href="#the-mean-variance-framework" id="toc-the-mean-variance-framework" class="nav-link" data-scroll-target="#the-mean-variance-framework"><span class="header-section-number">3.0.2</span> The Mean-Variance Framework</a></li>
+  <li><a href="#the-asset-universe-setting-up-the-problem" id="toc-the-asset-universe-setting-up-the-problem" class="nav-link" data-scroll-target="#the-asset-universe-setting-up-the-problem"><span class="header-section-number">3.1</span> The Asset Universe: Setting Up the Problem</a>
+  <ul class="collapse">
+  <li><a href="#the-two-stages-of-portfolio-selection" id="toc-the-two-stages-of-portfolio-selection" class="nav-link" data-scroll-target="#the-two-stages-of-portfolio-selection"><span class="header-section-number">3.1.1</span> The Two Stages of Portfolio Selection</a></li>
+  <li><a href="#loading-and-preparing-the-data" id="toc-loading-and-preparing-the-data" class="nav-link" data-scroll-target="#loading-and-preparing-the-data"><span class="header-section-number">3.1.2</span> Loading and Preparing the Data</a></li>
+  <li><a href="#computing-expected-returns" id="toc-computing-expected-returns" class="nav-link" data-scroll-target="#computing-expected-returns"><span class="header-section-number">3.1.3</span> Computing Expected Returns</a></li>
+  <li><a href="#computing-volatilities" id="toc-computing-volatilities" class="nav-link" data-scroll-target="#computing-volatilities"><span class="header-section-number">3.1.4</span> Computing Volatilities</a></li>
+  <li><a href="#visualizing-the-risk-return-trade-off" id="toc-visualizing-the-risk-return-trade-off" class="nav-link" data-scroll-target="#visualizing-the-risk-return-trade-off"><span class="header-section-number">3.1.5</span> Visualizing the Risk-Return Trade-off</a></li>
+  </ul></li>
+  <li><a href="#the-variance-covariance-matrix-capturing-asset-interactions" id="toc-the-variance-covariance-matrix-capturing-asset-interactions" class="nav-link" data-scroll-target="#the-variance-covariance-matrix-capturing-asset-interactions"><span class="header-section-number">3.2</span> The Variance-Covariance Matrix: Capturing Asset Interactions</a>
+  <ul class="collapse">
+  <li><a href="#why-correlations-matter" id="toc-why-correlations-matter" class="nav-link" data-scroll-target="#why-correlations-matter"><span class="header-section-number">3.2.1</span> Why Correlations Matter</a></li>
+  <li><a href="#computing-the-variance-covariance-matrix" id="toc-computing-the-variance-covariance-matrix" class="nav-link" data-scroll-target="#computing-the-variance-covariance-matrix"><span class="header-section-number">3.2.2</span> Computing the Variance-Covariance Matrix</a></li>
+  <li><a href="#interpreting-the-variance-covariance-matrix" id="toc-interpreting-the-variance-covariance-matrix" class="nav-link" data-scroll-target="#interpreting-the-variance-covariance-matrix"><span class="header-section-number">3.2.3</span> Interpreting the Variance-Covariance Matrix</a></li>
+  </ul></li>
+  <li><a href="#the-minimum-variance-portfolio" id="toc-the-minimum-variance-portfolio" class="nav-link" data-scroll-target="#the-minimum-variance-portfolio"><span class="header-section-number">3.3</span> The Minimum-Variance Portfolio</a>
+  <ul class="collapse">
+  <li><a href="#motivation-risk-minimization-as-a-benchmark" id="toc-motivation-risk-minimization-as-a-benchmark" class="nav-link" data-scroll-target="#motivation-risk-minimization-as-a-benchmark"><span class="header-section-number">3.3.1</span> Motivation: Risk Minimization as a Benchmark</a></li>
+  <li><a href="#the-optimization-problem" id="toc-the-optimization-problem" class="nav-link" data-scroll-target="#the-optimization-problem"><span class="header-section-number">3.3.2</span> The Optimization Problem</a></li>
+  <li><a href="#the-analytical-solution" id="toc-the-analytical-solution" class="nav-link" data-scroll-target="#the-analytical-solution"><span class="header-section-number">3.3.3</span> The Analytical Solution</a></li>
+  <li><a href="#implementation" id="toc-implementation" class="nav-link" data-scroll-target="#implementation"><span class="header-section-number">3.3.4</span> Implementation</a></li>
+  <li><a href="#visualizing-the-minimum-variance-weights" id="toc-visualizing-the-minimum-variance-weights" class="nav-link" data-scroll-target="#visualizing-the-minimum-variance-weights"><span class="header-section-number">3.3.5</span> Visualizing the Minimum-Variance Weights</a></li>
+  <li><a href="#portfolio-performance" id="toc-portfolio-performance" class="nav-link" data-scroll-target="#portfolio-performance"><span class="header-section-number">3.3.6</span> Portfolio Performance</a></li>
+  </ul></li>
+  <li><a href="#efficient-portfolios-balancing-risk-and-return" id="toc-efficient-portfolios-balancing-risk-and-return" class="nav-link" data-scroll-target="#efficient-portfolios-balancing-risk-and-return"><span class="header-section-number">3.4</span> Efficient Portfolios: Balancing Risk and Return</a>
+  <ul class="collapse">
+  <li><a href="#the-investors-trade-off" id="toc-the-investors-trade-off" class="nav-link" data-scroll-target="#the-investors-trade-off"><span class="header-section-number">3.4.1</span> The Investor’s Trade-off</a></li>
+  <li><a href="#setting-the-target-return" id="toc-setting-the-target-return" class="nav-link" data-scroll-target="#setting-the-target-return"><span class="header-section-number">3.4.2</span> Setting the Target Return</a></li>
+  <li><a href="#the-analytical-solution-1" id="toc-the-analytical-solution-1" class="nav-link" data-scroll-target="#the-analytical-solution-1"><span class="header-section-number">3.4.3</span> The Analytical Solution</a></li>
+  <li><a href="#implementation-1" id="toc-implementation-1" class="nav-link" data-scroll-target="#implementation-1"><span class="header-section-number">3.4.4</span> Implementation</a></li>
+  <li><a href="#comparing-the-portfolios" id="toc-comparing-the-portfolios" class="nav-link" data-scroll-target="#comparing-the-portfolios"><span class="header-section-number">3.4.5</span> Comparing the Portfolios</a></li>
+  <li><a href="#the-role-of-risk-aversion" id="toc-the-role-of-risk-aversion" class="nav-link" data-scroll-target="#the-role-of-risk-aversion"><span class="header-section-number">3.4.6</span> The Role of Risk Aversion</a></li>
+  </ul></li>
+  <li><a href="#the-efficient-frontier-the-menu-of-optimal-portfolios" id="toc-the-efficient-frontier-the-menu-of-optimal-portfolios" class="nav-link" data-scroll-target="#the-efficient-frontier-the-menu-of-optimal-portfolios"><span class="header-section-number">3.5</span> The Efficient Frontier: The Menu of Optimal Portfolios</a>
+  <ul class="collapse">
+  <li><a href="#the-mutual-fund-separation-theorem" id="toc-the-mutual-fund-separation-theorem" class="nav-link" data-scroll-target="#the-mutual-fund-separation-theorem"><span class="header-section-number">3.5.1</span> The Mutual Fund Separation Theorem</a></li>
+  <li><a href="#proof-of-the-separation-theorem" id="toc-proof-of-the-separation-theorem" class="nav-link" data-scroll-target="#proof-of-the-separation-theorem"><span class="header-section-number">3.5.2</span> Proof of the Separation Theorem</a></li>
+  <li><a href="#computing-the-efficient-frontier" id="toc-computing-the-efficient-frontier" class="nav-link" data-scroll-target="#computing-the-efficient-frontier"><span class="header-section-number">3.5.3</span> Computing the Efficient Frontier</a></li>
+  <li><a href="#visualizing-the-efficient-frontier" id="toc-visualizing-the-efficient-frontier" class="nav-link" data-scroll-target="#visualizing-the-efficient-frontier"><span class="header-section-number">3.5.4</span> Visualizing the Efficient Frontier</a></li>
+  </ul></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">3.6</span> Key Takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In the previous chapter, we showed how to download and analyze stock market data with figures and summary statistics. Now, we turn to one of the most fundamental questions in finance: How should an investor allocate their wealth across assets that differ in expected returns, variance, and correlations to optimize their portfolio’s performance?</p>
+<p>This question might seem straightforward at first glance. Why not simply invest everything in the asset with the highest expected return? The answer lies in a profound insight that transformed financial economics: <strong>risk matters, and it can be managed through diversification</strong>.</p>
+<p>Modern Portfolio Theory (MPT), introduced by <span class="citation" data-cites="Markowitz1952">Markowitz (<a href="references.html#ref-Markowitz1952" role="doc-biblioref">1952</a>)</span>, revolutionized investment decision-making by formalizing the trade-off between risk and expected return. Before Markowitz, investors largely thought about risk on a security-by-security basis. Markowitz’s genius was recognizing that what matters is not the risk of individual securities in isolation, but how they contribute to the risk of the <em>entire portfolio</em>. This insight was so influential that it earned him the Sveriges Riksbank Prize in Economic Sciences in 1990 and laid the foundation for much of modern finance.</p>
+<section id="the-core-insight-diversification-as-a-free-lunch" class="level3" data-number="3.0.1">
+<h3 data-number="3.0.1" class="anchored" data-anchor-id="the-core-insight-diversification-as-a-free-lunch"><span class="header-section-number">3.0.1</span> The Core Insight: Diversification as a Free Lunch</h3>
+<p>MPT relies on a crucial mathematical fact: portfolio risk depends not only on individual asset volatilities but also on the <em>correlations</em> between asset returns. This insight reveals the power of diversification—combining assets whose returns don’t move in perfect lockstep can reduce overall portfolio risk without necessarily sacrificing expected return.</p>
+<p>Consider a simple analogy: Imagine you run a business selling both sunscreen and umbrellas. On sunny days, sunscreen sales boom but umbrella sales suffer; on rainy days, the reverse happens. By selling both products, your total revenue becomes more stable than if you sold only one. The “correlation” between sunscreen and umbrella sales is negative, and combining them reduces the variance of your overall income. This is precisely the logic behind portfolio diversification.</p>
+<p>The fruit basket analogy offers another perspective: If all you have are apples and they spoil, you lose everything. With a variety of fruits, some may spoil, but others will stay fresh. Diversification provides insurance against the idiosyncratic risks of individual assets.</p>
+</section>
+<section id="the-mean-variance-framework" class="level3" data-number="3.0.2">
+<h3 data-number="3.0.2" class="anchored" data-anchor-id="the-mean-variance-framework"><span class="header-section-number">3.0.2</span> The Mean-Variance Framework</h3>
+<p>At the heart of MPT is <strong>mean-variance analysis</strong>, which evaluates portfolios based on two dimensions:</p>
+<ol type="1">
+<li><strong>Expected return (mean)</strong>: The anticipated average profit from holding the portfolio</li>
+<li><strong>Risk (variance)</strong>: The dispersion of possible returns around the expected value</li>
+</ol>
+<p>The key assumption is that investors care only about these two moments of the return distribution. This assumption is exactly correct if returns are normally distributed, or if investors have quadratic utility functions. Even when these conditions don’t hold precisely, mean-variance analysis often provides a good approximation to optimal portfolio choice.</p>
+<p>By balancing expected return and risk, investors can construct portfolios that either maximize expected return for a given level of risk, or minimize risk for a desired level of expected return. In this chapter, we derive these optimal portfolio decisions analytically and implement the mean-variance approach computationally.</p>
+<div id="3b4e82d1" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tidyfinance <span class="im">as</span> tf</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotnine <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> mizani.formatters <span class="im">import</span> percent_format</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> adjustText <span class="im">import</span> adjust_text</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="the-asset-universe-setting-up-the-problem" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="the-asset-universe-setting-up-the-problem"><span class="header-section-number">3.1</span> The Asset Universe: Setting Up the Problem</h2>
+<p>Suppose <span class="math inline">\(N\)</span> different risky assets are available to the investor. Each asset <span class="math inline">\(i\)</span> is characterized by:</p>
+<ul>
+<li><strong>Expected return</strong> <span class="math inline">\(\mu_i\)</span>: The anticipated profit from holding the asset for one period</li>
+<li><strong>Variance</strong> <span class="math inline">\(\sigma_i^2\)</span>: The dispersion of returns around the mean</li>
+<li><strong>Covariances</strong> <span class="math inline">\(\sigma_{ij}\)</span>: The degree to which asset <span class="math inline">\(i\)</span>’s returns move together with asset <span class="math inline">\(j\)</span>’s returns</li>
+</ul>
+<p>The investor chooses <strong>portfolio weights</strong> <span class="math inline">\(\omega_i\)</span> for each asset <span class="math inline">\(i\)</span>. These weights represent the fraction of total wealth invested in each asset. We impose the constraint that weights sum to one:</p>
+<p><span class="math display">\[
+\sum_{i=1}^N \omega_i = 1
+\]</span></p>
+<p>This “budget constraint” ensures that the investor is fully invested—there is no outside option such as keeping money under a mattress. Note that we allow weights to be negative (short selling) or greater than one (leverage), though in practice these positions may face constraints.</p>
+<section id="the-two-stages-of-portfolio-selection" class="level3" data-number="3.1.1">
+<h3 data-number="3.1.1" class="anchored" data-anchor-id="the-two-stages-of-portfolio-selection"><span class="header-section-number">3.1.1</span> The Two Stages of Portfolio Selection</h3>
+<p>According to <span class="citation" data-cites="Markowitz1952">Markowitz (<a href="references.html#ref-Markowitz1952" role="doc-biblioref">1952</a>)</span>, portfolio selection involves two distinct stages:</p>
+<ol type="1">
+<li><strong>Estimation</strong>: Forming expectations about future security performance based on observations, experience, and economic reasoning</li>
+<li><strong>Optimization</strong>: Using these expectations to choose an optimal portfolio</li>
+</ol>
+<p>In practice, these stages cannot be fully separated. The estimation stage determines the inputs (<span class="math inline">\(\mu\)</span>, <span class="math inline">\(\Sigma\)</span>) that feed into the optimization stage. Poor estimation leads to poor portfolio choices, regardless of how sophisticated the optimization procedure.</p>
+<p>To keep things conceptually clear, we focus primarily on the optimization stage in this chapter. We treat the expected returns and variance-covariance matrix as known, using historical data to compute reasonable proxies. In later chapters, we address the substantial challenges that arise from estimation uncertainty.</p>
+</section>
+<section id="loading-and-preparing-the-data" class="level3" data-number="3.1.2">
+<h3 data-number="3.1.2" class="anchored" data-anchor-id="loading-and-preparing-the-data"><span class="header-section-number">3.1.2</span> Loading and Preparing the Data</h3>
+<p>We work with the VN30 index constituents—the 30 largest and most liquid stocks on Vietnam’s Ho Chi Minh Stock Exchange. This provides a realistic asset universe for a domestic Vietnamese investor.</p>
+<div id="b3b37062" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>vn30_symbols <span class="op">=</span> [</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ACB"</span>,<span class="st">"BCM"</span>,<span class="st">"BID"</span>,<span class="st">"BVH"</span>,<span class="st">"CTG"</span>,<span class="st">"FPT"</span>,<span class="st">"GAS"</span>,<span class="st">"GVR"</span>,<span class="st">"HDB"</span>,<span class="st">"HPG"</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"MBB"</span>,<span class="st">"MSN"</span>,<span class="st">"MWG"</span>,<span class="st">"PLX"</span>,<span class="st">"POW"</span>,<span class="st">"SAB"</span>,<span class="st">"SHB"</span>,<span class="st">"SSB"</span>,<span class="st">"STB"</span>,<span class="st">"TCB"</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"TPB"</span>,<span class="st">"VCB"</span>,<span class="st">"VHM"</span>,<span class="st">"VIB"</span>,<span class="st">"VIC"</span>,<span class="st">"VJC"</span>,<span class="st">"VNM"</span>,<span class="st">"VPB"</span>,<span class="st">"VRE"</span>,<span class="st">"EIB"</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We load the historical price data:</p>
+<div id="e36d83a3" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> io <span class="im">import</span> BytesIO</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> datetime <span class="im">as</span> dt</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> boto3</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> botocore.client <span class="im">import</span> Config</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ConnectMinio:</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.MINIO_ENDPOINT <span class="op">=</span> os.environ[<span class="st">"MINIO_ENDPOINT"</span>]</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.MINIO_ACCESS_KEY <span class="op">=</span> os.environ[<span class="st">"MINIO_ACCESS_KEY"</span>]</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.MINIO_SECRET_KEY <span class="op">=</span> os.environ[<span class="st">"MINIO_SECRET_KEY"</span>]</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.REGION <span class="op">=</span> os.getenv(<span class="st">"MINIO_REGION"</span>, <span class="st">"us-east-1"</span>)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.s3 <span class="op">=</span> boto3.client(</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>            <span class="st">"s3"</span>,</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>            endpoint_url<span class="op">=</span><span class="va">self</span>.MINIO_ENDPOINT,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            aws_access_key_id<span class="op">=</span><span class="va">self</span>.MINIO_ACCESS_KEY,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            aws_secret_access_key<span class="op">=</span><span class="va">self</span>.MINIO_SECRET_KEY,</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>            region_name<span class="op">=</span><span class="va">self</span>.REGION,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>            config<span class="op">=</span>Config(signature_version<span class="op">=</span><span class="st">"s3v4"</span>),</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> test_connection(<span class="va">self</span>):</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        resp <span class="op">=</span> <span class="va">self</span>.s3.list_buckets()</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"Connected. Buckets:"</span>)</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> b <span class="kw">in</span> resp.get(<span class="st">"Buckets"</span>, []):</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">" -"</span>, b[<span class="st">"Name"</span>])</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>conn <span class="op">=</span> ConnectMinio()</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>s3 <span class="op">=</span> conn.s3</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>conn.test_connection()</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>bucket_name <span class="op">=</span> os.environ[<span class="st">"MINIO_BUCKET"</span>]</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>prices <span class="op">=</span> pd.read_csv(</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    BytesIO(</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>        s3.get_object(</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>            Bucket<span class="op">=</span>bucket_name,</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>            Key<span class="op">=</span><span class="st">"historycal_price/dataset_historical_price.csv"</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>        )[<span class="st">"Body"</span>].read()</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    low_memory<span class="op">=</span><span class="va">False</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>prices[<span class="st">"date"</span>] <span class="op">=</span> pd.to_datetime(prices[<span class="st">"date"</span>])</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>prices[<span class="st">"adjusted_close"</span>] <span class="op">=</span> prices[<span class="st">"close_price"</span>] <span class="op">*</span> prices[<span class="st">"adj_ratio"</span>]</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>prices <span class="op">=</span> prices.rename(columns<span class="op">=</span>{</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_total"</span>: <span class="st">"volume"</span>,</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>    <span class="st">"open_price"</span>: <span class="st">"open"</span>,</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>    <span class="st">"low_price"</span>: <span class="st">"low"</span>,</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>    <span class="st">"high_price"</span>: <span class="st">"high"</span>,</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    <span class="st">"close_price"</span>: <span class="st">"close"</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>prices <span class="op">=</span> prices.sort_values([<span class="st">"symbol"</span>, <span class="st">"date"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Connected. Buckets:
+ - dsteam-data
+ - rawbctc</code></pre>
+</div>
+</div>
+<p>We filter to keep only the VN30 constituents:</p>
+<div id="62d4c730" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>prices_daily <span class="op">=</span> prices[prices[<span class="st">"symbol"</span>].isin(vn30_symbols)]</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>prices_daily[[<span class="st">"date"</span>, <span class="st">"symbol"</span>, <span class="st">"adjusted_close"</span>]].head(<span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">date</th>
+<th data-quarto-table-cell-role="th">symbol</th>
+<th data-quarto-table-cell-role="th">adjusted_close</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">18176</th>
+<td>2010-01-04</td>
+<td>ACB</td>
+<td>329.408244</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">18177</th>
+<td>2010-01-05</td>
+<td>ACB</td>
+<td>329.408244</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">18178</th>
+<td>2010-01-06</td>
+<td>ACB</td>
+<td>320.258015</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="computing-expected-returns" class="level3" data-number="3.1.3">
+<h3 data-number="3.1.3" class="anchored" data-anchor-id="computing-expected-returns"><span class="header-section-number">3.1.3</span> Computing Expected Returns</h3>
+<p>The sample mean return serves as our proxy for expected returns. For each asset <span class="math inline">\(i\)</span>, we compute:</p>
+<p><span class="math display">\[
+\hat{\mu}_i = \frac{1}{T} \sum_{t=1}^{T} r_{i,t}
+\]</span></p>
+<p>where <span class="math inline">\(r_{i,t}\)</span> is the return of asset <span class="math inline">\(i\)</span> in period <span class="math inline">\(t\)</span>, and <span class="math inline">\(T\)</span> is the total number of periods.</p>
+<p><strong>Why monthly returns?</strong> While daily data provides more observations, monthly returns offer several advantages for portfolio optimization. First, monthly returns are less noisy and exhibit weaker serial correlation. Second, monthly rebalancing is more realistic for most investors, avoiding excessive transaction costs. Third, the estimation error in mean returns is already substantial—using daily data doesn’t materially improve the precision of mean estimates because the mean return scales with the horizon while estimation error scales with the square root of observations.</p>
+<div id="14eb91f6" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>returns_monthly <span class="op">=</span> (prices_daily</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  .assign(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    date<span class="op">=</span>prices_daily[<span class="st">"date"</span>].dt.to_period(<span class="st">"M"</span>).dt.to_timestamp()</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  .groupby([<span class="st">"symbol"</span>, <span class="st">"date"</span>], as_index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  .agg(adjusted_close<span class="op">=</span>(<span class="st">"adjusted_close"</span>, <span class="st">"last"</span>))</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  .assign(</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    ret<span class="op">=</span><span class="kw">lambda</span> x: x.groupby(<span class="st">"symbol"</span>)[<span class="st">"adjusted_close"</span>].pct_change()</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="computing-volatilities" class="level3" data-number="3.1.4">
+<h3 data-number="3.1.4" class="anchored" data-anchor-id="computing-volatilities"><span class="header-section-number">3.1.4</span> Computing Volatilities</h3>
+<p>Individual asset risk in MPT is quantified using variance (<span class="math inline">\(\sigma^2_i\)</span>) or its square root, the standard deviation or volatility (<span class="math inline">\(\sigma_i\)</span>). We use the sample standard deviation as our proxy:</p>
+<p><span class="math display">\[
+\hat{\sigma}_i = \sqrt{\frac{1}{T-1} \sum_{t=1}^{T} (r_{i,t} - \hat{\mu}_i)^2}
+\]</span></p>
+<p>Alternative risk measures exist, including Value-at-Risk, Expected Shortfall, and higher-order moments such as skewness and kurtosis. However, variance remains the workhorse measure in portfolio theory because of its mathematical tractability and the central role of the normal distribution in finance.</p>
+<div id="569e0765" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>assets <span class="op">=</span> (returns_monthly</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  .groupby(<span class="st">"symbol"</span>, as_index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  .agg(</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    mu<span class="op">=</span>(<span class="st">"ret"</span>, <span class="st">"mean"</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    sigma<span class="op">=</span>(<span class="st">"ret"</span>, <span class="st">"std"</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="visualizing-the-risk-return-trade-off" class="level3" data-number="3.1.5">
+<h3 data-number="3.1.5" class="anchored" data-anchor-id="visualizing-the-risk-return-trade-off"><span class="header-section-number">3.1.5</span> Visualizing the Risk-Return Trade-off</h3>
+<p><a href="#fig-201" class="quarto-xref">Figure&nbsp;<span>3.1</span></a> displays each asset’s expected return (vertical axis) against its volatility (horizontal axis). This “mean-standard deviation” space is fundamental to portfolio theory.</p>
+<div id="cell-fig-201" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>assets_figure <span class="op">=</span> (</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  ggplot(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    assets, </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    aes(x<span class="op">=</span><span class="st">"sigma"</span>, y<span class="op">=</span><span class="st">"mu"</span>, label<span class="op">=</span><span class="st">"symbol"</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_point()</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_text(adjust_text<span class="op">=</span>{<span class="st">"arrowprops"</span>: {<span class="st">"arrowstyle"</span>: <span class="st">"-"</span>}})</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_x_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> labs(</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>      x<span class="op">=</span><span class="st">"Volatility (Standard Deviation)"</span>, </span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>      y<span class="op">=</span><span class="st">"Expected Return"</span>,</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>      title<span class="op">=</span><span class="st">"Expected returns and volatilities of VN30 index constituents"</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>assets_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-201" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: Expected returns and volatilities of VN30 index constituents. The figure is a scatter plot with volatilities on the horizontal and expected returns on the vertical axis.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-201-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02_modern_portfolio_theory_files/figure-html/fig-201-output-1.png" alt="Title: Expected returns and volatilities of VN30 index constituents. The figure is a scatter plot with volatilities on the horizontal and expected returns on the vertical axis." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-201-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.1: Expected returns and volatilities based on monthly returns adjusted for dividend payments and stock splits.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Several observations emerge from this figure. First, there is substantial heterogeneity in both expected returns and volatilities across stocks. Second, the relationship between risk and return is far from linear. Some high-volatility stocks have low or even negative expected returns. Third, most individual stocks appear to offer poor risk-return trade-offs. As we will see, portfolios can substantially improve upon these individual positions.</p>
+</section>
+</section>
+<section id="the-variance-covariance-matrix-capturing-asset-interactions" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="the-variance-covariance-matrix-capturing-asset-interactions"><span class="header-section-number">3.2</span> The Variance-Covariance Matrix: Capturing Asset Interactions</h2>
+<section id="why-correlations-matter" class="level3" data-number="3.2.1">
+<h3 data-number="3.2.1" class="anchored" data-anchor-id="why-correlations-matter"><span class="header-section-number">3.2.1</span> Why Correlations Matter</h3>
+<p>A key innovation of MPT is recognizing that portfolio risk depends critically on how assets move together. The <strong>variance-covariance matrix</strong> <span class="math inline">\(\Sigma\)</span> captures all pairwise interactions between asset returns.</p>
+<p>To understand why correlations matter, consider the variance of a two-asset portfolio: <span class="math display">\[\sigma_p^2 = \omega_1^2\sigma_1^2 + \omega_2^2\sigma_2^2 + 2\omega_1\omega_2\sigma_{12}\]</span></p>
+<p>The third term involves the covariance <span class="math inline">\(\sigma_{12} = \rho_{12}\sigma_1\sigma_2\)</span>, where <span class="math inline">\(\rho_{12}\)</span> is the correlation coefficient. When <span class="math inline">\(\rho_{12} &lt; 1\)</span>, the portfolio variance is <em>less</em> than the weighted average of individual variances. When <span class="math inline">\(\rho_{12} &lt; 0\)</span>, the diversification benefit is even more pronounced.</p>
+<p>This mathematical fact has profound implications: <strong>You can reduce risk without reducing expected return</strong> by combining assets that don’t move perfectly together. This is sometimes called the “only free lunch in finance.”</p>
+</section>
+<section id="computing-the-variance-covariance-matrix" class="level3" data-number="3.2.2">
+<h3 data-number="3.2.2" class="anchored" data-anchor-id="computing-the-variance-covariance-matrix"><span class="header-section-number">3.2.2</span> Computing the Variance-Covariance Matrix</h3>
+<p>We compute the sample covariance matrix as: <span class="math display">\[\hat{\sigma}_{ij} = \frac{1}{T-1} \sum_{t=1}^{T} (r_{i,t} - \hat{\mu}_i)(r_{j,t} - \hat{\mu}_j)\]</span></p>
+<p>First, we reshape the returns data into a wide format with assets as columns:</p>
+<div id="45a6ff99" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>returns_wide <span class="op">=</span> (returns_monthly</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  .pivot(index<span class="op">=</span><span class="st">"date"</span>, columns<span class="op">=</span><span class="st">"symbol"</span>, values<span class="op">=</span><span class="st">"ret"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  .reset_index()</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>sigma <span class="op">=</span> (returns_wide</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  .drop(columns<span class="op">=</span>[<span class="st">"date"</span>])</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  .cov()</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="interpreting-the-variance-covariance-matrix" class="level3" data-number="3.2.3">
+<h3 data-number="3.2.3" class="anchored" data-anchor-id="interpreting-the-variance-covariance-matrix"><span class="header-section-number">3.2.3</span> Interpreting the Variance-Covariance Matrix</h3>
+<p>The diagonal elements of <span class="math inline">\(\Sigma\)</span> are the variances of individual assets. The off-diagonal elements are covariances, which can be positive (assets tend to move together), negative (assets tend to move in opposite directions), or zero (no linear relationship).</p>
+<p>For easier interpretation, we often convert covariances to correlations: <span class="math display">\[\rho_{ij} = \frac{\sigma_{ij}}{\sigma_i \sigma_j}\]</span></p>
+<p>Correlations are bounded between -1 and +1, making them easier to compare across asset pairs.</p>
+<p><a href="#fig-203" class="quarto-xref">Figure&nbsp;<span>3.2</span></a> visualizes the variance-covariance matrix as a heatmap.</p>
+<div id="cell-fig-203" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>sigma_long <span class="op">=</span> (sigma</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  .reset_index()</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  .melt(id_vars<span class="op">=</span><span class="st">"symbol"</span>, var_name<span class="op">=</span><span class="st">"symbol_b"</span>, value_name<span class="op">=</span><span class="st">"value"</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>sigma_long[<span class="st">"symbol_b"</span>] <span class="op">=</span> pd.Categorical(</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  sigma_long[<span class="st">"symbol_b"</span>], </span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  categories<span class="op">=</span>sigma_long[<span class="st">"symbol_b"</span>].unique()[::<span class="op">-</span><span class="dv">1</span>],</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  ordered<span class="op">=</span><span class="va">True</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>sigma_figure <span class="op">=</span> (</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  ggplot(</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    sigma_long, </span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    aes(x<span class="op">=</span><span class="st">"symbol"</span>, y<span class="op">=</span><span class="st">"symbol_b"</span>, fill<span class="op">=</span><span class="st">"value"</span>)</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_tile()</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> labs(</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>      x<span class="op">=</span><span class="st">""</span>, y<span class="op">=</span><span class="st">""</span>, fill<span class="op">=</span><span class="st">"(Co-)Variance"</span>,</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>      title<span class="op">=</span><span class="st">"Sample variance-covariance matrix of VN30 index constituents"</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_fill_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> theme(axis_text_x<span class="op">=</span>element_text(angle<span class="op">=</span><span class="dv">45</span>, hjust<span class="op">=</span><span class="dv">1</span>))</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>sigma_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-203" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: Variance-covariance matrix of VN30 index constituents.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-203-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02_modern_portfolio_theory_files/figure-html/fig-203-output-1.png" alt="Title: Variance-covariance matrix of VN30 index constituents." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-203-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.2: Variances and covariances based on monthly returns adjusted for dividend payments and stock splits.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The heatmap reveals important patterns. The diagonal (variances) shows which stocks are most volatile. The off-diagonal patterns show which pairs of stocks tend to move together. In general, stocks within the same sector tend to have higher correlations with each other than with stocks from different sectors.</p>
+</section>
+</section>
+<section id="the-minimum-variance-portfolio" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="the-minimum-variance-portfolio"><span class="header-section-number">3.3</span> The Minimum-Variance Portfolio</h2>
+<section id="motivation-risk-minimization-as-a-benchmark" class="level3" data-number="3.3.1">
+<h3 data-number="3.3.1" class="anchored" data-anchor-id="motivation-risk-minimization-as-a-benchmark"><span class="header-section-number">3.3.1</span> Motivation: Risk Minimization as a Benchmark</h3>
+<p>Before considering expected returns, let’s find the portfolio that minimizes risk entirely. This <strong>minimum-variance portfolio (MVP)</strong> serves as an important benchmark and reference point. It represents what an extremely risk-averse investor—one who cares only about minimizing volatility—would choose.</p>
+</section>
+<section id="the-optimization-problem" class="level3" data-number="3.3.2">
+<h3 data-number="3.3.2" class="anchored" data-anchor-id="the-optimization-problem"><span class="header-section-number">3.3.2</span> The Optimization Problem</h3>
+<p>The minimum-variance investor solves: <span class="math display">\[
+\min_{\omega} \omega^{\prime}\Sigma\omega
+\]</span></p>
+<p>subject to the constraint that weights sum to one:</p>
+<p><span class="math display">\[
+\omega^{\prime}\iota = 1
+\]</span></p>
+<p>where <span class="math inline">\(\iota\)</span> is an <span class="math inline">\(N \times 1\)</span> vector of ones.</p>
+<p>In words: minimize portfolio variance, subject to being fully invested.</p>
+</section>
+<section id="the-analytical-solution" class="level3" data-number="3.3.3">
+<h3 data-number="3.3.3" class="anchored" data-anchor-id="the-analytical-solution"><span class="header-section-number">3.3.3</span> The Analytical Solution</h3>
+<p>This is a classic constrained optimization problem that can be solved using Lagrange multipliers. The Lagrangian is:</p>
+<p><span class="math display">\[
+\mathcal{L} = \omega^{\prime}\Sigma\omega - \lambda(\omega^{\prime}\iota - 1)
+\]</span></p>
+<p>Taking the first-order condition with respect to <span class="math inline">\(\omega\)</span>: <span class="math display">\[
+\frac{\partial \mathcal{L}}{\partial \omega} = 2\Sigma\omega - \lambda\iota = 0
+\]</span></p>
+<p>Solving for <span class="math inline">\(\omega\)</span>: <span class="math display">\[
+\omega = \frac{\lambda}{2}\Sigma^{-1}\iota
+\]</span></p>
+<p>Using the constraint <span class="math inline">\(\omega^{\prime}\iota = 1\)</span> to solve for <span class="math inline">\(\lambda\)</span>: <span class="math display">\[
+\frac{\lambda}{2}\iota^{\prime}\Sigma^{-1}\iota = 1 \implies \frac{\lambda}{2} = \frac{1}{\iota^{\prime}\Sigma^{-1}\iota}
+\]</span></p>
+<p>Substituting back: <span class="math display">\[
+\omega_{\text{mvp}} = \frac{\Sigma^{-1}\iota}{\iota^{\prime}\Sigma^{-1}\iota}
+\]</span></p>
+<p>This elegant formula shows that the minimum-variance weights depend only on the covariance matrix—expected returns play no role. The inverse covariance matrix <span class="math inline">\(\Sigma^{-1}\)</span> determines how much to invest in each asset based on its variance and its covariances with all other assets.</p>
+</section>
+<section id="implementation" class="level3" data-number="3.3.4">
+<h3 data-number="3.3.4" class="anchored" data-anchor-id="implementation"><span class="header-section-number">3.3.4</span> Implementation</h3>
+<div id="0c47eef1" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>iota <span class="op">=</span> np.ones(sigma.shape[<span class="dv">0</span>])</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>sigma_inv <span class="op">=</span> np.linalg.inv(sigma.values)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>omega_mvp <span class="op">=</span> (sigma_inv <span class="op">@</span> iota) <span class="op">/</span> (iota <span class="op">@</span> sigma_inv <span class="op">@</span> iota)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="visualizing-the-minimum-variance-weights" class="level3" data-number="3.3.5">
+<h3 data-number="3.3.5" class="anchored" data-anchor-id="visualizing-the-minimum-variance-weights"><span class="header-section-number">3.3.5</span> Visualizing the Minimum-Variance Weights</h3>
+<p><a href="#fig-204" class="quarto-xref">Figure&nbsp;<span>3.3</span></a> displays the portfolio weights of the minimum-variance portfolio.</p>
+<div id="cell-fig-204" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>assets <span class="op">=</span> assets.assign(omega_mvp<span class="op">=</span>omega_mvp)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>assets[<span class="st">"symbol"</span>] <span class="op">=</span> pd.Categorical(</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  assets[<span class="st">"symbol"</span>],</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  categories<span class="op">=</span>assets.sort_values(<span class="st">"omega_mvp"</span>)[<span class="st">"symbol"</span>],</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  ordered<span class="op">=</span><span class="va">True</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>omega_figure <span class="op">=</span> (</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  ggplot(</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    assets,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    aes(y<span class="op">=</span><span class="st">"omega_mvp"</span>, x<span class="op">=</span><span class="st">"symbol"</span>, fill<span class="op">=</span><span class="st">"omega_mvp&gt;0"</span>)</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_col()</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> coord_flip()</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> labs(</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>      x<span class="op">=</span><span class="st">""</span>, </span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>      y<span class="op">=</span><span class="st">"Portfolio Weight"</span>, </span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>      title<span class="op">=</span><span class="st">"Minimum-variance portfolio weights"</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> theme(legend_position<span class="op">=</span><span class="st">"none"</span>)</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>omega_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-204" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: Minimum-variance portfolio weights. The figure shows a bar chart with portfolio weights for each VN30 index constituent.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-204-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02_modern_portfolio_theory_files/figure-html/fig-204-output-1.png" alt="Title: Minimum-variance portfolio weights. The figure shows a bar chart with portfolio weights for each VN30 index constituent." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-204-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.3: Weights are based on historical moments of monthly returns adjusted for dividend payments and stock splits.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Several features of the minimum-variance portfolio are noteworthy. First, many stocks receive zero or near-zero weights. Second, some stocks receive negative weights (short positions). These short positions are not a computational artifact, they reflect the optimizer’s attempt to exploit correlations for risk reduction. Third, the weights are quite extreme (both large positive and large negative), which often indicates estimation error amplification, which is a topic we address in later chapters.</p>
+</section>
+<section id="portfolio-performance" class="level3" data-number="3.3.6">
+<h3 data-number="3.3.6" class="anchored" data-anchor-id="portfolio-performance"><span class="header-section-number">3.3.6</span> Portfolio Performance</h3>
+<p>Let’s compute the expected return and volatility of the minimum-variance portfolio:</p>
+<div id="fa2c23c7" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>mu <span class="op">=</span> assets[<span class="st">"mu"</span>].values</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>mu_mvp <span class="op">=</span> omega_mvp <span class="op">@</span> mu</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>sigma_mvp <span class="op">=</span> np.sqrt(omega_mvp <span class="op">@</span> sigma.values <span class="op">@</span> omega_mvp)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>summary_mvp <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"mu"</span>: [mu_mvp],</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"sigma"</span>: [sigma_mvp],</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"type"</span>: [<span class="st">"Minimum-Variance Portfolio"</span>]</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>summary_mvp</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">mu</th>
+<th data-quarto-table-cell-role="th">sigma</th>
+<th data-quarto-table-cell-role="th">type</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>-0.011424</td>
+<td>0.043512</td>
+<td>Minimum-Variance Portfolio</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="05ee521a" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mu_mvp_fmt <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>mu_mvp<span class="sc">:.4f}</span><span class="ss">"</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>sigma_mvp_fmt <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>sigma_mvp<span class="sc">:.4f}</span><span class="ss">"</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"The MVP return is </span><span class="sc">{</span>mu_mvp_fmt<span class="sc">}</span><span class="ss"> and volatility is </span><span class="sc">{</span>sigma_mvp_fmt<span class="sc">}</span><span class="ss">."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>The MVP return is -0.0114 and volatility is 0.0435.</code></pre>
+</div>
+</div>
+<p>If the expected return is negative, this is not a computational error. The minimum-variance portfolio minimizes risk without regard to expected returns. Because some assets in the sample have negative average returns, the risk-minimizing combination may inherit a negative expected return. This highlights a fundamental limitation of using historical sample means as estimates of expected returns: they are extremely noisy, and can lead to economically unintuitive results even when the optimization mathematics are working correctly.</p>
+</section>
+</section>
+<section id="efficient-portfolios-balancing-risk-and-return" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="efficient-portfolios-balancing-risk-and-return"><span class="header-section-number">3.4</span> Efficient Portfolios: Balancing Risk and Return</h2>
+<section id="the-investors-trade-off" class="level3" data-number="3.4.1">
+<h3 data-number="3.4.1" class="anchored" data-anchor-id="the-investors-trade-off"><span class="header-section-number">3.4.1</span> The Investor’s Trade-off</h3>
+<p>In most cases, minimizing variance is not the investor’s sole objective. A more realistic formulation allows the investor to trade off risk against expected return. The investor might be willing to accept higher portfolio variance in exchange for higher expected returns.</p>
+<p>An <strong>efficient portfolio</strong> minimizes variance subject to earning at least some target expected return <span class="math inline">\(\bar{\mu}\)</span>. Formally:</p>
+<p><span class="math display">\[\min_{\omega} \omega^{\prime}\Sigma\omega\]</span></p>
+<p>subject to: <span class="math display">\[\omega^{\prime}\iota = 1 \quad \text{(fully invested)}\]</span> <span class="math display">\[\omega^{\prime}\mu \geq \bar{\mu} \quad \text{(minimum return)}\]</span></p>
+<p>When <span class="math inline">\(\bar{\mu}\)</span> exceeds the expected return of the minimum-variance portfolio, the investor accepts more risk to earn more return.</p>
+</section>
+<section id="setting-the-target-return" class="level3" data-number="3.4.2">
+<h3 data-number="3.4.2" class="anchored" data-anchor-id="setting-the-target-return"><span class="header-section-number">3.4.2</span> Setting the Target Return</h3>
+<p>For illustration, suppose the investor wants to earn at least the historical average return of the best-performing stock:</p>
+<div id="e7b79a0d" class="cell" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>mu_bar <span class="op">=</span> assets[<span class="st">"mu"</span>].<span class="bu">max</span>()</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Target expected return: </span><span class="sc">{</span>mu_bar<span class="sc">:.5f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Target expected return: 0.01886</code></pre>
+</div>
+</div>
+<p>This is an ambitious target—it means matching the return of the single highest-returning stock while benefiting from diversification to reduce risk.</p>
+</section>
+<section id="the-analytical-solution-1" class="level3" data-number="3.4.3">
+<h3 data-number="3.4.3" class="anchored" data-anchor-id="the-analytical-solution-1"><span class="header-section-number">3.4.3</span> The Analytical Solution</h3>
+<p>The constrained optimization problem with an inequality constraint on expected returns can be solved using the Karush-Kuhn-Tucker (KKT) conditions. At the optimum (assuming the return constraint binds), the solution is:</p>
+<p><span class="math display">\[\omega_{\text{efp}} = \frac{\lambda^*}{2}\left(\Sigma^{-1}\mu - \frac{D}{C}\Sigma^{-1}\iota\right)\]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(C = \iota^{\prime}\Sigma^{-1}\iota\)</span> (a scalar measuring the “size” of the inverse covariance matrix)</li>
+<li><span class="math inline">\(D = \iota^{\prime}\Sigma^{-1}\mu\)</span> (capturing the interaction between expected returns and the inverse covariance matrix)</li>
+<li><span class="math inline">\(E = \mu^{\prime}\Sigma^{-1}\mu\)</span> (measuring the “signal” in expected returns weighted by inverse covariances)</li>
+<li><span class="math inline">\(\lambda^* = 2\frac{\bar{\mu} - D/C}{E - D^2/C}\)</span> (the shadow price of the return constraint)</li>
+</ul>
+<p>Alternatively, we can express the efficient portfolio as a linear combination of the minimum-variance portfolio and an “excess return” portfolio:</p>
+<p><span class="math display">\[\omega_{\text{efp}} = \omega_{\text{mvp}} + \frac{\lambda^*}{2}\left(\Sigma^{-1}\mu - D \cdot \omega_{\text{mvp}}\right)\]</span></p>
+<p>This representation reveals important intuition: the efficient portfolio starts from the minimum-variance portfolio and tilts toward higher-expected-return assets, with the tilt magnitude determined by <span class="math inline">\(\lambda^*\)</span>.</p>
+</section>
+<section id="implementation-1" class="level3" data-number="3.4.4">
+<h3 data-number="3.4.4" class="anchored" data-anchor-id="implementation-1"><span class="header-section-number">3.4.4</span> Implementation</h3>
+<div id="03edc9a8" class="cell" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>C <span class="op">=</span> iota <span class="op">@</span> sigma_inv <span class="op">@</span> iota</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>D <span class="op">=</span> iota <span class="op">@</span> sigma_inv <span class="op">@</span> mu</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>E <span class="op">=</span> mu <span class="op">@</span> sigma_inv <span class="op">@</span> mu</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>lambda_tilde <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> (mu_bar <span class="op">-</span> D <span class="op">/</span> C) <span class="op">/</span> (E <span class="op">-</span> (D <span class="op">**</span> <span class="dv">2</span>) <span class="op">/</span> C)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>omega_efp <span class="op">=</span> omega_mvp <span class="op">+</span> (lambda_tilde <span class="op">/</span> <span class="dv">2</span>) <span class="op">*</span> (sigma_inv <span class="op">@</span> mu <span class="op">-</span> D <span class="op">*</span> omega_mvp)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>mu_efp <span class="op">=</span> omega_efp <span class="op">@</span> mu</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>sigma_efp <span class="op">=</span> np.sqrt(omega_efp <span class="op">@</span> sigma.values <span class="op">@</span> omega_efp)</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>summary_efp <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"mu"</span>: [mu_efp],</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"sigma"</span>: [sigma_efp],</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">"type"</span>: [<span class="st">"Efficient Portfolio"</span>]</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="comparing-the-portfolios" class="level3" data-number="3.4.5">
+<h3 data-number="3.4.5" class="anchored" data-anchor-id="comparing-the-portfolios"><span class="header-section-number">3.4.5</span> Comparing the Portfolios</h3>
+<p><a href="#fig-205" class="quarto-xref">Figure&nbsp;<span>3.4</span></a> plots both portfolios alongside the individual assets.</p>
+<div id="cell-fig-205" class="cell" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>summaries <span class="op">=</span> pd.concat(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  [assets, summary_mvp, summary_efp], ignore_index<span class="op">=</span><span class="va">True</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>summaries_figure <span class="op">=</span> (</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  ggplot(</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    summaries, </span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    aes(x<span class="op">=</span><span class="st">"sigma"</span>, y<span class="op">=</span><span class="st">"mu"</span>)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_point(data<span class="op">=</span>summaries.query(<span class="st">"type.isna()"</span>))</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_point(data<span class="op">=</span>summaries.query(<span class="st">"type.notna()"</span>), color<span class="op">=</span><span class="st">"#F21A00"</span>, size<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_label(aes(label<span class="op">=</span><span class="st">"type"</span>), adjust_text<span class="op">=</span>{<span class="st">"arrowprops"</span>: {<span class="st">"arrowstyle"</span>: <span class="st">"-"</span>}})</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_x_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> labs(</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>      x<span class="op">=</span><span class="st">"Volatility (Standard Deviation)"</span>, </span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>      y<span class="op">=</span><span class="st">"Expected Return"</span>,</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>      title<span class="op">=</span><span class="st">"Efficient &amp; minimum-variance portfolios"</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    ) </span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>summaries_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-205" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: Efficient &amp; minimum-variance portfolios. The figure shows big dots indicating the location of the minimum-variance and the efficient portfolio that delivers the expected return of the stock with the higehst return, respectively. The small dots indicate the location of the individual constituents.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-205-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02_modern_portfolio_theory_files/figure-html/fig-205-output-1.png" alt="Title: Efficient &amp; minimum-variance portfolios. The figure shows big dots indicating the location of the minimum-variance and the efficient portfolio that delivers the expected return of the stock with the higehst return, respectively. The small dots indicate the location of the individual constituents." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-205-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.4: The big dots indicate the location of the minimum-variance and the efficient portfolio that delivers the expected return of the stock with the highest return, respectively. The small dots indicate the location of the individual constituents.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The figure demonstrates the substantial diversification benefits of portfolio optimization. The efficient portfolio achieves the same expected return as the highest-returning individual stock but with substantially lower volatility. This “free lunch” from diversification is the central insight of Modern Portfolio Theory.</p>
+</section>
+<section id="the-role-of-risk-aversion" class="level3" data-number="3.4.6">
+<h3 data-number="3.4.6" class="anchored" data-anchor-id="the-role-of-risk-aversion"><span class="header-section-number">3.4.6</span> The Role of Risk Aversion</h3>
+<p>The target return <span class="math inline">\(\bar{\mu}\)</span> implicitly reflects the investor’s risk aversion. Less risk-averse investors choose higher <span class="math inline">\(\bar{\mu}\)</span>, accepting more variance to earn more expected return. More risk-averse investors choose <span class="math inline">\(\bar{\mu}\)</span> closer to the minimum-variance portfolio’s expected return.</p>
+<p>Equivalently, the mean-variance framework can be derived from the optimal decisions of an investor with a mean-variance utility function: <span class="math display">\[U(\omega) = \omega^{\prime}\mu - \frac{\gamma}{2}\omega^{\prime}\Sigma\omega\]</span></p>
+<p>where <span class="math inline">\(\gamma\)</span> is the coefficient of relative risk aversion. The Appendix shows there is a one-to-one mapping between <span class="math inline">\(\gamma\)</span> and <span class="math inline">\(\bar{\mu}\)</span>, so both formulations yield identical efficient portfolios.</p>
+</section>
+</section>
+<section id="the-efficient-frontier-the-menu-of-optimal-portfolios" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="the-efficient-frontier-the-menu-of-optimal-portfolios"><span class="header-section-number">3.5</span> The Efficient Frontier: The Menu of Optimal Portfolios</h2>
+<p>The <strong>efficient frontier</strong> is the set of all portfolios for which no other portfolio offers higher expected return at the same or lower variance. Geometrically, it traces the upper boundary of achievable (volatility, expected return) combinations.</p>
+<p>Every rational mean-variance investor should hold a portfolio on the efficient frontier. Portfolios below the frontier are “dominated,” there exists another portfolio with either higher return for the same risk, or lower risk for the same return.</p>
+<section id="the-mutual-fund-separation-theorem" class="level3" data-number="3.5.1">
+<h3 data-number="3.5.1" class="anchored" data-anchor-id="the-mutual-fund-separation-theorem"><span class="header-section-number">3.5.1</span> The Mutual Fund Separation Theorem</h3>
+<p>A remarkable result simplifies the construction of the efficient frontier. The <strong>mutual fund separation theorem</strong> (sometimes called the two-fund theorem) states that any efficient portfolio can be expressed as a linear combination of any two distinct efficient portfolios.</p>
+<p>Formally, if <span class="math inline">\(\omega_{\mu_1}\)</span> and <span class="math inline">\(\omega_{\mu_2}\)</span> are efficient portfolios earning expected returns <span class="math inline">\(\mu_1\)</span> and <span class="math inline">\(\mu_2\)</span> respectively, then the portfolio: <span class="math display">\[\omega_{a\mu_1 + (1-a)\mu_2} = a \cdot \omega_{\mu_1} + (1-a) \cdot \omega_{\mu_2}\]</span></p>
+<p>is also efficient and earns expected return <span class="math inline">\(a\mu_1 + (1-a)\mu_2\)</span>.</p>
+<p>This result has profound practical implications: an investor needs access to only two efficient “mutual funds” to construct any portfolio on the efficient frontier. The specific funds don’t matter—any two distinct efficient portfolios span the entire frontier.</p>
+</section>
+<section id="proof-of-the-separation-theorem" class="level3" data-number="3.5.2">
+<h3 data-number="3.5.2" class="anchored" data-anchor-id="proof-of-the-separation-theorem"><span class="header-section-number">3.5.2</span> Proof of the Separation Theorem</h3>
+<p>The proof follows directly from the analytical solution for efficient portfolios. Consider:</p>
+<p><span class="math display">\[
+a \cdot \omega_{\mu_1} + (1-a) \cdot \omega_{\mu_2} = \left(\frac{a\mu_1 + (1-a)\mu_2 - D/C}{E - D^2/C}\right)\left(\Sigma^{-1}\mu - \frac{D}{C}\Sigma^{-1}\iota\right)
+\]</span></p>
+<p>This expression has exactly the form of the efficient portfolio earning expected return <span class="math inline">\(a\mu_1 + (1-a)\mu_2\)</span>, proving the theorem.</p>
+</section>
+<section id="computing-the-efficient-frontier" class="level3" data-number="3.5.3">
+<h3 data-number="3.5.3" class="anchored" data-anchor-id="computing-the-efficient-frontier"><span class="header-section-number">3.5.3</span> Computing the Efficient Frontier</h3>
+<p>Using the minimum-variance portfolio and our efficient portfolio as the two “funds,” we can trace out the entire efficient frontier:</p>
+<div id="1b1bed24" class="cell" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>efficient_frontier <span class="op">=</span> (</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  pd.DataFrame({</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"a"</span>: np.arange(<span class="op">-</span><span class="dv">1</span>, <span class="fl">2.01</span>, <span class="fl">0.01</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  .assign(</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    omega<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"a"</span>].<span class="bu">map</span>(<span class="kw">lambda</span> a: a <span class="op">*</span> omega_efp <span class="op">+</span> (<span class="dv">1</span> <span class="op">-</span> a) <span class="op">*</span> omega_mvp)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  .assign(</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    mu<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"omega"</span>].<span class="bu">map</span>(<span class="kw">lambda</span> w: w <span class="op">@</span> mu),</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    sigma<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"omega"</span>].<span class="bu">map</span>(<span class="kw">lambda</span> w: np.sqrt(w <span class="op">@</span> sigma <span class="op">@</span> w))</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Note that we allow <span class="math inline">\(a\)</span> to range from -1 to 2, which means some portfolios involve shorting one of the two basis funds and leveraging into the other. This traces out both the upper and lower portions of the frontier hyperbola.</p>
+</section>
+<section id="visualizing-the-efficient-frontier" class="level3" data-number="3.5.4">
+<h3 data-number="3.5.4" class="anchored" data-anchor-id="visualizing-the-efficient-frontier"><span class="header-section-number">3.5.4</span> Visualizing the Efficient Frontier</h3>
+<p><a href="#fig-206" class="quarto-xref">Figure&nbsp;<span>3.5</span></a> displays the efficient frontier alongside individual assets and the benchmark portfolios.</p>
+<div id="cell-fig-206" class="cell" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>summaries <span class="op">=</span> pd.concat(</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  [summaries, efficient_frontier], ignore_index<span class="op">=</span><span class="va">True</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>summaries_figure <span class="op">=</span> (</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  ggplot(</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    summaries, </span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    aes(x<span class="op">=</span><span class="st">"sigma"</span>, y<span class="op">=</span><span class="st">"mu"</span>)</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_point(data<span class="op">=</span>summaries.query(<span class="st">"type.isna()"</span>))</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_line(data<span class="op">=</span>efficient_frontier, color<span class="op">=</span><span class="st">"blue"</span>, alpha<span class="op">=</span><span class="fl">0.7</span>)</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_point(data<span class="op">=</span>summaries.query(<span class="st">"type.notna()"</span>), color<span class="op">=</span><span class="st">"#F21A00"</span>, size<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> geom_label(aes(label<span class="op">=</span><span class="st">"type"</span>), adjust_text<span class="op">=</span>{<span class="st">"arrowprops"</span>: {<span class="st">"arrowstyle"</span>: <span class="st">"-"</span>}})</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_x_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  <span class="op">+</span> labs(</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>      x<span class="op">=</span><span class="st">"Volatility (Standard Deviation)"</span>, </span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>      y<span class="op">=</span><span class="st">"Expected Return"</span>,</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>      title<span class="op">=</span><span class="st">"The Efficient Frontier and VN30 Constituents"</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>    ) </span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>summaries_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-206" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: Efficient frontier constructed from historical data for VN30 index constituents. The figure shows VN30 index constituents in a mean-variance diagram. A hyperbola indicates the efficient frontier of portfolios that dominate the individual holdings in the sense that they deliver higher expected returns for the same level of volatility.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-206-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02_modern_portfolio_theory_files/figure-html/fig-206-output-1.png" alt="Title: Efficient frontier constructed from historical data for VN30 index constituents. The figure shows VN30 index constituents in a mean-variance diagram. A hyperbola indicates the efficient frontier of portfolios that dominate the individual holdings in the sense that they deliver higher expected returns for the same level of volatility." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-206-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.5: The big dots indicate the location of the minimum-variance and the efficient portfolio. The small dots indicate the location of the individual constituents.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The efficient frontier has a characteristic hyperbolic shape. The leftmost point is the minimum-variance portfolio. Moving up and to the right along the frontier, expected return increases but so does volatility. The upper portion of the hyperbola (above the minimum-variance portfolio) is the “efficient” part—these portfolios offer the highest return for each level of risk. The lower portion is “inefficient”—these portfolios are dominated by their mirror images on the upper portion.</p>
+<p>The figure also reveals how dramatically diversification improves upon individual stock positions. Nearly all individual stocks lie well inside the efficient frontier, meaning investors can achieve the same expected return with much less risk, or much higher expected return with the same risk, simply by diversifying.</p>
+</section>
+</section>
+<section id="key-takeaways" class="level2" data-number="3.6">
+<h2 data-number="3.6" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">3.6</span> Key Takeaways</h2>
+<p>This chapter introduced the concepts of Modern Portfolio Theory. The main insights are:</p>
+<ol type="1">
+<li><p><strong>Portfolio risk depends on correlations</strong>: The variance of a portfolio is not simply the weighted average of individual variances. Covariances between assets play a crucial role, creating opportunities for diversification.</p></li>
+<li><p><strong>Diversification is the “only free lunch” in finance</strong>: By combining assets that don’t move perfectly together, investors can reduce risk without sacrificing expected return. This insight is the cornerstone of modern investment practice.</p></li>
+<li><p><strong>The minimum-variance portfolio minimizes risk</strong>: This portfolio depends only on the covariance matrix and serves as an important benchmark. It represents the least risky way to be fully invested in risky assets.</p></li>
+<li><p><strong>Efficient portfolios balance risk and return</strong>: By accepting more variance, investors can earn higher expected returns. Efficient portfolios are those that offer the best possible trade-off.</p></li>
+<li><p><strong>The efficient frontier characterizes optimal portfolios</strong>: This boundary in mean-standard deviation space represents the menu of optimal choices available to mean-variance investors.</p></li>
+<li><p><strong>Two-fund separation simplifies implementation</strong>: Any efficient portfolio can be constructed from any two distinct efficient portfolios, reducing the computational burden of portfolio optimization.</p></li>
+</ol>
+<p>Looking ahead, several important complications arise in practice. First, the inputs to portfolio optimization (expected returns and covariances) must be estimated from data, and estimation error can dramatically affect portfolio performance. Second, real-world constraints such as transaction costs, short-sale restrictions, and position limits modify the optimization problem. Third, the assumption that investors care only about mean and variance may be too restrictive when returns are non-normal or when investors have more complex preferences. We address these extensions in subsequent chapters.</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Markowitz1952" class="csl-entry" role="listitem">
+Markowitz, Harry. 1952. <span>“<span class="nocase">Portfolio selection</span>.”</span> <em><span>The Journal of Finance</span></em> 7 (1): 77–91. <a href="https://doi.org/10.1111/j.1540-6261.1952.tb01525.x">https://doi.org/10.1111/j.1540-6261.1952.tb01525.x</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./01_working_with_stock_returns.html" class="pagination-link" aria-label="Constructing and Analyzing Equity Return Series">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Constructing and Analyzing Equity Return Series</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./03_capm.html" class="pagination-link" aria-label="The Capital Asset Pricing Model">
+        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">The Capital Asset Pricing Model</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

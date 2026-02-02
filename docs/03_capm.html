@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>4&nbsp; The Capital Asset Pricing Model – Tidy Finance in Vietnam</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./04_financial_statement_analysis.html" rel="next">
+<link href="./02_modern_portfolio_theory.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-50a4fa9e9ef121803c2355a2deb1af4d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./03_capm.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">The Capital Asset Pricing Model</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Tidy Finance in Vietnam</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./00_institutional_background.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Institutional Background and Market Structure of Vietnam’s Equity Market</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01_working_with_stock_returns.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Constructing and Analyzing Equity Return Series</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02_modern_portfolio_theory.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03_capm.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">The Capital Asset Pricing Model</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04_financial_statement_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Financial Statement Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05_discounted_cash_flow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Discounted Cash Flow Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06_accessing_and_managing_financial_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Accessing and Managing Financial Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07_datacore_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">DataCore Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08_beta_estimation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Beta Estimation</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12_fama_french.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./20_conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#from-efficient-portfolios-to-equilibrium-prices" id="toc-from-efficient-portfolios-to-equilibrium-prices" class="nav-link active" data-scroll-target="#from-efficient-portfolios-to-equilibrium-prices"><span class="header-section-number">4.1</span> From Efficient Portfolios to Equilibrium Prices</a></li>
+  <li><a href="#systematic-versus-idiosyncratic-risk" id="toc-systematic-versus-idiosyncratic-risk" class="nav-link" data-scroll-target="#systematic-versus-idiosyncratic-risk"><span class="header-section-number">4.2</span> Systematic versus Idiosyncratic Risk</a>
+  <ul class="collapse">
+  <li><a href="#idiosyncratic-risk-diversifiable-and-unrewarded" id="toc-idiosyncratic-risk-diversifiable-and-unrewarded" class="nav-link" data-scroll-target="#idiosyncratic-risk-diversifiable-and-unrewarded"><span class="header-section-number">4.2.1</span> Idiosyncratic Risk: Diversifiable and Unrewarded</a></li>
+  <li><a href="#systematic-risk-undiversifiable-and-priced" id="toc-systematic-risk-undiversifiable-and-priced" class="nav-link" data-scroll-target="#systematic-risk-undiversifiable-and-priced"><span class="header-section-number">4.2.2</span> Systematic Risk: Undiversifiable and Priced</a></li>
+  <li><a href="#a-simple-illustration" id="toc-a-simple-illustration" class="nav-link" data-scroll-target="#a-simple-illustration"><span class="header-section-number">4.2.3</span> A Simple Illustration</a></li>
+  </ul></li>
+  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation"><span class="header-section-number">4.3</span> Data Preparation</a>
+  <ul class="collapse">
+  <li><a href="#computing-monthly-returns" id="toc-computing-monthly-returns" class="nav-link" data-scroll-target="#computing-monthly-returns"><span class="header-section-number">4.3.1</span> Computing Monthly Returns</a></li>
+  </ul></li>
+  <li><a href="#the-risk-free-asset-and-the-investment-opportunity-set" id="toc-the-risk-free-asset-and-the-investment-opportunity-set" class="nav-link" data-scroll-target="#the-risk-free-asset-and-the-investment-opportunity-set"><span class="header-section-number">4.4</span> The Risk-Free Asset and the Investment Opportunity Set</a>
+  <ul class="collapse">
+  <li><a href="#adding-a-risk-free-asset" id="toc-adding-a-risk-free-asset" class="nav-link" data-scroll-target="#adding-a-risk-free-asset"><span class="header-section-number">4.4.1</span> Adding a Risk-Free Asset</a></li>
+  <li><a href="#portfolio-return-with-a-risk-free-asset" id="toc-portfolio-return-with-a-risk-free-asset" class="nav-link" data-scroll-target="#portfolio-return-with-a-risk-free-asset"><span class="header-section-number">4.4.2</span> Portfolio Return with a Risk-Free Asset</a></li>
+  <li><a href="#portfolio-variance" id="toc-portfolio-variance" class="nav-link" data-scroll-target="#portfolio-variance"><span class="header-section-number">4.4.3</span> Portfolio Variance</a></li>
+  <li><a href="#setting-up-the-risk-free-rate" id="toc-setting-up-the-risk-free-rate" class="nav-link" data-scroll-target="#setting-up-the-risk-free-rate"><span class="header-section-number">4.4.4</span> Setting Up the Risk-Free Rate</a></li>
+  </ul></li>
+  <li><a href="#the-tangency-portfolio-where-everyone-invests" id="toc-the-tangency-portfolio-where-everyone-invests" class="nav-link" data-scroll-target="#the-tangency-portfolio-where-everyone-invests"><span class="header-section-number">4.5</span> The Tangency Portfolio: Where Everyone Invests</a>
+  <ul class="collapse">
+  <li><a href="#deriving-the-optimal-risky-portfolio" id="toc-deriving-the-optimal-risky-portfolio" class="nav-link" data-scroll-target="#deriving-the-optimal-risky-portfolio"><span class="header-section-number">4.5.1</span> Deriving the Optimal Risky Portfolio</a></li>
+  <li><a href="#the-tangency-portfolio" id="toc-the-tangency-portfolio" class="nav-link" data-scroll-target="#the-tangency-portfolio"><span class="header-section-number">4.5.2</span> The Tangency Portfolio</a></li>
+  <li><a href="#the-sharpe-ratio-and-the-capital-market-line" id="toc-the-sharpe-ratio-and-the-capital-market-line" class="nav-link" data-scroll-target="#the-sharpe-ratio-and-the-capital-market-line"><span class="header-section-number">4.5.3</span> The Sharpe Ratio and the Capital Market Line</a></li>
+  <li><a href="#computing-the-tangency-portfolio" id="toc-computing-the-tangency-portfolio" class="nav-link" data-scroll-target="#computing-the-tangency-portfolio"><span class="header-section-number">4.5.4</span> Computing the Tangency Portfolio</a></li>
+  <li><a href="#visualizing-the-efficient-frontier-with-a-risk-free-asset" id="toc-visualizing-the-efficient-frontier-with-a-risk-free-asset" class="nav-link" data-scroll-target="#visualizing-the-efficient-frontier-with-a-risk-free-asset"><span class="header-section-number">4.5.5</span> Visualizing the Efficient Frontier with a Risk-Free Asset</a></li>
+  </ul></li>
+  <li><a href="#the-capm-equation-risk-and-expected-return" id="toc-the-capm-equation-risk-and-expected-return" class="nav-link" data-scroll-target="#the-capm-equation-risk-and-expected-return"><span class="header-section-number">4.6</span> The CAPM Equation: Risk and Expected Return</a>
+  <ul class="collapse">
+  <li><a href="#from-individual-optimization-to-market-equilibrium" id="toc-from-individual-optimization-to-market-equilibrium" class="nav-link" data-scroll-target="#from-individual-optimization-to-market-equilibrium"><span class="header-section-number">4.6.1</span> From Individual Optimization to Market Equilibrium</a></li>
+  <li><a href="#the-market-portfolio" id="toc-the-market-portfolio" class="nav-link" data-scroll-target="#the-market-portfolio"><span class="header-section-number">4.6.2</span> The Market Portfolio</a></li>
+  <li><a href="#deriving-the-capm-equation" id="toc-deriving-the-capm-equation" class="nav-link" data-scroll-target="#deriving-the-capm-equation"><span class="header-section-number">4.6.3</span> Deriving the CAPM Equation</a></li>
+  <li><a href="#interpreting-beta" id="toc-interpreting-beta" class="nav-link" data-scroll-target="#interpreting-beta"><span class="header-section-number">4.6.4</span> Interpreting Beta</a></li>
+  </ul></li>
+  <li><a href="#the-security-market-line" id="toc-the-security-market-line" class="nav-link" data-scroll-target="#the-security-market-line"><span class="header-section-number">4.7</span> The Security Market Line</a></li>
+  <li><a href="#empirical-estimation-of-capm-parameters" id="toc-empirical-estimation-of-capm-parameters" class="nav-link" data-scroll-target="#empirical-estimation-of-capm-parameters"><span class="header-section-number">4.8</span> Empirical Estimation of CAPM Parameters</a>
+  <ul class="collapse">
+  <li><a href="#the-regression-framework" id="toc-the-regression-framework" class="nav-link" data-scroll-target="#the-regression-framework"><span class="header-section-number">4.8.1</span> The Regression Framework</a></li>
+  <li><a href="#alpha-risk-adjusted-performance" id="toc-alpha-risk-adjusted-performance" class="nav-link" data-scroll-target="#alpha-risk-adjusted-performance"><span class="header-section-number">4.8.2</span> Alpha: Risk-Adjusted Performance</a></li>
+  <li><a href="#loading-factor-data" id="toc-loading-factor-data" class="nav-link" data-scroll-target="#loading-factor-data"><span class="header-section-number">4.8.3</span> Loading Factor Data</a></li>
+  <li><a href="#running-the-regressions" id="toc-running-the-regressions" class="nav-link" data-scroll-target="#running-the-regressions"><span class="header-section-number">4.8.4</span> Running the Regressions</a></li>
+  <li><a href="#visualizing-alpha-estimates" id="toc-visualizing-alpha-estimates" class="nav-link" data-scroll-target="#visualizing-alpha-estimates"><span class="header-section-number">4.8.5</span> Visualizing Alpha Estimates</a></li>
+  </ul></li>
+  <li><a href="#limitations-and-extensions" id="toc-limitations-and-extensions" class="nav-link" data-scroll-target="#limitations-and-extensions"><span class="header-section-number">4.9</span> Limitations and Extensions</a>
+  <ul class="collapse">
+  <li><a href="#the-market-portfolio-problem" id="toc-the-market-portfolio-problem" class="nav-link" data-scroll-target="#the-market-portfolio-problem"><span class="header-section-number">4.9.1</span> The Market Portfolio Problem</a></li>
+  <li><a href="#time-varying-betas" id="toc-time-varying-betas" class="nav-link" data-scroll-target="#time-varying-betas"><span class="header-section-number">4.9.2</span> Time-Varying Betas</a></li>
+  <li><a href="#empirical-anomalies" id="toc-empirical-anomalies" class="nav-link" data-scroll-target="#empirical-anomalies"><span class="header-section-number">4.9.3</span> Empirical Anomalies</a></li>
+  <li><a href="#multifactor-extensions" id="toc-multifactor-extensions" class="nav-link" data-scroll-target="#multifactor-extensions"><span class="header-section-number">4.9.4</span> Multifactor Extensions</a></li>
+  </ul></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">4.10</span> Key Takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">The Capital Asset Pricing Model</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="from-efficient-portfolios-to-equilibrium-prices" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="from-efficient-portfolios-to-equilibrium-prices"><span class="header-section-number">4.1</span> From Efficient Portfolios to Equilibrium Prices</h2>
+<p>The previous chapter on <a href="./02_modern_portfolio_theory.html">Modern Portfolio Theory</a> (MPT) showed how an investor can construct portfolios that optimally trade off risk and expected return. But MPT leaves a crucial question unanswered: What determines the <em>expected returns</em> themselves? Why do some assets command higher risk premiums than others?</p>
+<p>The Capital Asset Pricing Model (CAPM) answers this question. Developed simultaneously by <span class="citation" data-cites="Sharpe1964">Sharpe (<a href="references.html#ref-Sharpe1964" role="doc-biblioref">1964</a>)</span>, <span class="citation" data-cites="Lintner1965">Lintner (<a href="references.html#ref-Lintner1965" role="doc-biblioref">1965</a>)</span>, and <span class="citation" data-cites="Mossin1966">Mossin (<a href="references.html#ref-Mossin1966" role="doc-biblioref">1966</a>)</span>, the CAPM extends MPT to explain how assets should be priced in equilibrium when <em>all</em> investors follow mean-variance optimization principles. The CAPM’s central insight is both elegant and counterintuitive: <strong>not all risk is rewarded</strong>. Only the component of risk that cannot be diversified away (i.e., systematic risk) commands a risk premium in equilibrium.</p>
+<p>The CAPM remains the cornerstone of asset pricing theory, not because it perfectly describes reality, but because it provides the simplest coherent framework for understanding the relationship between risk and expected return. Every extension and alternative model in asset pricing (e.g., from the Fama-French factors to consumption-based pricing) builds upon or reacts against the CAPM’s foundational logic.</p>
+<p>In this chapter, we derive the CAPM from first principles, illustrate its theoretical underpinnings, and show how to estimate its parameters empirically. We download stock market data, estimate betas using regression analysis, and evaluate asset performance relative to model predictions.</p>
+<div id="0964942b" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tidyfinance <span class="im">as</span> tf</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotnine <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> mizani.formatters <span class="im">import</span> percent_format</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> adjustText <span class="im">import</span> adjust_text</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="systematic-versus-idiosyncratic-risk" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="systematic-versus-idiosyncratic-risk"><span class="header-section-number">4.2</span> Systematic versus Idiosyncratic Risk</h2>
+<p>Before diving into the mathematics, we need to understand the fundamental distinction that makes the CAPM work: the difference between <em>systematic</em> and <em>idiosyncratic</em> risk.</p>
+<section id="idiosyncratic-risk-diversifiable-and-unrewarded" class="level3" data-number="4.2.1">
+<h3 data-number="4.2.1" class="anchored" data-anchor-id="idiosyncratic-risk-diversifiable-and-unrewarded"><span class="header-section-number">4.2.1</span> Idiosyncratic Risk: Diversifiable and Unrewarded</h3>
+<p>Consider events that affect individual companies but not the broader market: a CEO resigns unexpectedly, a product launch fails, earnings disappoint analysts, or a factory experiences a fire. These company-specific events can dramatically affect individual stock prices, but they tend to average out across a diversified portfolio. When one company has bad news, another often has good news; the shocks are largely uncorrelated.</p>
+<p>This idiosyncratic (or firm-specific) risk can be eliminated through diversification. By holding a portfolio of many stocks, an investor can reduce idiosyncratic risk to nearly zero. Since this risk can be avoided at no cost, investors should not expect compensation for bearing it. In equilibrium, idiosyncratic risk earns no premium.</p>
+</section>
+<section id="systematic-risk-undiversifiable-and-priced" class="level3" data-number="4.2.2">
+<h3 data-number="4.2.2" class="anchored" data-anchor-id="systematic-risk-undiversifiable-and-priced"><span class="header-section-number">4.2.2</span> Systematic Risk: Undiversifiable and Priced</h3>
+<p>Systematic risk, by contrast, affects all assets simultaneously. Recessions, interest rate changes, geopolitical crises, and pandemics impact virtually every company to some degree. No amount of diversification can eliminate exposure to these economy-wide shocks, they are inherent to participating in the market.</p>
+<p>Since systematic risk cannot be diversified away, investors genuinely dislike it. They must be compensated for bearing it. The CAPM formalizes this intuition: expected returns should depend only on systematic risk, not total risk. Two assets with identical total volatility can have very different expected returns if their systematic risk exposures differ.</p>
+</section>
+<section id="a-simple-illustration" class="level3" data-number="4.2.3">
+<h3 data-number="4.2.3" class="anchored" data-anchor-id="a-simple-illustration"><span class="header-section-number">4.2.3</span> A Simple Illustration</h3>
+<p>Imagine two stocks with identical 30% annual volatility. Stock A is a gold mining company whose returns move opposite to the overall market: it does well when the economy struggles and poorly when it booms. Stock B is a luxury retailer that amplifies market movements: soaring in good times and crashing in bad times.</p>
+<p>Which stock should offer higher expected returns? Intuition might suggest they should be equal since both have the same volatility. But the CAPM says Stock B should offer substantially higher returns. Why? Because Stock B performs poorly precisely when investors’ overall wealth is already down (during market crashes), making its returns particularly painful. Stock A, by contrast, provides insurance. Its strong performance during market downturns partially offsets losses elsewhere in the portfolio. Investors value this insurance property and are willing to accept lower expected returns in exchange.</p>
+<p>This is the CAPM’s core insight: expected returns compensate investors for systematic risk exposure, measured by how an asset’s returns co-move with the market portfolio.</p>
+</section>
+</section>
+<section id="data-preparation" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="data-preparation"><span class="header-section-number">4.3</span> Data Preparation</h2>
+<p>Building on our analysis from the previous chapter, we examine the VN30 constituents as our asset universe. We download and prepare monthly return data:</p>
+<div id="c9ca5486" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>vn30_symbols <span class="op">=</span> [</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ACB"</span>, <span class="st">"BCM"</span>, <span class="st">"BID"</span>, <span class="st">"BVH"</span>, <span class="st">"CTG"</span>, <span class="st">"FPT"</span>, <span class="st">"GAS"</span>, <span class="st">"GVR"</span>, <span class="st">"HDB"</span>, <span class="st">"HPG"</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"MBB"</span>, <span class="st">"MSN"</span>, <span class="st">"MWG"</span>, <span class="st">"PLX"</span>, <span class="st">"POW"</span>, <span class="st">"SAB"</span>, <span class="st">"SHB"</span>, <span class="st">"SSB"</span>, <span class="st">"STB"</span>, <span class="st">"TCB"</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"TPB"</span>, <span class="st">"VCB"</span>, <span class="st">"VHM"</span>, <span class="st">"VIB"</span>, <span class="st">"VIC"</span>, <span class="st">"VJC"</span>, <span class="st">"VNM"</span>, <span class="st">"VPB"</span>, <span class="st">"VRE"</span>, <span class="st">"EIB"</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="999eac6a" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> boto3</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> botocore.client <span class="im">import</span> Config</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> io <span class="im">import</span> BytesIO</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ConnectMinio:</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.MINIO_ENDPOINT <span class="op">=</span> os.environ[<span class="st">"MINIO_ENDPOINT"</span>]</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.MINIO_ACCESS_KEY <span class="op">=</span> os.environ[<span class="st">"MINIO_ACCESS_KEY"</span>]</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.MINIO_SECRET_KEY <span class="op">=</span> os.environ[<span class="st">"MINIO_SECRET_KEY"</span>]</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.REGION <span class="op">=</span> os.getenv(<span class="st">"MINIO_REGION"</span>, <span class="st">"us-east-1"</span>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.s3 <span class="op">=</span> boto3.client(</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>            <span class="st">"s3"</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>            endpoint_url<span class="op">=</span><span class="va">self</span>.MINIO_ENDPOINT,</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>            aws_access_key_id<span class="op">=</span><span class="va">self</span>.MINIO_ACCESS_KEY,</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>            aws_secret_access_key<span class="op">=</span><span class="va">self</span>.MINIO_SECRET_KEY,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            region_name<span class="op">=</span><span class="va">self</span>.REGION,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            config<span class="op">=</span>Config(signature_version<span class="op">=</span><span class="st">"s3v4"</span>),</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> test_connection(<span class="va">self</span>):</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        resp <span class="op">=</span> <span class="va">self</span>.s3.list_buckets()</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"Connected. Buckets:"</span>)</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> b <span class="kw">in</span> resp.get(<span class="st">"Buckets"</span>, []):</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">" -"</span>, b[<span class="st">"Name"</span>])</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>conn <span class="op">=</span> ConnectMinio()</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>s3 <span class="op">=</span> conn.s3</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>conn.test_connection()</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>bucket_name <span class="op">=</span> os.environ[<span class="st">"MINIO_BUCKET"</span>]</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>prices <span class="op">=</span> pd.read_csv(</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    BytesIO(</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>        s3.get_object(</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>            Bucket<span class="op">=</span>bucket_name,</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>            Key<span class="op">=</span><span class="st">"historycal_price/dataset_historical_price.csv"</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>        )[<span class="st">"Body"</span>].read()</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    low_memory<span class="op">=</span><span class="va">False</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Connected. Buckets:
+ - dsteam-data
+ - rawbctc</code></pre>
+</div>
+</div>
+<p>We process the raw price data to compute adjusted closing prices and standardize column names:</p>
+<div id="2fa79708" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>prices[<span class="st">"date"</span>] <span class="op">=</span> pd.to_datetime(prices[<span class="st">"date"</span>])</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>prices[<span class="st">"adjusted_close"</span>] <span class="op">=</span> prices[<span class="st">"close_price"</span>] <span class="op">*</span> prices[<span class="st">"adj_ratio"</span>]</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>prices <span class="op">=</span> prices.rename(columns<span class="op">=</span>{</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_total"</span>: <span class="st">"volume"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"open_price"</span>: <span class="st">"open"</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"low_price"</span>: <span class="st">"low"</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"high_price"</span>: <span class="st">"high"</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"close_price"</span>: <span class="st">"close"</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>prices <span class="op">=</span> prices.sort_values([<span class="st">"symbol"</span>, <span class="st">"date"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="8d49ed4f" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>prices_daily <span class="op">=</span> prices[prices[<span class="st">"symbol"</span>].isin(vn30_symbols)]</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>prices_daily[[<span class="st">"date"</span>, <span class="st">"symbol"</span>, <span class="st">"adjusted_close"</span>]].head(<span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">date</th>
+<th data-quarto-table-cell-role="th">symbol</th>
+<th data-quarto-table-cell-role="th">adjusted_close</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">18176</th>
+<td>2010-01-04</td>
+<td>ACB</td>
+<td>329.408244</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">18177</th>
+<td>2010-01-05</td>
+<td>ACB</td>
+<td>329.408244</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">18178</th>
+<td>2010-01-06</td>
+<td>ACB</td>
+<td>320.258015</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<section id="computing-monthly-returns" class="level3" data-number="4.3.1">
+<h3 data-number="4.3.1" class="anchored" data-anchor-id="computing-monthly-returns"><span class="header-section-number">4.3.1</span> Computing Monthly Returns</h3>
+<p>We aggregate daily prices to monthly frequency. Using monthly returns rather than daily returns offers several advantages for portfolio analysis: monthly returns exhibit less noise, better approximate normality, and reduce the impact of microstructure effects like bid-ask bounce.</p>
+<div id="f12c3911" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>returns_monthly <span class="op">=</span> (prices_daily</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    .assign(</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        date<span class="op">=</span>prices_daily[<span class="st">"date"</span>].dt.to_period(<span class="st">"M"</span>).dt.to_timestamp(<span class="st">"M"</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    .groupby([<span class="st">"symbol"</span>, <span class="st">"date"</span>], as_index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    .agg(adjusted_close<span class="op">=</span>(<span class="st">"adjusted_close"</span>, <span class="st">"last"</span>))</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    .sort_values([<span class="st">"symbol"</span>, <span class="st">"date"</span>])</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    .assign(</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        ret<span class="op">=</span><span class="kw">lambda</span> x: x.groupby(<span class="st">"symbol"</span>)[<span class="st">"adjusted_close"</span>].pct_change()</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>returns_monthly.head(<span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">symbol</th>
+<th data-quarto-table-cell-role="th">date</th>
+<th data-quarto-table-cell-role="th">adjusted_close</th>
+<th data-quarto-table-cell-role="th">ret</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>ACB</td>
+<td>2010-01-31</td>
+<td>291.975489</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>ACB</td>
+<td>2010-02-28</td>
+<td>303.621235</td>
+<td>0.039886</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>ACB</td>
+<td>2010-03-31</td>
+<td>273.784658</td>
+<td>-0.098269</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="the-risk-free-asset-and-the-investment-opportunity-set" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="the-risk-free-asset-and-the-investment-opportunity-set"><span class="header-section-number">4.4</span> The Risk-Free Asset and the Investment Opportunity Set</h2>
+<section id="adding-a-risk-free-asset" class="level3" data-number="4.4.1">
+<h3 data-number="4.4.1" class="anchored" data-anchor-id="adding-a-risk-free-asset"><span class="header-section-number">4.4.1</span> Adding a Risk-Free Asset</h3>
+<p>The previous chapter on MPT considered portfolios composed entirely of risky assets, requiring that portfolio weights sum to one. The CAPM introduces a crucial new element: a <strong>risk-free asset</strong> that pays a constant interest rate <span class="math inline">\(r_f\)</span> with zero volatility.</p>
+<p>This seemingly simple addition fundamentally transforms the investment opportunity set. With a risk-free asset available, investors can choose to park some wealth in the safe asset and invest the remainder in risky assets. They can also borrow at the risk-free rate to leverage their risky positions.</p>
+<p>Let <span class="math inline">\(\omega \in \mathbb{R}^N\)</span> denote the portfolio weights in the <span class="math inline">\(N\)</span> risky assets. Unlike before, these weights need not sum to one. The remainder, <span class="math inline">\(1 - \iota'\omega\)</span> (where <span class="math inline">\(\iota\)</span> is a vector of ones), is invested in the risk-free asset.</p>
+</section>
+<section id="portfolio-return-with-a-risk-free-asset" class="level3" data-number="4.4.2">
+<h3 data-number="4.4.2" class="anchored" data-anchor-id="portfolio-return-with-a-risk-free-asset"><span class="header-section-number">4.4.2</span> Portfolio Return with a Risk-Free Asset</h3>
+<p>The expected return on this combined portfolio is:</p>
+<p><span class="math display">\[
+\mu_\omega = \omega'\mu + (1 - \iota'\omega)r_f = r_f + \omega'(\mu - r_f) = r_f + \omega'\tilde{\mu}
+\]</span></p>
+<p>where <span class="math inline">\(\mu\)</span> is the vector of expected returns on risky assets and <span class="math inline">\(\tilde{\mu} = \mu - r_f\)</span> denotes the vector of <strong>excess returns</strong> (returns above the risk-free rate).</p>
+<p>This expression reveals an important decomposition: the portfolio’s expected return equals the risk-free rate plus a risk premium determined by the exposure to risky assets.</p>
+</section>
+<section id="portfolio-variance" class="level3" data-number="4.4.3">
+<h3 data-number="4.4.3" class="anchored" data-anchor-id="portfolio-variance"><span class="header-section-number">4.4.3</span> Portfolio Variance</h3>
+<p>Since the risk-free asset has zero volatility and zero covariance with risky assets, only the risky portion contributes to portfolio variance:</p>
+<p><span class="math display">\[
+\sigma_\omega^2 = \omega'\Sigma\omega
+\]</span></p>
+<p>where <span class="math inline">\(\Sigma\)</span> is the variance-covariance matrix of risky asset returns. The portfolio’s volatility (standard deviation) is:</p>
+<p><span class="math display">\[
+\sigma_\omega = \sqrt{\omega'\Sigma\omega}
+\]</span></p>
+</section>
+<section id="setting-up-the-risk-free-rate" class="level3" data-number="4.4.4">
+<h3 data-number="4.4.4" class="anchored" data-anchor-id="setting-up-the-risk-free-rate"><span class="header-section-number">4.4.4</span> Setting Up the Risk-Free Rate</h3>
+<p>For a realistic proxy of the risk-free rate, we use the Vietnam government bond yield. Government bonds of stable economies are considered “risk-free” because the government can always print money to meet its obligations (though this may cause inflation).</p>
+<div id="910b21aa" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>all_dates <span class="op">=</span> pd.date_range(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    start<span class="op">=</span>returns_monthly[<span class="st">"date"</span>].<span class="bu">min</span>(), </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    end<span class="op">=</span>returns_monthly[<span class="st">"date"</span>].<span class="bu">max</span>(), </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    freq<span class="op">=</span><span class="st">"ME"</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Vietnam 10-Year Government Bond Yield (approximately 2.52% annualized)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>rf_annual <span class="op">=</span> <span class="fl">0.0252</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>rf_monthly_val <span class="op">=</span> (<span class="dv">1</span> <span class="op">+</span> rf_annual)<span class="op">**</span>(<span class="dv">1</span><span class="op">/</span><span class="dv">12</span>) <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>risk_free_monthly <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"date"</span>: all_dates,</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"risk_free"</span>: rf_monthly_val</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>risk_free_monthly[<span class="st">"date"</span>] <span class="op">=</span> (</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    pd.to_datetime(risk_free_monthly[<span class="st">"date"</span>])</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    .dt.to_period(<span class="st">"M"</span>)</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    .dt.to_timestamp(<span class="st">"M"</span>)</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>risk_free_monthly.head(<span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">date</th>
+<th data-quarto-table-cell-role="th">risk_free</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>2010-01-31</td>
+<td>0.002076</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>2010-02-28</td>
+<td>0.002076</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>2010-03-31</td>
+<td>0.002076</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>We merge the risk-free rate with our returns data and compute excess returns:</p>
+<div id="ef2cca15" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>returns_monthly <span class="op">=</span> returns_monthly.merge(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    risk_free_monthly[[<span class="st">"date"</span>, <span class="st">"risk_free"</span>]], </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    on<span class="op">=</span><span class="st">"date"</span>, </span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    how<span class="op">=</span><span class="st">"left"</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>rf <span class="op">=</span> risk_free_monthly[<span class="st">"risk_free"</span>].mean()</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>returns_monthly <span class="op">=</span> (returns_monthly</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    .assign(</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>        ret_excess<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"ret"</span>] <span class="op">-</span> x[<span class="st">"risk_free"</span>]</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    .assign(</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        ret_excess<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"ret_excess"</span>].clip(lower<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>returns_monthly.head(<span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">symbol</th>
+<th data-quarto-table-cell-role="th">date</th>
+<th data-quarto-table-cell-role="th">adjusted_close</th>
+<th data-quarto-table-cell-role="th">ret</th>
+<th data-quarto-table-cell-role="th">risk_free</th>
+<th data-quarto-table-cell-role="th">ret_excess</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>ACB</td>
+<td>2010-01-31</td>
+<td>291.975489</td>
+<td>NaN</td>
+<td>0.002076</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>ACB</td>
+<td>2010-02-28</td>
+<td>303.621235</td>
+<td>0.039886</td>
+<td>0.002076</td>
+<td>0.037810</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>ACB</td>
+<td>2010-03-31</td>
+<td>273.784658</td>
+<td>-0.098269</td>
+<td>0.002076</td>
+<td>-0.100345</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="the-tangency-portfolio-where-everyone-invests" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="the-tangency-portfolio-where-everyone-invests"><span class="header-section-number">4.5</span> The Tangency Portfolio: Where Everyone Invests</h2>
+<section id="deriving-the-optimal-risky-portfolio" class="level3" data-number="4.5.1">
+<h3 data-number="4.5.1" class="anchored" data-anchor-id="deriving-the-optimal-risky-portfolio"><span class="header-section-number">4.5.1</span> Deriving the Optimal Risky Portfolio</h3>
+<p>With a risk-free asset available, how should an investor allocate wealth across risky assets? Consider an investor who wants to achieve a target expected excess return <span class="math inline">\(\bar{\mu}\)</span> with minimum variance. The optimization problem becomes:</p>
+<p><span class="math display">\[
+\min_\omega \omega'\Sigma\omega \quad \text{subject to} \quad \omega'\tilde{\mu} = \bar{\mu}
+\]</span></p>
+<p>Using the Lagrangian method:</p>
+<p><span class="math display">\[
+\mathcal{L}(\omega, \lambda) = \omega'\Sigma\omega - \lambda(\omega'\tilde{\mu} - \bar{\mu})
+\]</span></p>
+<p>The first-order condition with respect to <span class="math inline">\(\omega\)</span> is:</p>
+<p><span class="math display">\[
+\frac{\partial \mathcal{L}}{\partial \omega} = 2\Sigma\omega - \lambda\tilde{\mu} = 0
+\]</span></p>
+<p>Solving for the optimal weights:</p>
+<p><span class="math display">\[
+\omega^* = \frac{\lambda}{2}\Sigma^{-1}\tilde{\mu}
+\]</span></p>
+<p>The constraint <span class="math inline">\(\omega'\tilde{\mu} = \bar{\mu}\)</span> determines <span class="math inline">\(\lambda\)</span>:</p>
+<p><span class="math display">\[
+\bar{\mu} = \tilde{\mu}'\omega^* = \frac{\lambda}{2}\tilde{\mu}'\Sigma^{-1}\tilde{\mu} \implies \lambda = \frac{2\bar{\mu}}{\tilde{\mu}'\Sigma^{-1}\tilde{\mu}}
+\]</span></p>
+<p>Substituting back:</p>
+<p><span class="math display">\[
+\omega^* = \frac{\bar{\mu}}{\tilde{\mu}'\Sigma^{-1}\tilde{\mu}}\Sigma^{-1}\tilde{\mu}
+\]</span></p>
+</section>
+<section id="the-tangency-portfolio" class="level3" data-number="4.5.2">
+<h3 data-number="4.5.2" class="anchored" data-anchor-id="the-tangency-portfolio"><span class="header-section-number">4.5.2</span> The Tangency Portfolio</h3>
+<p>Notice something remarkable: the <em>direction</em> of <span class="math inline">\(\omega^*\)</span> is always <span class="math inline">\(\Sigma^{-1}\tilde{\mu}\)</span>, regardless of the target return <span class="math inline">\(\bar{\mu}\)</span>. Only the <em>scale</em> changes. This means all investors, regardless of their risk preferences, hold the <em>same portfolio of risky assets</em>. They differ only in how much they allocate to this portfolio versus the risk-free asset.</p>
+<p>To obtain the portfolio of risky assets that is fully invested (weights summing to one), we normalize:</p>
+<p><span class="math display">\[
+\omega_{\text{tan}} = \frac{\omega^*}{\iota'\omega^*} = \frac{\Sigma^{-1}(\mu - r_f)}{\iota'\Sigma^{-1}(\mu - r_f)}
+\]</span></p>
+<p>This is called the <strong>tangency portfolio</strong> (or maximum Sharpe ratio portfolio) because it lies at the point where the efficient frontier is tangent to the capital market line.</p>
+</section>
+<section id="the-sharpe-ratio-and-the-capital-market-line" class="level3" data-number="4.5.3">
+<h3 data-number="4.5.3" class="anchored" data-anchor-id="the-sharpe-ratio-and-the-capital-market-line"><span class="header-section-number">4.5.3</span> The Sharpe Ratio and the Capital Market Line</h3>
+<p>The <strong>Sharpe ratio</strong> measures excess return per unit of volatility:</p>
+<p><span class="math display">\[
+\text{Sharpe Ratio} = \frac{\mu_p - r_f}{\sigma_p}
+\]</span></p>
+<p>The tangency portfolio maximizes the Sharpe ratio among all possible portfolios. Any combination of the risk-free asset and the tangency portfolio lies on a straight line in mean-standard deviation space, called the <strong>Capital Market Line (CML)</strong>:</p>
+<p><span class="math display">\[
+\mu_p = r_f + \left(\frac{\mu_{\text{tan}} - r_f}{\sigma_{\text{tan}}}\right)\sigma_p
+\]</span></p>
+<p>The slope of this line equals the Sharpe ratio of the tangency portfolio (i.e., the highest achievable Sharpe ratio).</p>
+</section>
+<section id="computing-the-tangency-portfolio" class="level3" data-number="4.5.4">
+<h3 data-number="4.5.4" class="anchored" data-anchor-id="computing-the-tangency-portfolio"><span class="header-section-number">4.5.4</span> Computing the Tangency Portfolio</h3>
+<p>Let’s compute the tangency portfolio for our VN30 universe:</p>
+<div id="95e13c6e" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>assets <span class="op">=</span> (returns_monthly</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    .groupby(<span class="st">"symbol"</span>, as_index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    .agg(</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>        mu<span class="op">=</span>(<span class="st">"ret"</span>, <span class="st">"mean"</span>),</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        sigma<span class="op">=</span>(<span class="st">"ret"</span>, <span class="st">"std"</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>sigma <span class="op">=</span> (returns_monthly</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    .pivot(index<span class="op">=</span><span class="st">"date"</span>, columns<span class="op">=</span><span class="st">"symbol"</span>, values<span class="op">=</span><span class="st">"ret"</span>)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    .cov()</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>mu <span class="op">=</span> (returns_monthly</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    .groupby(<span class="st">"symbol"</span>)[<span class="st">"ret"</span>]</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    .mean()</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    .values</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="552d1ad7" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute tangency portfolio weights</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>w_tan <span class="op">=</span> np.linalg.solve(sigma, mu <span class="op">-</span> rf)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>w_tan <span class="op">=</span> w_tan <span class="op">/</span> np.<span class="bu">sum</span>(w_tan)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Portfolio performance metrics</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>mu_w <span class="op">=</span> w_tan.T <span class="op">@</span> mu</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>sigma_w <span class="op">=</span> np.sqrt(w_tan.T <span class="op">@</span> sigma <span class="op">@</span> w_tan)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>efficient_portfolios <span class="op">=</span> pd.DataFrame([</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"symbol"</span>: <span class="vs">r"</span><span class="dv">$</span><span class="er">\</span><span class="vs">omega_{</span><span class="dv">\m</span><span class="vs">athrm{tan}}</span><span class="dv">$</span><span class="vs">"</span>, <span class="st">"mu"</span>: mu_w, <span class="st">"sigma"</span>: sigma_w},</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"symbol"</span>: <span class="vs">r"</span><span class="dv">$</span><span class="vs">r_f</span><span class="dv">$</span><span class="vs">"</span>, <span class="st">"mu"</span>: rf, <span class="st">"sigma"</span>: <span class="dv">0</span>}</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>sharpe_ratio <span class="op">=</span> (mu_w <span class="op">-</span> rf) <span class="op">/</span> sigma_w</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Tangency Portfolio Sharpe Ratio: </span><span class="sc">{</span>sharpe_ratio<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(efficient_portfolios)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Tangency Portfolio Sharpe Ratio: -0.5552
+                    symbol        mu     sigma
+0  $\omega_{\mathrm{tan}}$ -0.041157  0.077866
+1                    $r_f$  0.002076  0.000000</code></pre>
+</div>
+</div>
+</section>
+<section id="visualizing-the-efficient-frontier-with-a-risk-free-asset" class="level3" data-number="4.5.5">
+<h3 data-number="4.5.5" class="anchored" data-anchor-id="visualizing-the-efficient-frontier-with-a-risk-free-asset"><span class="header-section-number">4.5.5</span> Visualizing the Efficient Frontier with a Risk-Free Asset</h3>
+<p><a href="#fig-300" class="quarto-xref">Figure&nbsp;<span>4.1</span></a> shows the efficient frontier when a risk-free asset is available. The frontier is now a straight line (the Capital Market Line) connecting the risk-free asset to the tangency portfolio and extending beyond.</p>
+<div id="cell-fig-300" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>efficient_portfolios_figure <span class="op">=</span> (</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    ggplot(efficient_portfolios, aes(x<span class="op">=</span><span class="st">"sigma"</span>, y<span class="op">=</span><span class="st">"mu"</span>))</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_point(data<span class="op">=</span>assets)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_point(data<span class="op">=</span>efficient_portfolios, color<span class="op">=</span><span class="st">"blue"</span>, size<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_label(</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        aes(label<span class="op">=</span><span class="st">"symbol"</span>), </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        adjust_text<span class="op">=</span>{<span class="st">"arrowprops"</span>: {<span class="st">"arrowstyle"</span>: <span class="st">"-"</span>}}</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_x_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">"Volatility (Standard Deviation)"</span>, </span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>        y<span class="op">=</span><span class="st">"Expected Return"</span>,</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"Efficient Frontier with Risk-Free Asset (VN30)"</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_abline(slope<span class="op">=</span>sharpe_ratio, intercept<span class="op">=</span>rf, linetype<span class="op">=</span><span class="st">"dotted"</span>)</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>efficient_portfolios_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-300" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: The efficient frontier with a risk-free asset and VN30 index constituents. The figure shows a scatter plot with volatilities on the horizontal axis and expected returns on the vertical axis. A dotted line represents the Capital Market Line.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-300-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="03_capm_files/figure-html/fig-300-output-1.png" alt="Title: The efficient frontier with a risk-free asset and VN30 index constituents. The figure shows a scatter plot with volatilities on the horizontal axis and expected returns on the vertical axis. A dotted line represents the Capital Market Line." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-300-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.1: The efficient frontier with a risk-free asset becomes a straight line (the Capital Market Line) connecting the risk-free rate to the tangency portfolio. Individual assets lie below this line, demonstrating the benefits of diversification.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>You may notice that estimated expected returns appear quite low, some even negative. This is not a model failure but reflects the realities of estimation:</p>
+<ol type="1">
+<li><p><strong>Sample period matters</strong>: If the estimation window includes market downturns (such as the 2022-2023 period), realized average returns can be near zero or negative. Mean-variance optimization takes sample means literally.</p></li>
+<li><p><strong>Estimation noise in emerging markets</strong>: With volatile emerging market data, sample means are dominated by noise. A few extremely bad months can push the average below the risk-free rate even if the long-run equity premium is positive.</p></li>
+</ol>
+<p>This highlights a fundamental challenge in portfolio optimization: the inputs we observe (historical returns) are noisy estimates of the true parameters we need (expected future returns).</p>
+</section>
+</section>
+<section id="the-capm-equation-risk-and-expected-return" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="the-capm-equation-risk-and-expected-return"><span class="header-section-number">4.6</span> The CAPM Equation: Risk and Expected Return</h2>
+<section id="from-individual-optimization-to-market-equilibrium" class="level3" data-number="4.6.1">
+<h3 data-number="4.6.1" class="anchored" data-anchor-id="from-individual-optimization-to-market-equilibrium"><span class="header-section-number">4.6.1</span> From Individual Optimization to Market Equilibrium</h3>
+<p>So far, we’ve focused on one investor’s optimization problem. The CAPM’s power comes from considering what happens when <em>all</em> investors optimize simultaneously.</p>
+<p>If all investors follow mean-variance optimization, they all hold some combination of the risk-free asset and the tangency portfolio. The only difference between investors is their risk tolerance. More risk-averse investors hold more of the risk-free asset, while risk-tolerant investors may even borrow at the risk-free rate to leverage their position in the tangency portfolio.</p>
+</section>
+<section id="the-market-portfolio" class="level3" data-number="4.6.2">
+<h3 data-number="4.6.2" class="anchored" data-anchor-id="the-market-portfolio"><span class="header-section-number">4.6.2</span> The Market Portfolio</h3>
+<p>In equilibrium, the total demand for each risky asset must equal its supply. Since all investors hold the same portfolio of risky assets (the tangency portfolio), the equilibrium portfolio weights must equal the <em>market capitalization weights</em>. The tangency portfolio <em>is</em> the market portfolio.</p>
+<p>This insight has enormous practical implications: instead of estimating expected returns and covariances to compute the tangency portfolio, we can simply use the market portfolio (approximated by a broad market index) as a proxy.</p>
+</section>
+<section id="deriving-the-capm-equation" class="level3" data-number="4.6.3">
+<h3 data-number="4.6.3" class="anchored" data-anchor-id="deriving-the-capm-equation"><span class="header-section-number">4.6.3</span> Deriving the CAPM Equation</h3>
+<p>From the first-order conditions of the optimization problem, we derived that:</p>
+<p><span class="math display">\[
+\tilde{\mu} = \frac{2}{\lambda}\Sigma\omega^*
+\]</span></p>
+<p>Since <span class="math inline">\(\omega^*\)</span> is proportional to <span class="math inline">\(\omega_{\text{tan}}\)</span>, and in equilibrium <span class="math inline">\(\omega_{\text{tan}}\)</span> equals the market portfolio <span class="math inline">\(\omega_m\)</span>:</p>
+<p><span class="math display">\[
+\tilde{\mu} = c \cdot \Sigma\omega_m
+\]</span></p>
+<p>for some constant <span class="math inline">\(c\)</span>. The <span class="math inline">\(i\)</span>-th element of <span class="math inline">\(\Sigma\omega_m\)</span> is:</p>
+<p><span class="math display">\[
+\sum_{j=1}^N \sigma_{ij}\omega_{m,j} = \text{Cov}(r_i, r_m)
+\]</span></p>
+<p>where <span class="math inline">\(r_m = \sum_j \omega_{m,j} r_j\)</span> is the return on the market portfolio.</p>
+<p>For the market portfolio itself:</p>
+<p><span class="math display">\[
+\tilde{\mu}_m = c \cdot \text{Var}(r_m) = c \cdot \sigma_m^2
+\]</span></p>
+<p>Therefore <span class="math inline">\(c = \tilde{\mu}_m / \sigma_m^2\)</span>, and for any asset <span class="math inline">\(i\)</span>:</p>
+<p><span class="math display">\[
+\tilde{\mu}_i = \frac{\tilde{\mu}_m}{\sigma_m^2} \text{Cov}(r_i, r_m) = \beta_i \tilde{\mu}_m
+\]</span></p>
+<p>where:</p>
+<p><span class="math display">\[
+\beta_i = \frac{\text{Cov}(r_i, r_m)}{\text{Var}(r_m)}
+\]</span></p>
+<p>This is the famous <strong>CAPM equation</strong>:</p>
+<p><span class="math display">\[
+E(r_i) - r_f = \beta_i [E(r_m) - r_f]
+\]</span></p>
+</section>
+<section id="interpreting-beta" class="level3" data-number="4.6.4">
+<h3 data-number="4.6.4" class="anchored" data-anchor-id="interpreting-beta"><span class="header-section-number">4.6.4</span> Interpreting Beta</h3>
+<p>Beta (<span class="math inline">\(\beta_i\)</span>) measures an asset’s <strong>systematic risk</strong> (i.e., its sensitivity to market movements). The interpretation is straightforward:</p>
+<ul>
+<li><span class="math inline">\(\beta = 1\)</span>: The asset moves one-for-one with the market (average systematic risk)</li>
+<li><span class="math inline">\(\beta &gt; 1\)</span>: The asset amplifies market movements (aggressive, high systematic risk)</li>
+<li><span class="math inline">\(\beta &lt; 1\)</span>: The asset dampens market movements (defensive, low systematic risk)</li>
+<li><span class="math inline">\(\beta &lt; 0\)</span>: The asset moves opposite to the market (provides insurance)</li>
+</ul>
+<p>The CAPM says that expected excess return is proportional to beta, not to total volatility. This explains why:</p>
+<ol type="1">
+<li>An asset with zero beta earns only the risk-free rate (i.e., its risk is entirely idiosyncratic).</li>
+<li>An asset with beta of 1 earns the market risk premium</li>
+<li>A negative-beta asset earns <em>less</em> than the risk-free rate (i.e., investors pay for its insurance properties).</li>
+</ol>
+</section>
+</section>
+<section id="the-security-market-line" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="the-security-market-line"><span class="header-section-number">4.7</span> The Security Market Line</h2>
+<p>The CAPM predicts a linear relationship between beta and expected return. This relationship is called the <strong>Security Market Line (SML)</strong>:</p>
+<p><span class="math display">\[
+E(r_i) = r_f + \beta_i [E(r_m) - r_f]
+\]</span></p>
+<p>Unlike the Capital Market Line (which plots expected return against total risk), the Security Market Line plots expected return against systematic risk (beta).</p>
+<div id="ee8d3554" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>betas <span class="op">=</span> (sigma <span class="op">@</span> w_tan) <span class="op">/</span> (w_tan.T <span class="op">@</span> sigma <span class="op">@</span> w_tan)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>assets[<span class="st">"beta"</span>] <span class="op">=</span> betas.values</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>price_of_risk <span class="op">=</span> <span class="bu">float</span>(w_tan.T <span class="op">@</span> mu <span class="op">-</span> rf)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>assets_figure <span class="op">=</span> (</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    ggplot(assets, aes(x<span class="op">=</span><span class="st">"beta"</span>, y<span class="op">=</span><span class="st">"mu"</span>))</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_point()</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_abline(intercept<span class="op">=</span>rf, slope<span class="op">=</span>price_of_risk)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">"Beta (Systematic Risk)"</span>, </span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>        y<span class="op">=</span><span class="st">"Expected Return"</span>,</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"Security Market Line"</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> annotate(<span class="st">"text"</span>, x<span class="op">=</span><span class="fl">0.05</span>, y<span class="op">=</span>rf <span class="op">+</span> <span class="fl">0.001</span>, label<span class="op">=</span><span class="st">"Risk-free rate"</span>)</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>assets_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="03_capm_files/figure-html/cell-13-output-1.png" width="672" height="480" class="figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>You may observe that the estimated SML has a negative slope, which seems to contradict CAPM’s prediction. This reflects a <strong>negative estimated market risk premium</strong> in our sample period (i.e., the market portfolio earned less than the risk-free rate).</p>
+<p>When the market risk premium is negative, CAPM predicts that high-beta stocks should have <em>lower</em> expected returns than low-beta stocks. This is not a model failure, the model is behaving consistently. Rather, it reflects an unusual (but not impossible) sample period where risky assets underperformed safe assets.</p>
+<p>This observation highlights an important distinction: CAPM describes <em>expected</em> returns in equilibrium, but <em>realized</em> returns over any particular period may differ substantially from expectations due to shocks and surprises.</p>
+</section>
+<section id="empirical-estimation-of-capm-parameters" class="level2" data-number="4.8">
+<h2 data-number="4.8" class="anchored" data-anchor-id="empirical-estimation-of-capm-parameters"><span class="header-section-number">4.8</span> Empirical Estimation of CAPM Parameters</h2>
+<section id="the-regression-framework" class="level3" data-number="4.8.1">
+<h3 data-number="4.8.1" class="anchored" data-anchor-id="the-regression-framework"><span class="header-section-number">4.8.1</span> The Regression Framework</h3>
+<p>In practice, we estimate CAPM parameters using time-series regression. The model implies:</p>
+<p><span class="math display">\[
+r_{i,t} - r_{f,t} = \alpha_i + \beta_i(r_{m,t} - r_{f,t}) + \varepsilon_{i,t}
+\]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(r_{i,t}\)</span>: Return on asset <span class="math inline">\(i\)</span> at time <span class="math inline">\(t\)</span></li>
+<li><span class="math inline">\(r_{f,t}\)</span>: Risk-free rate at time <span class="math inline">\(t\)</span></li>
+<li><span class="math inline">\(r_{m,t}\)</span>: Market return at time <span class="math inline">\(t\)</span></li>
+<li><span class="math inline">\(\alpha_i\)</span>: Intercept (should be zero if CAPM holds)</li>
+<li><span class="math inline">\(\beta_i\)</span>: Systematic risk (slope coefficient)</li>
+<li><span class="math inline">\(\varepsilon_{i,t}\)</span>: Idiosyncratic shock (residual)</li>
+</ul>
+</section>
+<section id="alpha-risk-adjusted-performance" class="level3" data-number="4.8.2">
+<h3 data-number="4.8.2" class="anchored" data-anchor-id="alpha-risk-adjusted-performance"><span class="header-section-number">4.8.2</span> Alpha: Risk-Adjusted Performance</h3>
+<p>The intercept <span class="math inline">\(\alpha_i\)</span> measures <strong>risk-adjusted performance</strong>. If CAPM holds perfectly, alpha should be zero for all assets (i.e., any excess return is exactly compensated by systematic risk).</p>
+<ul>
+<li><span class="math inline">\(\alpha &gt; 0\)</span>: The asset outperformed its CAPM-predicted return (positive abnormal return)</li>
+<li><span class="math inline">\(\alpha &lt; 0\)</span>: The asset underperformed its CAPM-predicted return (negative abnormal return)</li>
+</ul>
+<p>Positive alpha is the holy grail of active management: earning returns beyond what systematic risk exposure would justify.</p>
+</section>
+<section id="loading-factor-data" class="level3" data-number="4.8.3">
+<h3 data-number="4.8.3" class="anchored" data-anchor-id="loading-factor-data"><span class="header-section-number">4.8.3</span> Loading Factor Data</h3>
+<p>We use Fama-French market excess returns as our market portfolio proxy. These data provide a widely accepted benchmark that is already adjusted for the risk-free rate:</p>
+<div id="484e89a8" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sqlite3</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>tidy_finance <span class="op">=</span> sqlite3.<span class="ex">connect</span>(database<span class="op">=</span><span class="st">"data/tidy_finance_python.sqlite"</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>factors <span class="op">=</span> pd.read_sql_query(</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    sql<span class="op">=</span><span class="st">"SELECT * FROM factors_ff5_monthly"</span>,</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    con<span class="op">=</span>tidy_finance,</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    parse_dates<span class="op">=</span>{<span class="st">"date"</span>}</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>factors.head(<span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">date</th>
+<th data-quarto-table-cell-role="th">smb</th>
+<th data-quarto-table-cell-role="th">hml</th>
+<th data-quarto-table-cell-role="th">rmw</th>
+<th data-quarto-table-cell-role="th">cma</th>
+<th data-quarto-table-cell-role="th">mkt_excess</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>2011-07-31</td>
+<td>0.008933</td>
+<td>-0.013099</td>
+<td>0.012139</td>
+<td>-0.009529</td>
+<td>-0.011287</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>2011-08-31</td>
+<td>0.004830</td>
+<td>-0.016656</td>
+<td>0.014516</td>
+<td>-0.003981</td>
+<td>0.007856</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>2011-09-30</td>
+<td>0.004970</td>
+<td>-0.000462</td>
+<td>0.008899</td>
+<td>0.001241</td>
+<td>-0.006501</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="running-the-regressions" class="level3" data-number="4.8.4">
+<h3 data-number="4.8.4" class="anchored" data-anchor-id="running-the-regressions"><span class="header-section-number">4.8.4</span> Running the Regressions</h3>
+<p>We estimate CAPM regressions for each stock in our universe:</p>
+<div id="f7fed34a" class="cell" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>returns_excess_monthly <span class="op">=</span> (returns_monthly</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    .merge(factors, on<span class="op">=</span><span class="st">"date"</span>, how<span class="op">=</span><span class="st">"left"</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    .assign(ret_excess<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"ret"</span>] <span class="op">-</span> x[<span class="st">"risk_free"</span>])</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> estimate_capm(data):</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> smf.ols(<span class="st">"ret_excess ~ mkt_excess"</span>, data<span class="op">=</span>data).fit()</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">"coefficient"</span>: [<span class="st">"alpha"</span>, <span class="st">"beta"</span>],</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">"estimate"</span>: model.params.values,</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">"t_statistic"</span>: model.tvalues.values</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>capm_results <span class="op">=</span> (returns_excess_monthly</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    .groupby(<span class="st">"symbol"</span>, group_keys<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(estimate_capm)</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>capm_results.head(<span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">symbol</th>
+<th data-quarto-table-cell-role="th">level_1</th>
+<th data-quarto-table-cell-role="th">coefficient</th>
+<th data-quarto-table-cell-role="th">estimate</th>
+<th data-quarto-table-cell-role="th">t_statistic</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>ACB</td>
+<td>0</td>
+<td>alpha</td>
+<td>-0.007479</td>
+<td>-0.876326</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>ACB</td>
+<td>1</td>
+<td>beta</td>
+<td>-0.240019</td>
+<td>-0.252484</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>BCM</td>
+<td>0</td>
+<td>alpha</td>
+<td>0.027827</td>
+<td>1.737895</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>BCM</td>
+<td>1</td>
+<td>beta</td>
+<td>4.150186</td>
+<td>2.625283</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="visualizing-alpha-estimates" class="level3" data-number="4.8.5">
+<h3 data-number="4.8.5" class="anchored" data-anchor-id="visualizing-alpha-estimates"><span class="header-section-number">4.8.5</span> Visualizing Alpha Estimates</h3>
+<p><a href="#fig-305" class="quarto-xref">Figure&nbsp;<span>4.2</span></a> shows the estimated alphas across our VN30 sample. Statistical significance (at the 95% level) is indicated by color.</p>
+<div id="cell-fig-305" class="cell" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>alphas <span class="op">=</span> (capm_results</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">"coefficient == 'alpha'"</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    .assign(is_significant<span class="op">=</span><span class="kw">lambda</span> x: np.<span class="bu">abs</span>(x[<span class="st">"t_statistic"</span>]) <span class="op">&gt;=</span> <span class="fl">1.96</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>alphas[<span class="st">"symbol"</span>] <span class="op">=</span> pd.Categorical(</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    alphas[<span class="st">"symbol"</span>],</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    categories<span class="op">=</span>alphas.sort_values(<span class="st">"estimate"</span>)[<span class="st">"symbol"</span>],</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    ordered<span class="op">=</span><span class="va">True</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>alphas_figure <span class="op">=</span> (</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    ggplot(alphas, aes(y<span class="op">=</span><span class="st">"estimate"</span>, x<span class="op">=</span><span class="st">"symbol"</span>, fill<span class="op">=</span><span class="st">"is_significant"</span>))</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_col()</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> coord_flip()</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">""</span>, </span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>        y<span class="op">=</span><span class="st">"Estimated Alpha (Monthly)"</span>, </span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>        fill<span class="op">=</span><span class="st">"Significant at 95%?"</span>,</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"Estimated CAPM Alphas for VN30 Index Constituents"</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>alphas_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-305" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: Estimated CAPM alphas for VN30 index constituents. The figure shows a bar chart with estimated alphas and indicates whether each estimate is statistically significant at 95%.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-305-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="03_capm_files/figure-html/fig-305-output-1.png" alt="Title: Estimated CAPM alphas for VN30 index constituents. The figure shows a bar chart with estimated alphas and indicates whether each estimate is statistically significant at 95%." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-305-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.2: Estimated CAPM alphas for VN30 index constituents. Color indicates statistical significance at the 95% confidence level. Most alphas are statistically indistinguishable from zero, consistent with CAPM predictions.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The distribution of alphas provides evidence on CAPM’s empirical validity. If the model holds, we expect:</p>
+<ol type="1">
+<li>Most alphas close to zero</li>
+<li>Few statistically significant alphas</li>
+<li>Roughly equal numbers of positive and negative alphas</li>
+</ol>
+<p>Systematic patterns in alphas, such as consistently positive alphas for certain types of stocks, would suggest the CAPM is incomplete and that additional risk factors may be needed.</p>
+</section>
+</section>
+<section id="limitations-and-extensions" class="level2" data-number="4.9">
+<h2 data-number="4.9" class="anchored" data-anchor-id="limitations-and-extensions"><span class="header-section-number">4.9</span> Limitations and Extensions</h2>
+<section id="the-market-portfolio-problem" class="level3" data-number="4.9.1">
+<h3 data-number="4.9.1" class="anchored" data-anchor-id="the-market-portfolio-problem"><span class="header-section-number">4.9.1</span> The Market Portfolio Problem</h3>
+<p>A fundamental challenge in testing the CAPM is identifying the market portfolio. The theory requires a portfolio that includes <em>all</em> investable assets, not just stocks, but also bonds, real estate, private businesses, human capital, and even intangible assets. In practice, we use proxies like broad market indices (VNI, S&amp;P 500), but these capture only publicly traded equities.</p>
+<p>This limitation is profound. As Richard Roll famously argued, the CAPM is essentially untestable because the true market portfolio is unobservable. Any test of the CAPM is simultaneously a test of whether our proxy adequately represents the market.</p>
+</section>
+<section id="time-varying-betas" class="level3" data-number="4.9.2">
+<h3 data-number="4.9.2" class="anchored" data-anchor-id="time-varying-betas"><span class="header-section-number">4.9.2</span> Time-Varying Betas</h3>
+<p>The CAPM assumes that betas are constant over time, but this assumption rarely holds in practice. Companies undergo changes that affect their market sensitivity:</p>
+<ul>
+<li><strong>Capital structure changes</strong>: Increasing leverage raises beta</li>
+<li><strong>Business model evolution</strong>: Diversification into new industries can alter systematic risk</li>
+<li><strong>Market conditions</strong>: Betas often increase during market stress</li>
+</ul>
+<p>Conditional CAPM models <span class="citation" data-cites="Jagannathan1996">(<a href="references.html#ref-Jagannathan1996" role="doc-biblioref">Jagannathan and Wang 1996</a>)</span> address this by allowing risk premiums and betas to vary with the business cycle.</p>
+</section>
+<section id="empirical-anomalies" class="level3" data-number="4.9.3">
+<h3 data-number="4.9.3" class="anchored" data-anchor-id="empirical-anomalies"><span class="header-section-number">4.9.3</span> Empirical Anomalies</h3>
+<p>Decades of empirical research have documented patterns in stock returns that CAPM cannot explain:</p>
+<ol type="1">
+<li><strong>Size effect</strong>: Small-cap stocks tend to outperform large-cap stocks, even after adjusting for beta</li>
+<li><strong>Value effect</strong>: Stocks with high book-to-market ratios outperform growth stocks</li>
+<li><strong>Momentum</strong>: Stocks that performed well recently tend to continue performing well</li>
+</ol>
+<p>These anomalies suggest that systematic risk has multiple dimensions beyond market exposure.</p>
+</section>
+<section id="multifactor-extensions" class="level3" data-number="4.9.4">
+<h3 data-number="4.9.4" class="anchored" data-anchor-id="multifactor-extensions"><span class="header-section-number">4.9.4</span> Multifactor Extensions</h3>
+<p>The limitations of CAPM have led to increasingly sophisticated asset pricing models. The <strong>Fama-French three-factor model</strong> <span class="citation" data-cites="Fama1992">(<a href="references.html#ref-Fama1992" role="doc-biblioref">Fama and French 1992</a>)</span> adds two factors to capture size and value effects:</p>
+<ul>
+<li><strong>SMB (Small Minus Big)</strong>: Returns on small stocks minus large stocks</li>
+<li><strong>HML (High Minus Low)</strong>: Returns on value stocks minus growth stocks</li>
+</ul>
+<p>The <strong>Fama-French five-factor model</strong> <span class="citation" data-cites="FamaFrench2015">(<a href="references.html#ref-FamaFrench2015" role="doc-biblioref">Fama and French 2015</a>)</span> adds two more dimensions:</p>
+<ul>
+<li><strong>RMW (Robust Minus Weak)</strong>: Returns on profitable firms minus unprofitable firms<br>
+</li>
+<li><strong>CMA (Conservative Minus Aggressive)</strong>: Returns on conservative investors minus aggressive investors</li>
+</ul>
+<p>The <strong>Carhart four-factor model</strong> <span class="citation" data-cites="Carhart1997">(<a href="references.html#ref-Carhart1997" role="doc-biblioref">Carhart 1997</a>)</span> adds momentum to the three-factor framework.</p>
+<p>Other theoretical developments include:</p>
+<ul>
+<li><strong>Consumption CAPM</strong>: Links asset prices to macroeconomic consumption risk</li>
+<li><strong>Q-factor model</strong> <span class="citation" data-cites="Hou2015">(<a href="references.html#ref-Hou2015" role="doc-biblioref">Hou, Xue, and Zhang 2014</a>)</span>: Derives factors from investment-based asset pricing theory</li>
+<li><strong>Arbitrage Pricing Theory</strong>: Allows for multiple sources of systematic risk without specifying their identity</li>
+</ul>
+<p>Despite its limitations, the CAPM remains valuable as a conceptual benchmark. Its core insight (i.e., only systematic, undiversifiable risk commands a premium) continues to inform how we think about risk and return.</p>
+</section>
+</section>
+<section id="key-takeaways" class="level2" data-number="4.10">
+<h2 data-number="4.10" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">4.10</span> Key Takeaways</h2>
+<p>This chapter introduced the Capital Asset Pricing Model and its implications for understanding the relationship between risk and expected return. The main insights are:</p>
+<ol type="1">
+<li><p><strong>Not all risk is rewarded</strong>: The CAPM distinguishes between systematic risk (which cannot be diversified away and commands a premium) and idiosyncratic risk (which can be eliminated through diversification and earns no premium).</p></li>
+<li><p><strong>The tangency portfolio is universal</strong>: When a risk-free asset exists, all mean-variance investors hold the same portfolio of risky assets (i.e., the tangency or maximum Sharpe ratio portfolio). They differ only in how much they allocate to this portfolio versus the risk-free asset.</p></li>
+<li><p><strong>In equilibrium, the tangency portfolio is the market portfolio</strong>: Since all investors hold the same risky portfolio, and total demand must equal supply, the equilibrium portfolio weights are market capitalization weights.</p></li>
+<li><p><strong>Expected returns depend on beta</strong>: The CAPM equation states that expected excess return equals beta times the market risk premium. Beta measures covariance with the market portfolio, normalized by market variance.</p></li>
+<li><p><strong>Alpha measures risk-adjusted performance</strong>: Positive alpha indicates returns above what systematic risk would justify; negative alpha indicates underperformance.</p></li>
+<li><p><strong>Empirical challenges exist</strong>: Testing the CAPM requires identifying the market portfolio, which is unobservable in practice. Documented anomalies (size, value, momentum) suggest additional risk factors beyond market exposure.</p></li>
+<li><p><strong>Extensions abound</strong>: Multifactor models like Fama-French extend the CAPM framework by adding factors that capture dimensions of systematic risk the market factor misses.</p></li>
+</ol>
+<p>The CAPM’s elegance lies in its simplicity: a single factor (i.e., exposure to the market) should explain expected returns in equilibrium. While reality is more complex, this framework provides the foundation for all modern asset pricing theory.</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Carhart1997" class="csl-entry" role="listitem">
+Carhart, Mark M. 1997. <span>“<span class="nocase">On persistence in mutual fund performance</span>.”</span> <em><span>The Journal of Finance</span></em> 52 (1): 57–82. <a href="https://doi.org/10.1111/j.1540-6261.1997.tb03808.x">https://doi.org/10.1111/j.1540-6261.1997.tb03808.x</a>.
+</div>
+<div id="ref-Fama1992" class="csl-entry" role="listitem">
+Fama, Eugene F., and Kenneth R. French. 1992. <span>“<span class="nocase">The cross-section of expected stock returns</span>.”</span> <em><span>The Journal of Finance</span></em> 47 (2): 427–65. <a href="https://doi.org/2329112">https://doi.org/2329112</a>.
+</div>
+<div id="ref-FamaFrench2015" class="csl-entry" role="listitem">
+———. 2015. <span>“A Five-Factor Asset Pricing Model.”</span> <em>Journal of Financial Economics</em> 116 (1): 1–22. <a href="https://doi.org/10.1016/j.jfineco.2014.10.010">https://doi.org/10.1016/j.jfineco.2014.10.010</a>.
+</div>
+<div id="ref-Hou2015" class="csl-entry" role="listitem">
+Hou, Kewei, Chen Xue, and Lu Zhang. 2014. <span>“<span class="nocase">Digesting anomalies: An investment approach</span>.”</span> <em><span>Review of Financial Studies</span></em> 28 (3): 650–705. <a href="https://doi.org/10.1093/rfs/hhu068">https://doi.org/10.1093/rfs/hhu068</a>.
+</div>
+<div id="ref-Jagannathan1996" class="csl-entry" role="listitem">
+Jagannathan, Ravi, and Zhenyu Wang. 1996. <span>“<span class="nocase">The conditional CAPM and the cross-section of expected returns</span>.”</span> <em><span>The Journal of Finance</span></em> 51 (1): 3–53. <a href="https://doi.org/10.2307/2329301">https://doi.org/10.2307/2329301</a>.
+</div>
+<div id="ref-Lintner1965" class="csl-entry" role="listitem">
+Lintner, John. 1965. <span>“<span class="nocase">Security prices, risk, and maximal gains from diversification</span>.”</span> <em><span>The Journal of Finance</span></em> 20 (4): 587–615. <a href="https://doi.org/10.1111/j.1540-6261.1965.tb02930.x">https://doi.org/10.1111/j.1540-6261.1965.tb02930.x</a>.
+</div>
+<div id="ref-Mossin1966" class="csl-entry" role="listitem">
+Mossin, Jan. 1966. <span>“<span class="nocase">Equilibrium in a capital asset market</span>.”</span> <em><span>Econometrica</span></em> 34 (4): 768–83. <a href="https://doi.org/10.2307/1910098">https://doi.org/10.2307/1910098</a>.
+</div>
+<div id="ref-Sharpe1964" class="csl-entry" role="listitem">
+Sharpe, William F. 1964. <span>“<span class="nocase">Capital asset prices: A theory of market equilibrium under conditions of risk </span>.”</span> <em><span>The Journal of Finance</span></em> 19 (3): 425–42. <a href="https://doi.org/10.1111/j.1540-6261.1964.tb02865.x">https://doi.org/10.1111/j.1540-6261.1964.tb02865.x</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./02_modern_portfolio_theory.html" class="pagination-link" aria-label="Modern Portfolio Theory">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./04_financial_statement_analysis.html" class="pagination-link" aria-label="Financial Statement Analysis">
+        <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Financial Statement Analysis</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

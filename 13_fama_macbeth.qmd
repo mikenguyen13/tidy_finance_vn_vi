@@ -1,0 +1,186 @@
+---
+title: Fama-MacBeth Regressions
+---
+
+
+
+```{python}
+import pandas as pd
+import numpy as np
+import sqlite3
+import statsmodels.formula.api as smf
+```
+
+## Data Preparation
+
+We illustrate @Fama1973 with the monthly CRSP sample and use three characteristics to explain the cross-section of returns: Market capitalization, the book-to-market ratio, and the CAPM beta (i.e., the covariance of the excess stock returns with the market excess returns). We collect the data from our SQLite database introduced in [Accessing and Managing Financial Data](accessing-and-managing-financial-data.qmd) and [WRDS, CRSP, and Compustat](wrds-crsp-and-compustat.qmd).\index{Data!CRSP}\index{Data!Compustat}\index{Beta}
+
+```{python}
+tidy_finance = sqlite3.connect(database="data/tidy_finance_python.sqlite")
+
+prices_monthly = pd.read_sql_query(
+  sql="SELECT symbol, date, ret_excess, mktcap FROM prices_monthly",
+  con=tidy_finance,
+  parse_dates={"date"}
+)
+
+comp_vn = pd.read_sql_query(
+  sql="SELECT datadate, symbol, be FROM comp_vn",
+  con=tidy_finance,
+  parse_dates={"datadate"}
+)
+
+beta_monthly = pd.read_sql_query(
+  sql="SELECT symbol, date, beta FROM beta_monthly WHERE return_type = 'monthly'",
+  con=tidy_finance,
+  parse_dates={"date"}
+)
+```
+
+We use the Compustat and CRSP data to compute the book-to-market ratio and the (log) market capitalization.\index{Book-to-market ratio}\index{Market capitalization} Furthermore, we also use the CAPM betas based on monthly returns we computed in the previous chapters.\index{Beta}\index{CAPM}
+
+```{python}
+
+from pandas.tseries.offsets import MonthEnd
+
+characteristics = (comp_vn
+  # Ensure date is the end of the month
+  .assign(date=lambda x: pd.to_datetime(x["datadate"]) + MonthEnd(0))
+  .merge(prices_monthly, how="left", on=["symbol", "date"])
+  .merge(beta_monthly, how="left", on=["symbol", "date"])
+  .assign(
+      bm=lambda x: x["be"] / x["mktcap"],
+      log_mktcap=lambda x: np.log(x["mktcap"]),
+      # Shift to the future month where these characteristics will be used
+      sorting_date=lambda x: x["date"] + pd.DateOffset(months=6) + MonthEnd(0)
+  )
+  .get(["symbol", "bm", "log_mktcap", "beta", "sorting_date"])
+  .dropna()
+)
+
+characteristics.head(3)
+```
+
+```{python}
+data_fama_macbeth = (prices_monthly
+  .merge(characteristics, 
+         how="left",
+         left_on=["symbol", "date"], 
+         right_on=["symbol", "sorting_date"])
+  .sort_values(["date", "symbol"])
+)
+
+# Forward fill only the necessary columns within each group
+cols_to_fill = ["beta", "bm", "log_mktcap"]
+data_fama_macbeth[cols_to_fill] = (data_fama_macbeth
+                                  .groupby("symbol")[cols_to_fill]
+                                  .ffill())
+
+data_fama_macbeth = data_fama_macbeth.dropna().reset_index(drop=True)
+```
+
+```{python}
+data_fama_macbeth.head(3)
+```
+
+
+```{python}
+data_fama_macbeth = (data_fama_macbeth
+  .sort_values(["symbol", "date"])
+  .assign(
+      # Shift moves the 'next' value up to the 'current' row
+      ret_excess_lead=lambda x: x.groupby("symbol")["ret_excess"].shift(-1)
+  )
+  .get(["symbol", "date", "ret_excess_lead", "beta", "log_mktcap", "bm"])
+  .dropna()
+)
+
+data_fama_macbeth.head()
+
+data_fama_macbeth.head()
+```
+
+## Cross-Sectional Regression
+
+Next, we run the cross-sectional regressions with the characteristics as explanatory variables for each month. We regress the returns of the test assets at a particular time point on the characteristics of each asset. By doing so, we get an estimate of the risk premiums $\hat\lambda^{f}_t$ for each point in time. \index{Regression!Cross-section}
+
+```{python}
+risk_premiums = (data_fama_macbeth
+  .groupby("date")
+  .apply(lambda x: smf.ols(
+      formula="ret_excess_lead ~ beta + log_mktcap + bm", 
+      data=x
+    ).fit()
+    .params
+  )
+  .reset_index()
+)
+risk_premiums
+```
+
+## Time-Series Aggregation
+
+Now that we have the risk premiums' estimates for each period, we can average across the time-series dimension to get the expected risk premium for each characteristic. Similarly, we manually create the $t$-test statistics for each regressor, which we can then compare to usual critical values of 1.96 or 2.576 for two-tailed significance tests at a five percent and a one percent significance level.
+
+```{python}
+price_of_risk = (risk_premiums
+  .melt(id_vars="date", var_name="factor", value_name="estimate")
+  .groupby("factor")["estimate"]
+  .apply(lambda x: pd.Series({
+      "risk_premium": x.mean(),
+      "t_statistic": x.mean()/x.std()*np.sqrt(len(x))
+    })
+  )
+  .reset_index()
+  .pivot(index="factor", columns="level_1", values="estimate")
+  .reset_index()
+)
+```
+
+It is common to adjust for autocorrelation when reporting standard errors of risk premiums. As in [Univariate Portfolio Sorts](univariate-portfolio-sorts.qmd), the typical procedure for this is computing @Newey1987 standard errors.\index{Standard errors!Newey-West}
+
+```{python}
+price_of_risk_newey_west = (risk_premiums
+  .melt(id_vars="date", var_name="factor", value_name="estimate")
+  .groupby("factor")
+  .apply(lambda x: (
+      x["estimate"].mean()/ 
+        smf.ols("estimate ~ 1", x)
+        .fit(cov_type="HAC", cov_kwds={"maxlags": 6}).bse
+    )
+  )
+  .reset_index()
+  .rename(columns={"Intercept": "t_statistic_newey_west"})
+)
+
+(price_of_risk
+  .merge(price_of_risk_newey_west, on="factor")
+  .round(3)
+)
+```
+
+Finally, let us interpret the results. Stocks with higher book-to-market ratios earn higher expected future returns, which is in line with the value premium. The negative value for log market capitalization reflects the size premium for smaller stocks. Consistent with results from earlier chapters, we detect no relation between beta and future stock returns.
+
+```{python}
+#| output: false
+import tidyfinance as tf
+
+tf.estimate_fama_macbeth(
+  data=data_fama_macbeth,
+  model="ret_excess_lead ~ beta + bm + log_mktcap",
+  vcov="newey-west"
+)
+```
+
+## Key Takeaways
+
+- Fama-MacBeth regressions provide a two-step approach to estimate risk premiums by running time-series averages of cross-sectional regressions on asset characteristics.
+- Fama-MacBeth regressions are commonly used in empirical asset pricing to test whether factors like size, value, or market beta are priced in the cross-section of stock returns.
+- Measurement error in factor exposures, especially when estimated beforehand, can bias results, but corrections such as Newey-West standard errors and weighted regressions can improve accuracy.
+- The `tidyfinance` Python package provides a user-friendly `estimate_fama_macbeth()` function that simplifies the Fama-MacBeth estimation pipeline.
+
+## Exercises
+
+1. Estimate stock-specific value and size risk factors to similar to the CAPM-beta using rolling estimation based on Fama-French 3 Factors. Use these estimates instead of the stock characteristics in the Fama-MacBeth regression from above. How do the coefficient estimates differ?
+1. Download the 49 Industry Portfolios from Ken French data library. Use these industry portfolios instead of the stocks to estimate the three rolling risk-factors (beta, value, size). Replicate the Fama-MacBeth regression from above. Are the coefficient estimates similar?
+1. Use individual stocks with weighted-least squares based on a firm's size as suggested by @Hou2020. Then, repeat the Fama-MacBeth regressions without the weighting-scheme adjustment but drop the smallest 20 percent of firms each month. Compare the results of the three approaches. 

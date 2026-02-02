@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>6&nbsp; Discounted Cash Flow Analysis – Tidy Finance in Vietnam</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./06_accessing_and_managing_financial_data.html" rel="next">
+<link href="./04_financial_statement_analysis.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-50a4fa9e9ef121803c2355a2deb1af4d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./05_discounted_cash_flow.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Discounted Cash Flow Analysis</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Tidy Finance in Vietnam</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./00_institutional_background.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Institutional Background and Market Structure of Vietnam’s Equity Market</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01_working_with_stock_returns.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Constructing and Analyzing Equity Return Series</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02_modern_portfolio_theory.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03_capm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">The Capital Asset Pricing Model</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04_financial_statement_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Financial Statement Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05_discounted_cash_flow.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Discounted Cash Flow Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06_accessing_and_managing_financial_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Accessing and Managing Financial Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07_datacore_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">DataCore Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08_beta_estimation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Beta Estimation</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12_fama_french.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./20_conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#what-is-a-company-worth" id="toc-what-is-a-company-worth" class="nav-link active" data-scroll-target="#what-is-a-company-worth"><span class="header-section-number">6.1</span> What Is a Company Worth?</a>
+  <ul class="collapse">
+  <li><a href="#valuation-methods-overview" id="toc-valuation-methods-overview" class="nav-link" data-scroll-target="#valuation-methods-overview"><span class="header-section-number">6.1.1</span> Valuation Methods Overview</a></li>
+  <li><a href="#the-three-pillars-of-dcf" id="toc-the-three-pillars-of-dcf" class="nav-link" data-scroll-target="#the-three-pillars-of-dcf"><span class="header-section-number">6.1.2</span> The Three Pillars of DCF</a></li>
+  </ul></li>
+  <li><a href="#understanding-free-cash-flow" id="toc-understanding-free-cash-flow" class="nav-link" data-scroll-target="#understanding-free-cash-flow"><span class="header-section-number">6.2</span> Understanding Free Cash Flow</a>
+  <ul class="collapse">
+  <li><a href="#why-free-cash-flow-not-net-income" id="toc-why-free-cash-flow-not-net-income" class="nav-link" data-scroll-target="#why-free-cash-flow-not-net-income"><span class="header-section-number">6.2.1</span> Why Free Cash Flow, Not Net Income?</a></li>
+  <li><a href="#the-free-cash-flow-formula" id="toc-the-free-cash-flow-formula" class="nav-link" data-scroll-target="#the-free-cash-flow-formula"><span class="header-section-number">6.2.2</span> The Free Cash Flow Formula</a></li>
+  </ul></li>
+  <li><a href="#loading-historical-financial-data" id="toc-loading-historical-financial-data" class="nav-link" data-scroll-target="#loading-historical-financial-data"><span class="header-section-number">6.3</span> Loading Historical Financial Data</a>
+  <ul class="collapse">
+  <li><a href="#computing-historical-free-cash-flow" id="toc-computing-historical-free-cash-flow" class="nav-link" data-scroll-target="#computing-historical-free-cash-flow"><span class="header-section-number">6.3.1</span> Computing Historical Free Cash Flow</a></li>
+  <li><a href="#understanding-the-historical-pattern" id="toc-understanding-the-historical-pattern" class="nav-link" data-scroll-target="#understanding-the-historical-pattern"><span class="header-section-number">6.3.2</span> Understanding the Historical Pattern</a></li>
+  </ul></li>
+  <li><a href="#visualizing-historical-ratios" id="toc-visualizing-historical-ratios" class="nav-link" data-scroll-target="#visualizing-historical-ratios"><span class="header-section-number">6.4</span> Visualizing Historical Ratios</a></li>
+  <li><a href="#forecasting-free-cash-flow" id="toc-forecasting-free-cash-flow" class="nav-link" data-scroll-target="#forecasting-free-cash-flow"><span class="header-section-number">6.5</span> Forecasting Free Cash Flow</a>
+  <ul class="collapse">
+  <li><a href="#the-ratio-based-forecasting-approach" id="toc-the-ratio-based-forecasting-approach" class="nav-link" data-scroll-target="#the-ratio-based-forecasting-approach"><span class="header-section-number">6.5.1</span> The Ratio-Based Forecasting Approach</a></li>
+  <li><a href="#setting-forecast-assumptions" id="toc-setting-forecast-assumptions" class="nav-link" data-scroll-target="#setting-forecast-assumptions"><span class="header-section-number">6.5.2</span> Setting Forecast Assumptions</a></li>
+  <li><a href="#forecasting-revenue-growth" id="toc-forecasting-revenue-growth" class="nav-link" data-scroll-target="#forecasting-revenue-growth"><span class="header-section-number">6.5.3</span> Forecasting Revenue Growth</a></li>
+  <li><a href="#building-the-forecast" id="toc-building-the-forecast" class="nav-link" data-scroll-target="#building-the-forecast"><span class="header-section-number">6.5.4</span> Building the Forecast</a></li>
+  </ul></li>
+  <li><a href="#visualizing-the-forecast" id="toc-visualizing-the-forecast" class="nav-link" data-scroll-target="#visualizing-the-forecast"><span class="header-section-number">6.6</span> Visualizing the Forecast</a></li>
+  <li><a href="#terminal-value-capturing-long-term-value" id="toc-terminal-value-capturing-long-term-value" class="nav-link" data-scroll-target="#terminal-value-capturing-long-term-value"><span class="header-section-number">6.7</span> Terminal Value: Capturing Long-Term Value</a>
+  <ul class="collapse">
+  <li><a href="#the-perpetuity-growth-model" id="toc-the-perpetuity-growth-model" class="nav-link" data-scroll-target="#the-perpetuity-growth-model"><span class="header-section-number">6.7.1</span> The Perpetuity Growth Model</a></li>
+  <li><a href="#choosing-the-perpetual-growth-rate" id="toc-choosing-the-perpetual-growth-rate" class="nav-link" data-scroll-target="#choosing-the-perpetual-growth-rate"><span class="header-section-number">6.7.2</span> Choosing the Perpetual Growth Rate</a></li>
+  <li><a href="#alternative-exit-multiple-approach" id="toc-alternative-exit-multiple-approach" class="nav-link" data-scroll-target="#alternative-exit-multiple-approach"><span class="header-section-number">6.7.3</span> Alternative: Exit Multiple Approach</a></li>
+  </ul></li>
+  <li><a href="#the-discount-rate-weighted-average-cost-of-capital" id="toc-the-discount-rate-weighted-average-cost-of-capital" class="nav-link" data-scroll-target="#the-discount-rate-weighted-average-cost-of-capital"><span class="header-section-number">6.8</span> The Discount Rate: Weighted Average Cost of Capital</a>
+  <ul class="collapse">
+  <li><a href="#estimating-wacc-components" id="toc-estimating-wacc-components" class="nav-link" data-scroll-target="#estimating-wacc-components"><span class="header-section-number">6.8.1</span> Estimating WACC Components</a></li>
+  <li><a href="#using-industry-wacc-data" id="toc-using-industry-wacc-data" class="nav-link" data-scroll-target="#using-industry-wacc-data"><span class="header-section-number">6.8.2</span> Using Industry WACC Data</a></li>
+  </ul></li>
+  <li><a href="#computing-enterprise-value" id="toc-computing-enterprise-value" class="nav-link" data-scroll-target="#computing-enterprise-value"><span class="header-section-number">6.9</span> Computing Enterprise Value</a></li>
+  <li><a href="#sensitivity-analysis" id="toc-sensitivity-analysis" class="nav-link" data-scroll-target="#sensitivity-analysis"><span class="header-section-number">6.10</span> Sensitivity Analysis</a></li>
+  <li><a href="#from-enterprise-value-to-equity-value" id="toc-from-enterprise-value-to-equity-value" class="nav-link" data-scroll-target="#from-enterprise-value-to-equity-value"><span class="header-section-number">6.11</span> From Enterprise Value to Equity Value</a>
+  <ul class="collapse">
+  <li><a href="#implied-share-price" id="toc-implied-share-price" class="nav-link" data-scroll-target="#implied-share-price"><span class="header-section-number">6.11.1</span> Implied Share Price</a></li>
+  </ul></li>
+  <li><a href="#limitations-and-practical-considerations" id="toc-limitations-and-practical-considerations" class="nav-link" data-scroll-target="#limitations-and-practical-considerations"><span class="header-section-number">6.12</span> Limitations and Practical Considerations</a>
+  <ul class="collapse">
+  <li><a href="#sensitivity-to-assumptions" id="toc-sensitivity-to-assumptions" class="nav-link" data-scroll-target="#sensitivity-to-assumptions"><span class="header-section-number">6.12.1</span> Sensitivity to Assumptions</a></li>
+  <li><a href="#terminal-value-dominance" id="toc-terminal-value-dominance" class="nav-link" data-scroll-target="#terminal-value-dominance"><span class="header-section-number">6.12.2</span> Terminal Value Dominance</a></li>
+  <li><a href="#garbage-in-garbage-out" id="toc-garbage-in-garbage-out" class="nav-link" data-scroll-target="#garbage-in-garbage-out"><span class="header-section-number">6.12.3</span> Garbage In, Garbage Out</a></li>
+  <li><a href="#not-suitable-for-all-companies" id="toc-not-suitable-for-all-companies" class="nav-link" data-scroll-target="#not-suitable-for-all-companies"><span class="header-section-number">6.12.4</span> Not Suitable for All Companies</a></li>
+  <li><a href="#complement-with-other-methods" id="toc-complement-with-other-methods" class="nav-link" data-scroll-target="#complement-with-other-methods"><span class="header-section-number">6.12.5</span> Complement with Other Methods</a></li>
+  </ul></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">6.13</span> Key Takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Discounted Cash Flow Analysis</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="what-is-a-company-worth" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="what-is-a-company-worth"><span class="header-section-number">6.1</span> What Is a Company Worth?</h2>
+<p>The previous chapters examined how markets price securities in equilibrium and how financial statements reveal company fundamentals. But these approaches leave a central question unanswered: What is the <em>intrinsic value</em> of a business, independent of its current market price?</p>
+<p>Discounted Cash Flow (DCF) analysis answers this question by valuing a company based on its ability to generate cash for investors. The core insight is simple: a business is worth the present value of all future cash it will produce. This principle that value equals discounted future cash flows underlies virtually all of finance, from bond pricing to real estate valuation.</p>
+<p>DCF analysis stands apart from other valuation approaches in three important ways. First, it explicitly accounts for the <strong>time value of money</strong> (i.e., the principle that a dollar today is worth more than a dollar tomorrow). By discounting future cash flows at an appropriate rate, we incorporate both time preferences and risk. Second, DCF is <strong>forward-looking</strong>, making it particularly suitable for companies where historical performance may not reflect future potential. Third, DCF is <strong>flexible</strong> enough to accommodate various business models and capital structures, making it applicable across industries and company sizes.</p>
+<section id="valuation-methods-overview" class="level3" data-number="6.1.1">
+<h3 data-number="6.1.1" class="anchored" data-anchor-id="valuation-methods-overview"><span class="header-section-number">6.1.1</span> Valuation Methods Overview</h3>
+<p>Company valuation methods broadly fall into three categories:</p>
+<ul>
+<li><strong>Market-based approaches</strong> compare companies using relative metrics like Price-to-Earnings or EV/EBITDA ratios. These are quick but assume comparable companies are fairly valued.</li>
+<li><strong>Asset-based methods</strong> focus on the net value of tangible and intangible assets. These work well for liquidation scenarios but miss going-concern value.</li>
+<li><strong>Income-based techniques</strong> value companies based on their ability to generate future cash flows. DCF is the most rigorous income-based method.</li>
+</ul>
+<p>We focus on DCF because it forces analysts to make explicit assumptions about growth, profitability, and risk. These assumptions are often hidden in other methods. Even when DCF isn’t the final word on valuation, the discipline of building a DCF model deepens understanding of what drives value.</p>
+</section>
+<section id="the-three-pillars-of-dcf" class="level3" data-number="6.1.2">
+<h3 data-number="6.1.2" class="anchored" data-anchor-id="the-three-pillars-of-dcf"><span class="header-section-number">6.1.2</span> The Three Pillars of DCF</h3>
+<p>Every DCF analysis rests on three components:</p>
+<ol type="1">
+<li><strong>Free Cash Flow (FCF) forecasts</strong>: The expected future cash available for distribution to investors after operating expenses, taxes, and investments</li>
+<li><strong>Terminal value</strong>: The company’s value beyond the explicit forecast period, often representing a majority of total valuation</li>
+<li><strong>Discount rate</strong>: Typically the Weighted Average Cost of Capital (WACC), which adjusts future cash flows to present value by incorporating risk and capital structure</li>
+</ol>
+<p>We make simplifying assumptions throughout this chapter. In particular, we assume firms conduct only operating activities (i.e., financial statements do not include non-operating items like excess cash or investment securities). Real-world valuations require valuing these separately. Entire textbooks are devoted to valuation nuances; our goal is to establish the conceptual framework and practical implementation.</p>
+<div id="07670a7e" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotnine <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> mizani.formatters <span class="im">import</span> percent_format, comma_format</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> product</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+<section id="understanding-free-cash-flow" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="understanding-free-cash-flow"><span class="header-section-number">6.2</span> Understanding Free Cash Flow</h2>
+<p>Before diving into calculations, we need to understand what Free Cash Flow represents and why it matters for valuation.</p>
+<section id="why-free-cash-flow-not-net-income" class="level3" data-number="6.2.1">
+<h3 data-number="6.2.1" class="anchored" data-anchor-id="why-free-cash-flow-not-net-income"><span class="header-section-number">6.2.1</span> Why Free Cash Flow, Not Net Income?</h3>
+<p>Accountants report net income, but DCF uses free cash flow. Why the difference?</p>
+<p>Net income includes non-cash items (like depreciation) and ignores cash needs (like capital expenditures and working capital investments). A company can report strong profits while burning cash, or generate substantial cash while reporting losses. Free cash flow captures what actually matters for valuation: the cash available to distribute to all capital providers (both debt holders and equity holders) after funding operations and investments.</p>
+</section>
+<section id="the-free-cash-flow-formula" class="level3" data-number="6.2.2">
+<h3 data-number="6.2.2" class="anchored" data-anchor-id="the-free-cash-flow-formula"><span class="header-section-number">6.2.2</span> The Free Cash Flow Formula</h3>
+<p>We calculate FCF using the following formula:</p>
+<p><span class="math display">\[
+\text{FCF} = \text{EBIT} \times (1 - \tau) + \text{D\&amp;A} - \Delta\text{WC} - \text{CAPEX}
+\]</span></p>
+<p>where:</p>
+<ul>
+<li><strong>EBIT</strong> (Earnings Before Interest and Taxes): Core operating profit before financing costs and taxes</li>
+<li><strong><span class="math inline">\(\tau\)</span></strong>: Corporate tax rate applied to operating profits</li>
+<li><strong>D&amp;A</strong> (Depreciation &amp; Amortization): Non-cash charges that reduce reported earnings but don’t consume cash</li>
+<li><strong><span class="math inline">\(\Delta\)</span>WC</strong> (Change in Working Capital): Cash tied up in (or released from) operations (increases in receivables and inventory consume cash, while increases in payables provide cash)</li>
+<li><strong>CAPEX</strong> (Capital Expenditures): Investments in long-term assets required to maintain and grow operations</li>
+</ul>
+<p>An alternative formulation starts from EBIT directly:</p>
+<p><span class="math display">\[
+\text{FCF} = \text{EBIT} + \text{D\&amp;A} - \text{Taxes} - \Delta\text{WC} - \text{CAPEX}
+\]</span></p>
+<p>Both formulations yield the same result when taxes are calculated consistently. The key insight is that FCF represents cash generated from operations after all reinvestment needs (i.e., cash that could theoretically be distributed to investors without impairing the business).</p>
+</section>
+</section>
+<section id="loading-historical-financial-data" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="loading-historical-financial-data"><span class="header-section-number">6.3</span> Loading Historical Financial Data</h2>
+<p>We use FPT Corporation, one of Vietnam’s largest technology companies, as our case study. FPT provides IT services, telecommunications, and education. It’s a diversified business with meaningful capital requirements and growth potential.</p>
+<div id="828e6838" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sqlite3</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>tidy_finance <span class="op">=</span> sqlite3.<span class="ex">connect</span>(database<span class="op">=</span><span class="st">"data/tidy_finance_python.sqlite"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>comp_vn <span class="op">=</span> pd.read_sql_query(</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    sql<span class="op">=</span><span class="st">"SELECT * FROM comp_vn"</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    con<span class="op">=</span>tidy_finance,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    parse_dates<span class="op">=</span>{<span class="st">"date"</span>}</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter to FPT and examine the data structure</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>fpt_data <span class="op">=</span> comp_vn[comp_vn[<span class="st">"symbol"</span>] <span class="op">==</span> <span class="st">"FPT"</span>].copy()</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>fpt_data[<span class="st">"year"</span>] <span class="op">=</span> fpt_data[<span class="st">"year"</span>].astype(<span class="bu">int</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>fpt_data <span class="op">=</span> fpt_data.sort_values(<span class="st">"year"</span>).reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Available years: </span><span class="sc">{</span>fpt_data[<span class="st">'year'</span>]<span class="sc">.</span><span class="bu">min</span>()<span class="sc">}</span><span class="ss"> to </span><span class="sc">{</span>fpt_data[<span class="st">'year'</span>]<span class="sc">.</span><span class="bu">max</span>()<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Number of observations: </span><span class="sc">{</span><span class="bu">len</span>(fpt_data)<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Available years: 2002 to 2023
+Number of observations: 22</code></pre>
+</div>
+</div>
+<section id="computing-historical-free-cash-flow" class="level3" data-number="6.3.1">
+<h3 data-number="6.3.1" class="anchored" data-anchor-id="computing-historical-free-cash-flow"><span class="header-section-number">6.3.1</span> Computing Historical Free Cash Flow</h3>
+<p>Let’s calculate the components needed for FCF from the financial statement data:</p>
+<div id="0f800cbc" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract and compute FCF components</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>historical_data <span class="op">=</span> (fpt_data</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    .assign(</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Revenue for ratio calculations</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        revenue<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"is_net_revenue"</span>],</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># EBIT = Earnings before interest and taxes</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Approximate as EBT + Interest Expense</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        ebit<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"is_ebt"</span>] <span class="op">+</span> x[<span class="st">"is_interest_expense"</span>],</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Tax payments (use actual tax expense)</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        taxes<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"is_cit_expense"</span>],</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Depreciation and amortization (non-cash add-back)</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        depreciation<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"cfo_depreciation"</span>],</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Change in working capital components</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Positive delta_wc means cash is consumed (tied up in working capital)</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        delta_working_capital<span class="op">=</span><span class="kw">lambda</span> x: (</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>            x[<span class="st">"cfo_receive"</span>] <span class="op">+</span>      <span class="co"># Change in receivables</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>            x[<span class="st">"cfo_inventory"</span>] <span class="op">-</span>    <span class="co"># Change in inventory  </span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>            x[<span class="st">"cfo_payale"</span>]         <span class="co"># Change in payables (negative = cash source)</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Capital expenditures</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>        capex<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"capex"</span>]</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    .loc[:, [</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        <span class="st">"year"</span>, <span class="st">"revenue"</span>, <span class="st">"ebit"</span>, <span class="st">"taxes"</span>, <span class="st">"depreciation"</span>,</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">"delta_working_capital"</span>, <span class="st">"capex"</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    ]]</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate Free Cash Flow</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>historical_data[<span class="st">"fcf"</span>] <span class="op">=</span> (</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    historical_data[<span class="st">"ebit"</span>] </span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span> historical_data[<span class="st">"taxes"</span>]</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> historical_data[<span class="st">"depreciation"</span>]</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span> historical_data[<span class="st">"delta_working_capital"</span>]</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span> historical_data[<span class="st">"capex"</span>]</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>historical_data</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">year</th>
+<th data-quarto-table-cell-role="th">revenue</th>
+<th data-quarto-table-cell-role="th">ebit</th>
+<th data-quarto-table-cell-role="th">taxes</th>
+<th data-quarto-table-cell-role="th">depreciation</th>
+<th data-quarto-table-cell-role="th">delta_working_capital</th>
+<th data-quarto-table-cell-role="th">capex</th>
+<th data-quarto-table-cell-role="th">fcf</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>2002</td>
+<td>1.514961e+12</td>
+<td>2.698700e+10</td>
+<td>0.000000e+00</td>
+<td>1.261500e+10</td>
+<td>-2.561760e+11</td>
+<td>2.202800e+10</td>
+<td>2.737500e+11</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>2003</td>
+<td>4.148298e+12</td>
+<td>5.676100e+10</td>
+<td>0.000000e+00</td>
+<td>1.837700e+10</td>
+<td>-5.078740e+11</td>
+<td>3.753300e+10</td>
+<td>5.454790e+11</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>2004</td>
+<td>8.734781e+12</td>
+<td>2.145902e+11</td>
+<td>1.795700e+10</td>
+<td>2.947900e+10</td>
+<td>-4.280270e+11</td>
+<td>5.252100e+10</td>
+<td>6.016182e+11</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>2005</td>
+<td>1.410079e+13</td>
+<td>3.753490e+11</td>
+<td>4.251500e+10</td>
+<td>5.381700e+10</td>
+<td>-4.471110e+11</td>
+<td>1.428320e+11</td>
+<td>6.909300e+11</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>2006</td>
+<td>2.139975e+13</td>
+<td>6.672593e+11</td>
+<td>7.368682e+10</td>
+<td>1.068192e+11</td>
+<td>-1.173099e+12</td>
+<td>2.459780e+11</td>
+<td>1.627513e+12</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5</th>
+<td>2007</td>
+<td>1.349889e+13</td>
+<td>1.071941e+12</td>
+<td>1.487146e+11</td>
+<td>1.709335e+11</td>
+<td>-1.873794e+12</td>
+<td>4.802762e+11</td>
+<td>2.487677e+12</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">6</th>
+<td>2008</td>
+<td>1.638184e+13</td>
+<td>1.320573e+12</td>
+<td>1.890384e+11</td>
+<td>2.395799e+11</td>
+<td>-1.419506e+11</td>
+<td>6.690461e+11</td>
+<td>8.440192e+11</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">7</th>
+<td>2009</td>
+<td>1.840403e+13</td>
+<td>1.807221e+12</td>
+<td>2.916482e+11</td>
+<td>3.041813e+11</td>
+<td>-8.065011e+11</td>
+<td>7.632280e+11</td>
+<td>1.863027e+12</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">8</th>
+<td>2010</td>
+<td>2.001730e+13</td>
+<td>2.261341e+12</td>
+<td>3.314359e+11</td>
+<td>3.294060e+11</td>
+<td>-2.360993e+12</td>
+<td>8.672138e+11</td>
+<td>3.753090e+12</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">9</th>
+<td>2011</td>
+<td>2.537025e+13</td>
+<td>2.751044e+12</td>
+<td>4.223952e+11</td>
+<td>3.759567e+11</td>
+<td>-2.099380e+12</td>
+<td>4.524081e+11</td>
+<td>4.351578e+12</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">10</th>
+<td>2012</td>
+<td>2.459430e+13</td>
+<td>2.635219e+12</td>
+<td>4.210738e+11</td>
+<td>3.995598e+11</td>
+<td>8.043763e+11</td>
+<td>7.083318e+11</td>
+<td>1.100997e+12</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">11</th>
+<td>2013</td>
+<td>2.702789e+13</td>
+<td>2.690568e+12</td>
+<td>4.503170e+11</td>
+<td>4.429860e+11</td>
+<td>-1.947751e+12</td>
+<td>9.110216e+11</td>
+<td>3.719967e+12</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">12</th>
+<td>2014</td>
+<td>3.264466e+13</td>
+<td>2.625389e+12</td>
+<td>3.800994e+11</td>
+<td>5.472736e+11</td>
+<td>-3.078130e+12</td>
+<td>1.417399e+12</td>
+<td>4.453295e+12</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">13</th>
+<td>2015</td>
+<td>3.795970e+13</td>
+<td>3.113651e+12</td>
+<td>4.130641e+11</td>
+<td>7.328801e+11</td>
+<td>-1.951778e+12</td>
+<td>1.974295e+12</td>
+<td>3.410951e+12</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">14</th>
+<td>2016</td>
+<td>3.953147e+13</td>
+<td>3.388085e+12</td>
+<td>4.382078e+11</td>
+<td>9.334397e+11</td>
+<td>-9.242713e+11</td>
+<td>1.428472e+12</td>
+<td>3.379116e+12</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">15</th>
+<td>2017</td>
+<td>4.265861e+13</td>
+<td>4.623663e+12</td>
+<td>7.270039e+11</td>
+<td>1.039417e+12</td>
+<td>-4.638788e+12</td>
+<td>1.100498e+12</td>
+<td>8.474367e+12</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">16</th>
+<td>2018</td>
+<td>2.321354e+13</td>
+<td>4.095947e+12</td>
+<td>6.236054e+11</td>
+<td>1.164692e+12</td>
+<td>-1.033438e+12</td>
+<td>2.452902e+12</td>
+<td>3.217569e+12</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">17</th>
+<td>2019</td>
+<td>2.771696e+13</td>
+<td>5.023518e+12</td>
+<td>7.528183e+11</td>
+<td>1.354613e+12</td>
+<td>-5.308818e+11</td>
+<td>3.230818e+12</td>
+<td>2.925377e+12</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">18</th>
+<td>2020</td>
+<td>2.983040e+13</td>
+<td>5.648794e+12</td>
+<td>8.397114e+11</td>
+<td>1.490607e+12</td>
+<td>-8.040730e+11</td>
+<td>3.014322e+12</td>
+<td>4.089441e+12</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">19</th>
+<td>2021</td>
+<td>3.565726e+13</td>
+<td>6.821202e+12</td>
+<td>9.879053e+11</td>
+<td>1.643916e+12</td>
+<td>-2.821825e+12</td>
+<td>2.908134e+12</td>
+<td>7.390903e+12</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">20</th>
+<td>2022</td>
+<td>4.400953e+13</td>
+<td>8.308009e+12</td>
+<td>1.170940e+12</td>
+<td>1.833064e+12</td>
+<td>-3.746661e+12</td>
+<td>3.209581e+12</td>
+<td>9.507213e+12</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">21</th>
+<td>2023</td>
+<td>5.261790e+13</td>
+<td>1.003565e+13</td>
+<td>1.414956e+12</td>
+<td>2.286514e+12</td>
+<td>-2.147304e+12</td>
+<td>3.948982e+12</td>
+<td>9.105534e+12</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="understanding-the-historical-pattern" class="level3" data-number="6.3.2">
+<h3 data-number="6.3.2" class="anchored" data-anchor-id="understanding-the-historical-pattern"><span class="header-section-number">6.3.2</span> Understanding the Historical Pattern</h3>
+<p>Before forecasting, we should understand the historical trends in FCF and its components:</p>
+<div id="31f3938a" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate key ratios relative to revenue</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>historical_ratios <span class="op">=</span> (historical_data</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    .assign(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Revenue growth (year-over-year)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        revenue_growth<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"revenue"</span>].pct_change(),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Operating margin: EBIT as % of revenue</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        operating_margin<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"ebit"</span>] <span class="op">/</span> x[<span class="st">"revenue"</span>],</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Depreciation as % of revenue</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        depreciation_margin<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"depreciation"</span>] <span class="op">/</span> x[<span class="st">"revenue"</span>],</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Tax rate (taxes as % of revenue, for simplicity)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        tax_margin<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"taxes"</span>] <span class="op">/</span> x[<span class="st">"revenue"</span>],</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Working capital intensity</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        working_capital_margin<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"delta_working_capital"</span>] <span class="op">/</span> x[<span class="st">"revenue"</span>],</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Capital intensity</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        capex_margin<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"capex"</span>] <span class="op">/</span> x[<span class="st">"revenue"</span>],</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        <span class="co"># FCF margin</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        fcf_margin<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"fcf"</span>] <span class="op">/</span> x[<span class="st">"revenue"</span>]</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Display key metrics</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>display_cols <span class="op">=</span> [</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="st">"year"</span>, <span class="st">"revenue_growth"</span>, <span class="st">"operating_margin"</span>, <span class="st">"depreciation_margin"</span>,</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tax_margin"</span>, <span class="st">"working_capital_margin"</span>, <span class="st">"capex_margin"</span>, <span class="st">"fcf_margin"</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>historical_ratios[display_cols].<span class="bu">round</span>(<span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">year</th>
+<th data-quarto-table-cell-role="th">revenue_growth</th>
+<th data-quarto-table-cell-role="th">operating_margin</th>
+<th data-quarto-table-cell-role="th">depreciation_margin</th>
+<th data-quarto-table-cell-role="th">tax_margin</th>
+<th data-quarto-table-cell-role="th">working_capital_margin</th>
+<th data-quarto-table-cell-role="th">capex_margin</th>
+<th data-quarto-table-cell-role="th">fcf_margin</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>2002</td>
+<td>NaN</td>
+<td>0.018</td>
+<td>0.008</td>
+<td>0.000</td>
+<td>-0.169</td>
+<td>0.015</td>
+<td>0.181</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>2003</td>
+<td>1.738</td>
+<td>0.014</td>
+<td>0.004</td>
+<td>0.000</td>
+<td>-0.122</td>
+<td>0.009</td>
+<td>0.131</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>2004</td>
+<td>1.106</td>
+<td>0.025</td>
+<td>0.003</td>
+<td>0.002</td>
+<td>-0.049</td>
+<td>0.006</td>
+<td>0.069</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>2005</td>
+<td>0.614</td>
+<td>0.027</td>
+<td>0.004</td>
+<td>0.003</td>
+<td>-0.032</td>
+<td>0.010</td>
+<td>0.049</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>2006</td>
+<td>0.518</td>
+<td>0.031</td>
+<td>0.005</td>
+<td>0.003</td>
+<td>-0.055</td>
+<td>0.011</td>
+<td>0.076</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5</th>
+<td>2007</td>
+<td>-0.369</td>
+<td>0.079</td>
+<td>0.013</td>
+<td>0.011</td>
+<td>-0.139</td>
+<td>0.036</td>
+<td>0.184</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">6</th>
+<td>2008</td>
+<td>0.214</td>
+<td>0.081</td>
+<td>0.015</td>
+<td>0.012</td>
+<td>-0.009</td>
+<td>0.041</td>
+<td>0.052</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">7</th>
+<td>2009</td>
+<td>0.123</td>
+<td>0.098</td>
+<td>0.017</td>
+<td>0.016</td>
+<td>-0.044</td>
+<td>0.041</td>
+<td>0.101</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">8</th>
+<td>2010</td>
+<td>0.088</td>
+<td>0.113</td>
+<td>0.016</td>
+<td>0.017</td>
+<td>-0.118</td>
+<td>0.043</td>
+<td>0.187</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">9</th>
+<td>2011</td>
+<td>0.267</td>
+<td>0.108</td>
+<td>0.015</td>
+<td>0.017</td>
+<td>-0.083</td>
+<td>0.018</td>
+<td>0.172</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">10</th>
+<td>2012</td>
+<td>-0.031</td>
+<td>0.107</td>
+<td>0.016</td>
+<td>0.017</td>
+<td>0.033</td>
+<td>0.029</td>
+<td>0.045</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">11</th>
+<td>2013</td>
+<td>0.099</td>
+<td>0.100</td>
+<td>0.016</td>
+<td>0.017</td>
+<td>-0.072</td>
+<td>0.034</td>
+<td>0.138</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">12</th>
+<td>2014</td>
+<td>0.208</td>
+<td>0.080</td>
+<td>0.017</td>
+<td>0.012</td>
+<td>-0.094</td>
+<td>0.043</td>
+<td>0.136</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">13</th>
+<td>2015</td>
+<td>0.163</td>
+<td>0.082</td>
+<td>0.019</td>
+<td>0.011</td>
+<td>-0.051</td>
+<td>0.052</td>
+<td>0.090</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">14</th>
+<td>2016</td>
+<td>0.041</td>
+<td>0.086</td>
+<td>0.024</td>
+<td>0.011</td>
+<td>-0.023</td>
+<td>0.036</td>
+<td>0.085</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">15</th>
+<td>2017</td>
+<td>0.079</td>
+<td>0.108</td>
+<td>0.024</td>
+<td>0.017</td>
+<td>-0.109</td>
+<td>0.026</td>
+<td>0.199</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">16</th>
+<td>2018</td>
+<td>-0.456</td>
+<td>0.176</td>
+<td>0.050</td>
+<td>0.027</td>
+<td>-0.045</td>
+<td>0.106</td>
+<td>0.139</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">17</th>
+<td>2019</td>
+<td>0.194</td>
+<td>0.181</td>
+<td>0.049</td>
+<td>0.027</td>
+<td>-0.019</td>
+<td>0.117</td>
+<td>0.106</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">18</th>
+<td>2020</td>
+<td>0.076</td>
+<td>0.189</td>
+<td>0.050</td>
+<td>0.028</td>
+<td>-0.027</td>
+<td>0.101</td>
+<td>0.137</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">19</th>
+<td>2021</td>
+<td>0.195</td>
+<td>0.191</td>
+<td>0.046</td>
+<td>0.028</td>
+<td>-0.079</td>
+<td>0.082</td>
+<td>0.207</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">20</th>
+<td>2022</td>
+<td>0.234</td>
+<td>0.189</td>
+<td>0.042</td>
+<td>0.027</td>
+<td>-0.085</td>
+<td>0.073</td>
+<td>0.216</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">21</th>
+<td>2023</td>
+<td>0.196</td>
+<td>0.191</td>
+<td>0.043</td>
+<td>0.027</td>
+<td>-0.041</td>
+<td>0.075</td>
+<td>0.173</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="visualizing-historical-ratios" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="visualizing-historical-ratios"><span class="header-section-number">6.4</span> Visualizing Historical Ratios</h2>
+<p><a href="#fig-500" class="quarto-xref">Figure&nbsp;<span>6.1</span></a> shows the historical evolution of key financial ratios that drive FCF. Understanding these patterns helps inform our forecasts.</p>
+<div id="cell-fig-500" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare data for plotting</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>ratio_columns <span class="op">=</span> [</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"operating_margin"</span>, <span class="st">"depreciation_margin"</span>, <span class="st">"tax_margin"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"working_capital_margin"</span>, <span class="st">"capex_margin"</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>ratios_long <span class="op">=</span> (historical_ratios</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    .melt(</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        id_vars<span class="op">=</span>[<span class="st">"year"</span>],</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        value_vars<span class="op">=</span>ratio_columns,</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        var_name<span class="op">=</span><span class="st">"ratio"</span>,</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        value_name<span class="op">=</span><span class="st">"value"</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    .assign(</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        ratio<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"ratio"</span>].<span class="bu">str</span>.replace(<span class="st">"_"</span>, <span class="st">" "</span>).<span class="bu">str</span>.title()</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>ratios_figure <span class="op">=</span> (</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    ggplot(ratios_long, aes(x<span class="op">=</span><span class="st">"year"</span>, y<span class="op">=</span><span class="st">"value"</span>, color<span class="op">=</span><span class="st">"ratio"</span>))</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_line(size<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_point(size<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">""</span>, y<span class="op">=</span><span class="st">"Ratio (</span><span class="sc">% o</span><span class="st">f Revenue)"</span>, color<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"Key Financial Ratios of FPT Over Time"</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> theme(legend_position<span class="op">=</span><span class="st">"right"</span>)</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>ratios_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-500" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: Key financial ratios of FPT over time. The figure shows a line chart with years on the horizontal axis and financial ratios on the vertical axis.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-500-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05_discounted_cash_flow_files/figure-html/fig-500-output-1.png" alt="Title: Key financial ratios of FPT over time. The figure shows a line chart with years on the horizontal axis and financial ratios on the vertical axis." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-500-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.1: Historical financial ratios reveal the operating characteristics of FPT. These patterns inform our forecast assumptions.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Several patterns emerge from the historical data. Operating margins show the profitability of core operations. Depreciation margins indicate asset intensity. CAPEX margins reveal investment requirements. Working capital margins can be volatile, reflecting changes in credit terms and inventory management.</p>
+</section>
+<section id="forecasting-free-cash-flow" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="forecasting-free-cash-flow"><span class="header-section-number">6.5</span> Forecasting Free Cash Flow</h2>
+<p>With historical patterns established, we now project FCF into the future. This requires forecasting both revenue growth and the ratios that convert revenue into cash flow.</p>
+<section id="the-ratio-based-forecasting-approach" class="level3" data-number="6.5.1">
+<h3 data-number="6.5.1" class="anchored" data-anchor-id="the-ratio-based-forecasting-approach"><span class="header-section-number">6.5.1</span> The Ratio-Based Forecasting Approach</h3>
+<p>We use a ratio-based approach that links all FCF components to revenue. This makes forecasting tractable: rather than projecting absolute dollar amounts for each component, we forecast (1) revenue growth and (2) how each component scales with revenue.</p>
+<p>This approach embeds a key assumption: that the relationship between revenue and FCF components remains stable. In reality, operating leverage, investment needs, and working capital requirements may change as companies mature. Sophisticated valuations model these dynamics explicitly.</p>
+</section>
+<section id="setting-forecast-assumptions" class="level3" data-number="6.5.2">
+<h3 data-number="6.5.2" class="anchored" data-anchor-id="setting-forecast-assumptions"><span class="header-section-number">6.5.2</span> Setting Forecast Assumptions</h3>
+<p>For our five-year forecast, we make the following assumptions about FPT’s financial ratios. These should reflect industry analysis, company guidance, and competitive dynamics. Here we use estimates for illustration:</p>
+<div id="88af93f0" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the forecast horizon</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>last_historical_year <span class="op">=</span> historical_data[<span class="st">"year"</span>].<span class="bu">max</span>()</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>forecast_years <span class="op">=</span> <span class="bu">list</span>(<span class="bu">range</span>(last_historical_year <span class="op">+</span> <span class="dv">1</span>, last_historical_year <span class="op">+</span> <span class="dv">6</span>))</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>n_forecast_years <span class="op">=</span> <span class="bu">len</span>(forecast_years)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Forecast period: </span><span class="sc">{</span>forecast_years[<span class="dv">0</span>]<span class="sc">}</span><span class="ss"> to </span><span class="sc">{</span>forecast_years[<span class="op">-</span><span class="dv">1</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Define forecast ratios</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co"># In practice, these would come from detailed analysis</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>forecast_assumptions <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"year"</span>: forecast_years,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Operating margin: slight improvement as scale increases</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"operating_margin"</span>: [<span class="fl">0.12</span>, <span class="fl">0.125</span>, <span class="fl">0.13</span>, <span class="fl">0.13</span>, <span class="fl">0.135</span>],</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Depreciation: stable as % of revenue</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"depreciation_margin"</span>: [<span class="fl">0.03</span>, <span class="fl">0.03</span>, <span class="fl">0.03</span>, <span class="fl">0.028</span>, <span class="fl">0.028</span>],</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Tax rate: stable</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tax_margin"</span>: [<span class="fl">0.02</span>, <span class="fl">0.02</span>, <span class="fl">0.02</span>, <span class="fl">0.02</span>, <span class="fl">0.02</span>],</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Working capital: modest cash consumption</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"working_capital_margin"</span>: [<span class="fl">0.01</span>, <span class="fl">0.01</span>, <span class="fl">0.008</span>, <span class="fl">0.008</span>, <span class="fl">0.008</span>],</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># CAPEX: declining as % of revenue as growth moderates</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"capex_margin"</span>: [<span class="fl">0.05</span>, <span class="fl">0.048</span>, <span class="fl">0.045</span>, <span class="fl">0.042</span>, <span class="fl">0.04</span>]</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>forecast_assumptions</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Forecast period: 2024 to 2028</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">year</th>
+<th data-quarto-table-cell-role="th">operating_margin</th>
+<th data-quarto-table-cell-role="th">depreciation_margin</th>
+<th data-quarto-table-cell-role="th">tax_margin</th>
+<th data-quarto-table-cell-role="th">working_capital_margin</th>
+<th data-quarto-table-cell-role="th">capex_margin</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>2024</td>
+<td>0.120</td>
+<td>0.030</td>
+<td>0.02</td>
+<td>0.010</td>
+<td>0.050</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>2025</td>
+<td>0.125</td>
+<td>0.030</td>
+<td>0.02</td>
+<td>0.010</td>
+<td>0.048</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>2026</td>
+<td>0.130</td>
+<td>0.030</td>
+<td>0.02</td>
+<td>0.008</td>
+<td>0.045</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>2027</td>
+<td>0.130</td>
+<td>0.028</td>
+<td>0.02</td>
+<td>0.008</td>
+<td>0.042</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>2028</td>
+<td>0.135</td>
+<td>0.028</td>
+<td>0.02</td>
+<td>0.008</td>
+<td>0.040</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="forecasting-revenue-growth" class="level3" data-number="6.5.3">
+<h3 data-number="6.5.3" class="anchored" data-anchor-id="forecasting-revenue-growth"><span class="header-section-number">6.5.3</span> Forecasting Revenue Growth</h3>
+<p>Revenue growth is often the most important and most uncertain assumption in DCF analysis. We demonstrate two approaches: using historical averages and linking growth to macroeconomic forecasts.</p>
+<p><strong>Approach 1: Historical Average</strong></p>
+<p>A simple approach uses the historical average growth rate:</p>
+<div id="7688311c" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>historical_growth <span class="op">=</span> historical_ratios[<span class="st">"revenue_growth"</span>].dropna()</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>avg_historical_growth <span class="op">=</span> historical_growth.mean()</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Average historical revenue growth: </span><span class="sc">{</span>avg_historical_growth<span class="sc">:.1%}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Average historical revenue growth: 25.2%</code></pre>
+</div>
+</div>
+<p><strong>Approach 2: GDP-Linked Growth</strong></p>
+<p>A more sophisticated approach links company growth to GDP forecasts from institutions like the IMF. This captures the intuition that company revenues often move with broader economic activity.</p>
+<div id="4893fdaf" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Vietnam GDP growth forecasts (illustrative, based on IMF WEO style projections)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># In practice, download from IMF WEO database</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>gdp_forecasts <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"year"</span>: forecast_years,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"gdp_growth"</span>: [<span class="fl">0.065</span>, <span class="fl">0.063</span>, <span class="fl">0.060</span>, <span class="fl">0.058</span>, <span class="fl">0.055</span>]  <span class="co"># Gradually declining to long-term</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Assume FPT grows at a premium to GDP (tech sector outperformance)</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co"># This premium should reflect company-specific factors</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>growth_premium <span class="op">=</span> <span class="fl">0.05</span>  <span class="co"># 5 percentage points above GDP</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>forecast_assumptions <span class="op">=</span> forecast_assumptions.merge(gdp_forecasts, on<span class="op">=</span><span class="st">"year"</span>)</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>forecast_assumptions[<span class="st">"revenue_growth"</span>] <span class="op">=</span> (</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    forecast_assumptions[<span class="st">"gdp_growth"</span>] <span class="op">+</span> growth_premium</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>forecast_assumptions[[<span class="st">"year"</span>, <span class="st">"gdp_growth"</span>, <span class="st">"revenue_growth"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">year</th>
+<th data-quarto-table-cell-role="th">gdp_growth</th>
+<th data-quarto-table-cell-role="th">revenue_growth</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>2024</td>
+<td>0.065</td>
+<td>0.115</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>2025</td>
+<td>0.063</td>
+<td>0.113</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>2026</td>
+<td>0.060</td>
+<td>0.110</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>2027</td>
+<td>0.058</td>
+<td>0.108</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>2028</td>
+<td>0.055</td>
+<td>0.105</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="building-the-forecast" class="level3" data-number="6.5.4">
+<h3 data-number="6.5.4" class="anchored" data-anchor-id="building-the-forecast"><span class="header-section-number">6.5.4</span> Building the Forecast</h3>
+<p>Now we combine our assumptions to project revenue and FCF:</p>
+<div id="d3e9be54" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get the last historical revenue as our starting point</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>last_revenue <span class="op">=</span> historical_data.loc[</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    historical_data[<span class="st">"year"</span>] <span class="op">==</span> last_historical_year, <span class="st">"revenue"</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>].values[<span class="dv">0</span>]</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Last historical revenue (</span><span class="sc">{</span>last_historical_year<span class="sc">}</span><span class="ss">): </span><span class="sc">{</span>last_revenue<span class="op">/</span><span class="fl">1e12</span><span class="sc">:.2f}</span><span class="ss"> trillion VND"</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Project revenue forward</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>forecast_data <span class="op">=</span> forecast_assumptions.copy()</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>forecast_data[<span class="st">"revenue"</span>] <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate revenue for each forecast year</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, row <span class="kw">in</span> forecast_data.iterrows():</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> i <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>        <span class="co"># First forecast year: grow from last historical</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>        forecast_data.loc[i, <span class="st">"revenue"</span>] <span class="op">=</span> last_revenue <span class="op">*</span> (<span class="dv">1</span> <span class="op">+</span> row[<span class="st">"revenue_growth"</span>])</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Subsequent years: grow from previous forecast</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>        prev_revenue <span class="op">=</span> forecast_data.loc[i<span class="op">-</span><span class="dv">1</span>, <span class="st">"revenue"</span>]</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>        forecast_data.loc[i, <span class="st">"revenue"</span>] <span class="op">=</span> prev_revenue <span class="op">*</span> (<span class="dv">1</span> <span class="op">+</span> row[<span class="st">"revenue_growth"</span>])</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert revenue to numeric</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>forecast_data[<span class="st">"revenue"</span>] <span class="op">=</span> forecast_data[<span class="st">"revenue"</span>].astype(<span class="bu">float</span>)</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate FCF components from ratios</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>forecast_data[<span class="st">"ebit"</span>] <span class="op">=</span> forecast_data[<span class="st">"operating_margin"</span>] <span class="op">*</span> forecast_data[<span class="st">"revenue"</span>]</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>forecast_data[<span class="st">"depreciation"</span>] <span class="op">=</span> forecast_data[<span class="st">"depreciation_margin"</span>] <span class="op">*</span> forecast_data[<span class="st">"revenue"</span>]</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>forecast_data[<span class="st">"taxes"</span>] <span class="op">=</span> forecast_data[<span class="st">"tax_margin"</span>] <span class="op">*</span> forecast_data[<span class="st">"revenue"</span>]</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>forecast_data[<span class="st">"delta_working_capital"</span>] <span class="op">=</span> forecast_data[<span class="st">"working_capital_margin"</span>] <span class="op">*</span> forecast_data[<span class="st">"revenue"</span>]</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>forecast_data[<span class="st">"capex"</span>] <span class="op">=</span> forecast_data[<span class="st">"capex_margin"</span>] <span class="op">*</span> forecast_data[<span class="st">"revenue"</span>]</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate FCF</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>forecast_data[<span class="st">"fcf"</span>] <span class="op">=</span> (</span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>    forecast_data[<span class="st">"ebit"</span>]</span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span> forecast_data[<span class="st">"taxes"</span>]</span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> forecast_data[<span class="st">"depreciation"</span>]</span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span> forecast_data[<span class="st">"delta_working_capital"</span>]</span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span> forecast_data[<span class="st">"capex"</span>]</span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>forecast_data[[<span class="st">"year"</span>, <span class="st">"revenue"</span>, <span class="st">"ebit"</span>, <span class="st">"fcf"</span>]].<span class="bu">round</span>(<span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Last historical revenue (2023): 52.62 trillion VND</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">year</th>
+<th data-quarto-table-cell-role="th">revenue</th>
+<th data-quarto-table-cell-role="th">ebit</th>
+<th data-quarto-table-cell-role="th">fcf</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>2024</td>
+<td>5.866896e+13</td>
+<td>7.040275e+12</td>
+<td>4.106827e+12</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>2025</td>
+<td>6.529855e+13</td>
+<td>8.162319e+12</td>
+<td>5.027988e+12</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>2026</td>
+<td>7.248139e+13</td>
+<td>9.422581e+12</td>
+<td>6.305881e+12</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>2027</td>
+<td>8.030938e+13</td>
+<td>1.044022e+13</td>
+<td>7.067226e+12</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>2028</td>
+<td>8.874187e+13</td>
+<td>1.198015e+13</td>
+<td>8.430477e+12</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="visualizing-the-forecast" class="level2" data-number="6.6">
+<h2 data-number="6.6" class="anchored" data-anchor-id="visualizing-the-forecast"><span class="header-section-number">6.6</span> Visualizing the Forecast</h2>
+<p><a href="#fig-501" class="quarto-xref">Figure&nbsp;<span>6.2</span></a> compares our forecast ratios with historical values, showing the transition from realized to projected performance.</p>
+<div id="cell-fig-501" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare historical data for plotting</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>historical_plot <span class="op">=</span> (historical_ratios</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    .loc[:, [<span class="st">"year"</span>, <span class="st">"operating_margin"</span>, <span class="st">"depreciation_margin"</span>, </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>             <span class="st">"tax_margin"</span>, <span class="st">"working_capital_margin"</span>, <span class="st">"capex_margin"</span>]]</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    .assign(<span class="bu">type</span><span class="op">=</span><span class="st">"Historical"</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare forecast data for plotting</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>forecast_plot <span class="op">=</span> (forecast_data</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    .loc[:, [<span class="st">"year"</span>, <span class="st">"operating_margin"</span>, <span class="st">"depreciation_margin"</span>,</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>             <span class="st">"tax_margin"</span>, <span class="st">"working_capital_margin"</span>, <span class="st">"capex_margin"</span>]]</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    .assign(<span class="bu">type</span><span class="op">=</span><span class="st">"Forecast"</span>)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>combined_ratios <span class="op">=</span> pd.concat([historical_plot, forecast_plot], ignore_index<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Reshape for plotting</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>combined_long <span class="op">=</span> combined_ratios.melt(</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    id_vars<span class="op">=</span>[<span class="st">"year"</span>, <span class="st">"type"</span>],</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>    var_name<span class="op">=</span><span class="st">"ratio"</span>,</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>    value_name<span class="op">=</span><span class="st">"value"</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>combined_long[<span class="st">"type"</span>] <span class="op">=</span> pd.Categorical(</span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>    combined_long[<span class="st">"type"</span>], </span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>    categories<span class="op">=</span>[<span class="st">"Historical"</span>, <span class="st">"Forecast"</span>]</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>forecast_ratios_figure <span class="op">=</span> (</span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>    ggplot(combined_long, aes(x<span class="op">=</span><span class="st">"year"</span>, y<span class="op">=</span><span class="st">"value"</span>, color<span class="op">=</span><span class="st">"ratio"</span>, linetype<span class="op">=</span><span class="st">"type"</span>))</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_line(size<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_point(size<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">""</span>, y<span class="op">=</span><span class="st">"Ratio (</span><span class="sc">% o</span><span class="st">f Revenue)"</span>, color<span class="op">=</span><span class="st">""</span>, linetype<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"Historical and Forecast Financial Ratios for FPT"</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> theme(legend_position<span class="op">=</span><span class="st">"right"</span>)</span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>forecast_ratios_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-501" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: Historical and forecast financial ratios for FPT. The figure shows line charts comparing historical ratios with forecast assumptions.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-501-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05_discounted_cash_flow_files/figure-html/fig-501-output-1.png" alt="Title: Historical and forecast financial ratios for FPT. The figure shows line charts comparing historical ratios with forecast assumptions." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-501-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.2: Historical ratios (solid lines) and forecast assumptions (dashed lines) for key financial metrics. The forecast period begins after the last historical observation.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><a href="#fig-502" class="quarto-xref">Figure&nbsp;<span>6.3</span></a> shows the revenue growth trajectory, comparing historical performance with our GDP-linked forecasts.</p>
+<div id="cell-fig-502" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare growth data</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>historical_growth_df <span class="op">=</span> (historical_ratios</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    .loc[:, [<span class="st">"year"</span>, <span class="st">"revenue_growth"</span>]]</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    .dropna()</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    .assign(<span class="bu">type</span><span class="op">=</span><span class="st">"Historical"</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>forecast_growth_df <span class="op">=</span> (forecast_data</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    .loc[:, [<span class="st">"year"</span>, <span class="st">"revenue_growth"</span>, <span class="st">"gdp_growth"</span>]]</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    .assign(<span class="bu">type</span><span class="op">=</span><span class="st">"Forecast"</span>)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine for revenue growth</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>growth_combined <span class="op">=</span> pd.concat([</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    historical_growth_df,</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    forecast_growth_df[[<span class="st">"year"</span>, <span class="st">"revenue_growth"</span>, <span class="st">"type"</span>]]</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>], ignore_index<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>growth_combined[<span class="st">"type"</span>] <span class="op">=</span> pd.Categorical(</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    growth_combined[<span class="st">"type"</span>],</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    categories<span class="op">=</span>[<span class="st">"Historical"</span>, <span class="st">"Forecast"</span>]</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>growth_figure <span class="op">=</span> (</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>    ggplot(growth_combined, aes(x<span class="op">=</span><span class="st">"year"</span>, y<span class="op">=</span><span class="st">"revenue_growth"</span>, linetype<span class="op">=</span><span class="st">"type"</span>))</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_line(size<span class="op">=</span><span class="dv">1</span>, color<span class="op">=</span><span class="st">"steelblue"</span>)</span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_point(size<span class="op">=</span><span class="dv">2</span>, color<span class="op">=</span><span class="st">"steelblue"</span>)</span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">""</span>, y<span class="op">=</span><span class="st">"Revenue Growth Rate"</span>, linetype<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"Historical and Forecast Revenue Growth for FPT"</span></span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a>growth_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-502" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: Revenue growth rates for FPT. The figure shows historical and forecast revenue growth rates.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-502-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05_discounted_cash_flow_files/figure-html/fig-502-output-1.png" alt="Title: Revenue growth rates for FPT. The figure shows historical and forecast revenue growth rates." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-502-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.3: Revenue growth rates: historical (realized) and forecast (GDP-linked with company premium). The forecast assumes FPT grows at a premium to Vietnam’s GDP growth.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><a href="#fig-503" class="quarto-xref">Figure&nbsp;<span>6.4</span></a> presents the resulting FCF projections alongside historical values.</p>
+<div id="cell-fig-503" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine historical and forecast FCF</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>fcf_historical <span class="op">=</span> (historical_data</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    .loc[:, [<span class="st">"year"</span>, <span class="st">"fcf"</span>]]</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    .assign(<span class="bu">type</span><span class="op">=</span><span class="st">"Historical"</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>fcf_forecast <span class="op">=</span> (forecast_data</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    .loc[:, [<span class="st">"year"</span>, <span class="st">"fcf"</span>]]</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    .assign(<span class="bu">type</span><span class="op">=</span><span class="st">"Forecast"</span>)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>fcf_combined <span class="op">=</span> pd.concat([fcf_historical, fcf_forecast], ignore_index<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>fcf_combined[<span class="st">"type"</span>] <span class="op">=</span> pd.Categorical(</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    fcf_combined[<span class="st">"type"</span>],</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    categories<span class="op">=</span>[<span class="st">"Historical"</span>, <span class="st">"Forecast"</span>]</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>fcf_figure <span class="op">=</span> (</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    ggplot(fcf_combined, aes(x<span class="op">=</span><span class="st">"year"</span>, y<span class="op">=</span><span class="st">"fcf/1e12"</span>, fill<span class="op">=</span><span class="st">"type"</span>))</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_col()</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">""</span>, y<span class="op">=</span><span class="st">"Free Cash Flow (Trillion VND)"</span>, fill<span class="op">=</span><span class="st">""</span>,</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"Historical and Forecast Free Cash Flow for FPT"</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>fcf_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-503" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: Free Cash Flow for FPT. The figure shows a bar chart with historical and forecast FCF values.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-503-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05_discounted_cash_flow_files/figure-html/fig-503-output-1.png" alt="Title: Free Cash Flow for FPT. The figure shows a bar chart with historical and forecast FCF values." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-503-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.4: Free Cash Flow: historical (realized) and forecast (projected). The forecast reflects our assumptions about revenue growth and operating ratios.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="terminal-value-capturing-long-term-value" class="level2" data-number="6.7">
+<h2 data-number="6.7" class="anchored" data-anchor-id="terminal-value-capturing-long-term-value"><span class="header-section-number">6.7</span> Terminal Value: Capturing Long-Term Value</h2>
+<p>A critical component of DCF analysis is the <strong>terminal value</strong> (or continuation value), which represents the company’s value beyond the explicit forecast period. In most valuations, terminal value constitutes 50-80% of total enterprise value, making its estimation particularly important.</p>
+<section id="the-perpetuity-growth-model" class="level3" data-number="6.7.1">
+<h3 data-number="6.7.1" class="anchored" data-anchor-id="the-perpetuity-growth-model"><span class="header-section-number">6.7.1</span> The Perpetuity Growth Model</h3>
+<p>The most common approach is the <strong>Perpetuity Growth Model</strong> (also called the Gordon Growth Model), which assumes FCF grows at a constant rate forever:</p>
+<p><span class="math display">\[
+TV_T = \frac{FCF_{T+1}}{r - g} = \frac{FCF_T \times (1 + g)}{r - g}
+\]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(TV_T\)</span>: Terminal value at the end of year <span class="math inline">\(T\)</span></li>
+<li><span class="math inline">\(FCF_T\)</span>: Free cash flow in the final forecast year</li>
+<li><span class="math inline">\(g\)</span>: Perpetual growth rate</li>
+<li><span class="math inline">\(r\)</span>: Discount rate (WACC)</li>
+</ul>
+</section>
+<section id="choosing-the-perpetual-growth-rate" class="level3" data-number="6.7.2">
+<h3 data-number="6.7.2" class="anchored" data-anchor-id="choosing-the-perpetual-growth-rate"><span class="header-section-number">6.7.2</span> Choosing the Perpetual Growth Rate</h3>
+<p>The perpetual growth rate <span class="math inline">\(g\)</span> should reflect long-term sustainable growth. Key considerations:</p>
+<ol type="1">
+<li><p><strong>No company can grow faster than the economy forever</strong>. If it did, the company would eventually become larger than GDP, which is an impossibility. Long-term GDP growth (nominal, including inflation) provides an upper bound.</p></li>
+<li><p><strong>Mature companies typically grow at or below GDP growth</strong>. The perpetual growth rate should reflect the company in its “steady state,” not its current high-growth phase.</p></li>
+<li><p><strong>For Vietnam</strong>, long-term nominal GDP growth might be 6-8% given current development stage, but this will moderate over time. A perpetual growth rate of 3-5% is often reasonable.</p></li>
+</ol>
+<div id="40fb4f26" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_terminal_value(last_fcf, growth_rate, discount_rate):</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Compute terminal value using the perpetuity growth model.</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co">    Parameters:</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co">    -----------</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co">    last_fcf : float</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co">        Free cash flow in the final forecast year</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co">    growth_rate : float</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co">        Perpetual growth rate (g)</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="co">    discount_rate : float</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="co">        Discount rate / WACC (r)</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="co">        </span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns:</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="co">    --------</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="co">    float : Terminal value</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> discount_rate <span class="op">&lt;=</span> growth_rate:</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"Discount rate must exceed growth rate for finite terminal value"</span>)</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> last_fcf <span class="op">*</span> (<span class="dv">1</span> <span class="op">+</span> growth_rate) <span class="op">/</span> (discount_rate <span class="op">-</span> growth_rate)</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Example calculation</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>last_fcf <span class="op">=</span> forecast_data[<span class="st">"fcf"</span>].iloc[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>perpetual_growth <span class="op">=</span> <span class="fl">0.04</span>  <span class="co"># 4% perpetual growth</span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>discount_rate <span class="op">=</span> <span class="fl">0.10</span>     <span class="co"># 10% WACC (placeholder)</span></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>terminal_value <span class="op">=</span> compute_terminal_value(last_fcf, perpetual_growth, discount_rate)</span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Last forecast FCF: </span><span class="sc">{</span>last_fcf<span class="op">/</span><span class="fl">1e12</span><span class="sc">:.2f}</span><span class="ss"> trillion VND"</span>)</span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Terminal value (at </span><span class="sc">{</span>perpetual_growth<span class="sc">:.0%}</span><span class="ss"> growth, </span><span class="sc">{</span>discount_rate<span class="sc">:.0%}</span><span class="ss"> WACC): </span><span class="sc">{</span>terminal_value<span class="op">/</span><span class="fl">1e12</span><span class="sc">:.1f}</span><span class="ss"> trillion VND"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Last forecast FCF: 8.43 trillion VND
+Terminal value (at 4% growth, 10% WACC): 146.1 trillion VND</code></pre>
+</div>
+</div>
+</section>
+<section id="alternative-exit-multiple-approach" class="level3" data-number="6.7.3">
+<h3 data-number="6.7.3" class="anchored" data-anchor-id="alternative-exit-multiple-approach"><span class="header-section-number">6.7.3</span> Alternative: Exit Multiple Approach</h3>
+<p>Practitioners often cross-check terminal value using the <strong>exit multiple approach</strong>, which assumes the company is sold at the end of the forecast period at a multiple of EBITDA, EBIT, or revenue comparable to similar companies today.</p>
+<p>For example, if comparable companies trade at 10x EBITDA, the terminal value would be:</p>
+<p><span class="math display">\[
+TV_T = \text{EBITDA}_T \times \text{Exit Multiple}
+\]</span></p>
+<p>This approach is simpler but embeds the assumption that current market multiples will persist (a strong assumption that may not hold).</p>
+</section>
+</section>
+<section id="the-discount-rate-weighted-average-cost-of-capital" class="level2" data-number="6.8">
+<h2 data-number="6.8" class="anchored" data-anchor-id="the-discount-rate-weighted-average-cost-of-capital"><span class="header-section-number">6.8</span> The Discount Rate: Weighted Average Cost of Capital</h2>
+<p>The discount rate converts future cash flows to present value. For FCF (which goes to all capital providers), we use the <strong>Weighted Average Cost of Capital (WACC)</strong>:</p>
+<p><span class="math display">\[
+WACC = \frac{E}{E+D} \times r_E + \frac{D}{E+D} \times r_D \times (1 - \tau)
+\]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(E\)</span>: Market value of equity</li>
+<li><span class="math inline">\(D\)</span>: Market value of debt</li>
+<li><span class="math inline">\(r_E\)</span>: Cost of equity (typically estimated using CAPM)</li>
+<li><span class="math inline">\(r_D\)</span>: Cost of debt (pre-tax)</li>
+<li><span class="math inline">\(\tau\)</span>: Corporate tax rate</li>
+</ul>
+<p>The <span class="math inline">\((1-\tau)\)</span> term on debt reflects the tax shield. Interest payments are tax-deductible, reducing the effective cost of debt.</p>
+<section id="estimating-wacc-components" class="level3" data-number="6.8.1">
+<h3 data-number="6.8.1" class="anchored" data-anchor-id="estimating-wacc-components"><span class="header-section-number">6.8.1</span> Estimating WACC Components</h3>
+<p><strong>Cost of Equity</strong> is typically estimated using the Capital Asset Pricing Model (see our <a href="0.qmd">CAPM chapter</a>):</p>
+<p><span class="math display">\[
+r_E = r_f + \beta \times (r_m - r_f)
+\]</span></p>
+<p>where <span class="math inline">\(r_f\)</span> is the risk-free rate, <span class="math inline">\(\beta\)</span> measures systematic risk, and <span class="math inline">\((r_m - r_f)\)</span> is the market risk premium.</p>
+<p><strong>Cost of Debt</strong> can be estimated from:</p>
+<ul>
+<li>Interest expense divided by total debt (effective rate)</li>
+<li>Yields on the company’s traded bonds</li>
+<li>Yields on bonds with similar credit ratings</li>
+</ul>
+<p><strong>Capital Structure Weights</strong> should use market values when available. For equity, market capitalization is straightforward. For debt, book value is often used when market values aren’t observable.</p>
+</section>
+<section id="using-industry-wacc-data" class="level3" data-number="6.8.2">
+<h3 data-number="6.8.2" class="anchored" data-anchor-id="using-industry-wacc-data"><span class="header-section-number">6.8.2</span> Using Industry WACC Data</h3>
+<p>Professor Aswath Damodaran at NYU Stern maintains comprehensive industry WACC data. Let’s download and use this resource:</p>
+<div id="2ab53600" class="cell" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> requests</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Download Damodaran's WACC data</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> <span class="st">"https://pages.stern.nyu.edu/~adamodar/pc/datasets/wacc.xls"</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    response <span class="op">=</span> requests.get(url, timeout<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    response.raise_for_status()</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(<span class="st">"wacc.xls"</span>, <span class="st">"wb"</span>) <span class="im">as</span> f:</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>        f.write(response.content)</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Read the data (skip header rows)</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    wacc_data <span class="op">=</span> pd.read_excel(<span class="st">"wacc.xls"</span>, sheet_name<span class="op">=</span><span class="dv">1</span>, skiprows<span class="op">=</span><span class="dv">18</span>)</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Clean up</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    os.remove(<span class="st">"wacc.xls"</span>)</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Find WACC for Computer Services (closest to FPT's business)</span></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>    industry_wacc <span class="op">=</span> wacc_data.loc[</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>        wacc_data[<span class="st">"Industry Name"</span>] <span class="op">==</span> <span class="st">"Computer Services"</span>,</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Cost of Capital"</span></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>    ].values[<span class="dv">0</span>]</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Industry WACC (Computer Services): </span><span class="sc">{</span>industry_wacc<span class="sc">:.2%}</span><span class="ss">"</span>)</span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Could not download WACC data: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Use a reasonable estimate</span></span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>    industry_wacc <span class="op">=</span> <span class="fl">0.10</span></span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Using estimated WACC: </span><span class="sc">{</span>industry_wacc<span class="sc">:.2%}</span><span class="ss">"</span>)</span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>wacc <span class="op">=</span> industry_wacc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Could not download WACC data: `Import xlrd` failed. Install xlrd &gt;= 2.0.1 for xls Excel support Use pip or conda to install the xlrd package.
+Using estimated WACC: 10.00%</code></pre>
+</div>
+</div>
+<p><strong>Note</strong>: Industry WACC provides a useful benchmark, but company-specific factors (leverage, business risk, country risk) may warrant adjustments. For Vietnamese companies, adding a country risk premium may be appropriate.</p>
+</section>
+</section>
+<section id="computing-enterprise-value" class="level2" data-number="6.9">
+<h2 data-number="6.9" class="anchored" data-anchor-id="computing-enterprise-value"><span class="header-section-number">6.9</span> Computing Enterprise Value</h2>
+<p>With all components in place, we can now compute enterprise value. The DCF formula is:</p>
+<p><span class="math display">\[
+\text{Enterprise Value} = \sum_{t=1}^{T} \frac{FCF_t}{(1 + WACC)^t} + \frac{TV_T}{(1 + WACC)^T}
+\]</span></p>
+<p>The first term is the present value of forecast-period cash flows; the second is the present value of terminal value.</p>
+<div id="9d8d4dae" class="cell" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_dcf_value(fcf_series, wacc, perpetual_growth):</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Compute enterprise value using DCF analysis.</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co">    Parameters:</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="co">    -----------</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co">    fcf_series : array-like</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="co">        Free cash flows for forecast period</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co">    wacc : float</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="co">        Weighted average cost of capital</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="co">    perpetual_growth : float</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="co">        Perpetual growth rate for terminal value</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="co">        </span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns:</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="co">    --------</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="co">    dict : Components of DCF valuation</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>    fcf <span class="op">=</span> np.array(fcf_series)</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>    n_years <span class="op">=</span> <span class="bu">len</span>(fcf)</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Discount factors</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>    discount_factors <span class="op">=</span> (<span class="dv">1</span> <span class="op">+</span> wacc) <span class="op">**</span> np.arange(<span class="dv">1</span>, n_years <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Present value of forecast period cash flows</span></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>    pv_fcf <span class="op">=</span> fcf <span class="op">/</span> discount_factors</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>    pv_fcf_total <span class="op">=</span> pv_fcf.<span class="bu">sum</span>()</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Terminal value and its present value</span></span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>    terminal_value <span class="op">=</span> compute_terminal_value(fcf[<span class="op">-</span><span class="dv">1</span>], perpetual_growth, wacc)</span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>    pv_terminal <span class="op">=</span> terminal_value <span class="op">/</span> discount_factors[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Total enterprise value</span></span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a>    enterprise_value <span class="op">=</span> pv_fcf_total <span class="op">+</span> pv_terminal</span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>        <span class="st">"pv_fcf"</span>: pv_fcf_total,</span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a>        <span class="st">"terminal_value"</span>: terminal_value,</span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>        <span class="st">"pv_terminal"</span>: pv_terminal,</span>
+<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a>        <span class="st">"enterprise_value"</span>: enterprise_value,</span>
+<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a>        <span class="st">"terminal_pct"</span>: pv_terminal <span class="op">/</span> enterprise_value</span>
+<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute DCF value</span></span>
+<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a>perpetual_growth <span class="op">=</span> <span class="fl">0.04</span>  <span class="co"># 4% perpetual growth</span></span>
+<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-47"><a href="#cb21-47" aria-hidden="true" tabindex="-1"></a>dcf_result <span class="op">=</span> compute_dcf_value(</span>
+<span id="cb21-48"><a href="#cb21-48" aria-hidden="true" tabindex="-1"></a>    fcf_series<span class="op">=</span>forecast_data[<span class="st">"fcf"</span>].values,</span>
+<span id="cb21-49"><a href="#cb21-49" aria-hidden="true" tabindex="-1"></a>    wacc<span class="op">=</span>wacc,</span>
+<span id="cb21-50"><a href="#cb21-50" aria-hidden="true" tabindex="-1"></a>    perpetual_growth<span class="op">=</span>perpetual_growth</span>
+<span id="cb21-51"><a href="#cb21-51" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-52"><a href="#cb21-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-53"><a href="#cb21-53" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"DCF Valuation Results"</span>)</span>
+<span id="cb21-54"><a href="#cb21-54" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">50</span>)</span>
+<span id="cb21-55"><a href="#cb21-55" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"PV of Forecast Period FCF: </span><span class="sc">{</span>dcf_result[<span class="st">'pv_fcf'</span>]<span class="op">/</span><span class="fl">1e12</span><span class="sc">:.1f}</span><span class="ss"> trillion VND"</span>)</span>
+<span id="cb21-56"><a href="#cb21-56" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Terminal Value: </span><span class="sc">{</span>dcf_result[<span class="st">'terminal_value'</span>]<span class="op">/</span><span class="fl">1e12</span><span class="sc">:.1f}</span><span class="ss"> trillion VND"</span>)</span>
+<span id="cb21-57"><a href="#cb21-57" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"PV of Terminal Value: </span><span class="sc">{</span>dcf_result[<span class="st">'pv_terminal'</span>]<span class="op">/</span><span class="fl">1e12</span><span class="sc">:.1f}</span><span class="ss"> trillion VND"</span>)</span>
+<span id="cb21-58"><a href="#cb21-58" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Enterprise Value: </span><span class="sc">{</span>dcf_result[<span class="st">'enterprise_value'</span>]<span class="op">/</span><span class="fl">1e12</span><span class="sc">:.1f}</span><span class="ss"> trillion VND"</span>)</span>
+<span id="cb21-59"><a href="#cb21-59" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Terminal Value as % of EV: </span><span class="sc">{</span>dcf_result[<span class="st">'terminal_pct'</span>]<span class="sc">:.1%}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DCF Valuation Results
+==================================================
+PV of Forecast Period FCF: 22.7 trillion VND
+Terminal Value: 146.1 trillion VND
+PV of Terminal Value: 90.7 trillion VND
+Enterprise Value: 113.4 trillion VND
+Terminal Value as % of EV: 80.0%</code></pre>
+</div>
+</div>
+<p>Note that terminal value often represents 60-80% of enterprise value. This highlights the importance of terminal value assumptions and the inherent uncertainty in DCF analysis.</p>
+</section>
+<section id="sensitivity-analysis" class="level2" data-number="6.10">
+<h2 data-number="6.10" class="anchored" data-anchor-id="sensitivity-analysis"><span class="header-section-number">6.10</span> Sensitivity Analysis</h2>
+<p>Given the uncertainty in DCF inputs, sensitivity analysis is essential. We examine how enterprise value changes with different assumptions about WACC and perpetual growth.</p>
+<div id="cell-fig-504" class="cell" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define ranges for sensitivity analysis</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>wacc_range <span class="op">=</span> np.arange(<span class="fl">0.08</span>, <span class="fl">0.14</span>, <span class="fl">0.01</span>)  <span class="co"># 8% to 13%</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>growth_range <span class="op">=</span> np.arange(<span class="fl">0.02</span>, <span class="fl">0.06</span>, <span class="fl">0.01</span>)  <span class="co"># 2% to 5%</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Create all combinations</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>sensitivity_results <span class="op">=</span> []</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> w <span class="kw">in</span> wacc_range:</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> g <span class="kw">in</span> growth_range:</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> w <span class="op">&gt;</span> g:  <span class="co"># Must have WACC &gt; growth for valid terminal value</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>            result <span class="op">=</span> compute_dcf_value(</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>                fcf_series<span class="op">=</span>forecast_data[<span class="st">"fcf"</span>].values,</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>                wacc<span class="op">=</span>w,</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>                perpetual_growth<span class="op">=</span>g</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>            sensitivity_results.append({</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>                <span class="st">"wacc"</span>: w,</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>                <span class="st">"growth_rate"</span>: g,</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>                <span class="st">"enterprise_value"</span>: result[<span class="st">"enterprise_value"</span>] <span class="op">/</span> <span class="fl">1e12</span>  <span class="co"># In trillions</span></span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>            })</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>sensitivity_df <span class="op">=</span> pd.DataFrame(sensitivity_results)</span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Create heatmap</span></span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>sensitivity_figure <span class="op">=</span> (</span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>    ggplot(sensitivity_df, aes(x<span class="op">=</span><span class="st">"wacc"</span>, y<span class="op">=</span><span class="st">"growth_rate"</span>, fill<span class="op">=</span><span class="st">"enterprise_value"</span>))</span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_tile()</span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_text(</span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>        aes(label<span class="op">=</span><span class="st">"enterprise_value"</span>),</span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a>        format_string<span class="op">=</span><span class="st">"</span><span class="sc">{:.0f}</span><span class="st">"</span>,</span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span><span class="st">"white"</span>,</span>
+<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a>        size<span class="op">=</span><span class="dv">9</span></span>
+<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_x_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_y_continuous(labels<span class="op">=</span>percent_format())</span>
+<span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> scale_fill_gradient(low<span class="op">=</span><span class="st">"darkblue"</span>, high<span class="op">=</span><span class="st">"lightblue"</span>)</span>
+<span id="cb23-37"><a href="#cb23-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
+<span id="cb23-38"><a href="#cb23-38" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">"WACC"</span>, y<span class="op">=</span><span class="st">"Perpetual Growth Rate"</span>,</span>
+<span id="cb23-39"><a href="#cb23-39" aria-hidden="true" tabindex="-1"></a>        fill<span class="op">=</span><span class="st">"EV</span><span class="ch">\n</span><span class="st">(Trillion VND)"</span>,</span>
+<span id="cb23-40"><a href="#cb23-40" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"DCF Sensitivity: Enterprise Value by WACC and Growth Rate"</span></span>
+<span id="cb23-41"><a href="#cb23-41" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb23-42"><a href="#cb23-42" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-43"><a href="#cb23-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-44"><a href="#cb23-44" aria-hidden="true" tabindex="-1"></a>sensitivity_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-504" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Title: DCF Sensitivity Analysis. The figure shows a heatmap of enterprise values for different combinations of WACC and growth rate.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-504-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05_discounted_cash_flow_files/figure-html/fig-504-output-1.png" alt="Title: DCF Sensitivity Analysis. The figure shows a heatmap of enterprise values for different combinations of WACC and growth rate." width="672" height="480" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-504-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.5: Sensitivity of enterprise value to WACC and perpetual growth rate assumptions. Small changes in these inputs can substantially affect valuation.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The sensitivity analysis reveals several important insights:</p>
+<ol type="1">
+<li><p><strong>Valuation is highly sensitive to inputs</strong>: Small changes in WACC or growth rate produce large changes in enterprise value. A 1 percentage point change in WACC can shift value by 20% or more.</p></li>
+<li><p><strong>The relationship is non-linear</strong>: The impact of growth rate changes is amplified at lower WACCs because the terminal value formula has <span class="math inline">\((r-g)\)</span> in the denominator.</p></li>
+<li><p><strong>Reasonable people can disagree</strong>: Given input uncertainty, DCF should be thought of as producing a <em>range</em> of values, not a single precise number.</p></li>
+</ol>
+</section>
+<section id="from-enterprise-value-to-equity-value" class="level2" data-number="6.11">
+<h2 data-number="6.11" class="anchored" data-anchor-id="from-enterprise-value-to-equity-value"><span class="header-section-number">6.11</span> From Enterprise Value to Equity Value</h2>
+<p>Our DCF analysis yields <strong>enterprise value</strong> (i.e., the total value of the company’s operations to all capital providers). To determine <strong>equity value</strong> (what shareholders own), we must adjust for the claims of debt holders and any non-operating assets:</p>
+<p><span class="math display">\[
+\text{Equity Value} = \text{Enterprise Value} + \text{Non-Operating Assets} - \text{Debt}
+\]</span></p>
+<p><strong>Non-Operating Assets</strong> include:</p>
+<ul>
+<li>Excess cash beyond operating needs</li>
+<li>Marketable securities</li>
+<li>Non-core real estate or investments</li>
+</ul>
+<p><strong>Debt</strong> includes:</p>
+<ul>
+<li>Short-term debt</li>
+<li>Long-term debt</li>
+<li>Capital lease obligations</li>
+<li>Preferred stock (if treated as debt-like)</li>
+</ul>
+<div id="5bb20bbd" class="cell" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get most recent balance sheet data for FPT</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>latest_year <span class="op">=</span> fpt_data[<span class="st">"year"</span>].<span class="bu">max</span>()</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>latest_data <span class="op">=</span> fpt_data[fpt_data[<span class="st">"year"</span>] <span class="op">==</span> latest_year].iloc[<span class="dv">0</span>]</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract debt and cash (column names may vary)</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>total_debt <span class="op">=</span> latest_data.get(<span class="st">"total_debt"</span>, <span class="dv">0</span>)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>cash <span class="op">=</span> latest_data.get(<span class="st">"ca_cce"</span>, <span class="dv">0</span>)</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute equity value</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>enterprise_value <span class="op">=</span> dcf_result[<span class="st">"enterprise_value"</span>]</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>equity_value <span class="op">=</span> enterprise_value <span class="op">-</span> total_debt <span class="op">+</span> cash</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"From Enterprise Value to Equity Value"</span>)</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">50</span>)</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Enterprise Value: </span><span class="sc">{</span>enterprise_value<span class="op">/</span><span class="fl">1e12</span><span class="sc">:.1f}</span><span class="ss"> trillion VND"</span>)</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Less: Total Debt: </span><span class="sc">{</span>total_debt<span class="op">/</span><span class="fl">1e12</span><span class="sc">:.1f}</span><span class="ss"> trillion VND"</span>)</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Plus: Cash: </span><span class="sc">{</span>cash<span class="op">/</span><span class="fl">1e12</span><span class="sc">:.1f}</span><span class="ss"> trillion VND"</span>)</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Equity Value: </span><span class="sc">{</span>equity_value<span class="op">/</span><span class="fl">1e12</span><span class="sc">:.1f}</span><span class="ss"> trillion VND"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>From Enterprise Value to Equity Value
+==================================================
+Enterprise Value: 113.4 trillion VND
+Less: Total Debt: 0.0 trillion VND
+Plus: Cash: 8.3 trillion VND
+Equity Value: 121.7 trillion VND</code></pre>
+</div>
+</div>
+<section id="implied-share-price" class="level3" data-number="6.11.1">
+<h3 data-number="6.11.1" class="anchored" data-anchor-id="implied-share-price"><span class="header-section-number">6.11.1</span> Implied Share Price</h3>
+<p>If we know the number of shares outstanding, we can compute an implied share price:</p>
+<div id="bdbfda49" class="cell" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get shares outstanding (this would come from market data)</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Using placeholder - in practice, get from exchange data</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>shares_outstanding <span class="op">=</span> latest_data.get(<span class="st">"total_equity"</span>, equity_value) <span class="op">/</span> <span class="dv">25000</span>  <span class="co"># Rough estimate</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>implied_price <span class="op">=</span> equity_value <span class="op">/</span> shares_outstanding</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Implied Share Price: </span><span class="sc">{</span>implied_price<span class="sc">:,.0f}</span><span class="ss"> VND"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Implied Share Price: 101,645 VND</code></pre>
+</div>
+</div>
+<p>Comparing the implied price to the current market price tells us whether the stock appears under- or overvalued according to our DCF model.</p>
+</section>
+</section>
+<section id="limitations-and-practical-considerations" class="level2" data-number="6.12">
+<h2 data-number="6.12" class="anchored" data-anchor-id="limitations-and-practical-considerations"><span class="header-section-number">6.12</span> Limitations and Practical Considerations</h2>
+<p>DCF analysis is powerful but has important limitations:</p>
+<section id="sensitivity-to-assumptions" class="level3" data-number="6.12.1">
+<h3 data-number="6.12.1" class="anchored" data-anchor-id="sensitivity-to-assumptions"><span class="header-section-number">6.12.1</span> Sensitivity to Assumptions</h3>
+<p>As our sensitivity analysis showed, small changes in inputs produce large changes in value. This is particularly problematic because the most influential inputs (long-term growth, WACC) are the hardest to estimate accurately.</p>
+</section>
+<section id="terminal-value-dominance" class="level3" data-number="6.12.2">
+<h3 data-number="6.12.2" class="anchored" data-anchor-id="terminal-value-dominance"><span class="header-section-number">6.12.2</span> Terminal Value Dominance</h3>
+<p>Terminal value often represents 60-80% of total value, yet it’s based on assumptions about the very distant future. This concentrates valuation risk in the most uncertain component.</p>
+</section>
+<section id="garbage-in-garbage-out" class="level3" data-number="6.12.3">
+<h3 data-number="6.12.3" class="anchored" data-anchor-id="garbage-in-garbage-out"><span class="header-section-number">6.12.3</span> Garbage In, Garbage Out</h3>
+<p>DCF is only as good as its inputs. Unrealistic growth assumptions, optimistic margins, or inappropriate discount rates produce meaningless valuations. The discipline of DCF lies in forcing analysts to justify their assumptions.</p>
+</section>
+<section id="not-suitable-for-all-companies" class="level3" data-number="6.12.4">
+<h3 data-number="6.12.4" class="anchored" data-anchor-id="not-suitable-for-all-companies"><span class="header-section-number">6.12.4</span> Not Suitable for All Companies</h3>
+<p>DCF works best for companies with:</p>
+<ul>
+<li>Positive and predictable cash flows</li>
+<li>Stable or predictably changing margins</li>
+<li>Reasonable visibility into future operations</li>
+</ul>
+<p>It struggles with:</p>
+<ul>
+<li>Early-stage companies with no profits</li>
+<li>Highly cyclical businesses</li>
+<li>Companies undergoing major transitions</li>
+<li>Financial institutions (which require different approaches)</li>
+</ul>
+</section>
+<section id="complement-with-other-methods" class="level3" data-number="6.12.5">
+<h3 data-number="6.12.5" class="anchored" data-anchor-id="complement-with-other-methods"><span class="header-section-number">6.12.5</span> Complement with Other Methods</h3>
+<p>Wise practitioners use DCF alongside other valuation methods:</p>
+<ul>
+<li><strong>Comparable company analysis</strong>: How do similar companies trade?</li>
+<li><strong>Precedent transactions</strong>: What have acquirers paid for similar businesses?</li>
+<li><strong>Sum-of-the-parts</strong>: Value divisions separately and add</li>
+</ul>
+<p>When methods converge, confidence increases. When they diverge, it prompts investigation into why.</p>
+</section>
+</section>
+<section id="key-takeaways" class="level2" data-number="6.13">
+<h2 data-number="6.13" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">6.13</span> Key Takeaways</h2>
+<p>This chapter introduced Discounted Cash Flow analysis as a framework for intrinsic valuation. The main insights are:</p>
+<ol type="1">
+<li><p><strong>Free Cash Flow is the foundation</strong>: FCF represents cash available to all investors after operating expenses, taxes, and investments. It differs from net income by excluding non-cash items and including investment needs.</p></li>
+<li><p><strong>Ratio-based forecasting links components to revenue</strong>: By expressing FCF components as percentages of revenue, we can systematically forecast cash flows based on revenue growth assumptions and operating ratio projections.</p></li>
+<li><p><strong>Terminal value captures long-term value</strong>: The perpetuity growth model assumes FCF grows at a constant rate forever. The perpetual growth rate should not exceed long-term economic growth.</p></li>
+<li><p><strong>WACC is the appropriate discount rate</strong>: The Weighted Average Cost of Capital reflects the blended cost of debt and equity financing, adjusted for the tax shield on interest.</p></li>
+<li><p><strong>DCF produces enterprise value</strong>: To derive equity value, subtract debt and add non-operating assets. Dividing by shares outstanding yields an implied share price.</p></li>
+<li><p><strong>Sensitivity analysis is essential</strong>: Given input uncertainty, presenting a range of values based on different assumptions is more honest than a single point estimate.</p></li>
+<li><p><strong>DCF complements other methods</strong>: No single valuation method is definitive. Cross-checking DCF with market multiples and transaction comparables provides a more complete picture.</p></li>
+</ol>
+<p>The true value of DCF analysis lies not in producing a precise number but in forcing rigorous thinking about what drives company value. The process of building a DCF model (i.e., forecasting growth, projecting margins, estimating risk) develops deep understanding of the business being valued.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./04_financial_statement_analysis.html" class="pagination-link" aria-label="Financial Statement Analysis">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Financial Statement Analysis</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./06_accessing_and_managing_financial_data.html" class="pagination-link" aria-label="Accessing and Managing Financial Data">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Accessing and Managing Financial Data</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
