@@ -1,5 +1,5 @@
 ---
-title: Accessing and Managing Financial Data
+title: Accessing and Managing VN Financial Data
 format:
   html:
     toc: true
@@ -11,223 +11,385 @@ execute:
   message: false
 ---
 
+This chapter provides a guide to organizing, accessing, and managing financial data specifically tailored for the Vietnamese market. While global financial databases such as CRSP and Compustat serve as standard resources for developed markets, emerging markets like Vietnam require a different approach due to unique data sources, market structures, and regulatory environments. Understanding these nuances is essential for conducting rigorous empirical research on Vietnamese equities, bonds, and macroeconomic indicators.
 
-In this chapter, we suggest a way to organize your financial data. Everybody who has experience with data is also familiar with storing data in various formats like CSV, XLS, XLSX, or other delimited value storage. Reading and saving data can become very cumbersome when using different data formats and across different projects. Moreover, storing data in delimited files often leads to problems with respect to column type consistency. For instance, date-type columns frequently lead to inconsistencies across different data formats and programming languages. 
+Vietnam's financial market has experienced remarkable growth since the establishment of the Ho Chi Minh City Stock Exchange (HOSE) in 2000 and the Hanoi Stock Exchange (HNX) in 2005. Today, the market comprises over 1,600 listed companies across three trading venues: HOSE for large-cap stocks, HNX for mid-cap stocks, and UPCoM (Unlisted Public Company Market) for smaller companies transitioning to formal listing. This diversity creates both opportunities and challenges for financial researchers seeking comprehensive coverage of the Vietnamese equity universe.
 
-First, we load the Python packages that we use throughout this chapter. Later on, we load more packages in the sections where we need them. 
+The Vietnamese market presents several distinctive characteristics that researchers must account for. Foreign ownership limits (typically 49% for most sectors, with exceptions for banking and certain strategic industries), trading band restrictions (e.g., currently $\pm$ 7% for HOSE and $\pm$ 10% for HNX), and the T+2 settlement cycle all influence market microstructure and return dynamics. Additionally, the market operates in Vietnamese Dong (VND), requiring careful attention to currency effects when comparing results with international studies.
+
+We begin by loading the essential Python packages that facilitate data acquisition and management throughout this chapter.
 
 ```{python}
+#| message: false
 import pandas as pd
 import numpy as np
-import io
-import re
-import zipfile
-from curl_cffi import requests
+import requests
+from datetime import datetime, timedelta
+import json
+import sqlite3
 ```
 
-Moreover, we initially define the date range for which we fetch and store the financial data, making future data updates tractable. In case you need another time frame, you can adjust the dates below. 
+We also define the date range for our data collection, which spans from the early days of the Vietnamese stock market to the present. This extended timeframe allows us to capture the market's evolution through various economic cycles, including the 2008 global financial crisis, the 2011-2012 domestic banking crisis, and the COVID-19 pandemic period.
 
 ```{python}
-start_date = "1960-01-01"
+start_date = "2000-07-28"  # HOSE establishment date
 end_date = "2024-12-31"
 ```
 
-## Macroeconomic Predictors
+------------------------------------------------------------------------
 
-Our next data source is a set of macroeconomic variables often used as predictors for the equity premium. @Goyal2008 comprehensively reexamine the performance of variables suggested by the academic literature to be good predictors of the equity premium. The authors host the data on [Amit Goyal's website.](https://sites.google.com/view/agoyal145) Since the data is an XLSX-file stored on a public Google Drive location, we need additional packages to access the data directly from our Python session. Usually, you need to authenticate if you interact with Google drive directly in Python. Since the data is stored via a public link, we can proceed without any authentication.\index{Google Drive}
+## Overview of Vietnamese Financial Data Sources
 
-```{python}
-#| eval: false
-sheet_id = "1bM7vCWd3WOt95Sf9qjLPZjoiafgF_8EG"
-sheet_name = "macro_predictors.xlsx"
-macro_predictors_link = (
-  f"https://docs.google.com/spreadsheets/d/{sheet_id}" 
-  f"/gviz/tq?tqx=out:csv&sheet={sheet_name}"
-)
-```
+Before diving into the technical implementation, it is valuable to understand the landscape of financial data providers serving the Vietnamese market. Unlike developed markets where a few dominant providers (Bloomberg, Refinitiv, FactSet) offer comprehensive coverage, Vietnamese financial data has historically been fragmented across multiple sources, each with distinct strengths and limitations.
 
-Next, we read in the new data and transform the columns into the variables that we later use:
+The primary sources of Vietnamese financial data include official exchange feeds from HOSE and HNX, which provide real-time and historical trading data. The State Securities Commission of Vietnam (SSC) publishes regulatory filings, corporate announcements, and market statistics. Commercial data vendors such as FiinGroup, StoxPlus (now part of FiinGroup), and VNDirect offer curated datasets with varying levels of coverage and data quality. Additionally, the State Bank of Vietnam (SBV) and the General Statistics Office (GSO) provide macroeconomic indicators essential for asset pricing research.
 
-1. The dividend price ratio (`dp`), the difference between the log of dividends and the log of prices, where dividends are 12-month moving sums of dividends paid on the S&P 500 index, and prices are monthly averages of daily closing prices [@Campbell1988; @Campbell2006]. 
-1. Dividend yield (`dy`), the difference between the log of dividends and the log of lagged prices [@Ball1978]. 
-1. Earnings price ratio (`ep`), the difference between the log of earnings and the log of prices, where earnings are 12-month moving sums of earnings on the S&P 500 index [@Campbell1988]. 
-1. Dividend payout ratio (`de`), the difference between the log of dividends and the log of earnings [@Lamont1998]. 
-1. Stock variance (`svar`), the sum of squared daily returns on the S&P 500 index [@Guo2006].
-1. Book-to-market ratio (`bm`), the ratio of book value to market value for the Dow Jones Industrial Average [@Kothari1997].
-1. Net equity expansion (`ntis`), the ratio of 12-month moving sums of net issues by NYSE listed stocks divided by the total end-of-year market capitalization of NYSE stocks [@Campbell2008].
-1. Treasury bills (`tbl`), the 3-Month Treasury Bill: Secondary Market Rate from the economic research database at the Federal Reserve Bank at St. Louis [@Campbell1987].
-1. Long-term yield (`lty`), the long-term government bond yield from Ibbotson's Stocks, Bonds, Bills, and Inflation Yearbook [@Goyal2008].
-1. Long-term rate of returns (`ltr`), the long-term government bond returns from Ibbotson's Stocks, Bonds, Bills, and Inflation Yearbook [@Goyal2008].
-1. Term spread (`tms`), the difference between the long-term yield on government bonds and the Treasury bill [@Campbell1987].
-1. Default yield spread (`dfy`), the difference between BAA and AAA-rated corporate bond yields [@Fama1989]. 
-1. Inflation (`infl`), the Consumer Price Index (All Urban Consumers) from the Bureau of Labor Statistics [@Campbell2004].
-			
-For variable definitions and the required data transformations, you can consult the material on [Amit Goyal's website.](https://sites.google.com/view/agoyal145)
+For academic researchers, this fragmentation traditionally involved difficult trade-offs between cost, coverage, data quality, and ease of access. Commercial providers like FiinGroup offer clean, standardized data but require subscription fees that may be prohibitive for individual researchers and smaller institutions. Open-source alternatives provide free access but often require substantial data cleaning and validation efforts. Manually collecting data from government websites is time-consuming and prone to inconsistencies.
 
-```{python}
-#| eval: false
-ssl._create_default_https_context = ssl._create_unverified_context
+Fortunately, this landscape has improved significantly with the emergence of [**Datacore**](https://datacore.vn/) as a unified data platform for Vietnamese financial markets. In our experience working with Vietnamese financial data across multiple research projects, Datacore has proven to be the most practical solution for academic research. The platform consolidates data from multiple sources, including stock prices, corporate fundamentals, market indices, macroeconomic indicators, and alternative data, into a single, accessible interface with a well-documented API.
 
-macro_predictors = (
-  pd.read_csv(macro_predictors_link, thousands=",")
-  .assign(
-    date=lambda x: pd.to_datetime(x["yyyymm"], format="%Y%m"),
-    dp=lambda x: np.log(x["D12"])-np.log(x["Index"]),
-    dy=lambda x: np.log(x["D12"])-np.log(x["Index"].shift(1)),
-    ep=lambda x: np.log(x["E12"])-np.log(x["Index"]),
-    de=lambda x: np.log(x["D12"])-np.log(x["E12"]),
-    tms=lambda x: x["lty"]-x["tbl"],
-    dfy=lambda x: x["BAA"]-x["AAA"]
-  )
-  .rename(columns={"b/m": "bm"})
-  .get(["date", "dp", "dy", "ep", "de", "svar", "bm", 
-        "ntis", "tbl", "lty", "ltr", "tms", "dfy", "infl"])
-  .query("date >= @start_date and date <= @end_date")
-  .dropna()
-)
+What distinguishes [Datacore](https://datacore.vn/) from traditional commercial providers like FiinGroup extends beyond mere data aggregation. While FiinGroup has long been the institutional incumbent, several factors make Datacore particularly attractive for rigorous empirical research:
 
-ssl._create_default_https_context = ssl.create_default_context
-```
+1.  **API-First Architecture**: Datacore was built from the ground up for programmatic access, making it seamlessly integrable with Python, R, and other research workflows. FiinGroup's data access, by contrast, often requires manual downloads or cumbersome Excel-based interfaces that impede reproducibility.
 
+2.  **Cost Efficiency**: Academic researchers frequently operate under budget constraints. Datacore offers competitive pricing structures that make comprehensive market coverage accessible without the substantial subscription fees associated with legacy providers.
 
-## Other Macroeconomic Data
+3.  **Corporate Action Handling**: One persistent challenge with Vietnamese data is accurate adjustment for stock splits, bonus shares, and rights issues. Datacore implements transparent adjustment methodologies with clear documentation, whereas legacy providers often apply adjustments inconsistently or without adequate explanation.
 
-The Federal Reserve bank of St. Louis provides the Federal Reserve Economic Data (FRED), an extensive database for macroeconomic data. In total, there are 817,000 US and international time series from 108 different sources. As an illustration, we use the `tidyfinance` package to fetch consumer price index (CPI) data that can be found under the [CPIAUCNS](https://fred.stlouisfed.org/series/CPIAUCNS) key.\index{Data!FRED}\index{Data!CPI}
+4.  **Update Frequency**: Datacore maintains near real-time data updates with clear timestamps, enabling event study research and timely portfolio rebalancing. Traditional providers often suffer from publication lags that can compromise research requiring current data.
+
+5.  **Coverage Breadth**: Beyond standard price and fundamental data, Datacore integrates alternative data, and macroeconomic indicators into a unified schema. This eliminates the need to merge datasets from multiple sources, which is a process that introduces potential errors and consumes valuable research time.
+
+Throughout this chapter, we leverage Datacore as our primary data source. By centralizing our data acquisition through a single platform, we benefit from consistent data formats, reliable corporate action adjustments, and comprehensive market coverage spanning HOSE, HNX, and UPCoM. The code examples that follow demonstrate how straightforward Vietnamese financial research becomes when data access friction is minimized.
+
+The following table summarizes the key data sources for Vietnamese financial research:
+
+| Data Source | Coverage | Access Type | Key Strengths | Limitations |
+|---------------|---------------|---------------|---------------|---------------|
+| **Datacore** | Prices, fundamentals, indices, macro, derivatives | API | Unified platform, programmatic access, comprehensive coverage, transparent methodology | Newer platform |
+| FiinGroup | Full market coverage | Commercial | Established reputation, institutional adoption | High cost, manual access, limited API |
+| HOSE/HNX websites | Official exchange data | Free (manual) | Authoritative, real-time | No API, manual collection required |
+| GSO (gso.gov.vn) | Macroeconomic indicators | Free (manual) | Official government statistics | Infrequent updates, no API |
+| SBV (sbv.gov.vn) | Monetary policy, rates | Free (manual) | Central bank data | Manual download only |
+| CafeF/VnExpress | News, announcements | Free | Market sentiment, events | Unstructured, requires NLP processing |
+
+: Vietnamese Financial Data Sources {#tbl-data-sources}
+
+------------------------------------------------------------------------
+
+## Stock Market Data
 
 ```{python}
 #| eval: false
-series = "CPIAUCNS"
-url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}"
+
 ```
 
-We can then use the `requests` module to request the CSV, extract the data from the response body, and convert the columns to a tidy format:
+The resulting DataFrame contains essential security identifiers including the ticker symbol, company name in both Vietnamese and English, exchange listing, industry classification according to the Vietnam Standard Industrial Classification (VSIC), and various flags indicating special status such as foreign ownership restrictions or trading suspensions.
+
+### Historical Price Data
 
 ```{python}
 #| eval: false
-resp = requests.get(url)
-resp_csv = pd.io.common.StringIO(resp.text)
 
-cpi_monthly = (pd.read_csv(resp_csv)
-  .assign(
-    date=lambda x: pd.to_datetime(x["observation_date"]),
-    value=lambda x: pd.to_numeric(
-      x[series], errors="coerce"
-    ),
-      series=series,
-   )
-  .get(["date", "series", "value"])
-  .query("date >= @start_date & date <= @end_date")
-  .assign(cpi=lambda x: x["value"] / x["value"].iloc[-1])
-)
 ```
 
-The last line sets the current (latest) price level as the reference price level.
+### Fundamental Data and Financial Statements
 
-To download other time series, we just have to look it up on the FRED website and extract the corresponding key from the address. For instance, the producer price index for gold ores can be found under the [PCU2122212122210](https://fred.stlouisfed.org/series/PCU2122212122210) key. If your desired time series is not supported through tidyfinance, we recommend working with the `fredapi` package. Note that you need to get an API key to use its functionality. We refer to the package documentation for details.
+Beyond price data, fundamental analysis requires access to corporate financial statements including balance sheets, income statements, and cash flow statements. Vietnamese publicly listed companies are required to publish quarterly and annual financial reports according to Vietnamese Accounting Standards (VAS), which differ in certain respects from International Financial Reporting Standards (IFRS). Understanding these differences is important when comparing Vietnamese firms with international peers or applying models developed using US or European data.
 
-## Setting Up a Database
+Key differences between VAS and IFRS that affect financial analysis include:
 
-Now that we have downloaded some (freely available) data from the web into the memory of our Python session, let us set up a database to store that information for future use. We will use the data stored in this database throughout the following chapters, but you could alternatively implement a different strategy and replace the respective code. 
-
-There are many ways to set up and organize a database, depending on the use case. For our purpose, the most efficient way is to use an [SQLite](https://SQLite.org/)-database, which is the C-language library that implements a small, fast, self-contained, high-reliability, full-featured SQL database engine. Note that [SQL](https://en.wikipedia.org/wiki/SQL) (Structured Query Language) is a standard language for accessing and manipulating databases.\index{Database!SQLite}
+1.  **Revenue recognition**: VAS allows more flexibility in timing of revenue recognition compared to IFRS 15
+2.  **Financial instruments**: VAS has less comprehensive guidance on fair value measurement
+3.  **Lease accounting**: VAS does not require operating lease capitalization as under IFRS 16
+4.  **Goodwill**: VAS requires amortization while IFRS requires impairment testing only
 
 ```{python}
-import sqlite3
+#| eval: false
+
 ```
 
-An SQLite-database is easily created - the code below is really all there is. You do not need any external software. Otherwise, date columns are stored and retrieved as integers.\index{Database!Creation} We will use the file `tidy_finance_r.sqlite`, located in the data subfolder, to retrieve data for all subsequent chapters. The initial part of the code ensures that the directory is created if it does not already exist.
+### Corporate Actions and Events
+
+Accurate treatment of corporate actions is essential for computing correct returns and maintaining data integrity. Vietnamese companies frequently engage in corporate actions including cash dividends, stock dividends (bonus shares), rights issues, and stock splits.
 
 ```{python}
-import os
+#| eval: false
 
-if not os.path.exists("data"):
-  os.makedirs("data")
+```
+
+## Market Indices and Benchmarks
+
+Constructing appropriate benchmarks is fundamental to performance evaluation and factor model estimation. The Vietnamese market features several indices that serve different purposes in financial research.
+
+| Index       | Exchange | Description             | Use Case               |
+|-------------|----------|-------------------------|------------------------|
+| VN-Index    | HOSE     | All HOSE-listed stocks  | Broad market benchmark |
+| VN30-Index  | HOSE     | 30 largest, most liquid | Investable benchmark   |
+| HNX-Index   | HNX      | All HNX-listed stocks   | Mid-cap benchmark      |
+| HNX30-Index | HNX      | 30 largest HNX stocks   | HNX large-cap          |
+| VNAllShare  | Combined | HOSE + HNX              | Total market           |
+| VN100       | Combined | Top 100 stocks          | Large/mid-cap          |
+
+: Vietnamese Market Indices {#tbl-indices}
+
+The VN-Index, which tracks all stocks listed on HOSE, is the most widely followed benchmark and serves as the primary gauge of overall market performance. The HNX-Index covers stocks on the Hanoi exchange, while the VN30-Index tracks the thirty largest and most liquid stocks on HOSE.
+
+For asset pricing research, the VN30-Index is particularly valuable as it represents the investable universe for institutional investors and serves as the underlying for Vietnam's most liquid derivatives contracts. The constituent stocks are reviewed semi-annually based on market capitalization, liquidity, and free-float requirements.
+
+```{python}
+#| eval: false
+# Retrieve VN-Index historical data
+
+```
+
+### Index Constituent Data
+
+For factor model construction and portfolio analysis, access to index constituent lists and their weights is essential. While official constituent data requires subscription to exchange data feeds, we can approximate index membership using market capitalization and liquidity filters.
+
+```{python}
+#| eval: false
+
+```
+
+## Macroeconomic Data from Vietnamese Sources
+
+Asset pricing models often incorporate macroeconomic variables as predictors of expected returns or as state variables in conditional models. For the Vietnamese market, relevant macroeconomic data comes primarily from two sources: the General Statistics Office (GSO) and the State Bank of Vietnam (SBV).
+
+### Key Macroeconomic Indicators
+
+The following macroeconomic variables are particularly relevant for Vietnamese financial research:
+
+1.  **Consumer Price Index (CPI)**: Essential for computing real returns and inflation-adjusted valuations. Vietnam experienced periods of high inflation, particularly during 2008 and 2011 when annual CPI exceeded 20%.
+
+2.  **Industrial Production Index (IPI)**: Proxy for economic activity and business cycle conditions.
+
+3.  **Money Supply (M2)**: Indicator of monetary policy stance and liquidity conditions.
+
+4.  **Credit Growth**: Bank lending growth, a key driver of economic activity in Vietnam's bank-dominated financial system.
+
+5.  **USD/VND Exchange Rate**: Critical for international investors and companies with foreign currency exposure.
+
+6.  **Foreign Direct Investment (FDI)**: Indicator of international capital flows and economic confidence.
+
+7.  **Trade Balance**: Export and import dynamics affecting corporate earnings.
+
+Unfortunately, unlike the US Federal Reserve's FRED database, Vietnamese macroeconomic data is not available through standardized APIs. Researchers must typically download data manually from GSO and SBV websites or use web scraping techniques.
+
+```{python}
+#| eval: false
+# Structure for Vietnamese macroeconomic data
+
+```
+
+### Risk-Free Rate Approximation
+
+Determining an appropriate risk-free rate for Vietnam presents challenges not encountered in developed markets. Unlike the US Treasury market, Vietnam's government bond market is relatively illiquid with limited secondary trading. Several alternatives exist:
+
+1.  **SBV Refinancing Rate**: The policy rate set by the State Bank of Vietnam. Not directly investable but reflects monetary policy stance.
+
+2.  **Government Bond Yields**: One-year or longer-term government bond yields from auction results. More investable but less liquid than US Treasuries.
+
+3.  **Interbank Rates**: Overnight or term interbank lending rates. Reflect short-term funding costs but include credit risk.
+
+4.  **Adjusted US Rate**: US Treasury rate plus expected VND depreciation, following uncovered interest rate parity.
+
+```{python}
+#| eval: false
+def calculate_risk_free_rate(macro_data, method="refinancing"):
+    """
+    Calculate risk-free rate proxy for Vietnamese market.
     
-tidy_finance = sqlite3.connect(database="data/tidy_finance_python.sqlite")
+    Parameters
+    ----------
+    macro_data : pd.DataFrame
+        DataFrame with macroeconomic data
+    method : str
+        Method for risk-free rate: 'refinancing', 'bond', or 'adjusted_us'
+    
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with date and monthly risk-free rate
+    """
+    if method == "refinancing":
+        # Use SBV refinancing rate, convert annual to monthly
+        rf = macro_data[["date", "refinancing_rate"]].copy()
+        rf["rf_monthly"] = rf["refinancing_rate"] / 12 / 100
+        
+    elif method == "adjusted_us":
+        # US rate + expected VND depreciation
+        # Requires additional data on US rates and exchange rate expectations
+        pass
+    
+    return rf[["date", "rf_monthly"]]
 ```
 
-Next, we create a remote table with the monthly Fama-French factor data. We do so with the `pandas` function `to_sql()`, which copies the data to our SQLite-database.
+## Setting Up a Database for Vietnamese Financial Data
 
-```{python}
-#| output: false
-#| eval: false
-(factors_ff3_monthly
-  .to_sql(name="factors_ff3_monthly", 
-          con=tidy_finance, 
-          if_exists="replace",
-          index=False)
-)
-```
+Managing financial data across multiple sources and formats requires a systematic approach to data storage. We recommend using SQLite as the primary database engine for several reasons: it requires no server setup, stores the entire database in a single portable file, supports standard SQL queries, and integrates seamlessly with Python through the built-in sqlite3 module.
 
-Now, if we want to have the whole table in memory, we need to call `pd.read_sql_query()` with the corresponding query. You will see that we regularly load the data into the memory in the next chapters.\index{Database!Read}
+### Database Schema Design
+
+Our database schema is designed to support efficient queries for common research tasks while maintaining data integrity. We create separate tables for different data types with appropriate relationships.
 
 ```{python}
 #| eval: false
-pd.read_sql_query(
-  sql="SELECT date, risk_free FROM factors_ff3_monthly",
-  con=tidy_finance,
-  parse_dates={"date"}
-)
-```
-
-The last couple of code chunks are really all there is to organizing a simple database! You can also share the SQLite database across devices and programming languages. 
-
-Before we move on to the next data source, let us also store the other six tables in our new SQLite database. 
-
-```{python}
-#| output: false
-#| eval: false
-data_dict = {
-  "factors_ff5_monthly": factors_ff5_monthly,
-  "factors_ff3_daily": factors_ff3_daily,
-  "industries_ff_monthly": industries_ff_monthly, 
-  "factors_q_monthly": factors_q_monthly,
-  "macro_predictors": macro_predictors,
-  "cpi_monthly": cpi_monthly
-}
-
-for key, value in data_dict.items():
-    value.to_sql(name=key,
-                 con=tidy_finance, 
-                 if_exists="replace",
-                 index=False)
-```
-
-From now on, all you need to do to access data that is stored in the database is to follow two steps: (i) Establish the connection to the SQLite-database and (ii) execute the query to fetch the data. For your convenience, the following steps show all you need in a compact fashion.\index{Database!Connection}
-
-```{python}
-#| results: false
-#| message: false
-#| eval: false
-import pandas as pd
+import os
 import sqlite3
 
-tidy_finance = sqlite3.connect(database="data/tidy_finance_python.sqlite")
+# Create data directory if it doesn't exist
+if not os.path.exists("data"):
+    os.makedirs("data")
 
-factors_q_monthly = pd.read_sql_query(
-  sql="SELECT * FROM factors_q_monthly",
-  con=tidy_finance,
-  parse_dates={"date"}
+# Initialize SQLite database connection
+tidy_finance_vn = sqlite3.connect(
+    "data/tidy_finance_vn.sqlite"
 )
+
 ```
 
-## Managing SQLite Databases
+### Storing Data
 
-Finally, at the end of our data chapter, we revisit the  SQLite database itself. When you drop database objects such as tables or delete data from tables, the database file size remains unchanged because SQLite just marks the deleted objects as free and reserves their space for future uses. As a result, the database file always grows in size.\index{Database!Management}
-
-To optimize the database file, you can run the `VACUUM` command in the database, which rebuilds the database and frees up unused space. You can execute the command in the database using the `execute()` function. 
+With the database schema established, we can store our collected data using pandas' to_sql() method.
 
 ```{python}
 #| eval: false
-#| output: false
-tidy_finance.execute("VACUUM")
+# Store stock listing data
+common_stocks.to_sql(
+    name="stock_master",
+    con=tidy_finance_vn,
+    if_exists="replace",
+    index=False
+)
+
+# Store stock price data
+stock_prices.to_sql(
+    name="stock_prices_daily",
+    con=tidy_finance_vn,
+    if_exists="replace",
+    index=False
+)
+
+# Store market indices
+vn_index.to_sql(
+    name="market_indices",
+    con=tidy_finance_vn,
+    if_exists="replace",
+    index=False
+)
+
+# Store factor returns
+factors_vietnam.to_sql(
+    name="factors_monthly",
+    con=tidy_finance_vn,
+    if_exists="replace",
+    index=False
+)
 ```
 
-The `VACUUM` command actually performs a couple of additional cleaning steps, which you can read about in [this tutorial.](https://SQLite.org/docs/sql/statements/vacuum.html) \index{Database!Cleaning}
+## Querying and Updating the Database
+
+Once data is stored in the database, retrieval is straightforward using SQL queries. The pandas read_sql_query() function executes a SQL statement and returns the results as a DataFrame.
+
+```{python}
+#| eval: false
+# Query stock prices for specific symbols and date range
+query = """
+SELECT date, symbol, close, volume
+FROM stock_prices_daily
+WHERE symbol IN ('VNM', 'VIC', 'FPT', 'VHM', 'VCB')
+  AND date >= '2020-01-01'
+ORDER BY symbol, date
+"""
+
+selected_stocks = pd.read_sql_query(
+    sql=query,
+    con=tidy_finance_vn,
+    parse_dates=["date"]
+)
+
+# Query factor data merged with market returns
+query_factors = """
+SELECT f.date, f.mkt_rf, f.smb, f.hml, f.rf,
+       m.cpi_yoy, m.credit_growth
+FROM factors_monthly f
+LEFT JOIN macro_monthly m ON f.date = m.date
+WHERE f.date >= '2015-01-01'
+ORDER BY f.date
+"""
+
+factor_data = pd.read_sql_query(
+    sql=query_factors,
+    con=tidy_finance_vn,
+    parse_dates=["date"]
+)
+```
+
+### Database Maintenance
+
+Regular database maintenance ensures optimal performance and data integrity.
+
+```{python}
+#| eval: false
+# Optimize database
+tidy_finance_vn.execute("VACUUM")
+
+# Check database integrity
+integrity_check = pd.read_sql_query(
+    "PRAGMA integrity_check",
+    tidy_finance_vn
+)
+print(f"Integrity check: {integrity_check.iloc[0, 0]}")
+
+# Get database statistics
+table_stats = pd.read_sql_query("""
+    SELECT name, 
+           (SELECT COUNT(*) FROM stock_prices_daily) as price_rows,
+           (SELECT COUNT(*) FROM stock_master) as stock_count,
+           (SELECT COUNT(*) FROM factors_monthly) as factor_months
+    FROM sqlite_master
+    WHERE type='table' AND name='stock_master'
+""", tidy_finance_vn)
+
+print(table_stats)
+
+# Close connection when done
+tidy_finance_vn.close()
+```
+
+## Alternative Data Sources for Vietnamese Markets
+
+Beyond traditional price and fundamental data, researchers increasingly incorporate alternative data sources to gain unique insights into market dynamics.
+
+### Foreign Investor Flow Data
+
+Foreign investor flow data is particularly valuable given the significant role of foreign capital in Vietnamese equity markets. The State Securities Commission publishes daily foreign ownership statistics by security.
+
+```{python}
+#| eval: false
+
+```
+
+### News and Sentiment Data
+
+Media sentiment from Vietnamese financial news sources offers another research avenue. Major outlets such as CafeF, VnExpress Finance, and Vietstock publish real-time news that can be analyzed for market sentiment.
+
+```{python}
+#| eval: false
+
+```
 
 ## Key Takeaways
 
-- Importing Fama-French factors, q-factors, macroeconomic indicators, and CPI data is simplified through API calls, CSV parsing, and web scraping techniques.
-- The `tidyfinance` Python package offers pre-processed access to financial datasets, reducing manual data cleaning and saving valuable time.
-- Creating a centralized SQLite database helps manage and organize data efficiently across projects, while maintaining reproducibility.
-- Structured database storage supports scalable data access, which is essential for long-term academic projects and collaborative work in finance.
+1.  **Market Structure Understanding**: The Vietnamese financial market operates across three exchanges (HOSE, HNX, UPCoM) with distinct characteristics including foreign ownership limits, trading band restrictions, and a T+2 settlement cycle. Researchers must account for these institutional features in empirical analysis.
+
+2.  **Macroeconomic Data Challenges**: Unlike developed markets with standardized APIs (e.g., FRED), Vietnamese macroeconomic data requires manual collection from government sources (GSO, SBV). Researchers should plan for this additional data gathering effort and implement systematic data management practices.
+
+3.  **Database-Centric Workflow**: SQLite provides an efficient and portable database solution for managing Vietnamese financial data across research projects. The structured database approach enables reproducible research workflows, efficient queries, and easy data sharing among collaborators.
+
+4.  **Data Quality Imperative**: Data quality validation is especially important for emerging market data. Implementing systematic checks for missing values, extreme returns, duplicate entries, and cross-source validation helps ensure research reliability and reproducibility.
+
+5.  **Alternative Data Opportunities**: Foreign investor flows, corporate announcements, and media sentiment provide unique research opportunities in the Vietnamese market that can complement traditional price and fundamental analysis. These data sources can reveal insights about market dynamics not captured in standard datasets.
+
+6.  **Continuous Maintenance**: Financial databases require ongoing maintenance including incremental updates, integrity checks, and optimization. Establishing systematic update procedures ensures data currency and database performance over time.
