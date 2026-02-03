@@ -243,8 +243,8 @@ if not os.path.exists("data"):
     os.makedirs("data")
 
 # Initialize SQLite database connection
-tidy_finance_vn = sqlite3.connect(
-    "data/tidy_finance_vn.sqlite"
+tidy_finance_python = sqlite3.connect(
+    "data/tidy_finance_python.sqlite"
 )
 
 ```
@@ -258,7 +258,7 @@ With the database schema established, we can store our collected data using pand
 # Store stock listing data
 common_stocks.to_sql(
     name="stock_master",
-    con=tidy_finance_vn,
+    con=tidy_finance_python,
     if_exists="replace",
     index=False
 )
@@ -266,7 +266,7 @@ common_stocks.to_sql(
 # Store stock price data
 stock_prices.to_sql(
     name="stock_prices_daily",
-    con=tidy_finance_vn,
+    con=tidy_finance_python,
     if_exists="replace",
     index=False
 )
@@ -274,7 +274,7 @@ stock_prices.to_sql(
 # Store market indices
 vn_index.to_sql(
     name="market_indices",
-    con=tidy_finance_vn,
+    con=tidy_finance_python,
     if_exists="replace",
     index=False
 )
@@ -282,7 +282,7 @@ vn_index.to_sql(
 # Store factor returns
 factors_vietnam.to_sql(
     name="factors_monthly",
-    con=tidy_finance_vn,
+    con=tidy_finance_python,
     if_exists="replace",
     index=False
 )
@@ -305,7 +305,7 @@ ORDER BY symbol, date
 
 selected_stocks = pd.read_sql_query(
     sql=query,
-    con=tidy_finance_vn,
+    con=tidy_finance_python,
     parse_dates=["date"]
 )
 
@@ -321,7 +321,7 @@ ORDER BY f.date
 
 factor_data = pd.read_sql_query(
     sql=query_factors,
-    con=tidy_finance_vn,
+    con=tidy_finance_python,
     parse_dates=["date"]
 )
 ```
@@ -333,12 +333,12 @@ Regular database maintenance ensures optimal performance and data integrity.
 ```{python}
 #| eval: false
 # Optimize database
-tidy_finance_vn.execute("VACUUM")
+tidy_finance_python.execute("VACUUM")
 
 # Check database integrity
 integrity_check = pd.read_sql_query(
     "PRAGMA integrity_check",
-    tidy_finance_vn
+    tidy_finance_python
 )
 print(f"Integrity check: {integrity_check.iloc[0, 0]}")
 
@@ -350,12 +350,12 @@ table_stats = pd.read_sql_query("""
            (SELECT COUNT(*) FROM factors_monthly) as factor_months
     FROM sqlite_master
     WHERE type='table' AND name='stock_master'
-""", tidy_finance_vn)
+""", tidy_finance_python)
 
 print(table_stats)
 
 # Close connection when done
-tidy_finance_vn.close()
+tidy_finance_python.close()
 ```
 
 ## Alternative Data Sources for Vietnamese Markets

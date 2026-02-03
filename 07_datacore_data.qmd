@@ -1,5 +1,5 @@
 ---
-title: DataCore Data
+title: Datacore Data
 format:
   html:
     toc: true
@@ -11,59 +11,69 @@ execute:
   message: false
 ---
 
-This chapter shows how to connect to [DataCore](https://datacore.vn/) a provider of financial and economic data for research applications. We use this connection to download the most commonly used data for stock and firm characteristics (i.e., Stock Data and Public Companies). Unfortunately, this data is not freely available, but most students and researchers typically have access to DataCore through their university libraries. Assuming that you have access to DataCore, we show you how to prepare and merge the databases and store them in the SQLite database introduced in the previous chapter. We conclude this chapter by providing some tips for working with the DataCore database.
+This chapter demonstrates how to connect to [Datacore](https://datacore.vn/), Vietnam's premier provider of financial and economic data for research applications. We use this connection to download the most commonly used data for stock prices and firm characteristics, including historical trading data and company fundamentals. While Datacore requires a subscription, most students and researchers typically have access through their university libraries or research institutions. For those without access, Datacore provides [demo datasets](https://datacore.vn/demo/dataset-groups) that allow you to run the code examples in this book with sample data.
 
-If you don't have access to DataCore but still want to run the code in this book, we refer to [DataCore Demo Data](https://datacore.vn/demo/dataset-groups), where we show how to create a dummy database that contains the DataCore tables and corresponding columns. With this database at hand, all code chunks in this book can be executed with this dummy database.
+The chapter is organized as follows. We first establish the connection to Datacore's cloud storage infrastructure. Then, we download and prepare company fundamentals data, including balance sheet items, income statement variables, and derived metrics essential for asset pricing research. Next, we retrieve and process stock price data, computing returns, market capitalizations, and excess returns. We conclude by merging these datasets and providing descriptive statistics that characterize the Vietnamese equity market.
 
-First, we load the Python packages that we use throughout this chapter. Later on, we load more packages in the sections where we need them. The last two packages are used for plotting.
+## Setting Up the Environment
+
+We begin by loading the Python packages used throughout this chapter. The core packages include `pandas` for data manipulation, `numpy` for numerical operations, and `sqlite3` for local database management. We also import visualization libraries for creating publication-quality figures.
 
 ```{python}
 import pandas as pd
 import numpy as np
-import tidyfinance as tf
 import sqlite3
+from datetime import datetime
+from io import BytesIO
 
 from plotnine import *
 from mizani.formatters import comma_format, percent_format
-from datetime import datetime
+```
+
+We establish a connection to our local SQLite database, which serves as the central repository for all processed data. This database was introduced in the previous chapter and will store the cleaned datasets for use in subsequent analyses.
+
+```{python}
 tidy_finance = sqlite3.connect(database="data/tidy_finance_python.sqlite")
 ```
 
-We use the same date range as in the previous chapter to ensure consistency. However, we have to use the date format that the DataCore database expects.
+We define the date range for our data collection. The Vietnamese stock market began operations in July 2000 with the establishment of the Ho Chi Minh City Stock Exchange (HOSE), so our sample period starts from 2000 and extends through the end of 2024.
 
 ```{python}
-start_date = "01/01/1960"
-end_date = "12/31/2024"
+start_date = "2000-01-01"
+end_date = "2024-12-31"
 ```
 
-## Accessing DataCore
+## Connecting to Datacore
 
-DataCore is the most widely used source for asset and firm-specific financial data used in academic settings. DataCore is a data platform that provides data validation, flexible delivery options, and access to many different data sources.
+Datacore delivers data through a cloud-based object storage system built on MinIO, an S3-compatible storage infrastructure. This architecture enables efficient, programmatic access to large datasets without the limitations of traditional database connections. To access the data, you need credentials provided by Datacore upon subscription: an endpoint URL, access key, and secret key.
 
-## Preparing Company Fundamentals Data
-
-Firm accounting data are an important source of information that we use in portfolio analyses in subsequent chapters.
-
-To access Company Fundamentals data, we can again tap DataCore, which hosts the `funda` data table that contains annual firm-level information on Vietnam companies. We follow the typical filter conventions and pull only data that we actually need: (i) we get only records in industrial data format, which includes companies that are primarily involved in manufacturing, services, and other non-financial business activities,[^1], (ii) in the standard format (i.e., consolidated information in standard presentation).
-
-[^1]: Companies that operate in the banking, insurance, or utilities sector typically report in different industry formats that reflect their specific regulatory requirements.
+The following class establishes the connection to Datacore's storage system. The credentials are stored as environment variables for security, following best practices for credential management in research computing environments.
 
 ```{python}
-import pandas as pd
-from io import BytesIO
-import datetime as dt
-
 import os
 import boto3
 from botocore.client import Config
 
-class ConnectMinio:
+class DatacoreConnection:
+    """
+    Connection handler for Datacore's MinIO-based storage system.
+    
+    This class manages authentication and provides methods for
+    accessing financial datasets stored in Datacore's cloud infrastructure.
+    
+    Attributes
+    ----------
+    s3 : boto3.client
+        S3-compatible client for interacting with Datacore storage
+    """
+    
     def __init__(self):
+        """Initialize connection using environment variables."""
         self.MINIO_ENDPOINT = os.environ["MINIO_ENDPOINT"]
         self.MINIO_ACCESS_KEY = os.environ["MINIO_ACCESS_KEY"]
         self.MINIO_SECRET_KEY = os.environ["MINIO_SECRET_KEY"]
         self.REGION = os.getenv("MINIO_REGION", "us-east-1")
-
+        
         self.s3 = boto3.client(
             "s3",
             endpoint_url=self.MINIO_ENDPOINT,
@@ -72,780 +82,1119 @@ class ConnectMinio:
             region_name=self.REGION,
             config=Config(signature_version="s3v4"),
         )
-
+    
     def test_connection(self):
-        resp = self.s3.list_buckets()
-        print("Connected. Buckets:")
-        for b in resp.get("Buckets", []):
-            print(" -", b["Name"])
+        """Verify connection by listing available buckets."""
+        response = self.s3.list_buckets()
+        print("Connected successfully. Available buckets:")
+        for bucket in response.get("Buckets", []):
+            print(f"  - {bucket['Name']}")
+    
+    def list_objects(self, bucket_name, prefix=""):
+        """List objects in a bucket with optional prefix filter."""
+        response = self.s3.list_objects_v2(
+            Bucket=bucket_name, 
+            Prefix=prefix
+        )
+        return [obj["Key"] for obj in response.get("Contents", [])]
+    
+    def read_excel(self, bucket_name, key):
+        """Read an Excel file from Datacore storage."""
+        obj = self.s3.get_object(Bucket=bucket_name, Key=key)
+        return pd.read_excel(BytesIO(obj["Body"].read()))
+    
+    def read_csv(self, bucket_name, key, **kwargs):
+        """Read a CSV file from Datacore storage."""
+        obj = self.s3.get_object(Bucket=bucket_name, Key=key)
+        return pd.read_csv(BytesIO(obj["Body"].read()), **kwargs)
+```
 
+With the connection class defined, we can establish a connection and verify access to Datacore's data repositories.
 
-conn = ConnectMinio()
-s3 = conn.s3
+```{python}
+# Initialize connection
+conn = DatacoreConnection()
 conn.test_connection()
 
+# Get bucket name from environment
 bucket_name = os.environ["MINIO_BUCKET"]
+```
 
-paths = [
+## Company Fundamentals Data
+
+Firm accounting data are essential for portfolio analyses, factor construction, and valuation studies. Datacore hosts comprehensive fundamentals data for Vietnamese listed companies, including annual and quarterly financial statements prepared according to Vietnamese Accounting Standards (VAS).
+
+### Understanding Vietnamese Financial Statements
+
+Before processing the data, it is important to understand the structure of Vietnamese financial reports. Vietnamese companies follow VAS, which shares similarities with International Financial Reporting Standards (IFRS) but has notable differences:
+
+1. **Fiscal Year**: Most Vietnamese companies use a calendar fiscal year ending December 31, though some companies (particularly in retail and agriculture) use different fiscal year-ends.
+
+2. **Reporting Frequency**: Listed companies must publish quarterly financial statements within 20 days of quarter-end and annual audited statements within 90 days of fiscal year-end.
+
+3. **Industry-Specific Formats**: Companies in banking, insurance, and securities sectors follow specialized reporting formats that differ from the standard industrial format.
+
+4. **Currency**: All figures are reported in Vietnamese Dong (VND). Given the large nominal values (millions to trillions of VND), we often scale figures to millions or billions for readability.
+
+### Downloading Fundamentals Data
+
+Datacore organizes fundamentals data in Excel files partitioned by time period for efficient access. We download and concatenate these files to create a comprehensive dataset spanning our sample period.
+
+```{python}
+# Define paths to fundamentals data files
+fundamentals_paths = [
     "fundamental_annual_1767674486317/fundamental_annual_1.xlsx",
     "fundamental_annual_1767674486317/fundamental_annual_2.xlsx",
     "fundamental_annual_1767674486317/fundamental_annual_3.xlsx",
 ]
 
-dfs = []
-for key in paths:
-    obj = s3.get_object(Bucket=bucket_name, Key=key)
-    df_tmp = pd.read_excel(BytesIO(obj["Body"].read()))
-    dfs.append(df_tmp)
+# Download and combine all files
+fundamentals_list = []
+for path in fundamentals_paths:
+    df_temp = conn.read_excel(bucket_name, path)
+    fundamentals_list.append(df_temp)
+    print(f"Downloaded: {path} ({len(df_temp):,} rows)")
 
-df_company_fundamental = pd.concat(dfs, ignore_index=True)
+df_fundamentals_raw = pd.concat(fundamentals_list, ignore_index=True)
+print(f"\nTotal observations: {len(df_fundamentals_raw):,}")
 ```
 
-```{python}
-df = df_company_fundamental.copy()
+### Cleaning and Standardizing Fundamentals
 
-# core keys
-df["symbol"] = df["symbol"].astype(str).str.upper().str.strip()
-df["year"] = pd.to_numeric(df["year"], errors="coerce").astype("Int64")
-
-# drop rows with missing keys
-df = df.dropna(subset=["symbol", "year"])
-
-# if some numeric columns are objects, force numeric for the ones we will use
-need = [
-    "total_asset",
-    "total_equity",
-    "total_liabilities",
-    "total_current_liabilities",
-    "is_net_revenue",
-    "is_cogs",
-    "is_manage_expense",
-    "is_interest_expense",
-    "na_tax_deferred",
-    "nl_tax_deferred",
-    "e_preferred_stock",
-    "capex",
-    "total_cfo",
-    "is_eat",
-    "total_current_asset", 
-    "ca_cce", 
-    "total_equity", 
-    "cfo_interest_expense",
-    "ca_total_inventory", 
-    "ca_acc_receiv",
-    # The is_net_business_profit field captures the core profitability of a company's business activities before accounting for "other" non-core incomes and expenses, and before corporate income tax.
-    "is_net_business_profit"
-]
-for c in need:
-    if c in df.columns:
-        df[c] = pd.to_numeric(df[c], errors="coerce")
-
-# Keep the row with the most non missing fields.
-df["_non_missing"] = df.notna().sum(axis=1)
-
-df = (
-    df.sort_values(["symbol", "year", "_non_missing"])
-      .drop_duplicates(subset=["symbol", "year"], keep="last")
-      .drop(columns="_non_missing")
-      .reset_index(drop=True)
-)
-
-print("Remaining duplicates:",
-      df.duplicated(["symbol", "year"]).sum())
-```
+The raw fundamentals data requires several cleaning steps to ensure consistency and usability. We standardize variable names, handle missing values, and create derived variables commonly used in asset pricing research.
 
 ```{python}
-# preferably use Tax ID as Identifer
-# ---- Firm identifier and fiscal date ----
-df["datadate"] = pd.to_datetime(df["year"].astype(str) + "-12-31")  # Fiscal year-end date
-
-# ---- Core balance sheet ----
-df["at"]  = df["total_asset"]                                      # Total assets
-df["act"] = df["total_current_asset"] # Total Current Assets
-
-df["lt"]  = df["total_liabilities"]                                 # Total liabilities
-df["lct"] = df["total_current_liabilities"] # Total Current Liabilities
-df["seq"] = df["total_equity"]                                      # Stockholders' equity
-df["ceq"] = df["e_equity"] if "e_equity" in df.columns else np.nan  # Common equity (fallback)
-
-# ---- Deferred taxes ----
-df["txditc"] = df["na_tax_deferred"] if "na_tax_deferred" in df.columns else 0  # Deferred tax assets
-df["txdb"]   = df["nl_tax_deferred"] if "nl_tax_deferred" in df.columns else 0  # Deferred tax liabilities
-df["itcb"]   = 0                                                                # Investment tax credit (rare, set 0)
-
-# ---- Preferred stock (Compustat has multiple versions, we map one) ----
-pref = df["e_preferred_stock"] if "e_preferred_stock" in df.columns else 0
-df["pstk"]   = pref
-df["pstkrv"] = pref
-df["pstkl"]  = pref
-
-# ---- Income statement ----
-df["sale"] = df["is_net_revenue"]                                                # Sales
-df["cogs"] = df["is_cogs"] if "is_cogs" in df.columns else 0                    # Cost of goods sold
-df["xsga"] = df["is_manage_expense"] if "is_manage_expense" in df.columns else 0# SG&A proxy
-df["xint"] = df["is_interest_expense"] if "is_interest_expense" in df.columns else 0  # Interest expense
-
-# ---- Cash flow and investment ----
-df["oancf"] = df["total_cfo"] if "total_cfo" in df.columns else np.nan  # Operating cash flow
-df["capx"]  = df["capex"] if "capex" in df.columns else np.nan          # Capital expenditures
-
-comp_vn = df
-
-comp_vn.head()
-```
-
-```{python}
-# Keep only firm-years with core fundamentals present
-
-# Required for most accounting ratios
-req = ["at", "lt", "seq", "sale"]
-
-comp_vn = comp_vn.dropna(subset=req)
-comp_vn = comp_vn[comp_vn["at"] > 0]          # assets must be positive
-comp_vn = comp_vn[comp_vn["sale"] >= 0]       # sales cannot be negative
-
-# Quick diagnostics
-print("Rows:", len(comp_vn))
-print("Firms:", comp_vn["symbol"].nunique())
-print("Years:", comp_vn["datadate"].dt.year.min(), "-", comp_vn["datadate"].dt.year.max())
-```
-
-Next, we calculate the book value of preferred stock and equity `be` and the operating profitability `op` inspired by the [variable definitions in Kenneth French's data library.](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html) Note that we set negative or zero equity to missing, which is a common practice when working with book-to-market ratios [see @Fama1992 for details].
-
-```{python}
-comp_vn = (comp_vn
-  .assign(
-    be=lambda x: 
-      (x["seq"].combine_first(x["ceq"]+x["pstk"])
-       .combine_first(x["at"]-x["lt"])+
-       x["txditc"].combine_first(x["txdb"]+x["itcb"]).fillna(0)-
-       x["pstkrv"].combine_first(x["pstkl"])
-       .combine_first(x["pstk"]).fillna(0))
-  )
-  .assign(
-    be=lambda x: x["be"].apply(lambda y: np.nan if y <= 0 else y)
-  )
-  .assign(
-    op=lambda x: 
-      ((x["sale"]-x["cogs"].fillna(0)- 
-        x["xsga"].fillna(0)-x["xint"].fillna(0))/x["be"])
-  )
-)
-```
-
-We keep only the last available information for each firm-year group (by using the `tail(1)` pandas function for each group). Note that `datadate` defines the time the corresponding financial data refers to (e.g., annual report as of December 31, 2022). Therefore, `datadate` is not the date when data was made available to the public. Check out the Exercises for more insights into the peculiarities of `datadate`.
-
-```{python}
-comp_vn = (comp_vn
-  .assign(year=lambda x: pd.DatetimeIndex(x["datadate"]).year)
-  .sort_values("datadate")
-  .groupby(["symbol", "year"])
-  .tail(1)
-  .reset_index(drop=True)
-)
-```
-
-
-
-```{python}
-comp_vn_lag = (comp_vn
-  .get(["symbol", "year", "at"])
-  .assign(year=lambda x: x["year"]+1)
-  .rename(columns={"at": "at_lag"})
-)
-
-comp_vn = (comp_vn
-  .merge(comp_vn_lag, how="left", on=["symbol", "year"])
-  .assign(inv=lambda x: x["at"]/x["at_lag"]-1)
-  .assign(inv=lambda x: np.where(x["at_lag"] <= 0, np.nan, x["inv"]))
-)
-```
-
-In a standard Vietnamese financial report, the **LIABILITIES** section (`total_liabilities`) includes all forms of debt, including non-interest-bearing items like **Accounts Payable** (`cl_acc_payable`) and **Taxes payable** (`cl_tax_state_payable`).
-
-To get what financial analysts call "Total Debt" (interest-bearing debt), you must manually aggregate the specific loan and lease variables from your dataset:
-
--   **Short-term interest-bearing debt**: Sum of `cl_loan` and `cl_finlease`.
-
--   **Current portion of long-term debt**: `cl_due_long_debt`.
-
--   **Long-term interest-bearing debt**: Sum of `nl_loan` and `nl_finlease`.
-
-```{python}
-comp_vn = comp_vn.assign(
-    total_debt = lambda x: (
-        x["cl_loan"].fillna(0) + 
-        x["cl_finlease"].fillna(0) + 
-        x["cl_due_long_debt"].fillna(0) + 
-        x["nl_loan"].fillna(0) + 
-        x["nl_finlease"].fillna(0)
-    ), 
-    selling_general_and_administrative_expenses = lambda x: (
-        x["is_cos_of_sales"].fillna(0) + x["is_manage_expense"].fillna(0)
+def clean_fundamentals(df):
+    """
+    Clean and standardize company fundamentals data.
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Raw fundamentals data from Datacore
+    
+    Returns
+    -------
+    pd.DataFrame
+        Cleaned fundamentals with standardized column names
+    """
+    df = df.copy()
+    
+    # Standardize identifiers
+    df["symbol"] = df["symbol"].astype(str).str.upper().str.strip()
+    df["year"] = pd.to_numeric(df["year"], errors="coerce").astype("Int64")
+    
+    # Drop rows with missing identifiers
+    df = df.dropna(subset=["symbol", "year"])
+    
+    # Define columns that should be numeric
+    numeric_columns = [
+        "total_asset", "total_equity", "total_liabilities",
+        "total_current_asset", "total_current_liabilities",
+        "is_net_revenue", "is_cogs", "is_manage_expense",
+        "is_interest_expense", "is_eat", "is_net_business_profit",
+        "na_tax_deferred", "nl_tax_deferred", "e_preferred_stock",
+        "capex", "total_cfo", "ca_cce", "ca_total_inventory",
+        "ca_acc_receiv", "cfo_interest_expense", "basic_eps",
+        "is_shareholders_eat", "cl_loan", "cl_finlease",
+        "cl_due_long_debt", "nl_loan", "nl_finlease",
+        "is_cos_of_sales", "e_equity"
+    ]
+    
+    for col in numeric_columns:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+    
+    # Handle duplicates: keep row with most non-missing values
+    df["_completeness"] = df.notna().sum(axis=1)
+    df = (df
+        .sort_values(["symbol", "year", "_completeness"])
+        .drop_duplicates(subset=["symbol", "year"], keep="last")
+        .drop(columns="_completeness")
+        .reset_index(drop=True)
     )
-)
+    
+    return df
+
+df_fundamentals = clean_fundamentals(df_fundamentals_raw)
+print(f"After cleaning: {len(df_fundamentals):,} firm-year observations")
+print(f"Unique firms: {df_fundamentals['symbol'].nunique():,}")
 ```
 
-With the last step, we are already done preparing the firm fundamentals. Thus, we can store them in our local database.
+### Creating Standardized Variables
+
+To facilitate comparison with international studies and ensure compatibility with standard asset pricing methodologies, we create variables following conventions established in the academic literature. We map Vietnamese financial statement items to their Compustat equivalents where possible.
 
 ```{python}
-#| output: false
-(comp_vn
-  .to_sql(name="comp_vn", 
-          con=tidy_finance, 
-          if_exists="replace",
-          index=False)
-)
+def create_standard_variables(df):
+    """
+    Create standardized financial variables for asset pricing research.
+    
+    This function maps Vietnamese financial statement items to standard
+    variable names used in the academic finance literature, following
+    conventions from Fama and French (1992, 1993, 2015).
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Cleaned fundamentals data
+    
+    Returns
+    -------
+    pd.DataFrame
+        Fundamentals with standardized variables added
+    """
+    df = df.copy()
+    
+    # Fiscal date (assume December year-end)
+    df["datadate"] = pd.to_datetime(df["year"].astype(str) + "-12-31")
+    
+    # === Balance Sheet Items ===
+    df["at"] = df["total_asset"]                    # Total assets
+    df["lt"] = df["total_liabilities"]              # Total liabilities
+    df["seq"] = df["total_equity"]                  # Stockholders' equity
+    df["act"] = df["total_current_asset"]           # Current assets
+    df["lct"] = df["total_current_liabilities"]     # Current liabilities
+    
+    # Common equity (fallback to total equity if not available)
+    df["ceq"] = df.get("e_equity", df["seq"])
+    
+    # === Deferred Taxes ===
+    df["txditc"] = df.get("na_tax_deferred", 0).fillna(0)  # Deferred tax assets
+    df["txdb"] = df.get("nl_tax_deferred", 0).fillna(0)    # Deferred tax liab.
+    df["itcb"] = 0  # Investment tax credit (rare in Vietnam)
+    
+    # === Preferred Stock ===
+    pref = df.get("e_preferred_stock", 0)
+    if isinstance(pref, pd.Series):
+        pref = pref.fillna(0)
+    df["pstk"] = pref
+    df["pstkrv"] = pref  # Redemption value
+    df["pstkl"] = pref   # Liquidating value
+    
+    # === Income Statement Items ===
+    df["sale"] = df["is_net_revenue"]                        # Net sales/revenue
+    df["cogs"] = df.get("is_cogs", 0).fillna(0)              # Cost of goods sold
+    df["xsga"] = df.get("is_manage_expense", 0).fillna(0)    # SG&A expenses
+    df["xint"] = df.get("is_interest_expense", 0).fillna(0)  # Interest expense
+    df["ni"] = df.get("is_eat", np.nan)                      # Net income
+    df["oibdp"] = df.get("is_net_business_profit", np.nan)   # Operating income
+    
+    # === Cash Flow Items ===
+    df["oancf"] = df.get("total_cfo", np.nan)  # Operating cash flow
+    df["capx"] = df.get("capex", np.nan)       # Capital expenditures
+    
+    return df
+
+df_fundamentals = create_standard_variables(df_fundamentals)
 ```
 
-## Downloading and Preparing Stock Data
+### Computing Book Equity and Profitability
+
+Book equity is a crucial variable for value investing strategies and the construction of HML (High Minus Low) factor portfolios. We follow the definition from Kenneth French's data library, which accounts for deferred taxes and preferred stock.
 
 ```{python}
+def compute_book_equity(df):
+    """
+    Compute book equity following Fama-French conventions.
+    
+    Book equity = Stockholders' equity 
+                  + Deferred taxes and investment tax credit
+                  - Preferred stock
+    
+    Negative or zero book equity is set to missing, as book-to-market
+    ratios are undefined for such firms.
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Fundamentals with standardized variables
+    
+    Returns
+    -------
+    pd.DataFrame
+        Fundamentals with book equity (be) added
+    """
+    df = df.copy()
+    
+    # Primary measure: stockholders' equity
+    # Fallback 1: common equity + preferred stock
+    # Fallback 2: total assets - total liabilities
+    seq_measure = (df["seq"]
+        .combine_first(df["ceq"] + df["pstk"])
+        .combine_first(df["at"] - df["lt"])
+    )
+    
+    # Add deferred taxes
+    deferred_taxes = (df["txditc"]
+        .combine_first(df["txdb"] + df["itcb"])
+        .fillna(0)
+    )
+    
+    # Subtract preferred stock (use redemption value as primary)
+    preferred = (df["pstkrv"]
+        .combine_first(df["pstkl"])
+        .combine_first(df["pstk"])
+        .fillna(0)
+    )
+    
+    # Book equity calculation
+    df["be"] = seq_measure + deferred_taxes - preferred
+    
+    # Set non-positive book equity to missing
+    df["be"] = df["be"].where(df["be"] > 0, np.nan)
+    
+    return df
 
-import pandas as pd
-from io import BytesIO
-import datetime as dt
+df_fundamentals = compute_book_equity(df_fundamentals)
 
-import os
-import boto3
-from botocore.client import Config
+# Summary statistics for book equity
+print("Book Equity Summary Statistics (in million VND):")
+print(df_fundamentals["be"].describe().round(2))
+```
 
-class ConnectMinio:
-    def __init__(self):
-        self.MINIO_ENDPOINT = os.environ["MINIO_ENDPOINT"]
-        self.MINIO_ACCESS_KEY = os.environ["MINIO_ACCESS_KEY"]
-        self.MINIO_SECRET_KEY = os.environ["MINIO_SECRET_KEY"]
-        self.REGION = os.getenv("MINIO_REGION", "us-east-1")
+Operating profitability, introduced by @Fama2015, measures a firm's profits relative to its book equity. Firms with higher operating profitability tend to have higher expected returns.
 
-        self.s3 = boto3.client(
-            "s3",
-            endpoint_url=self.MINIO_ENDPOINT,
-            aws_access_key_id=self.MINIO_ACCESS_KEY,
-            aws_secret_access_key=self.MINIO_SECRET_KEY,
-            region_name=self.REGION,
-            config=Config(signature_version="s3v4"),
-        )
+```{python}
+def compute_profitability(df):
+    """
+    Compute operating profitability following Fama-French (2015).
+    
+    Operating profitability = (Revenue - COGS - SG&A - Interest) / Book Equity
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Fundamentals with book equity computed
+    
+    Returns
+    -------
+    pd.DataFrame
+        Fundamentals with operating profitability (op) added
+    """
+    df = df.copy()
+    
+    # Operating profit before taxes
+    operating_profit = (
+        df["sale"] 
+        - df["cogs"].fillna(0) 
+        - df["xsga"].fillna(0) 
+        - df["xint"].fillna(0)
+    )
+    
+    # Scale by book equity
+    df["op"] = operating_profit / df["be"]
+    
+    # Winsorize extreme values (outside 1st and 99th percentiles)
+    lower = df["op"].quantile(0.01)
+    upper = df["op"].quantile(0.99)
+    df["op"] = df["op"].clip(lower=lower, upper=upper)
+    
+    return df
 
-    def test_connection(self):
-        resp = self.s3.list_buckets()
-        print("Connected. Buckets:")
-        for b in resp.get("Buckets", []):
-            print(" -", b["Name"])
+df_fundamentals = compute_profitability(df_fundamentals)
+```
 
+### Computing Investment
 
-conn = ConnectMinio()
-s3 = conn.s3
-conn.test_connection()
+Investment, measured as asset growth, captures firms' investment behavior. @Fama2015 document that firms with high asset growth (aggressive investment) tend to have lower future returns.
 
-bucket_name = os.environ["MINIO_BUCKET"]
+```{python}
+def compute_investment(df):
+    """
+    Compute investment (asset growth) following Fama-French (2015).
+    
+    Investment = (Total Assets_t / Total Assets_{t-1}) - 1
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Fundamentals data
+    
+    Returns
+    -------
+    pd.DataFrame
+        Fundamentals with investment (inv) added
+    """
+    df = df.copy()
+    
+    # Create lagged assets
+    df_lag = (df[["symbol", "year", "at"]]
+        .assign(year=lambda x: x["year"] + 1)
+        .rename(columns={"at": "at_lag"})
+    )
+    
+    # Merge lagged values
+    df = df.merge(df_lag, on=["symbol", "year"], how="left")
+    
+    # Compute investment (asset growth)
+    df["inv"] = df["at"] / df["at_lag"] - 1
+    
+    # Set to missing if lagged assets non-positive
+    df["inv"] = df["inv"].where(df["at_lag"] > 0, np.nan)
+    
+    return df
 
-prices = pd.read_csv(
-    BytesIO(
-        s3.get_object(
-            Bucket=bucket_name,
-            Key="historycal_price/dataset_historical_price.csv"
-        )["Body"].read()
-    ),
+df_fundamentals = compute_investment(df_fundamentals)
+```
+
+### Computing Total Debt
+
+In Vietnamese financial statements, total liabilities include non-interest-bearing items such as accounts payable and tax payables. For leverage analysis, we compute total interest-bearing debt by aggregating loan and lease obligations.
+
+```{python}
+def compute_total_debt(df):
+    """
+    Compute total interest-bearing debt.
+    
+    Total Debt = Short-term loans + Finance leases (current)
+                 + Current portion of long-term debt
+                 + Long-term loans + Finance leases (non-current)
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Fundamentals data
+    
+    Returns
+    -------
+    pd.DataFrame
+        Fundamentals with total_debt added
+    """
+    df = df.copy()
+    
+    df["total_debt"] = (
+        df.get("cl_loan", 0).fillna(0) +           # Short-term bank loans
+        df.get("cl_finlease", 0).fillna(0) +       # Current finance leases
+        df.get("cl_due_long_debt", 0).fillna(0) +  # Current portion LT debt
+        df.get("nl_loan", 0).fillna(0) +           # Long-term bank loans
+        df.get("nl_finlease", 0).fillna(0)         # Non-current finance leases
+    )
+    
+    return df
+
+df_fundamentals = compute_total_debt(df_fundamentals)
+```
+
+### Applying Filters and Final Preparation
+
+We apply standard filters to ensure data quality: requiring positive assets, non-negative sales, and presence of core variables needed for portfolio construction.
+
+```{python}
+# Keep only observations with required variables
+required_vars = ["at", "lt", "seq", "sale"]
+comp_vn = df_fundamentals.dropna(subset=required_vars)
+
+# Apply quality filters
+comp_vn = comp_vn.query("at > 0")      # Positive assets
+comp_vn = comp_vn.query("sale >= 0")   # Non-negative sales
+
+# Keep last observation per firm-year (in case of restatements)
+comp_vn = (comp_vn
+    .sort_values("datadate")
+    .groupby(["symbol", "year"])
+    .tail(1)
+    .reset_index(drop=True)
+)
+
+# Diagnostic summary
+print(f"Final sample: {len(comp_vn):,} firm-year observations")
+print(f"Unique firms: {comp_vn['symbol'].nunique():,}")
+print(f"Sample period: {comp_vn['year'].min()} - {comp_vn['year'].max()}")
+```
+
+### Storing Fundamentals Data
+
+We store the prepared fundamentals data in our local SQLite database for use in subsequent chapters.
+
+```{python}
+comp_vn.to_sql(
+    name="comp_vn",
+    con=tidy_finance,
+    if_exists="replace",
+    index=False
+)
+
+print("Company fundamentals saved to database.")
+```
+
+## Stock Price Data
+
+Stock price data forms the foundation of return-based analyses in empirical finance. Datacore provides comprehensive historical price data for all securities traded on HOSE, HNX, and UPCoM, including adjusted prices that account for corporate actions.
+
+### Downloading Price Data
+
+We download the historical price data from Datacore's storage system. The data includes daily observations with open, high, low, close prices, trading volume, and adjustment factors.
+
+```{python}
+# Download historical price data
+prices_raw = conn.read_csv(
+    bucket_name,
+    "historycal_price/dataset_historical_price.csv",
     low_memory=False
 )
 
-prices["date"] = pd.to_datetime(prices["date"])
-
-prices["adjusted_close"] = prices["close_price"] * prices["adj_ratio"]
-
-prices = prices.rename(columns={
-    "vol_total": "volume",
-    "open_price": "open",
-    "low_price": "low",
-    "high_price": "high",
-    "close_price": "close"
-})
-
-prices = prices.sort_values(["symbol", "date"])
+print(f"Downloaded {len(prices_raw):,} daily price observations")
+print(f"Date range: {prices_raw['date'].min()} to {prices_raw['date'].max()}")
 ```
 
-```{python}
-prices = prices.sort_values(["symbol", "date"])
+### Processing Price Data
 
-prices["ret"] = (
-    prices.groupby("symbol")["adjusted_close"]
-    .pct_change()
-)
-
-# Remove impossible crashes beyond -100 percent
-prices["ret"] = prices["ret"].clip(lower=-0.99)
-```
-
-Now, we have all the relevant daily price data in memory and proceed with preparing the data for future analyses. We perform the preparation step at the current stage since we want to avoid executing the same mutations every time we use the data in subsequent chapters.
-
-The first additional variable we create is market capitalization (`mktcap`), which is the product of the number of outstanding shares (`shrout`) and the last traded price in a month (`prc`). Note that in contrast to returns (`ret`), these two variables are not adjusted ex-post for any corporate actions like stock splits. Therefore, if you want to use a stock's price, you need to adjust it with a cumulative adjustment factor. We also keep the market cap in millions of VND just for convenience, as we do not want to print huge numbers in our figures and tables. In addition, we set zero market capitalization to missing as it makes conceptually little sense (i.e., the firm would be bankrupt).
+We clean the price data and compute adjusted prices that account for stock splits, stock dividends, and other corporate actions.
 
 ```{python}
-# 1. Calculate the Share Count Proxy from Annual Fundamentals
-# df represents your fundamental_annual dataset
-df["shrout"] = (
-    df["is_shareholders_eat"] / df["basic_eps"]
-)
-
-# 2. Merge with Daily Prices
-# We join on 'symbol' and 'year' so every daily row in 'prices' 
-# receives the share count corresponding to that fiscal year.
-prices = prices.merge(
-    df[["symbol", "year", "shrout"]],
-    on=["symbol", "year"],
-    how="left"
-)
-
-# 3. Calculate Daily Market Cap
-# Market Cap = Daily Close Price * Annual Shares Outstanding
-# We use 'close' (unadjusted) to reflect the actual market value.
-prices["mktcap"] = prices["close"] * prices["shrout"]
-
-# 4. Filter and Scale
-# scales values to millions for readability
-prices["mktcap"] = (prices["mktcap"] / 1000000).replace(0, np.nan)
-```
-
-```{python}
-# Resample to Monthly Frequency
-# We group by symbol and resample the date to Month End (ME).
-# .last() picks the final available data point for each month.
-prices_monthly = (
-    prices.sort_values(["symbol", "date"])
-    .groupby("symbol")
-    .resample("ME", on="date")
-    .last()
-)
-
-# After .last(), 'symbol' is index level 0 and 'date' is index level 1.
-# We remove 'symbol' and 'date' from the index to make them regular columns.
-prices_monthly = prices_monthly.drop(columns=["symbol", "date"], errors="ignore").reset_index()
-```
-
-The next variable we frequently use is the one-month *lagged* market capitalization. Lagged market capitalization is typically used to compute value-weighted portfolio returns, as we demonstrate in a later chapter. The most simple and consistent way to add a column with lagged market cap values is to add one month to each observation and then join the information to our monthly data.
-
-```{python}
-# 3. Lagged Market Capitalization
-# We calculate the market cap at t-1 to use for weighting returns at t.
-prices_monthly["mktcap_lag"] = (
-    prices_monthly.groupby("symbol")["mktcap"]
-    .shift(1)
-)
-```
-
-```{python}
-# remove rows missing returns or capitalization data.
-prices_monthly = (
-    prices_monthly
-    .dropna(subset=["ret", "mktcap", "mktcap_lag"])
-)
-```
-
-Next, we transform primary listing exchange codes to explicit exchange names.
-
-```{python}
-#| eval: false
-
-def map_vn_exchange(row):
-    # This assumes you have an exchange column or can derive it from the symbol
-    # Adjust the logic based on your specific metadata availability.
-    if hasattr(row, 'exchange_code'):
-        if row.exchange_code == "HOSE": return "NYSE_Equiv"
-        if row.exchange_code == "HNX": return "AMEX_Equiv"
-    return "Other"
-```
-
-Next, we compute excess returns by subtracting the monthly risk-free rate provided by our Fama-French data. As we base all our analyses on the excess returns, we can drop the risk-free rate from our data frame. Note that we ensure excess returns are bounded by -1 from below as a return less than -100% makes no sense conceptually.
-
-To implement a placeholder for the Vietnam risk-free rate, we use an annualized value of 4.0% (0.04), which closely approximates the 10-year Vietnam Government Bond yield observed in early 2026. In professional asset pricing research for emerging markets, the 1-year or 10-year government bond rate is a standard proxy when a dedicated monthly Fama-French risk-free rate is unavailable.
-
-```{python}
-# Create a date range covering your prices_monthly sample
-all_dates = pd.date_range(
-    start=prices_monthly['date'].min(), 
-    end=prices_monthly['date'].max(), 
-    freq='ME'
-)
-
-# Professional Proxy: 4% Annualized (0.04)
-# Monthly rate = 0.04 / 12
-annual_rf = 0.04
-monthly_rf = annual_rf / 12
-
-rf_monthly = pd.DataFrame({
-    'date': all_dates,
-    'risk_free': monthly_rf
-})
-  
-prices_monthly = (prices_monthly
-  # we don't have Fama-French data for Vietnam
-  .merge(rf_monthly, how="left", on="date")
-  .assign(ret_excess=lambda x: x["ret"]-x["risk_free"])
-  .assign(ret_excess=lambda x: x["ret_excess"].clip(lower=-1))
-  # .drop(columns=["risk_free"])
-)
-
-# Clean the infinite values before replication
-prices_monthly = prices_monthly.replace([np.inf, -np.inf], np.nan).dropna(subset=['ret_excess'])
-```
-
-```{python}
-# Check for non-finite values (NaN or Inf)
-print("Missing or Infinite Values:")
-print(prices_monthly[['ret_excess', 'mktcap_lag']].isna().sum())
-print(np.isinf(prices_monthly['ret_excess']).sum())
-
-# Basic summary statistics to catch outliers
-print("\nRet_excess Summary Statistics:")
-print(prices_monthly['ret_excess'].describe())
-```
-
-Interpretation: Excess returns in a monthly dataset should typically fall between -1.0 and 1.0. If your max value is extremely high, it indicates an error in your return calculation or the risk-free rate merge. Any inf values will cause the np.average in your replication code to fail.
-
-```{python}
-import matplotlib.pyplot as plt
-
-# Clean data for plotting
-plot_data = prices_monthly['ret_excess'].dropna()
-plot_data = plot_data[np.isfinite(plot_data)]
-
-# Histogram with fixed range
-plt.figure(figsize=(10, 6))
-plt.hist(plot_data, bins=100, range=(-0.5, 0.5), color='skyblue', edgecolor='black')
-plt.title('Distribution of Monthly Excess Returns (Vietnam)')
-plt.xlabel('Excess Return')
-plt.ylabel('Frequency')
-plt.show()
-```
-
-Interpretation: A healthy distribution should be centered slightly above 0 and look roughly "bell-shaped" but with fatter tails (kurtosis). If the distribution is heavily skewed toward one side, check if your monthly_rf_placeholder was applied correctly.
-
-Since excess returns and market capitalization are crucial for all our analyses, we can safely exclude all observations with missing returns or market capitalization.
-
-```{python}
-prices_monthly = (prices_monthly
-  .dropna(subset=["ret_excess", "mktcap", "mktcap_lag"])
-)
-```
-
-Finally, we store the monthly Stock prices data file in our database.
-
-```{python}
-#| output: false
-(prices_monthly
-  .to_sql(name="prices_monthly", 
-          con=tidy_finance, 
-          if_exists="replace",
-          index=False)
-)
-```
-
-## First Glimpse of the Stock Sample
-
-Before we move on to other data sources, let us look at some descriptive statistics of the Stock sample, which is our main source for stock returns.
-
-@fig-211 shows the monthly number of securities by listing exchange over time. NYSE has the longest history in the data, but NASDAQ lists a considerably large number of stocks.
-
-```{python}
-#| label: fig-211
-#| eval: false
-#| fig-cap: "The figure shows the monthly number of stocks in the Stock sample listed at each of the Vietnam exchanges."
-#| fig-alt: "Title: Monthly number of securities by listing exchange. The figure shows a line chart with the number of securities by listing exchange."
-securities_per_exchange = (prices_monthly
-  .groupby(["exchange", "date"])
-  .size()
-  .reset_index(name="n")
-)
-
-securities_per_exchange_figure = (
-  ggplot(
-    securities_per_exchange, 
-    aes(x="date", y="n", color="exchange", linetype="exchange")
-  )
-  + geom_line()
-  + labs(
-      x="", y="", color="", linetype="",
-      title="Monthly number of securities by listing exchange"
-    )
-  + scale_x_datetime(date_breaks="10 years", date_labels="%Y")
-  + scale_y_continuous(labels=comma_format())
-)
-
-securities_per_exchange_figure.show()
-```
-
-Next, we look at the aggregate market capitalization grouped by the respective listing exchanges in @fig-212. To ensure that we look at meaningful data that is comparable over time, we adjust the nominal values for inflation. In fact, we can use the tables that are already in our database to calculate aggregate market caps by listing exchange. All values in @fig-212 are in terms of the end of 2024 USD to ensure intertemporal comparability. NYSE-listed stocks have by far the largest market capitalization, followed by NASDAQ-listed stocks.\index{Data!CPI}
-
-```{python}
-#| label: fig-212
-#| eval: false
-#| fig-cap: "The figure shows the monthly market capitalization by listing exchange."
-#| fig-alt: "Title: Monthly market cap by listing exchange. The figure shows a line chart of the total market capitalization of all stocks aggregated by the listing exchange, with years on the horizontal axis and the corresponding market capitalization on the vertical axis." 
-cpi_monthly = pd.read_sql_query(
-  sql="SELECT * FROM cpi_monthly",
-  con=tidy_finance,
-  parse_dates={"date"}
-)
-
-market_cap_per_exchange = (prices_monthly
-  .merge(cpi_monthly, how="left", on="date")
-  .groupby(["date", "exchange"])
-  .apply(
-    lambda group: pd.Series({
-      "mktcap": group["mktcap"].sum()/group["cpi"].mean()
+def process_price_data(df):
+    """
+    Process raw price data from Datacore.
+    """
+    df = df.copy()
+    
+    # Parse dates
+    df["date"] = pd.to_datetime(df["date"])
+    
+    # Standardize column names
+    df = df.rename(columns={
+        "open_price": "open",
+        "high_price": "high",
+        "low_price": "low",
+        "close_price": "close",
+        "vol_total": "volume"
     })
-  )
-  .reset_index()
-)
+    
+    # Compute adjusted close price
+    df["adjusted_close"] = df["close"] * df["adj_ratio"]
+    
+    # Standardize symbol
+    df["symbol"] = df["symbol"].astype(str).str.upper().str.strip()
+    
+    # Sort for return calculation
+    df = df.sort_values(["symbol", "date"])
+    
+    # Add year and month
+    df["year"] = df["date"].dt.year
+    df["month"] = df["date"].dt.month
+    
+    return df
 
-market_cap_per_exchange_figure = (
-  ggplot(
-    market_cap_per_exchange, 
-    aes(x="date", y="mktcap/1000", color="exchange", linetype="exchange")
-  )
-  + geom_line()
-  + labs(
-      x="", y="", color="", linetype="",
-      title="Monthly market cap by listing exchange"
-    )
-  + scale_x_datetime(date_breaks="10 years", date_labels="%Y")
-  + scale_y_continuous(labels=comma_format())
-)
-market_cap_per_exchange_figure.show()
+prices = process_price_data(prices_raw)
 ```
 
-Next, we look at the same descriptive statistics by industry. @fig-213 plots the number of stocks in the sample for each of the VSIC industry classifiers. For most of the sample period, the largest share of stocks is in manufacturing, albeit the number peaked somewhere in the 90s. The number of firms associated with public administration seems to be the only category on the rise in recent years, even surpassing manufacturing at the end of our sample period.
+
+### Computing Shares Outstanding and Market Capitalization
+
+Market capitalization is computed as the product of price and shares outstanding. Since Datacore provides earnings per share and net income, we can infer shares outstanding from these variables.
 
 ```{python}
-#| label: fig-213
-#| eval: false
-#| fig-cap: "The figure shows the monthly number of stocks in the Stock sample associated with different industries."
-#| fig-alt: "Title: Monthly number of securities by industry. The figure shows a line chart of the number of securities by industry with years on the horizontal axis and the corresponding number on the vertical axis."
-securities_per_industry = (prices_monthly
-  .groupby(["industry", "date"])
-  .size()
-  .reset_index(name="n")
-)
+def compute_shares_outstanding(fundamentals_df):
+    """
+    Compute shares outstanding from fundamentals.
+    """
+    shares = fundamentals_df.copy()
+    shares["shrout"] = shares["is_shareholders_eat"] / shares["basic_eps"]
+    shares = shares[["symbol", "year", "shrout"]].dropna()
+    
+    return shares
 
-linetypes = ["-", "--", "-.", ":"]
-n_industries = securities_per_industry["industry"].nunique()
-
-securities_per_industry_figure = (
-  ggplot(
-    securities_per_industry, 
-    aes(x="date", y="n", color="industry", linetype="industry")
-  )
-  + geom_line()
-  + labs(
-      x="", y="", color="", linetype="",
-      title="Monthly number of securities by industry"
-    )
-  + scale_x_datetime(date_breaks="10 years", date_labels="%Y")
-  + scale_y_continuous(labels=comma_format())
-  + scale_linetype_manual(
-      values=[linetypes[l % len(linetypes)] for l in range(n_industries)]
-    ) 
-)
-securities_per_industry_figure.show()
+shares_outstanding = compute_shares_outstanding(df_fundamentals)
 ```
 
-We also compute the market cap of all stocks belonging to the respective industries and show the evolution over time in @fig-214. At all points in time, manufacturing firms comprise of the largest portion of market capitalization. Toward the end of the sample, however, financial firms and services begin to make up a substantial portion of the market cap.
 
 ```{python}
-#| label: fig-214 
-#| eval: false
-#| fig-cap: "The figure shows the total Market capitalization."
-#| fig-alt: "Title: Monthly total market cap by industry. The figure shows a line chart of total market capitalization of all stocks in the Stock sample aggregated by industry with years on the horizontal axis and the corresponding market capitalization on the vertical axis. Stocks in the manufacturing sector have always had the highest market valuation. The figure shows a general upwards trend during the most recent past."
-market_cap_per_industry = (prices_monthly
-  .merge(cpi_monthly, how="left", on="date")
-  .groupby(["date", "industry"])
-  .apply(
-    lambda group: pd.Series({
-      "mktcap": (group["mktcap"].sum()/group["cpi"].mean())
-    })
-  )
-  .reset_index()
-)
+def add_market_cap(df, shares_df):
+    """
+    Add market capitalization to price data.
+    """
+    df = df.merge(shares_df, on=["symbol", "year"], how="left")
+    
+    # Compute market cap (in million VND)
+    df["mktcap"] = (df["close"] * df["shrout"]) / 1_000_000
+    
+    # Set zero or negative market cap to missing
+    df["mktcap"] = df["mktcap"].where(df["mktcap"] > 0, np.nan)
+    
+    return df
 
-market_cap_per_industry_figure = (
-  ggplot(
-    market_cap_per_industry, 
-    aes(x="date", y="mktcap/1000", color="industry", linetype="industry")
-  )
-  + geom_line()
-  + labs(
-      x="", y="", color="", linetype="",
-      title="Monthly market cap by industry in billions of Dec 2024 USD"
-    )
-  + scale_x_datetime(date_breaks="10 years", date_labels="%Y")
-  + scale_y_continuous(labels=comma_format())
-  + scale_linetype_manual(
-      values=[linetypes[l % len(linetypes)] for l in range(n_industries)]
-    ) 
-)
-market_cap_per_industry_figure.show()
+prices = add_market_cap(prices, shares_outstanding)
 ```
 
-## Daily Stock Data
 
-Before we turn to accounting data, we provide a proposal for downloading daily Stock data with the same filters used for the monthly data. While the monthly data from above typically fit into your memory and can be downloaded in a meaningful amount of time, this is usually not true for daily return data. The daily Stock data file is substantially larger than monthly data. This has two important implications: you cannot hold all the daily return data in your memory (hence it is not possible to copy the entire dataset to your local database), and in our experience, the download usually crashes (or never stops).
+### Computing Returns and Excess Returns
+We compute returns using adjusted closing prices to ensure returns correctly reflect total shareholder returns including dividends and corporate actions.
 
-There is a solution to this challenge. As with many *big data* problems, you can split up the big task into several smaller tasks that are easier to handle. That is, instead of downloading data about all stocks at once, download the data in small batches of stocks consecutively. Such operations can be implemented in `for`-loops, where we download, prepare, and store the data for a small number of stocks in each iteration. This operation might nonetheless take around 5 minutes, depending on your internet connection. To keep track of the progress, we create ad-hoc progress updates using `print()`. Notice that we also use the method `to_sql()` here with the option to append the new data to an existing table, when we process the second and all following batches. 
+#### Creating Daily Dataset
+
+1. Sequential version
+```{python}
+#| eval: false
+def create_daily_dataset(df, annual_rf=0.04):
+    """
+    Create daily price dataset with returns and excess returns.
+    """
+    df = df.copy()
+    
+    # Sort by symbol and date (critical for correct return calculation)
+    df = df.sort_values(["symbol", "date"]).reset_index(drop=True)
+    
+    # Remove duplicate dates within each symbol (keep last observation)
+    df = df.drop_duplicates(subset=["symbol", "date"], keep="last")
+    
+    # Compute daily returns
+    df["ret"] = df.groupby("symbol")["adjusted_close"].pct_change()
+    
+    # Cap extreme negative returns
+    df["ret"] = df["ret"].clip(lower=-0.99)
+    
+    # Daily risk-free rate (assuming 252 trading days)
+    df["risk_free"] = annual_rf / 252
+    
+    # Excess returns
+    df["ret_excess"] = df["ret"] - df["risk_free"]
+    df["ret_excess"] = df["ret_excess"].clip(lower=-1.0)
+    
+    # Lagged market cap
+    df["mktcap_lag"] = df.groupby("symbol")["mktcap"].shift(1)
+    
+    return df
+
+prices_daily = create_daily_dataset(prices)
+```
+
+2. Parallel version
 
 ```{python}
-#| output: false
-#| eval: false
-factors_ff3_daily = pd.read_sql(
-  sql="SELECT * FROM factors_ff3_daily", 
-  con=tidy_finance,
-  parse_dates={"date"}
-)
+from joblib import Parallel, delayed
+import os
 
-permnos = pd.read_sql(
-  sql="SELECT DISTINCT permno FROM crsp.stksecurityinfohist", 
-  con=DataCore,
-  dtype={"permno": int}
-)
-
-permnos = list(permnos["permno"].astype(str))
-  
-batch_size = 500
-batches = np.ceil(len(permnos)/batch_size).astype(int)
-
-for j in range(1, batches+1):  
+def process_daily_symbol(symbol_df, annual_rf=0.04):
+    """
+    Process a single symbol's daily data.
+    """
+    df = symbol_df.copy()
     
-  permno_batch = permnos[
-    ((j-1)*batch_size):(min(j*batch_size, len(permnos)))
-  ]
-  
-  permno_batch_formatted = (
-    ", ".join(f"'{permno}'" for permno in permno_batch)
-  )
-  permno_string = f"({permno_batch_formatted})"
-  
-  crsp_daily_sub_query = (
-    "SELECT dsf.permno, dlycaldt AS date, dlyret AS ret "
-      "FROM crsp.dsf_v2 AS dsf "
-      "INNER JOIN crsp.stksecurityinfohist AS ssih "
-      "ON dsf.permno = ssih.permno AND "
-         "ssih.secinfostartdt <= dsf.dlycaldt AND "
-         "dsf.dlycaldt <= ssih.secinfoenddt "
-      f"WHERE dsf.permno IN {permno_string} "
-           f"AND dlycaldt BETWEEN '{start_date}' AND '{end_date}' "
-            "AND ssih.sharetype = 'NS' "
-            "AND ssih.securitytype = 'EQTY' "  
-            "AND ssih.securitysubtype = 'COM' " 
-            "AND ssih.usincflg = 'Y' " 
-            "AND ssih.issuertype in ('ACOR', 'CORP') " 
-            "AND ssih.primaryexch in ('N', 'A', 'Q') "
-            "AND ssih.conditionaltype in ('RW', 'NW') "
-            "AND ssih.tradingstatusflg = 'A'"
-  )
+    # Sort by date (critical for correct return calculation)
+    df = df.sort_values("date").reset_index(drop=True)
     
-  crsp_daily_sub = (pd.read_sql_query(
-      sql=crsp_daily_sub_query,
-      con=DataCore,
-      dtype={"permno": int},
-      parse_dates={"date"}
+    # Remove duplicate dates (keep last observation if duplicates exist)
+    df = df.drop_duplicates(subset=["date"], keep="last")
+    
+    # Compute daily returns
+    df["ret"] = df["adjusted_close"].pct_change()
+
+    # Replace infinite values with NaN
+    df["ret"] = df["ret"].replace([np.inf, -np.inf], np.nan)
+    
+    # Cap extreme negative returns
+    df["ret"] = df["ret"].clip(lower=-0.99)
+    
+    # Daily risk-free rate
+    df["risk_free"] = annual_rf / 252
+    
+    # Excess returns
+    df["ret_excess"] = df["ret"] - df["risk_free"]
+    df["ret_excess"] = df["ret_excess"].clip(lower=-1.0)
+    
+    # Lagged market cap
+    df["mktcap_lag"] = df["mktcap"].shift(1)
+    
+    return df
+
+def create_daily_dataset_parallel(df, annual_rf=0.04):
+    """
+    Create daily price dataset using parallel processing.
+    """
+    # Ensure data is sorted before splitting
+    df = df.sort_values(["symbol", "date"])
+    
+    # Split by symbol
+    symbol_groups = [group for _, group in df.groupby("symbol")]
+    
+    n_jobs = max(1, os.cpu_count() - 1)
+    print(f"Processing {len(symbol_groups):,} symbols using {n_jobs} cores...")
+    
+    results = Parallel(n_jobs=n_jobs, verbose=1)(
+        delayed(process_daily_symbol)(group, annual_rf) 
+        for group in symbol_groups
     )
-    .dropna()
-   )
-
-  if not crsp_daily_sub.empty:
     
-      crsp_daily_sub = (crsp_daily_sub
-        .merge(factors_ff3_daily[["date", "risk_free"]], 
-               on="date", how="left")
-        .assign(
-          ret_excess = lambda x: 
-            ((x["ret"] - x["risk_free"]).clip(lower=-1))
-        )
-        .get(["permno", "date", "ret_excess"])
+    return pd.concat(results, ignore_index=True)
+
+prices_daily = create_daily_dataset_parallel(prices)
+
+# Quick validation
+print("\nValidation checks:")
+print(f"Any duplicate (symbol, date): {prices_daily.duplicated(subset=['symbol', 'date']).sum()}")
+print(f"Sample of non-zero returns:")
+print(prices_daily[prices_daily["ret"] != 0][["symbol", "date", "adjusted_close", "ret"]].head(10))
+
+
+prices_daily.query("symbol == 'FPT'")[["symbol", "date", "adjusted_close", "ret"]].head(3)
+```
+
+```{python}
+# Select columns
+daily_columns = [
+    "symbol", "date", "year", "month",
+    "open", "high", "low", "close", "volume",
+    "adjusted_close", "shrout", "mktcap", "mktcap_lag",
+    "ret", "risk_free", "ret_excess"
+]
+prices_daily = prices_daily[daily_columns]
+
+# Remove observations with missing essential variables
+prices_daily = prices_daily.dropna(subset=["ret_excess", "mktcap", "mktcap_lag"])
+
+print("Daily Return Summary Statistics:")
+print(prices_daily["ret"].describe().round(4))
+print(f"\nFinal daily sample: {len(prices_daily):,} observations")
+```
+
+#### Creating Monthly Dataset
+
+For monthly returns, we compute returns directly from month-end adjusted prices rather than compounding daily returns. This avoids compounding errors from missing days and is the standard approach in empirical finance.
+
+1. Sequential version
+
+```{python}
+#| eval: false
+def create_monthly_dataset(df, annual_rf=0.04):
+    """
+    Create monthly price dataset with returns computed from 
+    month-end to month-end adjusted prices.
+    """
+    df = df.copy()
+    
+    # Sort by symbol and date (critical for correct return calculation)
+    df = df.sort_values(["symbol", "date"]).reset_index(drop=True)
+    
+    # Remove duplicate dates within each symbol (keep last observation)
+    df = df.drop_duplicates(subset=["symbol", "date"], keep="last")
+    
+    # Get month-end observations
+    monthly = (df
+        .groupby("symbol")
+        .resample("ME", on="date")
+        .agg({
+            "open": "first",           # First day open
+            "high": "max",             # Monthly high
+            "low": "min",              # Monthly low
+            "close": "last",           # Last day close
+            "volume": "sum",           # Total monthly volume
+            "adjusted_close": "last",  # Month-end adjusted price
+            "shrout": "last",          # Month-end shares outstanding
+            "mktcap": "last",          # Month-end market cap
+            "year": "last",
+            "month": "last"
+        })
+        .reset_index()
+    )
+    
+    # Remove duplicate (symbol, date) after resampling (safety check)
+    monthly = monthly.drop_duplicates(subset=["symbol", "date"], keep="last")
+    
+    # Sort again after resampling
+    monthly = monthly.sort_values(["symbol", "date"]).reset_index(drop=True)
+    
+    # Compute monthly returns from month-end to month-end adjusted prices
+    monthly["ret"] = monthly.groupby("symbol")["adjusted_close"].pct_change()
+    
+    # Cap extreme returns
+    monthly["ret"] = monthly["ret"].clip(lower=-0.99)
+    
+    # Monthly risk-free rate
+    monthly["risk_free"] = annual_rf / 12
+    
+    # Excess returns
+    monthly["ret_excess"] = monthly["ret"] - monthly["risk_free"]
+    monthly["ret_excess"] = monthly["ret_excess"].clip(lower=-1.0)
+    
+    # Lagged market cap for portfolio weighting
+    monthly["mktcap_lag"] = monthly.groupby("symbol")["mktcap"].shift(1)
+    
+    return monthly
+
+prices_monthly = create_monthly_dataset(prices)
+```
+
+2. Parallel version
+
+```{python}
+from joblib import Parallel, delayed
+import os
+
+def process_monthly_symbol(symbol_df, annual_rf=0.04):
+    """
+    Process a single symbol's data to monthly frequency.
+    """
+    df = symbol_df.copy()
+    
+    # Sort by date (critical for correct return calculation)
+    df = df.sort_values("date").reset_index(drop=True)
+    
+    # Remove duplicate dates (keep last observation if duplicates exist)
+    df = df.drop_duplicates(subset=["date"], keep="last")
+    
+    # Set date as index for resampling
+    df = df.set_index("date")
+    
+    # Resample to monthly
+    monthly = df.resample("ME").agg({
+        "symbol": "last",
+        "open": "first",
+        "high": "max",
+        "low": "min",
+        "close": "last",
+        "volume": "sum",
+        "adjusted_close": "last",
+        "shrout": "last",
+        "mktcap": "last",
+        "year": "last",
+        "month": "last"
+    }).reset_index()
+    
+    # Remove rows where symbol is NaN (months with no trading)
+    monthly = monthly.dropna(subset=["symbol"])
+    
+    # Sort by date
+    monthly = monthly.sort_values("date").reset_index(drop=True)
+    
+    # Compute monthly returns
+    monthly["ret"] = monthly["adjusted_close"].pct_change()
+    
+    # Replace infinite values with NaN
+    monthly["ret"] = monthly["ret"].replace([np.inf, -np.inf], np.nan)
+    
+    # Cap extreme returns
+    monthly["ret"] = monthly["ret"].clip(lower=-0.99)
+    
+    # Monthly risk-free rate
+    monthly["risk_free"] = annual_rf / 12
+    
+    # Excess returns
+    monthly["ret_excess"] = monthly["ret"] - monthly["risk_free"]
+    monthly["ret_excess"] = monthly["ret_excess"].clip(lower=-1.0)
+    
+    # Lagged market cap
+    monthly["mktcap_lag"] = monthly["mktcap"].shift(1)
+    
+    return monthly
+
+def create_monthly_dataset_parallel(df, annual_rf=0.04):
+    """
+    Create monthly price dataset using parallel processing.
+    """
+    # Ensure data is sorted before splitting
+    df = df.sort_values(["symbol", "date"])
+    
+    # Split by symbol
+    symbol_groups = [group for _, group in df.groupby("symbol")]
+    
+    n_jobs = max(1, os.cpu_count() - 1)
+    print(f"Processing {len(symbol_groups):,} symbols using {n_jobs} cores...")
+    
+    results = Parallel(n_jobs=n_jobs, verbose=1)(
+        delayed(process_monthly_symbol)(group, annual_rf) 
+        for group in symbol_groups
+    )
+    
+    return pd.concat(results, ignore_index=True)
+
+prices_monthly = create_monthly_dataset_parallel(prices)
+
+# Validation checks
+print("\nValidation checks:")
+print(f"Any duplicate (symbol, date): {prices_monthly.duplicated(subset=['symbol', 'date']).sum()}")
+print(f"\nSample of non-zero returns:")
+print(prices_monthly[prices_monthly["ret"] != 0][["symbol", "date", "adjusted_close", "ret"]].head(10))
+
+prices_monthly.query("symbol == 'FPT'")[["symbol", "date", "adjusted_close", "ret"]].head(3)
+```
+
+
+```{python}
+# Select columns (same structure as daily)
+monthly_columns = [
+    "symbol", "date", "year", "month",
+    "open", "high", "low", "close", "volume",
+    "adjusted_close", "shrout", "mktcap", "mktcap_lag",
+    "ret", "risk_free", "ret_excess"
+]
+prices_monthly = prices_monthly[monthly_columns]
+
+# Remove observations with missing essential variables
+prices_monthly = prices_monthly.dropna(subset=["ret_excess", "mktcap", "mktcap_lag"])
+
+print("Monthly Return Summary Statistics:")
+print(prices_monthly["ret"].describe().round(4))
+print(f"\nFinal monthly sample: {len(prices_monthly):,} observations")
+```
+
+### Storing Price Data
+
+```{python}
+#| eval: false
+prices_daily.to_sql(
+    name="prices_daily",
+    con=tidy_finance,
+    if_exists="replace",
+    index=False
+)
+print("Daily price data saved to database.")
+
+prices_monthly.to_sql(
+    name="prices_monthly",
+    con=tidy_finance,
+    if_exists="replace",
+    index=False
+)
+print("Monthly price data saved to database.")
+```
+
+## Descriptive Statistics
+
+Before proceeding to asset pricing analyses, we examine the characteristics of our sample to understand the Vietnamese equity market's evolution and composition.
+
+### Market Evolution Over Time
+
+We first examine how the number of listed securities has grown over time.
+
+```{python}
+securities_over_time = (prices_monthly
+    .groupby("date")
+    .agg(
+        n_securities=("symbol", "nunique"),
+        total_mktcap=("mktcap", "sum")
+    )
+    .reset_index()
+)
+```
+
+```{python}
+#| label: fig-securities-over-time
+#| fig-cap: "The figure shows the monthly number of securities in the Vietnamese stock market sample."
+#| fig-alt: "Line chart showing the growth in number of listed securities over time."
+securities_figure = (
+    ggplot(securities_over_time, aes(x="date", y="n_securities"))
+    + geom_line(color="steelblue", size=1)
+    + labs(
+        x="",
+        y="Number of Securities",
+        title="Growth of Vietnamese Stock Market"
+    )
+    + scale_x_datetime(date_breaks="2 years", date_labels="%Y")
+    + scale_y_continuous(labels=comma_format())
+    + theme_minimal()
+)
+securities_figure.show()
+```
+
+### Market Capitalization Evolution
+
+The aggregate market capitalization reflects the overall size and development of the Vietnamese equity market.
+
+```{python}
+#| label: fig-market-cap-over-time
+#| fig-cap: "The figure shows the total market capitalization of Vietnamese listed companies over time."
+#| fig-alt: "Line chart showing total market capitalization growth."
+mktcap_figure = (
+    ggplot(securities_over_time, aes(x="date", y="total_mktcap / 1000"))
+    + geom_line(color="darkgreen", size=1)
+    + labs(
+        x="",
+        y="Market Cap (Trillion VND)",
+        title="Total Market Capitalization of Vietnamese Equities"
+    )
+    + scale_x_datetime(date_breaks="2 years", date_labels="%Y")
+    + scale_y_continuous(labels=comma_format())
+    + theme_minimal()
+)
+mktcap_figure.show()
+```
+
+### Return Distribution
+
+Understanding the distribution of monthly returns helps identify potential data quality issues and characterize market risk.
+
+```{python}
+#| label: fig-return-distribution
+#| fig-cap: "Distribution of monthly excess returns for Vietnamese stocks."
+#| fig-alt: "Histogram showing the distribution of monthly excess returns."
+return_distribution = (
+    ggplot(prices_monthly, aes(x="ret_excess"))
+    + geom_histogram(
+        binwidth=0.02, 
+        fill="steelblue", 
+        color="white",
+        alpha=0.7
+    )
+    + labs(
+        x="Monthly Excess Return",
+        y="Frequency",
+        title="Distribution of Monthly Excess Returns"
+    )
+    + scale_x_continuous(limits=(-0.5, 0.5))
+    + theme_minimal()
+)
+return_distribution.show()
+```
+
+### Coverage of Book Equity
+
+Book equity is essential for constructing value portfolios. We examine what fraction of our sample has book equity data available over time.
+
+```{python}
+#| label: fig-book-equity-coverage
+#| fig-cap: "Share of securities with available book equity data by year."
+#| fig-alt: "Line chart showing the coverage of book equity data over time."
+# Merge prices with fundamentals
+coverage_data = (prices_monthly
+    .assign(year=lambda x: x["date"].dt.year)
+    .groupby(["symbol", "year"])
+    .tail(1)
+    .merge(comp_vn[["symbol", "year", "be"]], 
+           on=["symbol", "year"], 
+           how="left")
+)
+
+# Compute coverage by year
+be_coverage = (coverage_data
+    .groupby("year")
+    .apply(lambda x: pd.Series({
+        "share_with_be": x["be"].notna().mean()
+    }))
+    .reset_index()
+)
+
+coverage_figure = (
+    ggplot(be_coverage, aes(x="year", y="share_with_be"))
+    + geom_line(color="darkorange", size=1)
+    + geom_point(color="darkorange", size=2)
+    + labs(
+        x="Year",
+        y="Share with Book Equity",
+        title="Coverage of Book Equity Data"
+    )
+    + scale_y_continuous(labels=percent_format(), limits=(0, 1))
+    + theme_minimal()
+)
+coverage_figure.show()
+```
+
+
+## Merging Stock and Fundamental Data
+
+The final step links price data with fundamental data using the stock symbol as the common identifier. This merged dataset forms the basis for constructing portfolios sorted on firm characteristics.
+
+```{python}
+# Example: Create merged dataset for end-of-June each year
+merged_data = (prices_monthly
+    .query("month == 6")
+    .merge(
+        comp_vn[["symbol", "year", "be", "op", "inv", "at"]],
+        on=["symbol", "year"],
+        how="left",
+        suffixes=("", "_fundamental")
+    )
+)
+
+# Convert BE from VND to BILLION VND
+merged_data["be"] = merged_data["be"] / 1e9
+
+# Compute book-to-market ratio
+merged_data["bm"] = merged_data["be"] / merged_data["mktcap"]
+
+merged_data.loc[
+    (merged_data["bm"] <= 0) |
+    (merged_data["bm"] > 20),
+    "bm"
+] = pd.NA
+
+
+merged_data["bm"].describe(percentiles=[.01, .1, .5, .9, .99])
+
+print(f"Merged observations: {len(merged_data):,}")
+print(f"With book-to-market: {merged_data['bm'].notna().sum():,}")
+merged_data.head(3)
+merged_data.describe()
+merged_data
+```
+
+```{python}
+from plotnine import *
+import numpy as np
+
+bm_plot_data = (
+    merged_data[["bm"]]
+      .dropna()
+      .assign(bm_plot=lambda x: x["bm"].clip(upper=10))
+)
+
+(
+    ggplot(bm_plot_data, aes(x="bm_plot")) +
+    geom_histogram(bins=80) +
+    labs(
+        title="Distribution of Book to Market Ratios",
+        x="Book to Market (capped at 10 for plotting)",
+        y="Number of firms"
+    ) +
+    theme_minimal()
+)
+```
+
+```{python}
+size_plot_data = (
+    merged_data[["mktcap_lag"]]
+      .dropna()
+      .assign(log_size=lambda x: np.log(x["mktcap_lag"]))
+)
+
+(
+    ggplot(size_plot_data, aes(x="log_size")) +
+    geom_histogram(bins=80) +
+    labs(
+        title="Distribution of Log Market Capitalization",
+        x="Log Market Cap",
+        y="Number of firms"
+    ) +
+    theme_minimal()
+)
+```
+
+```{python}
+scatter_data = (
+    merged_data[["be", "mktcap_lag"]]
+      .dropna()
+      .assign(
+          log_be=lambda x: np.log(x["be"]),
+          log_me=lambda x: np.log(x["mktcap_lag"])
       )
-        
-      if j == 1:
-        if_exists_string = "replace"
-      else:
-        if_exists_string = "append"
-
-      crsp_daily_sub.to_sql(
-        name="crsp_daily", 
-        con=tidy_finance, 
-        if_exists=if_exists_string, 
-        index=False
-      )
-            
-  print(f"Batch {j} out of {batches} done ({(j/batches)*100:.2f}%)\n")
-```
-
-
-## Merging Stock with Company Fundamentals
-
-To link the two datasets, we need to use the stock symbol.
-
-Before we close this chapter, let us look at an interesting descriptive statistic of our data. As the book value of equity plays a crucial role in many asset pricing applications, it is interesting to know for how many of our stocks this information is available. Hence, @fig-215 plots the share of securities with book equity values for each exchange. 
-
-```{python}
-#| label: fig-215 
-#| fig-cap: "The figure shows the end-of-year share of securities with book equity values by listing exchange."
-#| fig-alt: "Title: Share of securities with book equity values by exchange. The figure shows a line chart of end-of-year shares of securities with book equity values by exchange with years on the horizontal axis and the corresponding share on the vertical axis."
-
-share_with_be = (prices_monthly
-  .assign(year=lambda x: pd.DatetimeIndex(x["date"]).year)
-  .sort_values("date")
-  .groupby(["symbol", "year"])
-  .tail(1)
-  .reset_index()
-  .merge(comp_vn, how="left", on=["symbol", "year"])
-  
-  # Group by year only for now; easy to add "exchange" later
-  .groupby(["year"]) 
-  # # .groupby(["exchange", "year"]) # Uncomment this later
-  .apply(
-    lambda x: pd.Series({
-      "share": x["symbol"][x["be"].notnull()].nunique() / x["symbol"].nunique()
-    }),
-    include_groups=False # Recommended for newer pandas versions
-  )
-  .reset_index()
 )
 
-# Professional visualization check
-share_with_be_figure = (
-  ggplot(
-    share_with_be, 
- 
-    aes(x="year", y="share") 
-    # aes(x="year", y="share", color="exchange", linetype="exchange")
-  )
-  + geom_line(size=1)
-  + labs(
-      x="Year", y="Share with BE",
-      title="Share of securities with book equity values"
-      # title="Share of securities with book equity values by exchange"
-    )
-  + scale_y_continuous(labels=percent_format())
-  + coord_cartesian(ylim=(0, 1))
-  + theme_minimal()
+(
+    ggplot(scatter_data, aes(x="log_me", y="log_be")) +
+    geom_point(alpha=0.2) +
+    labs(
+        title="Log Book Equity vs Log Market Equity",
+        x="Log Market Cap",
+        y="Log Book Equity"
+    ) +
+    theme_minimal()
 )
-share_with_be_figure.show()
 ```
-
-
 
 ## Key Takeaways
 
--   DataCore provides secure access to essential financial databases like Stock and Company Fundamentals, which are critical for empirical finance research.
--   Stock data provides return, market capitalization and industry data for US common stocks listed.
--   Company Fundamentals provides firm-level accounting data such as book equity, profitability, and investment.
+1. **Datacore provides unified access** to Vietnamese financial data through a modern cloud-based infrastructure, eliminating the need to aggregate data from multiple fragmented sources.
 
+2. **Company fundamentals** from Datacore include comprehensive balance sheet, income statement, and cash flow data prepared according to Vietnamese Accounting Standards, which we map to standard variables used in international research.
 
+3. **Book equity computation** follows the Fama-French methodology, accounting for deferred taxes and preferred stock to ensure comparability with US-based studies.
 
+4. **Stock price data** includes adjustment factors for corporate actions, enabling accurate return calculations over long horizons.
 
+5. **Monthly frequency** is standard for asset pricing research, reducing noise while maintaining sufficient observations for statistical inference.
 
+6. **Risk-free rate approximation** uses Vietnamese government bond yields as a proxy, given the absence of a standardized short-term rate series comparable to US Treasury bills.
 
+7. **Data quality validation** through descriptive statistics and visualization helps identify potential issues before conducting formal analyses.
 
-
-
-
-
+8. **Batch processing** enables efficient handling of large daily datasets that would otherwise exceed memory constraints.
