@@ -1,35 +1,108 @@
 ---
-title: Fama-MacBeth Regressions
+title: "Fama-MacBeth Regressions"
+format:
+  html:
+    code-fold: false
+    number-sections: true
+jupyter: python3
 ---
 
+In this chapter, we delve into the implementation of the @Fama1973 regression approach, a cornerstone of empirical asset pricing. While portfolio sorts provide a robust, non-parametric view of the relationship between characteristics and returns, they struggle when we need to control for multiple factors simultaneously. For instance, in the Vietnamese stock market (HOSE and HNX), small-cap stocks often exhibit high illiquidity. Does the "Size effect" exist because small stocks are risky, or simply because they are illiquid? Fama-MacBeth (FM) regressions allow us to disentangle these effects in a linear framework.
 
+We will implement a version of the FM procedure, accounting for:
+1.  **Weighted Least Squares (WLS):** To prevent micro-cap stocks, which are prevalent and volatile in Vietnam, from dominating the estimates.
+2.  **Newey-West Adjustments:** To handle the serial correlation often observed in Vietnamese market risk premiums.
+3.  **Shanken Correction:** To mathematically adjust for the "Errors-in-Variables" bias arising from estimated betas.
+
+## The Econometric Framework
+
+The Fama-MacBeth procedure is essentially a two-step filter that separates the cross-sectional variation in returns from the time-series variation.
+
+### Intuition: Why not Panel OLS?
+
+A naive approach would be to pool all data ($N$ stocks $\times$ $T$ months) and run a single Ordinary Least Squares (OLS) regression:
+
+$$ 
+r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1} 
+$$
+
+However, this assumes that the error terms $\epsilon_{i,t+1}$ are independent across firms. In reality, stock returns are highly cross-sectionally correlated (if the VN-Index crashes, most stocks fall together). A pooled OLS would underestimate the standard errors, leading to "false positive" discoveries of risk factors. Fama-MacBeth solves this by running $T$ separate cross-sectional regressions, effectively treating each month as a single independent observation of the risk premium.
+
+### Mathematical Derivation
+
+#### Step 1: Cross-Sectional Regressions
+
+For each month $t$, we estimate the premium $\lambda_{k,t}$ for $K$ factors. Let $r_{i,t+1}$ be the excess return of asset $i$ at time $t+1$. Let $\boldsymbol{\beta}_{i,t}$ be a vector of $K$ characteristics (e.g., Market Beta, Book-to-Market, Size) known at time $t$.
+
+The model for a specific month $t$ is:
+$$ 
+\mathbf{r}_{t+1} = \mathbf{X}_t \boldsymbol{\lambda}_{t+1} + \boldsymbol{\alpha}_{t+1} + \boldsymbol{\epsilon}_{t+1} 
+$$
+
+Where:
+* $\mathbf{r}_{t+1}$ is an $N \times 1$ vector of returns.
+* $\mathbf{X}_t$ is an $N \times (K+1)$ matrix of factor exposures (including a column of ones for the intercept).
+* $\boldsymbol{\lambda}_{t+1}$ is the vector of risk premiums realized in month $t+1$.
+
+To use **Weighted Least Squares (WLS)**, We define a weighting matrix $\mathbf{W}_t$ (typically diagonal with market capitalizations). The estimator for month $t$ is:
+$$ 
+\hat{\boldsymbol{\lambda}}_{t+1} = (\mathbf{X}_t^\top \mathbf{W}_t \mathbf{X}_t)^{-1} \mathbf{X}_t^\top \mathbf{W}_t \mathbf{r}_{t+1} 
+$$
+
+
+#### Step 2: Time-Series Aggregation
+
+We now have a time-series of $T$ estimates: $\hat{\lambda}_1, \hat{\lambda}_2, \dots, \hat{\lambda}_T$. The final estimate of the risk premium is the time-series average:
+$$ 
+\hat{\lambda}_k = \frac{1}{T} \sum_{t=1}^T \hat{\lambda}_{k,t} 
+$$
+
+The standard error is derived from the standard deviation of these monthly estimates:
+$$ 
+\sigma(\hat{\lambda}_k) = \sqrt{\frac{1}{T^2} \sum_{t=1}^T (\hat{\lambda}_{k,t} - \hat{\lambda}_k)^2} 
+$$
+
+
+## The "Errors-in-Variables" (EIV) Problem
+A critical subtlety often ignored in basic applications is that the betas used in Step 1 are not true values, they are estimates from a prior rolling window (Step 0). This measurement error biases the second-pass $\lambda$ estimates (typically downwards) and understates the standard errors.
+
+@Shanken1992 provides a correction factor $c$. If we use standard portfolio betas, the variance of the estimator must be inflated:
+$$ 
+\sigma^2_{Shanken}(\hat{\lambda}) = \sigma^2_{FM}(\hat{\lambda}) \times (1 + \hat{\lambda}^\top \Sigma_f^{-1} \hat{\lambda}) 
+$$
+
+Where $\Sigma_f$ is the covariance matrix of the factors. This correction is particularly relevant for the Vietnamese market where factor volatilities are high, making the term $(1 + \dots)$ significantly larger than 1.
+
+## Data Preparation
+
+We utilize data from our local SQLite database. In Vietnam, the fiscal year typically ends in December, and audited reports are required by April. To ensure no look-ahead bias, we lag accounting data (Book Equity) to match returns starting in July (a 6-month conservative lag, similar to Fama-French, but adapted for Vietnamese reporting delays).
 
 ```{python}
 import pandas as pd
 import numpy as np
 import sqlite3
 import statsmodels.formula.api as smf
-```
+import statsmodels.api as sm
+from pandas.tseries.offsets import MonthEnd
 
-## Data Preparation
-
-We illustrate @Fama1973 with the monthly CRSP sample and use three characteristics to explain the cross-section of returns: Market capitalization, the book-to-market ratio, and the CAPM beta (i.e., the covariance of the excess stock returns with the market excess returns). We collect the data from our SQLite database introduced in [Accessing and Managing Financial Data](accessing-and-managing-financial-data.qmd) and [WRDS, CRSP, and Compustat](wrds-crsp-and-compustat.qmd).\index{Data!CRSP}\index{Data!Compustat}\index{Beta}
-
-```{python}
+# Connect to the Vietnamese data
 tidy_finance = sqlite3.connect(database="data/tidy_finance_python.sqlite")
 
+# Load Monthly Prices (HOSE & HNX)
 prices_monthly = pd.read_sql_query(
-  sql="SELECT symbol, date, ret_excess, mktcap FROM prices_monthly",
+  sql="SELECT symbol, date, ret_excess, mktcap, mktcap_lag FROM prices_monthly",
   con=tidy_finance,
   parse_dates={"date"}
 )
 
+# Load Book Equity (derived from Vietnamese Financial Statements)
 comp_vn = pd.read_sql_query(
   sql="SELECT datadate, symbol, be FROM comp_vn",
   con=tidy_finance,
   parse_dates={"datadate"}
 )
 
+# Load Rolling Market Betas (Pre-calculated in Chapter 'Beta Estimation')
 beta_monthly = pd.read_sql_query(
   sql="SELECT symbol, date, beta FROM beta_monthly WHERE return_type = 'monthly'",
   con=tidy_finance,
@@ -37,150 +110,257 @@ beta_monthly = pd.read_sql_query(
 )
 ```
 
-We use the Compustat and CRSP data to compute the book-to-market ratio and the (log) market capitalization.\index{Book-to-market ratio}\index{Market capitalization} Furthermore, we also use the CAPM betas based on monthly returns we computed in the previous chapters.\index{Beta}\index{CAPM}
+We construct our testing characteristics:
+
+1. **(Market Beta):** The sensitivity to the VN-Index.
+2. **Size (ln(ME)):** The natural log of market capitalization.
+3. **Value (BM):** The ratio of Book Equity to Market Equity.
 
 ```{python}
-
-from pandas.tseries.offsets import MonthEnd
-
-characteristics = (comp_vn
-  # Ensure date is the end of the month
-  .assign(date=lambda x: pd.to_datetime(x["datadate"]) + MonthEnd(0))
-  .merge(prices_monthly, how="left", on=["symbol", "date"])
-  .merge(beta_monthly, how="left", on=["symbol", "date"])
-  .assign(
-      bm=lambda x: x["be"] / x["mktcap"],
-      log_mktcap=lambda x: np.log(x["mktcap"]),
-      # Shift to the future month where these characteristics will be used
-      sorting_date=lambda x: x["date"] + pd.DateOffset(months=6) + MonthEnd(0)
-  )
-  .get(["symbol", "bm", "log_mktcap", "beta", "sorting_date"])
-  .dropna()
-)
-
-characteristics.head(3)
-```
-
-```{python}
-data_fama_macbeth = (prices_monthly
-  .merge(characteristics, 
-         how="left",
-         left_on=["symbol", "date"], 
-         right_on=["symbol", "sorting_date"])
-  .sort_values(["date", "symbol"])
-)
-
-# Forward fill only the necessary columns within each group
-cols_to_fill = ["beta", "bm", "log_mktcap"]
-data_fama_macbeth[cols_to_fill] = (data_fama_macbeth
-                                  .groupby("symbol")[cols_to_fill]
-                                  .ffill())
-
-data_fama_macbeth = data_fama_macbeth.dropna().reset_index(drop=True)
-```
-
-```{python}
-data_fama_macbeth.head(3)
-```
-
-
-```{python}
-data_fama_macbeth = (data_fama_macbeth
-  .sort_values(["symbol", "date"])
-  .assign(
-      # Shift moves the 'next' value up to the 'current' row
-      ret_excess_lead=lambda x: x.groupby("symbol")["ret_excess"].shift(-1)
-  )
-  .get(["symbol", "date", "ret_excess_lead", "beta", "log_mktcap", "bm"])
-  .dropna()
-)
-
-data_fama_macbeth.head()
-
-data_fama_macbeth.head()
-```
-
-## Cross-Sectional Regression
-
-Next, we run the cross-sectional regressions with the characteristics as explanatory variables for each month. We regress the returns of the test assets at a particular time point on the characteristics of each asset. By doing so, we get an estimate of the risk premiums $\hat\lambda^{f}_t$ for each point in time. \index{Regression!Cross-section}
-
-```{python}
-risk_premiums = (data_fama_macbeth
-  .groupby("date")
-  .apply(lambda x: smf.ols(
-      formula="ret_excess_lead ~ beta + log_mktcap + bm", 
-      data=x
-    ).fit()
-    .params
-  )
-  .reset_index()
-)
-risk_premiums
-```
-
-## Time-Series Aggregation
-
-Now that we have the risk premiums' estimates for each period, we can average across the time-series dimension to get the expected risk premium for each characteristic. Similarly, we manually create the $t$-test statistics for each regressor, which we can then compare to usual critical values of 1.96 or 2.576 for two-tailed significance tests at a five percent and a one percent significance level.
-
-```{python}
-price_of_risk = (risk_premiums
-  .melt(id_vars="date", var_name="factor", value_name="estimate")
-  .groupby("factor")["estimate"]
-  .apply(lambda x: pd.Series({
-      "risk_premium": x.mean(),
-      "t_statistic": x.mean()/x.std()*np.sqrt(len(x))
-    })
-  )
-  .reset_index()
-  .pivot(index="factor", columns="level_1", values="estimate")
-  .reset_index()
-)
-```
-
-It is common to adjust for autocorrelation when reporting standard errors of risk premiums. As in [Univariate Portfolio Sorts](univariate-portfolio-sorts.qmd), the typical procedure for this is computing @Newey1987 standard errors.\index{Standard errors!Newey-West}
-
-```{python}
-price_of_risk_newey_west = (risk_premiums
-  .melt(id_vars="date", var_name="factor", value_name="estimate")
-  .groupby("factor")
-  .apply(lambda x: (
-      x["estimate"].mean()/ 
-        smf.ols("estimate ~ 1", x)
-        .fit(cov_type="HAC", cov_kwds={"maxlags": 6}).bse
+# Prepare Characteristics
+characteristics = (
+    comp_vn
+    # Align reporting date to month end
+    .assign(date=lambda x: pd.to_datetime(x["datadate"]) + MonthEnd(0))
+    # Merge with price data to get Market Cap at fiscal year end
+    .merge(prices_monthly, on=["symbol", "date"], how="left")
+    .merge(beta_monthly, on=["symbol", "date"], how="left")
+    .assign(
+        # Compute Book-to-Market
+        bm=lambda x: x["be"] / x["mktcap"],
+        log_mktcap=lambda x: np.log(x["mktcap"]),
+        # Create sorting date: Financials valid from July of year t+1
+        sorting_date=lambda x: x["date"] + pd.DateOffset(months=6) + MonthEnd(0),
     )
-  )
-  .reset_index()
-  .rename(columns={"Intercept": "t_statistic_newey_west"})
+    .get(["symbol", "bm", "beta", "sorting_date"]) 
+    .dropna()
 )
 
-(price_of_risk
-  .merge(price_of_risk_newey_west, on="factor")
-  .round(3)
-)
+characteristics.head()
 ```
 
-Finally, let us interpret the results. Stocks with higher book-to-market ratios earn higher expected future returns, which is in line with the value premium. The negative value for log market capitalization reflects the size premium for smaller stocks. Consistent with results from earlier chapters, we detect no relation between beta and future stock returns.
 
 ```{python}
-#| output: false
-import tidyfinance as tf
-
-tf.estimate_fama_macbeth(
-  data=data_fama_macbeth,
-  model="ret_excess_lead ~ beta + bm + log_mktcap",
-  vcov="newey-west"
+# Merge back to monthly return panel
+data_fm = (prices_monthly
+  .merge(characteristics, 
+         left_on=["symbol", "date"], 
+         right_on=["symbol", "sorting_date"], 
+         how="left")
+#   .merge(beta_monthly, on=["symbol", "date"], how="left")
+  .sort_values(["symbol", "date"])
 )
+
+# Forward fill characteristics for 12 months (valid until next report)
+data_fm[["bm"]] = data_fm.groupby("symbol")[["bm"]].ffill(limit=12)
+
+# Log Market Cap is updated monthly
+data_fm["log_mktcap"] = np.log(data_fm["mktcap"])
+
+# Lead returns: We use characteristics at t to predict return at t+1
+data_fm["ret_excess_lead"] = data_fm.groupby("symbol")["ret_excess"].shift(-1)
+
+# Cleaning: Remove rows with missing future returns or characteristics
+data_fm = data_fm.dropna(subset=["ret_excess_lead", "beta", "log_mktcap", "bm"])
+
+print(data_fm.head())
+
+print(f"Data ready: {len(data_fm):,} observations from {data_fm.date.min().date()} to {data_fm.date.max().date()}")
+
 ```
 
-## Key Takeaways
+## Step 1: Cross-Sectional Regressions with WLS
 
-- Fama-MacBeth regressions provide a two-step approach to estimate risk premiums by running time-series averages of cross-sectional regressions on asset characteristics.
-- Fama-MacBeth regressions are commonly used in empirical asset pricing to test whether factors like size, value, or market beta are priced in the cross-section of stock returns.
-- Measurement error in factor exposures, especially when estimated beforehand, can bias results, but corrections such as Newey-West standard errors and weighted regressions can improve accuracy.
-- The `tidyfinance` Python package provides a user-friendly `estimate_fama_macbeth()` function that simplifies the Fama-MacBeth estimation pipeline.
+@Hou2020 argue that micro-cap stocks distorts inference because they have high transaction costs and idiosyncratic volatility. In Vietnam, this is exacerbated by "penny stock" speculation.
 
-## Exercises
+We implement **Weighted Least Squares (WLS)** where weights are the market capitalization of the prior month. This tests if the factors are priced in the *investable* universe, not just the equal-weighted average of tiny stocks.
 
-1. Estimate stock-specific value and size risk factors to similar to the CAPM-beta using rolling estimation based on Fama-French 3 Factors. Use these estimates instead of the stock characteristics in the Fama-MacBeth regression from above. How do the coefficient estimates differ?
-1. Download the 49 Industry Portfolios from Ken French data library. Use these industry portfolios instead of the stocks to estimate the three rolling risk-factors (beta, value, size). Replicate the Fama-MacBeth regression from above. Are the coefficient estimates similar?
-1. Use individual stocks with weighted-least squares based on a firm's size as suggested by @Hou2020. Then, repeat the Fama-MacBeth regressions without the weighting-scheme adjustment but drop the smallest 20 percent of firms each month. Compare the results of the three approaches. 
+```{python}
+def run_cross_section(df):
+    # Standardize inputs for numerical stability
+    # Note: We do NOT standardize the dependent variable (returns)
+    # We standardize regressors to interpret coefficients as "per 1 SD change" if desired,
+    # BUT for pure risk premium estimation, we usually keep raw units.
+    # Here we use raw units to interpret lambda as % return per unit of characteristic.
+    
+    # Define Weighted Least Squares
+    model = smf.wls(
+        formula="ret_excess_lead ~ beta + log_mktcap + bm",
+        data=df,
+        weights=df["mktcap_lag"] # Weight by size
+    )
+    results = model.fit()
+    
+    return results.params
+
+# Apply to every month
+risk_premiums = (data_fm
+  .groupby("date")
+  .apply(run_cross_section)
+  .reset_index()
+)
+
+print(risk_premiums.head())
+
+```
+
+## Step 2: Time-Series Aggregation & Hypothesis Testing
+
+We now possess the time-series of risk premiums. We calculate the arithmetic mean and the -statistics.
+
+Crucially, we use **Newey-West (HAC)** standard errors. Risk premiums in Vietnam often exhibit autocorrelation (momentum in factor performance). A simple standard error formula would be invalid.
+
+```{python}
+def calculate_fama_macbeth_stats(df, lags=6):
+    summary = []
+    
+    for col in ["Intercept", "beta", "log_mktcap", "bm"]:
+        series = df[col]
+        
+        # 1. Point Estimate (Average Risk Premium)
+        mean_premium = series.mean()
+        
+        # 2. Newey-West Standard Error
+        # We regress the series on a constant (ones) to get the SE of the mean
+        exog = sm.add_constant(np.ones(len(series)))
+        nw_model = sm.OLS(series, exog).fit(
+            cov_type='HAC', cov_kwds={'maxlags': lags}
+        )
+
+        se = nw_model.bse.iloc[0]
+        t_stat = nw_model.tvalues.iloc[0]
+        
+        summary.append({
+            "Factor": col,
+            "Premium (%)": mean_premium * 100,
+            "Std Error": se * 100,
+            "t-statistic": t_stat,
+            "Significance": "*" if abs(t_stat) > 1.96 else ""
+        })
+        
+    return pd.DataFrame(summary)
+
+price_of_risk = calculate_fama_macbeth_stats(risk_premiums)
+print(price_of_risk.round(4))
+```
+
+### Visualizing the Time-Varying Risk Premium
+
+One major advantage of the FM approach is that we can inspect the volatility of the risk premiums over time. In Vietnam, we expect the "Size" premium to be highly volatile during periods of retail liquidity injection (e.g., 2020-2021).
+
+```{python}
+#| label: fig-cumulative-premiums
+#| fig-alt: "A line plot displaying the time series of cumulative risk premiums for three factors: beta, log_mktcap, and bm in the Vietnamese market. The x-axis represents time, and the y-axis represents the cumulative coefficient returns."
+#| fig-cap: "Cumulative Risk Premiums in Vietnam."
+
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+
+# Calculate cumulative returns of the factors (as if they were tradable portfolios)
+cumulative_premiums = (risk_premiums
+    .set_index("date")
+    .drop(columns=["Intercept"])
+    .cumsum()
+)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+cumulative_premiums.plot(ax=ax, linewidth=2)
+ax.set_title("Cumulative Risk Premiums in Vietnam (Fama-MacBeth)", fontsize=14)
+ax.set_ylabel("Cumulative Coefficient Return")
+ax.legend(title="Factor")
+ax.grid(True, alpha=0.3)
+plt.show()
+
+```
+
+
+1. **Market Beta:** In many empirical studies (including the US), the market beta premium is often insignificant or even negative (the "Betting Against Beta" anomaly). In Vietnam, if the -stat is , it implies the CAPM does not explain the cross-section of returns.
+2. **Size (Log Mktcap):** A negative coefficient confirms the "Size Effect"—smaller firms have higher expected returns. However, using WLS often weakens this result compared to OLS, suggesting the size premium is concentrated in micro-caps.
+3. **Value (BM):** A positive coefficient confirms the Value premium. In Vietnam, value stocks (high B/M) often outperform growth stocks, particularly in the manufacturing and banking sectors.
+
+Figure @fig-cumulative-premiums plots the cumulative sum of the monthly Fama MacBeth risk premium estimates for beta, size, and value. Because these lines cumulate estimated cross sectional prices of risk rather than actual portfolio returns, the figure should be interpreted as showing the time variation and persistence of estimated premia, not investable performance.
+
+The beta premium displays a clear regime shift around 2020, with a sharp decline that only partially reverses afterward. This pattern suggests that the pricing of systematic risk in Vietnam is unstable over short samples and may be heavily influenced by episodic market conditions such as the post COVID retail trading boom. The size premium is comparatively smoother but small in magnitude, indicating only weak and time varying evidence that firm size is priced in the cross section during this period. The value premium remains close to zero throughout, implying little consistent cross sectional reward to high book to market firms in this sample window.
+
+Overall, the figure highlights that estimated risk premia in the Vietnamese market are highly time varying and sensitive to specific macro and market regimes, reinforcing the need for caution when drawing conclusions from short samples.
+
+## Sanity Checks
+### Time-Series Volatility Check
+
+Fama-MacBeth relies on the assumption that the risk premium varies over time. If your `bm` premium is truly near zero every month, the method fails.
+
+**Action:** Plot the time series of the estimated coefficients . You want to see "noise" around a mean. If you see a flat line or a single massive spike, your data is corrupted.
+
+```{python}
+import matplotlib.pyplot as plt
+
+# Plot the time series of the BM risk premium
+fig, ax = plt.subplots(figsize=(10, 5))
+risk_premiums["bm"].plot(ax=ax, title="Monthly Value Premium (BM) Coefficient")
+ax.axhline(0, color="black", linestyle="--")
+ax.set_ylabel("Slope Coefficient")
+plt.show()
+
+```
+
+### The "Predicted vs. Realized" Scatter Plot
+
+The ultimate test of an asset pricing model is whether it can price the test assets. If you group your stocks into portfolios (e.g., 25 portfolios sorted by Size and Beta), the model's predicted return should match the actual average return.
+
+**Action:** Compare the model's prediction against reality.
+
+1. Calculate the average realized return for each stock .
+2. Calculate the predicted return: .
+3. Scatter plot them. They should align along the 45-degree line.
+
+```{python}
+# Calculate average characteristics for each stock
+stock_means = data_fm.groupby("symbol")[["ret_excess_lead", "beta", "log_mktcap", "bm"]].mean()
+
+# Calculate Predicted Return using your Shanken results
+# Note: Ensure you grab the 'Premium (%)' divided by 100 if it was scaled
+# Or use the raw mean from risk_premiums
+lambda_beta = risk_premiums["beta"].mean()
+lambda_size = risk_premiums["log_mktcap"].mean()
+lambda_bm = risk_premiums["bm"].mean()
+const = risk_premiums["Intercept"].mean()
+
+stock_means["predicted_ret"] = (
+    const +
+    stock_means["beta"] * lambda_beta + 
+    stock_means["log_mktcap"] * lambda_size + 
+    stock_means["bm"] * lambda_bm
+)
+
+# Plot
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.scatter(stock_means["predicted_ret"], stock_means["ret_excess_lead"], alpha=0.3)
+ax.plot([0, 0.05], [0, 0.05], color='r', linestyle='--') # 45-degree line
+ax.set_xlabel("Predicted Average Return")
+ax.set_ylabel("Realized Average Return")
+ax.set_title("Model Fit: Predicted vs Realized")
+plt.show()
+
+```
+
+The scatter plot compares each stock’s average realized excess return to the return predicted by the estimated risk premia and its characteristics. If the model priced assets well, the points would cluster around the 45 degree line. Instead, the cloud is centered near zero on the horizontal axis, while realized returns vary widely on the vertical axis. The fitted line is nearly flat, indicating that differences in predicted returns explain very little of the variation in realized returns across stocks.
+
+This pattern implies that, over this sample period, the estimated factor premia have weak cross sectional explanatory power at the individual stock level. Such weak fit is common in emerging markets and in short samples, where idiosyncratic volatility, thin trading, and episodic market regimes dominate the cross section of returns. It also reflects the well known fact that Fama MacBeth tests tend to have low power when applied to individual securities rather than diversified portfolios.
+
+### Correlation of Characteristics (Multicollinearity)
+
+In Vietnam, large-cap stocks (high `log_mktcap`) are often the ones with high Book-to-Market ratios (banks/utilities) or specific Betas. If your factors are highly correlated, the Fama-MacBeth coefficients will be unstable and insignificant (low t-stats), even if the factors actually matter.
+
+**Action:** Check the cross-sectional correlation.
+
+```{python}
+# Check correlation of the characteristics
+corr_matrix = data_fm[["beta", "log_mktcap", "bm"]].corr()
+print(corr_matrix)
+
+```
+
+**Interpretation:**
+
+* If correlation > 0.7 (absolute value), the regression struggles to distinguish between the two factors.
+* For example, if `Size` and `Liquidity` are -0.8 correlated, the model cannot tell which one is driving the return, often resulting in both having insignificant t-stats.
