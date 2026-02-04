@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>11&nbsp; Fama-MacBeth Regressions – Tidy Finance in Vietnam</title>
+<title>12&nbsp; Fama-MacBeth Regressions – Tidy Finance in Vietnam</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -170,7 +170,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./13_fama_macbeth.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Fama-MacBeth Regressions</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./13_fama_macbeth.html"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Fama-MacBeth Regressions</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -257,20 +257,26 @@ window.Quarto = {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./09_univariate_portfolio_sort.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Univariate Portfolio Sorts</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./12_fama_french.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./13_fama_macbeth.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Fama-MacBeth Regressions</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Fama-MacBeth Regressions</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./20_conclusion.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -289,23 +295,22 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#the-econometric-framework" id="toc-the-econometric-framework" class="nav-link active" data-scroll-target="#the-econometric-framework"><span class="header-section-number">11.1</span> The Econometric Framework</a>
+  <li><a href="#the-econometric-framework" id="toc-the-econometric-framework" class="nav-link active" data-scroll-target="#the-econometric-framework"><span class="header-section-number">12.1</span> The Econometric Framework</a>
   <ul class="collapse">
-  <li><a href="#intuition-why-not-panel-ols" id="toc-intuition-why-not-panel-ols" class="nav-link" data-scroll-target="#intuition-why-not-panel-ols"><span class="header-section-number">11.1.1</span> Intuition: Why not Panel OLS?</a></li>
-  <li><a href="#mathematical-derivation" id="toc-mathematical-derivation" class="nav-link" data-scroll-target="#mathematical-derivation"><span class="header-section-number">11.1.2</span> Mathematical Derivation</a></li>
+  <li><a href="#intuition-why-not-panel-ols" id="toc-intuition-why-not-panel-ols" class="nav-link" data-scroll-target="#intuition-why-not-panel-ols"><span class="header-section-number">12.1.1</span> Intuition: Why not Panel OLS?</a></li>
+  <li><a href="#mathematical-derivation" id="toc-mathematical-derivation" class="nav-link" data-scroll-target="#mathematical-derivation"><span class="header-section-number">12.1.2</span> Mathematical Derivation</a></li>
   </ul></li>
-  <li><a href="#the-errors-in-variables-eiv-problem" id="toc-the-errors-in-variables-eiv-problem" class="nav-link" data-scroll-target="#the-errors-in-variables-eiv-problem"><span class="header-section-number">11.2</span> The “Errors-in-Variables” (EIV) Problem</a></li>
-  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation"><span class="header-section-number">11.3</span> Data Preparation</a></li>
-  <li><a href="#step-1-cross-sectional-regressions-with-wls" id="toc-step-1-cross-sectional-regressions-with-wls" class="nav-link" data-scroll-target="#step-1-cross-sectional-regressions-with-wls"><span class="header-section-number">11.4</span> Step 1: Cross-Sectional Regressions with WLS</a></li>
-  <li><a href="#step-2-time-series-aggregation-hypothesis-testing" id="toc-step-2-time-series-aggregation-hypothesis-testing" class="nav-link" data-scroll-target="#step-2-time-series-aggregation-hypothesis-testing"><span class="header-section-number">11.5</span> Step 2: Time-Series Aggregation &amp; Hypothesis Testing</a>
+  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation"><span class="header-section-number">12.2</span> Data Preparation</a></li>
+  <li><a href="#step-1-cross-sectional-regressions-with-wls" id="toc-step-1-cross-sectional-regressions-with-wls" class="nav-link" data-scroll-target="#step-1-cross-sectional-regressions-with-wls"><span class="header-section-number">12.3</span> Step 1: Cross-Sectional Regressions with WLS</a></li>
+  <li><a href="#step-2-time-series-aggregation-hypothesis-testing" id="toc-step-2-time-series-aggregation-hypothesis-testing" class="nav-link" data-scroll-target="#step-2-time-series-aggregation-hypothesis-testing"><span class="header-section-number">12.4</span> Step 2: Time-Series Aggregation &amp; Hypothesis Testing</a>
   <ul class="collapse">
-  <li><a href="#visualizing-the-time-varying-risk-premium" id="toc-visualizing-the-time-varying-risk-premium" class="nav-link" data-scroll-target="#visualizing-the-time-varying-risk-premium"><span class="header-section-number">11.5.1</span> Visualizing the Time-Varying Risk Premium</a></li>
+  <li><a href="#visualizing-the-time-varying-risk-premium" id="toc-visualizing-the-time-varying-risk-premium" class="nav-link" data-scroll-target="#visualizing-the-time-varying-risk-premium"><span class="header-section-number">12.4.1</span> Visualizing the Time-Varying Risk Premium</a></li>
   </ul></li>
-  <li><a href="#sanity-checks" id="toc-sanity-checks" class="nav-link" data-scroll-target="#sanity-checks"><span class="header-section-number">11.6</span> Sanity Checks</a>
+  <li><a href="#sanity-checks" id="toc-sanity-checks" class="nav-link" data-scroll-target="#sanity-checks"><span class="header-section-number">12.5</span> Sanity Checks</a>
   <ul class="collapse">
-  <li><a href="#time-series-volatility-check" id="toc-time-series-volatility-check" class="nav-link" data-scroll-target="#time-series-volatility-check"><span class="header-section-number">11.6.1</span> Time-Series Volatility Check</a></li>
-  <li><a href="#the-predicted-vs.-realized-scatter-plot" id="toc-the-predicted-vs.-realized-scatter-plot" class="nav-link" data-scroll-target="#the-predicted-vs.-realized-scatter-plot"><span class="header-section-number">11.6.2</span> The “Predicted vs.&nbsp;Realized” Scatter Plot</a></li>
-  <li><a href="#correlation-of-characteristics-multicollinearity" id="toc-correlation-of-characteristics-multicollinearity" class="nav-link" data-scroll-target="#correlation-of-characteristics-multicollinearity"><span class="header-section-number">11.6.3</span> Correlation of Characteristics (Multicollinearity)</a></li>
+  <li><a href="#time-series-volatility-check" id="toc-time-series-volatility-check" class="nav-link" data-scroll-target="#time-series-volatility-check"><span class="header-section-number">12.5.1</span> Time-Series Volatility Check</a></li>
+  <li><a href="#the-predicted-vs.-realized-scatter-plot" id="toc-the-predicted-vs.-realized-scatter-plot" class="nav-link" data-scroll-target="#the-predicted-vs.-realized-scatter-plot"><span class="header-section-number">12.5.2</span> The “Predicted vs.&nbsp;Realized” Scatter Plot</a></li>
+  <li><a href="#correlation-of-characteristics-multicollinearity" id="toc-correlation-of-characteristics-multicollinearity" class="nav-link" data-scroll-target="#correlation-of-characteristics-multicollinearity"><span class="header-section-number">12.5.3</span> Correlation of Characteristics (Multicollinearity)</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -315,7 +320,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Fama-MacBeth Regressions</span></h1>
+<h1 class="title"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Fama-MacBeth Regressions</span></h1>
 </div>
 
 
@@ -333,33 +338,42 @@ window.Quarto = {
 
 
 <p>In this chapter, we delve into the implementation of the <span class="citation" data-cites="Fama1973">Fama and MacBeth (<a href="references.html#ref-Fama1973" role="doc-biblioref">1973</a>)</span> regression approach, a cornerstone of empirical asset pricing. While portfolio sorts provide a robust, non-parametric view of the relationship between characteristics and returns, they struggle when we need to control for multiple factors simultaneously. For instance, in the Vietnamese stock market (HOSE and HNX), small-cap stocks often exhibit high illiquidity. Does the “Size effect” exist because small stocks are risky, or simply because they are illiquid? Fama-MacBeth (FM) regressions allow us to disentangle these effects in a linear framework.</p>
-<p>We will implement a version of the FM procedure, accounting for: 1. <strong>Weighted Least Squares (WLS):</strong> To prevent micro-cap stocks, which are prevalent and volatile in Vietnam, from dominating the estimates. 2. <strong>Newey-West Adjustments:</strong> To handle the serial correlation often observed in Vietnamese market risk premiums. 3. <strong>Shanken Correction:</strong> To mathematically adjust for the “Errors-in-Variables” bias arising from estimated betas.</p>
-<section id="the-econometric-framework" class="level2" data-number="11.1">
-<h2 data-number="11.1" class="anchored" data-anchor-id="the-econometric-framework"><span class="header-section-number">11.1</span> The Econometric Framework</h2>
+<p>We will implement a version of the FM procedure, accounting for:</p>
+<ol type="1">
+<li><strong>Weighted Least Squares (WLS):</strong> To prevent micro-cap stocks, which are prevalent and volatile in Vietnam, from dominating the estimates.</li>
+<li><strong>Newey-West Adjustments:</strong> To handle the serial correlation often observed in Vietnamese market risk premiums.</li>
+</ol>
+<section id="the-econometric-framework" class="level2" data-number="12.1">
+<h2 data-number="12.1" class="anchored" data-anchor-id="the-econometric-framework"><span class="header-section-number">12.1</span> The Econometric Framework</h2>
 <p>The Fama-MacBeth procedure is essentially a two-step filter that separates the cross-sectional variation in returns from the time-series variation.</p>
-<section id="intuition-why-not-panel-ols" class="level3" data-number="11.1.1">
-<h3 data-number="11.1.1" class="anchored" data-anchor-id="intuition-why-not-panel-ols"><span class="header-section-number">11.1.1</span> Intuition: Why not Panel OLS?</h3>
+<section id="intuition-why-not-panel-ols" class="level3" data-number="12.1.1">
+<h3 data-number="12.1.1" class="anchored" data-anchor-id="intuition-why-not-panel-ols"><span class="header-section-number">12.1.1</span> Intuition: Why not Panel OLS?</h3>
 <p>A naive approach would be to pool all data (<span class="math inline">\(N\)</span> stocks <span class="math inline">\(\times\)</span> <span class="math inline">\(T\)</span> months) and run a single Ordinary Least Squares (OLS) regression:</p>
 <p><span class="math display">\[
 r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1}
 \]</span></p>
 <p>However, this assumes that the error terms <span class="math inline">\(\epsilon_{i,t+1}\)</span> are independent across firms. In reality, stock returns are highly cross-sectionally correlated (if the VN-Index crashes, most stocks fall together). A pooled OLS would underestimate the standard errors, leading to “false positive” discoveries of risk factors. Fama-MacBeth solves this by running <span class="math inline">\(T\)</span> separate cross-sectional regressions, effectively treating each month as a single independent observation of the risk premium.</p>
 </section>
-<section id="mathematical-derivation" class="level3" data-number="11.1.2">
-<h3 data-number="11.1.2" class="anchored" data-anchor-id="mathematical-derivation"><span class="header-section-number">11.1.2</span> Mathematical Derivation</h3>
-<section id="step-1-cross-sectional-regressions" class="level4" data-number="11.1.2.1">
-<h4 data-number="11.1.2.1" class="anchored" data-anchor-id="step-1-cross-sectional-regressions"><span class="header-section-number">11.1.2.1</span> Step 1: Cross-Sectional Regressions</h4>
+<section id="mathematical-derivation" class="level3" data-number="12.1.2">
+<h3 data-number="12.1.2" class="anchored" data-anchor-id="mathematical-derivation"><span class="header-section-number">12.1.2</span> Mathematical Derivation</h3>
+<section id="step-1-cross-sectional-regressions" class="level4" data-number="12.1.2.1">
+<h4 data-number="12.1.2.1" class="anchored" data-anchor-id="step-1-cross-sectional-regressions"><span class="header-section-number">12.1.2.1</span> Step 1: Cross-Sectional Regressions</h4>
 <p>For each month <span class="math inline">\(t\)</span>, we estimate the premium <span class="math inline">\(\lambda_{k,t}\)</span> for <span class="math inline">\(K\)</span> factors. Let <span class="math inline">\(r_{i,t+1}\)</span> be the excess return of asset <span class="math inline">\(i\)</span> at time <span class="math inline">\(t+1\)</span>. Let <span class="math inline">\(\boldsymbol{\beta}_{i,t}\)</span> be a vector of <span class="math inline">\(K\)</span> characteristics (e.g., Market Beta, Book-to-Market, Size) known at time <span class="math inline">\(t\)</span>.</p>
 <p>The model for a specific month <span class="math inline">\(t\)</span> is: <span class="math display">\[
 \mathbf{r}_{t+1} = \mathbf{X}_t \boldsymbol{\lambda}_{t+1} + \boldsymbol{\alpha}_{t+1} + \boldsymbol{\epsilon}_{t+1}
 \]</span></p>
-<p>Where: * <span class="math inline">\(\mathbf{r}_{t+1}\)</span> is an <span class="math inline">\(N \times 1\)</span> vector of returns. * <span class="math inline">\(\mathbf{X}_t\)</span> is an <span class="math inline">\(N \times (K+1)\)</span> matrix of factor exposures (including a column of ones for the intercept). * <span class="math inline">\(\boldsymbol{\lambda}_{t+1}\)</span> is the vector of risk premiums realized in month <span class="math inline">\(t+1\)</span>.</p>
+<p>Where:</p>
+<ul>
+<li><span class="math inline">\(\mathbf{r}_{t+1}\)</span> is an <span class="math inline">\(N \times 1\)</span> vector of returns.</li>
+<li><span class="math inline">\(\mathbf{X}_t\)</span> is an <span class="math inline">\(N \times (K+1)\)</span> matrix of factor exposures (including a column of ones for the intercept).</li>
+<li><span class="math inline">\(\boldsymbol{\lambda}_{t+1}\)</span> is the vector of risk premiums realized in month <span class="math inline">\(t+1\)</span>.</li>
+</ul>
 <p>To use <strong>Weighted Least Squares (WLS)</strong>, We define a weighting matrix <span class="math inline">\(\mathbf{W}_t\)</span> (typically diagonal with market capitalizations). The estimator for month <span class="math inline">\(t\)</span> is: <span class="math display">\[
 \hat{\boldsymbol{\lambda}}_{t+1} = (\mathbf{X}_t^\top \mathbf{W}_t \mathbf{X}_t)^{-1} \mathbf{X}_t^\top \mathbf{W}_t \mathbf{r}_{t+1}
 \]</span></p>
 </section>
-<section id="step-2-time-series-aggregation" class="level4" data-number="11.1.2.2">
-<h4 data-number="11.1.2.2" class="anchored" data-anchor-id="step-2-time-series-aggregation"><span class="header-section-number">11.1.2.2</span> Step 2: Time-Series Aggregation</h4>
+<section id="step-2-time-series-aggregation" class="level4" data-number="12.1.2.2">
+<h4 data-number="12.1.2.2" class="anchored" data-anchor-id="step-2-time-series-aggregation"><span class="header-section-number">12.1.2.2</span> Step 2: Time-Series Aggregation</h4>
 <p>We now have a time-series of <span class="math inline">\(T\)</span> estimates: <span class="math inline">\(\hat{\lambda}_1, \hat{\lambda}_2, \dots, \hat{\lambda}_T\)</span>. The final estimate of the risk premium is the time-series average: <span class="math display">\[
 \hat{\lambda}_k = \frac{1}{T} \sum_{t=1}^T \hat{\lambda}_{k,t}
 \]</span></p>
@@ -369,18 +383,10 @@ r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1}
 </section>
 </section>
 </section>
-<section id="the-errors-in-variables-eiv-problem" class="level2" data-number="11.2">
-<h2 data-number="11.2" class="anchored" data-anchor-id="the-errors-in-variables-eiv-problem"><span class="header-section-number">11.2</span> The “Errors-in-Variables” (EIV) Problem</h2>
-<p>A critical subtlety often ignored in basic applications is that the betas used in Step 1 are not true values, they are estimates from a prior rolling window (Step 0). This measurement error biases the second-pass <span class="math inline">\(\lambda\)</span> estimates (typically downwards) and understates the standard errors.</p>
-<p><span class="citation" data-cites="Shanken1992">Shanken (<a href="references.html#ref-Shanken1992" role="doc-biblioref">1992</a>)</span> provides a correction factor <span class="math inline">\(c\)</span>. If we use standard portfolio betas, the variance of the estimator must be inflated: <span class="math display">\[
-\sigma^2_{Shanken}(\hat{\lambda}) = \sigma^2_{FM}(\hat{\lambda}) \times (1 + \hat{\lambda}^\top \Sigma_f^{-1} \hat{\lambda})
-\]</span></p>
-<p>Where <span class="math inline">\(\Sigma_f\)</span> is the covariance matrix of the factors. This correction is particularly relevant for the Vietnamese market where factor volatilities are high, making the term <span class="math inline">\((1 + \dots)\)</span> significantly larger than 1.</p>
-</section>
-<section id="data-preparation" class="level2" data-number="11.3">
-<h2 data-number="11.3" class="anchored" data-anchor-id="data-preparation"><span class="header-section-number">11.3</span> Data Preparation</h2>
+<section id="data-preparation" class="level2" data-number="12.2">
+<h2 data-number="12.2" class="anchored" data-anchor-id="data-preparation"><span class="header-section-number">12.2</span> Data Preparation</h2>
 <p>We utilize data from our local SQLite database. In Vietnam, the fiscal year typically ends in December, and audited reports are required by April. To ensure no look-ahead bias, we lag accounting data (Book Equity) to match returns starting in July (a 6-month conservative lag, similar to Fama-French, but adapted for Vietnamese reporting delays).</p>
-<div id="6eee5cb2" class="cell" data-execution_count="1">
+<div id="fa437833" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sqlite3</span>
@@ -407,7 +413,7 @@ r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1}
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Load Rolling Market Betas (Pre-calculated in Chapter 'Beta Estimation')</span></span>
 <span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>beta_monthly <span class="op">=</span> pd.read_sql_query(</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  sql<span class="op">=</span><span class="st">"SELECT symbol, date, beta FROM beta_monthly WHERE return_type = 'monthly'"</span>,</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  sql<span class="op">=</span><span class="st">"SELECT symbol, date, beta FROM beta_monthly"</span>,</span>
 <span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  con<span class="op">=</span>tidy_finance,</span>
 <span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  parse_dates<span class="op">=</span>{<span class="st">"date"</span>}</span>
 <span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -418,7 +424,7 @@ r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1}
 <li><strong>Size (ln(ME)):</strong> The natural log of market capitalization.</li>
 <li><strong>Value (BM):</strong> The ratio of Book Equity to Market Equity.</li>
 </ol>
-<div id="41001cd8" class="cell" data-execution_count="2">
+<div id="62519682" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare Characteristics</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>characteristics <span class="op">=</span> (</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    comp_vn</span>
@@ -458,35 +464,35 @@ r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1}
 <th data-quarto-table-cell-role="th">8729</th>
 <td>VTV</td>
 <td>7.034945e+08</td>
-<td>0.689815</td>
+<td>0.847809</td>
 <td>2017-06-30</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">8732</th>
 <td>MTG</td>
 <td>2.670306e+09</td>
-<td>0.885717</td>
+<td>1.140066</td>
 <td>2017-06-30</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">8739</th>
 <td>MKV</td>
 <td>6.505031e+08</td>
-<td>0.015128</td>
+<td>-0.448319</td>
 <td>2017-06-30</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">8742</th>
-<td>MCP</td>
-<td>6.657350e+08</td>
-<td>0.047316</td>
+<th data-quarto-table-cell-role="th">8740</th>
+<td>MIC</td>
+<td>1.243127e+09</td>
+<td>0.772140</td>
 <td>2017-06-30</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">8747</th>
-<td>MTH</td>
-<td>9.690267e+08</td>
-<td>0.099839</td>
+<th data-quarto-table-cell-role="th">8742</th>
+<td>MCP</td>
+<td>6.657350e+08</td>
+<td>0.348139</td>
 <td>2017-06-30</td>
 </tr>
 </tbody>
@@ -495,7 +501,7 @@ r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1}
 </div>
 </div>
 </div>
-<div id="64b08f15" class="cell" data-execution_count="3">
+<div id="3e7a08f4" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge back to monthly return panel</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>data_fm <span class="op">=</span> (prices_monthly</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  .merge(characteristics, </span>
@@ -530,20 +536,20 @@ r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1}
 211    AAA 2021-06-30    0.275355  5423.280296  4241.283308  1.456989e+09   
 
          beta sorting_date  log_mktcap  ret_excess_lead  
-163  1.084724   2017-06-30    7.639380        -0.051090  
-175  0.757288   2018-06-30    7.922416        -0.095926  
-187  0.479600   2019-06-30    8.052462        -0.027856  
-199  0.840952   2020-06-30    7.745544        -0.098769  
-211  0.932948   2021-06-30    8.598456        -0.175128  
-Data ready: 5,066 observations from 2017-06-30 to 2023-06-30</code></pre>
+163  1.479060   2017-06-30    7.639380        -0.051090  
+175  1.090411   2018-06-30    7.922416        -0.095926  
+187  1.099956   2019-06-30    8.052462        -0.027856  
+199  0.954144   2020-06-30    7.745544        -0.098769  
+211  1.245004   2021-06-30    8.598456        -0.175128  
+Data ready: 5,075 observations from 2017-06-30 to 2023-06-30</code></pre>
 </div>
 </div>
 </section>
-<section id="step-1-cross-sectional-regressions-with-wls" class="level2" data-number="11.4">
-<h2 data-number="11.4" class="anchored" data-anchor-id="step-1-cross-sectional-regressions-with-wls"><span class="header-section-number">11.4</span> Step 1: Cross-Sectional Regressions with WLS</h2>
+<section id="step-1-cross-sectional-regressions-with-wls" class="level2" data-number="12.3">
+<h2 data-number="12.3" class="anchored" data-anchor-id="step-1-cross-sectional-regressions-with-wls"><span class="header-section-number">12.3</span> Step 1: Cross-Sectional Regressions with WLS</h2>
 <p><span class="citation" data-cites="Hou2020">Hou, Xue, and Zhang (<a href="references.html#ref-Hou2020" role="doc-biblioref">2020</a>)</span> argue that micro-cap stocks distorts inference because they have high transaction costs and idiosyncratic volatility. In Vietnam, this is exacerbated by “penny stock” speculation.</p>
 <p>We implement <strong>Weighted Least Squares (WLS)</strong> where weights are the market capitalization of the prior month. This tests if the factors are priced in the <em>investable</em> universe, not just the equal-weighted average of tiny stocks.</p>
-<div id="97b40749" class="cell" data-execution_count="4">
+<div id="bb634f49" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_cross_section(df):</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Standardize inputs for numerical stability</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Note: We do NOT standardize the dependent variable (returns)</span></span>
@@ -571,19 +577,19 @@ Data ready: 5,066 observations from 2017-06-30 to 2023-06-30</code></pre>
 <span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(risk_premiums.head())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>        date  Intercept      beta  log_mktcap            bm
-0 2017-06-30  -0.097219 -0.026392    0.007891  2.497397e-11
-1 2018-06-30  -0.013960  0.011414   -0.000506  9.531488e-12
-2 2019-06-30  -0.088764  0.027848    0.008125 -1.061931e-11
-3 2020-06-30   0.007088 -0.086277    0.001930 -1.845476e-11
-4 2021-06-30   0.082599 -0.001406   -0.008388 -5.346800e-11</code></pre>
+0 2017-06-30  -0.089116 -0.063799    0.010284  2.897813e-11
+1 2018-06-30  -0.023221 -0.008252    0.001890  1.377518e-11
+2 2019-06-30  -0.079373  0.035622    0.006224 -8.139910e-12
+3 2020-06-30  -0.031213 -0.114968    0.008999 -2.306768e-11
+4 2021-06-30   0.081397 -0.011407   -0.007330 -5.211290e-11</code></pre>
 </div>
 </div>
 </section>
-<section id="step-2-time-series-aggregation-hypothesis-testing" class="level2" data-number="11.5">
-<h2 data-number="11.5" class="anchored" data-anchor-id="step-2-time-series-aggregation-hypothesis-testing"><span class="header-section-number">11.5</span> Step 2: Time-Series Aggregation &amp; Hypothesis Testing</h2>
+<section id="step-2-time-series-aggregation-hypothesis-testing" class="level2" data-number="12.4">
+<h2 data-number="12.4" class="anchored" data-anchor-id="step-2-time-series-aggregation-hypothesis-testing"><span class="header-section-number">12.4</span> Step 2: Time-Series Aggregation &amp; Hypothesis Testing</h2>
 <p>We now possess the time-series of risk premiums. We calculate the arithmetic mean and the -statistics.</p>
 <p>Crucially, we use <strong>Newey-West (HAC)</strong> standard errors. Risk premiums in Vietnam often exhibit autocorrelation (momentum in factor performance). A simple standard error formula would be invalid.</p>
-<div id="3ccf940e" class="cell" data-execution_count="5">
+<div id="7d00d465" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calculate_fama_macbeth_stats(df, lags<span class="op">=</span><span class="dv">6</span>):</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    summary <span class="op">=</span> []</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    </span>
@@ -617,14 +623,14 @@ Data ready: 5,066 observations from 2017-06-30 to 2023-06-30</code></pre>
 <span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(price_of_risk.<span class="bu">round</span>(<span class="dv">4</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>       Factor  Premium (%)  Std Error  t-statistic Significance
-0   Intercept      -1.1205     2.0597      -0.5440             
-1        beta      -0.7404     0.6101      -1.2136             
-2  log_mktcap       0.0676     0.1853       0.3651             
-3          bm      -0.0000     0.0000      -0.0751             </code></pre>
+0   Intercept      -1.8174     1.9117      -0.9507             
+1        beta      -1.7859     1.0407      -1.7161             
+2  log_mktcap       0.2347     0.2048       1.1457             
+3          bm      -0.0000     0.0000      -0.0928             </code></pre>
 </div>
 </div>
-<section id="visualizing-the-time-varying-risk-premium" class="level3" data-number="11.5.1">
-<h3 data-number="11.5.1" class="anchored" data-anchor-id="visualizing-the-time-varying-risk-premium"><span class="header-section-number">11.5.1</span> Visualizing the Time-Varying Risk Premium</h3>
+<section id="visualizing-the-time-varying-risk-premium" class="level3" data-number="12.4.1">
+<h3 data-number="12.4.1" class="anchored" data-anchor-id="visualizing-the-time-varying-risk-premium"><span class="header-section-number">12.4.1</span> Visualizing the Time-Varying Risk Premium</h3>
 <p>One major advantage of the FM approach is that we can inspect the volatility of the risk premiums over time. In Vietnam, we expect the “Size” premium to be highly volatile during periods of retail liquidity injection (e.g., 2020-2021).</p>
 <div id="cell-fig-cumulative-premiums" class="cell" data-execution_count="6">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -648,10 +654,10 @@ Data ready: 5,066 observations from 2017-06-30 to 2023-06-30</code></pre>
 <div id="fig-cumulative-premiums" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A line plot displaying the time series of cumulative risk premiums for three factors: beta, log_mktcap, and bm in the Vietnamese market. The x-axis represents time, and the y-axis represents the cumulative coefficient returns.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-cumulative-premiums-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="13_fama_macbeth_files/figure-html/fig-cumulative-premiums-output-1.png" alt="A line plot displaying the time series of cumulative risk premiums for three factors: beta, log_mktcap, and bm in the Vietnamese market. The x-axis represents time, and the y-axis represents the cumulative coefficient returns." width="849" height="526" class="figure-img">
+<img src="13_fama_macbeth_files/figure-html/fig-cumulative-premiums-output-1.png" alt="A line plot displaying the time series of cumulative risk premiums for three factors: beta, log_mktcap, and bm in the Vietnamese market. The x-axis represents time, and the y-axis represents the cumulative coefficient returns." width="857" height="526" class="figure-img">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cumulative-premiums-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;11.1: Cumulative Risk Premiums in Vietnam.
+Figure&nbsp;12.1: Cumulative Risk Premiums in Vietnam.
 </figcaption>
 </figure>
 </div>
@@ -662,18 +668,18 @@ Figure&nbsp;11.1: Cumulative Risk Premiums in Vietnam.
 <li><strong>Size (Log Mktcap):</strong> A negative coefficient confirms the “Size Effect”—smaller firms have higher expected returns. However, using WLS often weakens this result compared to OLS, suggesting the size premium is concentrated in micro-caps.</li>
 <li><strong>Value (BM):</strong> A positive coefficient confirms the Value premium. In Vietnam, value stocks (high B/M) often outperform growth stocks, particularly in the manufacturing and banking sectors.</li>
 </ol>
-<p>Figure <a href="#fig-cumulative-premiums" class="quarto-xref">Figure&nbsp;<span>11.1</span></a> plots the cumulative sum of the monthly Fama MacBeth risk premium estimates for beta, size, and value. Because these lines cumulate estimated cross sectional prices of risk rather than actual portfolio returns, the figure should be interpreted as showing the time variation and persistence of estimated premia, not investable performance.</p>
+<p><a href="#fig-cumulative-premiums" class="quarto-xref">Figure&nbsp;<span>12.1</span></a> plots the cumulative sum of the monthly Fama MacBeth risk premium estimates for beta, size, and value. Because these lines cumulate estimated cross sectional prices of risk rather than actual portfolio returns, the figure should be interpreted as showing the time variation and persistence of estimated premia, not investable performance.</p>
 <p>The beta premium displays a clear regime shift around 2020, with a sharp decline that only partially reverses afterward. This pattern suggests that the pricing of systematic risk in Vietnam is unstable over short samples and may be heavily influenced by episodic market conditions such as the post COVID retail trading boom. The size premium is comparatively smoother but small in magnitude, indicating only weak and time varying evidence that firm size is priced in the cross section during this period. The value premium remains close to zero throughout, implying little consistent cross sectional reward to high book to market firms in this sample window.</p>
 <p>Overall, the figure highlights that estimated risk premia in the Vietnamese market are highly time varying and sensitive to specific macro and market regimes, reinforcing the need for caution when drawing conclusions from short samples.</p>
 </section>
 </section>
-<section id="sanity-checks" class="level2" data-number="11.6">
-<h2 data-number="11.6" class="anchored" data-anchor-id="sanity-checks"><span class="header-section-number">11.6</span> Sanity Checks</h2>
-<section id="time-series-volatility-check" class="level3" data-number="11.6.1">
-<h3 data-number="11.6.1" class="anchored" data-anchor-id="time-series-volatility-check"><span class="header-section-number">11.6.1</span> Time-Series Volatility Check</h3>
+<section id="sanity-checks" class="level2" data-number="12.5">
+<h2 data-number="12.5" class="anchored" data-anchor-id="sanity-checks"><span class="header-section-number">12.5</span> Sanity Checks</h2>
+<section id="time-series-volatility-check" class="level3" data-number="12.5.1">
+<h3 data-number="12.5.1" class="anchored" data-anchor-id="time-series-volatility-check"><span class="header-section-number">12.5.1</span> Time-Series Volatility Check</h3>
 <p>Fama-MacBeth relies on the assumption that the risk premium varies over time. If your <code>bm</code> premium is truly near zero every month, the method fails.</p>
 <p><strong>Action:</strong> Plot the time series of the estimated coefficients . You want to see “noise” around a mean. If you see a flat line or a single massive spike, your data is corrupted.</p>
-<div id="b6ffa37f" class="cell" data-execution_count="7">
+<div id="d4524192" class="cell" data-execution_count="7">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the time series of the BM risk premium</span></span>
@@ -691,8 +697,8 @@ Figure&nbsp;11.1: Cumulative Risk Premiums in Vietnam.
 </div>
 </div>
 </section>
-<section id="the-predicted-vs.-realized-scatter-plot" class="level3" data-number="11.6.2">
-<h3 data-number="11.6.2" class="anchored" data-anchor-id="the-predicted-vs.-realized-scatter-plot"><span class="header-section-number">11.6.2</span> The “Predicted vs.&nbsp;Realized” Scatter Plot</h3>
+<section id="the-predicted-vs.-realized-scatter-plot" class="level3" data-number="12.5.2">
+<h3 data-number="12.5.2" class="anchored" data-anchor-id="the-predicted-vs.-realized-scatter-plot"><span class="header-section-number">12.5.2</span> The “Predicted vs.&nbsp;Realized” Scatter Plot</h3>
 <p>The ultimate test of an asset pricing model is whether it can price the test assets. If you group your stocks into portfolios (e.g., 25 portfolios sorted by Size and Beta), the model’s predicted return should match the actual average return.</p>
 <p><strong>Action:</strong> Compare the model’s prediction against reality.</p>
 <ol type="1">
@@ -700,33 +706,32 @@ Figure&nbsp;11.1: Cumulative Risk Premiums in Vietnam.
 <li>Calculate the predicted return: .</li>
 <li>Scatter plot them. They should align along the 45-degree line.</li>
 </ol>
-<div id="c94c3f9f" class="cell" data-execution_count="8">
+<div id="56c34afe" class="cell" data-execution_count="8">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate average characteristics for each stock</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>stock_means <span class="op">=</span> data_fm.groupby(<span class="st">"symbol"</span>)[[<span class="st">"ret_excess_lead"</span>, <span class="st">"beta"</span>, <span class="st">"log_mktcap"</span>, <span class="st">"bm"</span>]].mean()</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate Predicted Return using your Shanken results</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Note: Ensure you grab the 'Premium (%)' divided by 100 if it was scaled</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Or use the raw mean from risk_premiums</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>lambda_beta <span class="op">=</span> risk_premiums[<span class="st">"beta"</span>].mean()</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>lambda_size <span class="op">=</span> risk_premiums[<span class="st">"log_mktcap"</span>].mean()</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>lambda_bm <span class="op">=</span> risk_premiums[<span class="st">"bm"</span>].mean()</span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>const <span class="op">=</span> risk_premiums[<span class="st">"Intercept"</span>].mean()</span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>stock_means[<span class="st">"predicted_ret"</span>] <span class="op">=</span> (</span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    const <span class="op">+</span></span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    stock_means[<span class="st">"beta"</span>] <span class="op">*</span> lambda_beta <span class="op">+</span> </span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    stock_means[<span class="st">"log_mktcap"</span>] <span class="op">*</span> lambda_size <span class="op">+</span> </span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    stock_means[<span class="st">"bm"</span>] <span class="op">*</span> lambda_bm</span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
-<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">8</span>))</span>
-<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>ax.scatter(stock_means[<span class="st">"predicted_ret"</span>], stock_means[<span class="st">"ret_excess_lead"</span>], alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
-<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>ax.plot([<span class="dv">0</span>, <span class="fl">0.05</span>], [<span class="dv">0</span>, <span class="fl">0.05</span>], color<span class="op">=</span><span class="st">'r'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>) <span class="co"># 45-degree line</span></span>
-<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">"Predicted Average Return"</span>)</span>
-<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"Realized Average Return"</span>)</span>
-<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">"Model Fit: Predicted vs Realized"</span>)</span>
-<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Note: Ensure you grab the 'Premium (%)' divided by 100 if it was scaled</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Or use the raw mean from risk_premiums</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>lambda_beta <span class="op">=</span> risk_premiums[<span class="st">"beta"</span>].mean()</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>lambda_size <span class="op">=</span> risk_premiums[<span class="st">"log_mktcap"</span>].mean()</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>lambda_bm <span class="op">=</span> risk_premiums[<span class="st">"bm"</span>].mean()</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>const <span class="op">=</span> risk_premiums[<span class="st">"Intercept"</span>].mean()</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>stock_means[<span class="st">"predicted_ret"</span>] <span class="op">=</span> (</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    const <span class="op">+</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    stock_means[<span class="st">"beta"</span>] <span class="op">*</span> lambda_beta <span class="op">+</span> </span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    stock_means[<span class="st">"log_mktcap"</span>] <span class="op">*</span> lambda_size <span class="op">+</span> </span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    stock_means[<span class="st">"bm"</span>] <span class="op">*</span> lambda_bm</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">8</span>))</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>ax.scatter(stock_means[<span class="st">"predicted_ret"</span>], stock_means[<span class="st">"ret_excess_lead"</span>], alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>ax.plot([<span class="dv">0</span>, <span class="fl">0.05</span>], [<span class="dv">0</span>, <span class="fl">0.05</span>], color<span class="op">=</span><span class="st">'r'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>) <span class="co"># 45-degree line</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">"Predicted Average Return"</span>)</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"Realized Average Return"</span>)</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">"Model Fit: Predicted vs Realized"</span>)</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -738,19 +743,19 @@ Figure&nbsp;11.1: Cumulative Risk Premiums in Vietnam.
 <p>The scatter plot compares each stock’s average realized excess return to the return predicted by the estimated risk premia and its characteristics. If the model priced assets well, the points would cluster around the 45 degree line. Instead, the cloud is centered near zero on the horizontal axis, while realized returns vary widely on the vertical axis. The fitted line is nearly flat, indicating that differences in predicted returns explain very little of the variation in realized returns across stocks.</p>
 <p>This pattern implies that, over this sample period, the estimated factor premia have weak cross sectional explanatory power at the individual stock level. Such weak fit is common in emerging markets and in short samples, where idiosyncratic volatility, thin trading, and episodic market regimes dominate the cross section of returns. It also reflects the well known fact that Fama MacBeth tests tend to have low power when applied to individual securities rather than diversified portfolios.</p>
 </section>
-<section id="correlation-of-characteristics-multicollinearity" class="level3" data-number="11.6.3">
-<h3 data-number="11.6.3" class="anchored" data-anchor-id="correlation-of-characteristics-multicollinearity"><span class="header-section-number">11.6.3</span> Correlation of Characteristics (Multicollinearity)</h3>
+<section id="correlation-of-characteristics-multicollinearity" class="level3" data-number="12.5.3">
+<h3 data-number="12.5.3" class="anchored" data-anchor-id="correlation-of-characteristics-multicollinearity"><span class="header-section-number">12.5.3</span> Correlation of Characteristics (Multicollinearity)</h3>
 <p>In Vietnam, large-cap stocks (high <code>log_mktcap</code>) are often the ones with high Book-to-Market ratios (banks/utilities) or specific Betas. If your factors are highly correlated, the Fama-MacBeth coefficients will be unstable and insignificant (low t-stats), even if the factors actually matter.</p>
 <p><strong>Action:</strong> Check the cross-sectional correlation.</p>
-<div id="399a5ee8" class="cell" data-execution_count="9">
+<div id="7bacac48" class="cell" data-execution_count="9">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check correlation of the characteristics</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>corr_matrix <span class="op">=</span> data_fm[[<span class="st">"beta"</span>, <span class="st">"log_mktcap"</span>, <span class="st">"bm"</span>]].corr()</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(corr_matrix)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                beta  log_mktcap        bm
-beta        1.000000    0.283778 -0.009795
-log_mktcap  0.283778    1.000000 -0.203279
-bm         -0.009795   -0.203279  1.000000</code></pre>
+beta        1.000000    0.392776 -0.033748
+log_mktcap  0.392776    1.000000 -0.203307
+bm         -0.033748   -0.203307  1.000000</code></pre>
 </div>
 </div>
 <p><strong>Interpretation:</strong></p>
@@ -766,9 +771,6 @@ Fama, Eugene F., and James D. MacBeth. 1973. <span>“<span class="nocase">Risk,
 </div>
 <div id="ref-Hou2020" class="csl-entry" role="listitem">
 Hou, Kewei, Chen Xue, and Lu Zhang. 2020. <span>“<span class="nocase">Replicating anomalies</span>.”</span> <em><span>Review of Financial Studies</span></em> 33 (5): 2019–2133. <a href="https://doi.org/10.1093/rfs/hhy131">https://doi.org/10.1093/rfs/hhy131</a>.
-</div>
-<div id="ref-Shanken1992" class="csl-entry" role="listitem">
-Shanken, Jay. 1992. <span>“<span class="nocase">On the estimation of beta-pricing models</span>.”</span> <em><span>Review of Financial Studies</span></em> 5 (1): 1–33. <a href="https://doi.org/10.1093/rfs/5.1.1">https://doi.org/10.1093/rfs/5.1.1</a>.
 </div>
 </div>
 </section>
@@ -1178,12 +1180,12 @@ Shanken, Jay. 1992. <span>“<span class="nocase">On the estimation of beta-pric
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
       <a href="./12_fama_french.html" class="pagination-link" aria-label="Fama-French Factors">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span>
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
       <a href="./20_conclusion.html" class="pagination-link" aria-label="Conclusion">
-        <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Conclusion</span></span> <i class="bi bi-arrow-right-short"></i>
+        <span class="nav-page-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Conclusion</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

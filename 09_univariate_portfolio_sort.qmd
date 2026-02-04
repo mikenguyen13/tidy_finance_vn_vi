@@ -11,9 +11,9 @@ execute:
   message: false
 ---
 
-<!-- In this chapter, we dive into portfolio sorts, one of the most widely used statistical methodologies in empirical asset pricing [e.g., @BaliEngleMurray2016]. The key application of portfolio sorts is to examine whether one or more variables can predict future excess returns. In general, the idea is to sort individual stocks into portfolios, where the stocks within each portfolio are similar with respect to a sorting variable, such as firm size. The different portfolios then represent well-diversified investments that differ in the level of the sorting variable. You can then attribute the differences in the return distribution to the impact of the sorting variable. We start by introducing univariate portfolio sorts (which sort based on only one characteristic) and tackle bivariate sorting in [Value and Bivariate Sorts](value-and-bivariate-sorts.qmd). 
+In this chapter, we dive into portfolio sorts, one of the most widely used statistical methodologies in empirical asset pricing [e.g., @BaliEngleMurray2016]. The key application of portfolio sorts is to examine whether one or more variables can predict future excess returns. In general, the idea is to sort individual stocks into portfolios, where the stocks within each portfolio are similar with respect to a sorting variable, such as firm size. The different portfolios then represent well-diversified investments that differ in the level of the sorting variable. You can then attribute the differences in the return distribution to the impact of the sorting variable. We start by introducing univariate portfolio sorts (which sort based on only one characteristic) and tackle bivariate sorting in [Value and Bivariate Sorts](11_value_bivariate.qmd). 
 
-A univariate portfolio sort considers only one sorting variable $x_{i,t-1}$.\index{Portfolio sorts!Univariate} Here, $i$ denotes the stock and $t-1$ indicates that the characteristic is observable by investors at time $t$. The objective is to assess the cross-sectional relation between $x_{i,t-1}$ and, typically, stock excess returns $r_{i,t}$ at time $t$ as the outcome variable. To illustrate how portfolio sorts work, we use estimates for market betas from the previous chapter as our sorting variable. -->
+A univariate portfolio sort considers only one sorting variable $x_{i,t-1}$. Here, $i$ denotes the stock and $t-1$ indicates that the characteristic is observable by investors at time $t$. The objective is to assess the cross-sectional relation between $x_{i,t-1}$ and, typically, stock excess returns $r_{i,t}$ at time $t$ as the outcome variable. To illustrate how portfolio sorts work, we use estimates for market betas from the previous chapter as our sorting variable.
 
 ```{python}
 import pandas as pd
@@ -26,17 +26,15 @@ from mizani.formatters import percent_format
 from regtabletotext import prettify_result
 ```
 
-
-
 ## Data Preparation
 
-We start with loading the required data from our SQLite database introduced in [Accessing and Managing Financial Data](accessing-and-managing-financial-data.qmd) and [WRDS, CRSP, and Compustat](wrds-crsp-and-compustat.qmd). In particular, we use the monthly CRSP sample as our asset universe.\index{Data!CRSP} Once we form our portfolios, we use the Fama-French market factor returns to compute the risk-adjusted performance (i.e., alpha).\index{Data!Fama-French factors} `beta` is the dataframe with market betas computed in the previous chapter.\index{Beta}
+We start with loading the required data from our SQLite database introduced in [Accessing and Managing Financial Data](06_accessing_and_managing_financial_data.qmd) and [DataCore Data](07_datacore_data.qmd). In particular, we use the monthly stock price data as our asset universe. Once we form our portfolios, we use the market factor returns to compute the risk-adjusted performance (i.e., alpha). `beta` is the dataframe with market betas computed in the previous chapter.
 
 ```{python}
 tidy_finance = sqlite3.connect(database="data/tidy_finance_python.sqlite")
 
 prices_monthly = (pd.read_sql_query(
-    sql="SELECT permno, date, ret_excess, mktcap_lag FROM prices_monthly",
+    sql="SELECT symbol, date, ret_excess, mktcap_lag FROM prices_monthly",
     con=tidy_finance,
     parse_dates={"date"})
 )
@@ -47,8 +45,8 @@ factors_ff3_monthly = pd.read_sql_query(
   parse_dates={"date"}
 )
 
-beta_monthly = pd.read_sql_query(
-  sql="SELECT permno, date, beta_monthly FROM beta WHERE return_type = 'monthly'",
+beta = pd.read_sql_query(
+  sql="SELECT symbol, date, beta FROM beta_monthly",
   con=tidy_finance,
   parse_dates={"date"}
 )
@@ -56,41 +54,46 @@ beta_monthly = pd.read_sql_query(
 
 ## Sorting by Market Beta
 
-Next, we merge our sorting variable with the return data. We use the one-month *lagged* betas as a sorting variable to ensure that the sorts rely only on information available when we create the portfolios. To lag stock beta by one month, we add one month to the current date and join the resulting information with our return data. This procedure ensures that month $t$ information is available in month $t+1$. You may be tempted to simply use a call such as `prices_monthly['beta_lag'] = prices_monthly.groupby('permno')['beta'].shift(1)` instead. This procedure, however, does not work correctly if there are implicit missing values in the time series.
+Next, we merge our sorting variable with the return data. We use the one-month *lagged* betas as a sorting variable to ensure that the sorts rely only on information available when we create the portfolios. To lag stock beta by one month, we add one month to the current date and join the resulting information with our return data. This procedure ensures that month $t$ information is available in month $t+1$. You may be tempted to simply use a call such as `prices_monthly['beta_lag'] = prices_monthly.groupby('symbol')['beta'].shift(1)` instead. This procedure, however, does not work correctly if there are implicit missing values in the time series.
 
 ```{python}
 beta_lag = (beta
   .assign(date=lambda x: x["date"]+pd.DateOffset(months=1))
-  .get(["permno", "date", "beta"])
+  .get(["symbol", "date", "beta"])
   .rename(columns={"beta": "beta_lag"})
   .dropna()
 )
 
 data_for_sorts = (prices_monthly
-  .merge(beta_lag, how="inner", on=["permno", "date"])
+  .merge(beta_lag, how="inner", on=["symbol", "date"])
+  .dropna()
 )
 ```
 
-The first step to conduct portfolio sorts is to calculate periodic breakpoints that you can use to group the stocks into portfolios.\index{Breakpoints} For simplicity, we start with the median lagged market beta as the single breakpoint. We then compute the value-weighted returns for each of the two resulting portfolios, which means that the lagged market capitalization determines the weight in `np.average()`.
+The first step to conduct portfolio sorts is to calculate periodic breakpoints that you can use to group the stocks into portfolios. For simplicity, we start with the median lagged market beta as the single breakpoint. We then compute the value-weighted returns for each of the two resulting portfolios, which means that the lagged market capitalization determines the weight in `np.average()`.
 
 ```{python}
-beta_portfolios = (data_for_sorts
-  .groupby("date")
-  .apply(lambda x: (x.assign(
-      portfolio=pd.qcut(
-        x["beta_lag"], q=[0, 0.5, 1], labels=["low", "high"]))
-    )
-  )
-  .reset_index(drop=True)
-  .groupby(["portfolio","date"])
-  .apply(lambda x: np.average(x["ret_excess"], weights=x["mktcap_lag"]))
-  .reset_index(name="ret")
+beta_portfolios = (
+    data_for_sorts
+    .groupby("date")
+    .apply(lambda x: (
+        x.assign(
+            portfolio=pd.qcut(x["beta_lag"], q=[0, 0.5, 1], labels=["low", "high"]),
+            date=x.name
+        )
+    ))
+    .reset_index(drop=True)
+    .groupby(["portfolio", "date"])
+    .apply(lambda x: np.average(x["ret_excess"], weights=x["mktcap_lag"]))
+    .reset_index(name="ret")
+    .dropna(subset=['ret'])
 )
+beta_portfolios.head()
 ```
 
 ## Performance Evaluation
 
-We can construct a long-short strategy based on the two portfolios: buy the high-beta portfolio and, at the same time, short the low-beta portfolio. Thereby, the overall position in the market is net-zero, i.e., you do not need to invest money to realize this strategy in the absence of frictions.\index{Long-short}
+We can construct a long-short strategy based on the two portfolios: buy the high-beta portfolio and, at the same time, short the low-beta portfolio. Thereby, the overall position in the market is net-zero, i.e., you do not need to invest money to realize this strategy in the absence of frictions.
 
 ```{python}
 beta_longshort = (beta_portfolios
@@ -112,7 +115,7 @@ model_fit = (sm.OLS.from_formula(
 prettify_result(model_fit)
 ```
 
-The results indicate that we cannot reject the null hypothesis of average returns being equal to zero. Our portfolio strategy using the median as a breakpoint does not yield any abnormal returns. Is this finding surprising if you reconsider the CAPM? It certainly is. The CAPM yields that the high-beta stocks should yield higher expected returns. Our portfolio sort implicitly mimics an investment strategy that finances high-beta stocks by shorting low-beta stocks. Therefore, one should expect that the average excess returns yield a return that is above the risk-free rate.
+The results indicate that we cannot reject the null hypothesis of average returns being equal to zero. Our portfolio strategy using the median as a breakpoint does not yield any abnormal returns. Is this finding surprising if you reconsider the CAPM? It certainly is. The CAPM predicts that high-beta stocks should yield higher expected returns. Our portfolio sort implicitly mimics an investment strategy that finances high-beta stocks by shorting low-beta stocks. Therefore, one should expect that the average excess returns yield a return that is above the risk-free rate.
 
 ## Functional Programming for Portfolio Sorts
 
@@ -148,15 +151,15 @@ beta_portfolios = (data_for_sorts
   .groupby("date")
   .apply(lambda x: x.assign(
       portfolio=assign_portfolio(x, "beta_lag", 10)
-    )
+    ), include_groups=False
   )
-  .reset_index(drop=True)
+  .reset_index(level="date")
   .groupby(["portfolio", "date"])
-  .apply(lambda x: x.assign(
-      ret=np.average(x["ret_excess"], weights=x["mktcap_lag"])
-    )
+  .apply(lambda x: pd.Series({
+      "ret": np.average(x["ret_excess"], weights=x["mktcap_lag"])
+    }), include_groups=False
   )
-  .reset_index(drop=True)
+  .reset_index()
   .merge(factors_ff3_monthly, how="left", on="date")
 )
 ```
@@ -168,29 +171,29 @@ In the next step, we compute summary statistics for each beta portfolio. Namely,
 ```{python}
 beta_portfolios_summary = (beta_portfolios
   .groupby("portfolio")
-  .apply(lambda x: x.assign(
-      alpha=sm.OLS.from_formula(
+  .apply(lambda x: pd.Series({
+      "alpha": sm.OLS.from_formula(
           formula="ret ~ 1 + mkt_excess", 
           data=x
-        ).fit().params[0],
-      beta=sm.OLS.from_formula(
+        ).fit().params["Intercept"],
+      "beta": sm.OLS.from_formula(
           formula="ret ~ 1 + mkt_excess", 
           data=x
-        ).fit().params[1],
-      ret=x["ret"].mean()
-    ).tail(1)
+        ).fit().params["mkt_excess"],
+      "ret": x["ret"].mean()
+    }), include_groups=False
   )
-  .reset_index(drop=True)
-  .get(["portfolio", "alpha", "beta", "ret"])
+  .reset_index()
 )
+beta_portfolios_summary
 ```
 
-@fig-701 illustrates the CAPM alphas of beta-sorted portfolios. It shows that low-beta portfolios tend to exhibit positive alphas, while high-beta portfolios exhibit negative alphas.\index{Graph!Bar chart}
+@fig-701 illustrates the CAPM alphas of beta-sorted portfolios.\index{Graph!Bar chart}
 
 ```{python}
 #| label: fig-701
-#| fig-cap: "The figure shows CAPM alphas of beta-sorted portfolios. Portfolios are sorted into deciles each month based on their estimated CAPM beta. The bar charts indicate the CAPM alpha of the resulting portfolio returns during the entire CRSP period." 
-#| fig-alt: "Title: CAPM alphas of beta-sorted portfolios. The figure shows bar charts of alphas of beta-sorted portfolios with the decile portfolio on the horizontal axis and the corresponding CAPM alpha on the vertical axis. Alphas for low-beta portfolios are positive, while high-beta portfolios show negative alphas."
+#| fig-cap: "The figure shows CAPM alphas of beta-sorted portfolios. Portfolios are sorted into deciles each month based on their estimated CAPM beta. The bar charts indicate the CAPM alpha of the resulting portfolio returns during the sample period." 
+#| fig-alt: "Title: CAPM alphas of beta-sorted portfolios. The figure shows bar charts of alphas of beta-sorted portfolios with the decile portfolio on the horizontal axis and the corresponding CAPM alpha on the vertical axis."
 #| fig-pos: "htb"
 beta_portfolios_figure = (
   ggplot(
@@ -208,7 +211,7 @@ beta_portfolios_figure = (
 beta_portfolios_figure.show()
 ```
 
-These results suggest a negative relation between beta and future stock returns, which contradicts the predictions of the CAPM. According to the CAPM, returns should increase with beta across the portfolios and risk-adjusted returns should be statistically indistinguishable from zero.
+Unlike the well-documented "betting against beta" anomaly in US markets—where low-beta portfolios exhibit positive alphas and high-beta portfolios exhibit negative alphas in a monotonic pattern—the Vietnamese market shows no clear relationship between beta and risk-adjusted returns. The alphas fluctuate without a discernible trend across deciles. This lack of pattern likely reflects the limited sample period rather than a definitive conclusion about beta pricing in Vietnam. With such a short time series, the portfolio-level CAPM regressions contain substantial estimation noise, making it difficult to detect subtle anomalies. Longer sample periods would be needed to draw reliable conclusions about whether the low-beta anomaly exists in the Vietnamese equity market.
 
 ## Security Market Line and Beta Portfolios
 
@@ -217,7 +220,7 @@ The CAPM predicts that our portfolios should lie on the security market line (SM
 ```{python}
 #| label: fig-702
 #| fig-cap: "The figure shows average portfolio excess returns and beta estimates. Excess returns are computed as CAPM alphas of the beta-sorted portfolios. The horizontal axis indicates the CAPM beta of the resulting beta-sorted portfolio return time series. The dashed line indicates the slope coefficient of a linear regression of excess returns on portfolio betas."
-#| fig-alt: "Title: Average portfolio excess returns and beta estimates. The figure shows a scatter plot of the average excess returns per beta portfolio with average beta estimates per portfolio on the horizontal axis and average excess returns on the vertical axis. An increasing solid line indicates the security market line. A dashed increasing line with lower slope than the security market line indicates that the CAPM prediction is not valid for CRSP data."
+#| fig-alt: "Title: Average portfolio excess returns and beta estimates. The figure shows a scatter plot of the average excess returns per beta portfolio with average beta estimates per portfolio on the horizontal axis and average excess returns on the vertical axis. An increasing solid line indicates the security market line. A dashed increasing line with lower slope than the security market line indicates that the CAPM prediction is not valid for the data."
 #| fig-pos: "htb"
 sml_capm = (sm.OLS.from_formula(
     formula="ret ~ 1 + beta", 
@@ -230,7 +233,7 @@ sml_capm = (sm.OLS.from_formula(
 sml_figure = (
   ggplot(
     beta_portfolios_summary,
-    aes(x="beta", y="ret", color="portfolio")
+    aes(x="beta", y="ret", color="factor(portfolio)")
   )
   + geom_point()
   + geom_abline(
@@ -244,10 +247,7 @@ sml_figure = (
       title="Average portfolio excess returns and beta estimates"
     )
   + scale_x_continuous(limits=(0, 2))
-  + scale_y_continuous(
-      labels=percent_format(),
-      limits=(0, factors_ff3_monthly["mkt_excess"].mean()*2)
-    )
+  + scale_y_continuous(labels=percent_format())
 )
 sml_figure.show()
 ```
@@ -284,7 +284,7 @@ model_fit = (sm.OLS.from_formula(
 prettify_result(model_fit)
 ```
 
-However, controlling for the effect of beta, the long-short portfolio yields a statistically significant negative CAPM-adjusted alpha, although the average excess stock returns should be zero according to the CAPM. The results thus provide no evidence in support of the CAPM. The negative value has been documented as the so-called betting-against-beta factor [@Frazzini2014]. Betting-against-beta corresponds to a strategy that shorts high-beta stocks and takes a (levered) long position in low-beta stocks. If borrowing constraints prevent investors from taking positions on the security market line they are instead incentivized to buy high-beta stocks, which leads to a relatively higher price (and therefore lower expected returns than implied by the CAPM) for such high-beta stocks. As a result, the betting-against-beta strategy earns from providing liquidity to capital-constrained investors with lower risk aversion.\index{Risk aversion}\index{Betting-against-beta}
+However, controlling for the effect of beta, the long-short portfolio yields a CAPM-adjusted alpha. The results can provide evidence regarding the validity of the CAPM in the Vietnamese market. The betting-against-beta factor has been documented extensively in developed markets [@Frazzini2014]. Betting-against-beta corresponds to a strategy that shorts high-beta stocks and takes a (levered) long position in low-beta stocks. If borrowing constraints prevent investors from taking positions on the security market line, they are instead incentivized to buy high-beta stocks, which leads to a relatively higher price (and therefore lower expected returns than implied by the CAPM) for such high-beta stocks. As a result, the betting-against-beta strategy earns from providing liquidity to capital-constrained investors with lower risk aversion.\index{Risk aversion}\index{Betting-against-beta}
 
 ```{python}
 model_fit = (sm.OLS.from_formula(
@@ -296,12 +296,12 @@ model_fit = (sm.OLS.from_formula(
 prettify_result(model_fit)
 ```
 
-@fig-703 shows the annual returns of the extreme beta portfolios we are mainly interested in. The figure illustrates no consistent striking patterns over the last years; each portfolio exhibits periods with positive and negative annual returns. 
+@fig-703 shows the annual returns of the extreme beta portfolios we are mainly interested in. The figure illustrates the patterns over the sample period; each portfolio exhibits periods with positive and negative annual returns. 
 
 ```{python}
 #| label: fig-703
 #| fig-cap: "The figure shows annual returns of beta portfolios. We construct portfolios by sorting stocks into high and low based on their estimated CAPM beta. Long short indicates a strategy that goes long into high beta stocks and short low beta stocks."
-#| fig-alt: "Title: Annual returns of beta portfolios. The figure shows bar charts of annual returns of long, short, and long-short beta portfolios with years on the horizontal axis and returns on the vertical axis. Each portfolio is plotted in its own facet. The long-short portfolio strategy delivers very high losses during some periods."
+#| fig-alt: "Title: Annual returns of beta portfolios. The figure shows bar charts of annual returns of long, short, and long-short beta portfolios with years on the horizontal axis and returns on the vertical axis. Each portfolio is plotted in its own facet."
 #| fig-pos: "htb"
 beta_longshort_year = (beta_longshort
   .assign(year=lambda x: x["date"].dt.year)
@@ -329,13 +329,20 @@ beta_longshort_figure = (
 beta_longshort_figure.show()
 ```
 
+The high-beta portfolio and low-beta portfolio both exhibit substantial year-to-year variation. The long-short portfolio, which goes long high-beta stocks and short low-beta stocks, shows no consistent pattern of positive returns. This erratic performance reinforces our earlier finding that the beta-return relationship in the Vietnamese market does not conform to theoretical CAPM predictions during our sample period. The high volatility of annual long-short returns highlights the substantial risk inherent in such a strategy, particularly in an emerging market context with a limited sample period.
+
 Overall, this chapter shows how functional programming can be leveraged to form an arbitrary number of portfolios using any sorting variable and how to evaluate the performance of the resulting portfolios. In the next chapter, we dive deeper into the many degrees of freedom that arise in the context of portfolio analysis. 
 
 ## Key Takeaways
 
-- Univariate portfolio sorts assess whether a single firm characteristic, like lagged market beta, can predict future excess returns.
-- Portfolios are formed each month using quantile breakpoints, with returns computed using value-weighted averages to reflect realistic investment strategies.
-- A long-short strategy based on beta-sorted portfolios fails to generate significant positive excess returns, contradicting CAPM predictions that higher beta should yield higher returns.
-- The analysis highlights the “betting against beta” anomaly, where low-beta portfolios deliver higher alphas than high-beta portfolios, providing evidence against the CAPM
-- The functional programming capabilities of Python enable scalable and flexible portfolio sorting, making it easy to analyze multiple characteristics and portfolio configurations.
+1. Univariate portfolio sorts assess whether a single firm characteristic, like lagged market beta, can predict future excess returns.
 
+2. Portfolios are formed each month using quantile breakpoints, with returns computed using value-weighted averages to reflect realistic investment strategies.
+
+3. A long-short strategy based on beta-sorted portfolios fails to generate significant positive excess returns in the Vietnamese market, contradicting CAPM predictions that higher beta should yield higher returns.
+
+4. The analysis provides a framework for examining the "betting against beta" anomaly, where low-beta portfolios may deliver higher alphas than high-beta portfolios, offering evidence regarding the validity of the CAPM.
+
+5. The functional programming capabilities of Python enable scalable and flexible portfolio sorting, making it easy to analyze multiple characteristics and portfolio configurations.
+
+6. Emerging markets like Vietnam may exhibit different beta-return relationships compared to developed markets, highlighting the importance of conducting market-specific empirical analysis rather than assuming universal applicability of asset pricing anomalies.
