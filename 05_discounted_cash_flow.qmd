@@ -614,48 +614,103 @@ where $r_f$ is the risk-free rate, $\beta$ measures systematic risk, and $(r_m -
 
 **Capital Structure Weights** should use market values when available. For equity, market capitalization is straightforward. For debt, book value is often used when market values aren't observable.
 
+
 ### Using Industry WACC Data
 
-Professor Aswath Damodaran at NYU Stern maintains comprehensive industry WACC data. Let's download and use this resource:
+Professor Aswath Damodaran at NYU Stern maintains comprehensive industry WACC and country risk premium data. We use these datasets to estimate appropriate discount rates for Vietnamese companies.
 
+#### Downloading the Data
+
+The following code downloads the required datasets. Run this manually when you need to update the data (typically annually), but it is not executed during book rendering to avoid dependency on external servers.
 ```{python}
+#| eval: false
+#| label: download-damodaran-data
+
 import requests
-import os
+from pathlib import Path
 
-# Download Damodaran's WACC data
-url = "https://pages.stern.nyu.edu/~adamodar/pc/datasets/wacc.xls"
+# Create data directory if needed
+data_dir = Path("data")
+data_dir.mkdir(exist_ok=True)
 
-try:
-    response = requests.get(url, timeout=10)
-    response.raise_for_status()
-    
-    with open("wacc.xls", "wb") as f:
-        f.write(response.content)
-    
-    # Read the data (skip header rows)
-    wacc_data = pd.read_excel("wacc.xls", sheet_name=1, skiprows=18)
-    
-    # Clean up
-    os.remove("wacc.xls")
-    
-    # Find WACC for Computer Services (closest to FPT's business)
-    industry_wacc = wacc_data.loc[
-        wacc_data["Industry Name"] == "Computer Services",
-        "Cost of Capital"
-    ].values[0]
-    
-    print(f"Industry WACC (Computer Services): {industry_wacc:.2%}")
-    
-except Exception as e:
-    print(f"Could not download WACC data: {e}")
-    # Use a reasonable estimate
-    industry_wacc = 0.10
-    print(f"Using estimated WACC: {industry_wacc:.2%}")
+# Download WACC data
+wacc_url = "https://pages.stern.nyu.edu/~adamodar/pc/datasets/wacc.xls"
+response = requests.get(wacc_url, timeout=30)
+response.raise_for_status()
+(data_dir / "damodaran_wacc.xls").write_bytes(response.content)
+print("Downloaded: damodaran_wacc.xls")
 
-wacc = industry_wacc
+# Download country risk premium data
+crp_url = "https://pages.stern.nyu.edu/~adamodar/pc/datasets/ctryprem.xlsx"
+response = requests.get(crp_url, timeout=30)
+response.raise_for_status()
+(data_dir / "damodaran_crp.xlsx").write_bytes(response.content)
+print("Downloaded: damodaran_crp.xlsx")
 ```
 
-**Note**: Industry WACC provides a useful benchmark, but company-specific factors (leverage, business risk, country risk) may warrant adjustments. For Vietnamese companies, adding a country risk premium may be appropriate.
+#### Industry WACC
+
+We extract the cost of capital for the Computer Services industry, which most closely matches FPT's business profile:
+```{python}
+#| label: read-industry-wacc
+
+import pandas as pd
+
+# Read local WACC data
+wacc_data = pd.read_excel(
+    "data/damodaran_wacc.xls", 
+    sheet_name=1, 
+    skiprows=18
+)
+
+# Find WACC for Computer Services
+industry_wacc = wacc_data.loc[
+    wacc_data["Industry Name"] == "Computer Services",
+    "Cost of Capital"
+].values[0]
+
+print(f"Industry WACC (Computer Services): {industry_wacc:.2%}")
+```
+
+#### Country Risk Premium
+
+For Vietnamese companies, we must adjust for country-specific risk. Damodaran calculates country risk premiums based on sovereign credit ratings and relative equity market volatility:
+```{python}
+#| label: read-country-risk-premium
+
+# Read local country risk premium data
+crp_data = pd.read_excel(
+    "data/damodaran_crp.xlsx",
+    sheet_name="ERPs by country",
+    skiprows=7
+)
+
+# Find Vietnam's country risk premium
+vietnam_row = crp_data[
+    crp_data.iloc[:, 0].str.contains("Vietnam", case=False, na=False)
+]
+
+country_risk_premium = vietnam_row.iloc[0, 8]
+print(f"Vietnam Country Risk Premium: {country_risk_premium:.2%}")
+```
+
+#### Adjusted WACC for Vietnam
+
+Combining the industry benchmark with the country risk premium gives us an appropriate discount rate:
+```{python}
+#| label: calculate-vietnam-wacc
+
+wacc_vietnam = industry_wacc + country_risk_premium
+
+print(f"Industry WACC (US):        {industry_wacc:.2%}")
+print(f"Country Risk Premium:      {country_risk_premium:.2%}")
+print(f"Adjusted WACC (Vietnam):   {wacc_vietnam:.2%}")
+
+wacc = wacc_vietnam
+```
+
+**Note**: This approach assumes Vietnamese companies in the same industry face similar operating risks as their US counterparts, with the country risk premium capturing additional macroeconomic and political risks. For company-specific analysis, further adjustments for leverage differences and firm-specific risk factors may be warranted.
+
 
 ## Computing Enterprise Value
 
