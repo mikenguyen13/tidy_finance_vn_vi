@@ -1,0 +1,36 @@
+<script>
+  (function () {
+    const GA_ID = "G-LMDLDJXXSC"; // <-- replace
+    const KEY = "cookie_consent_v1";
+
+    function loadGtag() {
+      if (window.__gtag_loaded__) return;
+      window.__gtag_loaded__ = true;
+
+      const s1 = document.createElement("script");
+      s1.async = true;
+      s1.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(GA_ID);
+      document.head.appendChild(s1);
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      window.gtag = gtag;
+
+      gtag("js", new Date());
+      gtag("config", GA_ID, { anonymize_ip: true });
+    }
+
+    function maybeEnableAnalytics() {
+      const consent = localStorage.getItem(KEY);
+      if (consent === "accepted") loadGtag();
+    }
+
+    // Load on first render if already accepted
+    maybeEnableAnalytics();
+
+    // Load when user changes consent
+    window.addEventListener("cookie-consent-changed", function (e) {
+      if (e.detail === "accepted") loadGtag();
+    });
+  })();
+</script>
