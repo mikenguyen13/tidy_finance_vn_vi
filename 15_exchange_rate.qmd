@@ -1,0 +1,238 @@
+# Exchange Rate Dynamics
+
+```{python}
+#| label: setup
+#| include: false
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime
+```
+
+In quantitative finance, the precision of currency data is the bedrock of international asset pricing and risk management. This chapter demonstrates the capabilities of the **DataCore** platform, specifically the `datacore.exchange_rates` table, which serves as a centralized repository for global spot rates.
+
+We will execute a complete data pipeline: extracting raw spot rates for the **Chinese Yuan (CNY)** to **US Dollar (USD)** pair, transforming them into log returns, and performing a volatility analysis.
+
+## Pipeline Architecture
+
+The following diagram illustrates the data flow from the DataCore server to the final analytical output.
+
+```{mermaid}
+%%| fig-align: center
+%%| fig-cap: "DataCore ETL Process Flow"
+graph LR
+    subgraph Server["DataCore Infrastructure"]
+        A[("datacore.exchange_rates")]
+    end
+    
+    subgraph Client["Local Environment"]
+        B[("SQL Connection")]
+        C{Data Processing}
+        D[("Statistical Output")]
+        E[("Visualization")]
+    end
+
+    A -->|SQL Query| B
+    B -->|Pandas DataFrame| C
+    C -->|Log Transformation| D
+    C -->|Rolling Window| D
+    D -->|Matplotlib/Seaborn| E
+    
+    style A fill:#2c3e50,stroke:#fff,color:#fff
+    style C fill:#e74c3c,stroke:#fff,color:#fff
+    style E fill:#18bc9c,stroke:#fff,color:#fff
+
+```
+
+---
+
+# Data Extraction
+
+The DataCore schema is designed for high-throughput querying. We utilize a targeted SQL query to minimize latency, filtering for the specific currency pair at the server level.
+
+
+
+## Query Optimization
+
+Filtering within the SQL statement (using `WHERE`) is approximately 10x faster than fetching the full table and filtering in memory with Python.
+
+```{python}
+#| eval: false
+#| label: db-connection
+
+# Establish connection to the institutional database
+conn = db_connector.Connection()
+
+```
+
+```{python}
+#| eval: false
+#| label: data-query
+
+# Define the extraction logic
+query = """
+SELECT 
+    date,
+    from_currency,
+    to_currency,
+    rate as fx_rate
+FROM 
+    datacore.exchange_rates
+WHERE 
+    from_currency = 'CNY' 
+    AND to_currency = 'USD'
+ORDER BY 
+    date ASC
+"""
+
+# Execute query and parse dates
+df_fx = conn.raw_sql(query, date_cols=['date'])
+
+# Set temporal index
+df_fx.set_index('date', inplace=True)
+
+# Display interactive table (paged)
+df_fx.head(10)
+
+```
+
+---
+
+# Quantitative Transformation
+
+To prepare the data for risk modeling, we convert raw spot rates into **Logarithmic Returns**. Log returns are preferred in financial time series analysis due to their time-additivity and statistical stationarity.
+
+## Mathematical Formulation
+
+The log return $r_t$ at time $t$ is defined as:
+
+$$
+r_t = \ln (P_t) - \ln(P_{t-1} = \ln (\frac{P_t}{P_{t-1}}))
+$$
+
+Where $P_t$ represents the spot exchange rate.
+
+
+We also compute a **30-Day Rolling Volatility** measure to identify periods of market stress.
+
+```{python}
+#| eval: false
+#| label: feature-engineering
+
+# 1. Calculate Log Returns
+df_fx['log_return'] = np.log(df_fx['fx_rate'] / df_fx['fx_rate'].shift(1))
+
+# 2. Calculate 30-Day Rolling Standard Deviation (Volatility)
+# We scale by sqrt(252) to annualize the daily volatility
+df_fx['volatility_30d'] = df_fx['log_return'].rolling(window=30).std() * np.sqrt(252)
+
+# 3. Clean Missing Data (First row will be NaN)
+df_fx.dropna(inplace=True)
+
+# Preview transformed data
+df_fx[['fx_rate', 'log_return', 'volatility_30d']].tail()
+```
+
+---
+
+# Visual Analytics
+
+We utilize a tabbed interface to present multiple dimensions of the data without cluttering the report.
+
+
+## Trend Analysis
+
+The historical evolution of the spot rate reveals long-term macroeconomic trends.
+
+```{python}
+#| eval: false
+#| label: fig-trend
+#| fig-cap: "Long-term evolution of CNY/USD Spot Rate"
+
+fig, ax = plt.subplots(figsize=(12, 6))
+
+sns.lineplot(
+    data=df_fx, 
+    x=df_fx.index, 
+    y='fx_rate', 
+    linewidth=2.5, 
+    color="#2c3e50", 
+    ax=ax
+)
+
+ax.set_title('CNY/USD Spot Rate', fontsize=18, fontweight='bold', pad=20)
+ax.set_ylabel('Rate (USD)', fontsize=14)
+ax.set_xlabel('')
+ax.fill_between(df_fx.index, df_fx['fx_rate'], alpha=0.1, color="#2c3e50")
+
+plt.show()
+
+```
+
+## Volatility Regime
+
+This chart highlights periods of high market uncertainty (high volatility) versus periods of stability.
+
+```{python}
+#| eval: false
+#| label: fig-volatility
+#| fig-cap: "Annualized 30-Day Rolling Volatility"
+
+fig, ax = plt.subplots(figsize=(12, 6))
+
+sns.lineplot(
+    data=df_fx, 
+    x=df_fx.index, 
+    y='volatility_30d', 
+    linewidth=1.5, 
+    color="#e74c3c", 
+    ax=ax
+)
+
+ax.set_title('Market Volatility Regimes (30-Day Rolling)', fontsize=18, fontweight='bold', pad=20)
+ax.set_ylabel('Annualized Volatility', fontsize=14)
+ax.set_xlabel('')
+
+# Highlight crisis threshold
+ax.axhline(y=0.05, color='black', linestyle='--', label='High Volatility Threshold')
+ax.legend()
+
+plt.show()
+
+```
+
+## Distribution
+
+The histogram of returns allows us to check for "fat tails" (kurtosis), which indicate a higher probability of extreme events than a normal distribution predicts.
+
+```{python}
+#| eval: false
+#| label: fig-distribution
+#| fig-cap: "Distribution of Daily Log Returns"
+
+fig, ax = plt.subplots(figsize=(12, 6))
+
+sns.histplot(
+    data=df_fx, 
+    x='log_return', 
+    kde=True, 
+    bins=50, 
+    color="#18bc9c", 
+    edgecolor='white',
+    alpha=0.8
+)
+
+ax.set_title('Return Distribution', fontsize=18, fontweight='bold', pad=20)
+ax.set_xlabel('Daily Log Return', fontsize=14)
+ax.set_ylabel('Frequency', fontsize=14)
+
+plt.show()
+
+```
+
+
+# Conclusion
+
+This analysis confirms the utility of **DataCore** for financial modeling. By accessing high-fidelity data via `datacore.exchange_rates`, we successfully identified distinct volatility regimes in the CNY/USD currency pair.
+

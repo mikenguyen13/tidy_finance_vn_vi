@@ -19,15 +19,174 @@ The discussion proceeds from individual stocks to a broad market cross-section, 
 
 We begin by loading the core numerical and data manipulation libraries. These provide all functionality required for return construction without relying on specialized financial wrappers.
 
+
 ```{python}
 import pandas as pd
 import numpy as np
 ```
 
 
-Historical price data are stored in an S3-compatible object storage system. Access credentials are supplied via environment variables, which keeps sensitive information separate from the analysis and supports collaborative reproducibility.
+
+For this project, we retrieve our historical price data using the DataCore API. If you wish to replicate this analysis or use the dataset for your own work, you will need to access the data through their platform.
+
+### Prerequisites for API Access
+
+To run the code below, you need to configure a few things first:
+
+1.  **Obtain an API Key:** You must subscribe to the relevant dataset on the [DataCore](https://datacore.vn/) platform to receive a unique API key.
+2.  **Whitelist Your IP Address:** The API requires your IP address to be whitelisted for security.
+    * **Local Machine:** If you are running this code on your personal computer, you generally need to whitelist your public IP address.
+    * **Cloud or Remote Sessions (e.g., HPC Open OnDemand):** If you are using a remote server such as those provided by DataCore, the server's IP address will change with each new session. You must retrieve the server's private/public IP for that specific session and whitelist it in your DataCore account settings before running the script.
+3.  **Set Environment Variables:** To keep your credentials secure, do not hardcode your API key into your scripts. Instead, save it as an environment variable named `datacore_api` on your machine.
+
+*Note: If you only want to test the code performance, DataCore provides a preview endpoint that does not require an API key, though the data returned is limited.*
+
 
 ```{python}
+#| label: datacore-demo
+
+import requests
+import pandas as pd
+
+url = "https://gateway.datacore.vn/data/ds/preview"
+params = {
+    "dataSetCode": "fundamental_annual",
+    "pageSize": 10000 
+}
+headers = {
+    "Accept": "application/json",
+    "Origin": "https://datacore.vn",
+    "Referer": "https://datacore.vn/"
+}
+
+response = requests.get(url, params=params, headers=headers)
+data = response.json()
+
+columns = data['data']['fields']
+rows = data['data']['dataDetail']
+
+df = pd.DataFrame(rows, columns=columns)
+print(df.head())
+print("Total rows:", len(df))
+```
+
+
+### Checking Your IP Address
+
+If you need to verify the IP address of the machine running your code (to whitelist it), you can use the following Python snippets.
+
+**To find your Public IP:**
+```{python}
+#| eval: false
+import requests
+
+try:
+    public_ip = requests.get("https://api.ipify.org").text
+    print(f"Public IP: {public_ip}")
+except requests.exceptions.RequestException as e:
+    print(f"Could not retrieve Public IP: {e}")
+
+```
+
+**To find your Private IP (useful for specific remote server setups):**
+
+```{python}
+#| eval: false
+import socket
+
+def get_private_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        private_ip = s.getsockname()[0]
+        s.close()
+        return private_ip
+    except Exception as e:
+        return f"Error: {e}"
+
+print(f"Private IP: {get_private_ip()}")
+
+```
+
+### Fetching the Dataset
+
+The following script demonstrates how to securely authenticate and paginate through the DataCore API to retrieve the full `dataset_historical_price` dataset.
+
+```{python}
+#| eval: false
+#| include: false
+import requests
+import time
+import os
+import pandas as pd
+
+url = "https://gateway.datacore.vn/data/ds/search"
+
+headers = {
+    'x-api-key': os.environ.get('datacore_api'),
+    'Content-Type': 'application/json'
+}
+
+limit = 10000
+current_page = 1
+all_data = []
+fields = None
+
+while True:
+    print(f"Fetching page {current_page}...")
+    
+    payload = {
+        "dataSetCode": "dataset_historical_price",
+        "conditions": [],
+        "selectFields": [],
+        "page": current_page,
+        "limit": limit
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        records = data['data']['dataDetail']
+        total_pages = int(data['data']['totalPage'])
+        total_records = int(data['data']['num'])
+        
+        if fields is None:
+            fields = data['data']['fields']
+            print(f"Fields: {fields}")
+            print(f"Total records: {total_records:,} across {total_pages} pages")
+        
+        if not records:
+            print("No more data found.")
+            break
+            
+        all_data.extend(records)
+        print(f"  Page {current_page}/{total_pages} — {len(all_data):,}/{total_records:,} records collected")
+
+        if current_page >= total_pages:
+            break
+            
+        current_page += 1
+        time.sleep(0.1)
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error on page {current_page}: {e}")
+        break
+
+print(f"\nTotal records retrieved: {len(all_data):,}")
+
+df = pd.DataFrame(all_data, columns=fields)
+print(df.shape)
+df.head()
+```
+
+
+<!-- Historical price data are stored in an S3-compatible object storage system. Access credentials are supplied via environment variables, which keeps sensitive information separate from the analysis and supports collaborative reproducibility. -->
+
+```{python}
+#| include: false
 import os
 import boto3
 from botocore.client import Config
@@ -49,9 +208,10 @@ storage = ObjectStorage()
 bucket = os.environ["MINIO_BUCKET"]
 ```
 
-The daily price file is read directly into memory. We explicitly parse dates and harmonize variable names to avoid ambiguity in later steps.
+<!-- The daily price file is read directly into memory. We explicitly parse dates and harmonize variable names to avoid ambiguity in later steps. -->
 
 ```{python}
+#| include: false
 from io import BytesIO
 
 prices = pd.read_csv(
@@ -63,8 +223,40 @@ prices = pd.read_csv(
     ),
     low_memory=False,
 )
+```
 
 
+
+```{python}
+# Convert the date column to proper datetime objects
+prices["date"] = pd.to_datetime(prices["date"])
+
+# Ensure price and ratio columns are numeric before calculation
+prices["close_price"] = pd.to_numeric(prices["close_price"])
+prices["adj_ratio"] = pd.to_numeric(prices["adj_ratio"])
+
+# Calculate the adjusted close price
+prices["adjusted_close"] = prices["close_price"] * prices["adj_ratio"]
+
+# Rename columns to match standard conventions
+prices = prices.rename(
+    columns={
+        "vol_total": "volume",
+        "open_price": "open",
+        "low_price": "low",
+        "high_price": "high",
+        "close_price": "close",
+    }
+)
+
+# Sort the dataset logically by symbol and date
+prices = prices.sort_values(["symbol", "date"])
+
+print("Data manipulation complete. The dataset is ready for analysis.")
+```
+
+```{python}
+#| eval: false
 prices["date"] = pd.to_datetime(prices["date"])
 
 

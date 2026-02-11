@@ -1,0 +1,2569 @@
+# Institutional Ownership Analytics in Vietnam
+
+```{python}
+#| label: setup
+#| echo: false
+#| eval: true
+
+# ============================================================================
+# Global Setup and Configuration
+# ============================================================================
+import warnings
+warnings.filterwarnings('ignore')
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+import matplotlib.dates as mdates
+import seaborn as sns
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+import statsmodels.api as sm
+from scipy import stats
+from scipy.spatial.distance import pdist, squareform
+import itertools
+from pathlib import Path
+from typing import Optional, Union, Dict, List, Tuple
+
+# Plotting configuration — academic style
+plt.rcParams.update({
+    'figure.figsize': (10, 6),
+    'figure.dpi': 150,
+    'font.family': 'serif',
+    'font.serif': ['Times New Roman', 'DejaVu Serif'],
+    'font.size': 11,
+    'axes.titlesize': 13,
+    'axes.labelsize': 11,
+    'xtick.labelsize': 10,
+    'ytick.labelsize': 10,
+    'legend.fontsize': 10,
+    'figure.titlesize': 14,
+    'axes.spines.top': False,
+    'axes.spines.right': False,
+    'axes.grid': True,
+    'grid.alpha': 0.3,
+    'grid.linestyle': '--',
+})
+
+# Color palette for ownership types
+OWNER_COLORS = {
+    'State': '#d62728',
+    'Foreign Institutional': '#1f77b4',
+    'Domestic Institutional': '#2ca02c',
+    'Individual': '#ff7f0e',
+    'Treasury': '#9467bd',
+    'Total Institutional': '#333333',
+}
+
+# Exchange colors
+EXCHANGE_COLORS = {'HOSE': '#1f77b4', 'HNX': '#ff7f0e', 'UPCOM': '#2ca02c'}
+
+pd.set_option('display.max_columns', 20)
+pd.set_option('display.width', 120)
+pd.set_option('display.float_format', '{:.4f}'.format)
+```
+
+## Institutional Ownership in Vietnam: A Distinct Landscape
+
+Vietnam's equity market presents a fundamentally different institutional ownership landscape from the mature markets of the US, Europe, or Japan. Since the Ho Chi Minh City Securities Trading Center (now HOSE) opened on July 28, 2000 with just two listed stocks, the market has grown to over 1,700 listed companies across three exchanges (HOSE, HNX, and UPCOM) with a combined market capitalization exceeding 200 billion USD. Yet the ownership structure remains distinctive in several critical ways:
+
+-   **Retail dominance.** Individual investors account for approximately 85% of trading value on Vietnamese exchanges, far exceeding the institutional share. This contrasts sharply with the US, where institutional investors dominate both ownership and trading [@bao2024institutional]. The implications for market efficiency, price discovery, and volatility are profound.
+
+-   **State ownership legacy.** Vietnam's equitization (privatization) program, initiated under Đổi Mới reforms in 1986, means that the state remains a significant or controlling shareholder in many listed companies. As of 2022, SOEs (firms with state ownership \> 50%) account for approximately 30% of total market capitalization despite representing less than 10% of listed firms [@huang2023factors]. State ownership introduces unique agency problems, governance dynamics, and liquidity constraints.
+
+-   **Foreign Ownership Limits (FOLs).** Vietnam imposes sector-specific caps on aggregate foreign ownership, typically 49% for most sectors, 30% for banking, and varying limits for aviation, media, and telecommunications. When a stock reaches its FOL, foreign investors can only buy from other foreign sellers, creating a segmented market with distinct pricing dynamics and a well-documented "FOL premium" [@vo2015foreign].
+
+-   **Disclosure regime.** Unlike the US quarterly 13F filing system, Vietnam's ownership disclosure is event-driven and periodic. Major shareholders (≥5%) must disclose within 7 business days of crossing thresholds. Annual reports contain detailed shareholder registers. Semi-annual fund reports provide portfolio snapshots. This creates a patchwork of disclosure frequencies that require careful handling.
+
+## Data Infrastructure: DataCore.vn {#sec-datacore}
+
+**DataCore.vn** is a comprehensive Vietnamese financial data platform that provides academic-grade datasets for the Vietnamese market. Throughout this chapter, we assume all data is sourced exclusively from DataCore.vn, which provides:
+
+| DataCore.vn Dataset | Content | Key Variables |
+|:------------------------|:------------------|:---------------------------|
+| **Stock Prices** | Daily/monthly OHLCV for HOSE, HNX, UPCOM | `ticker`, `date`, `close`, `adjusted_close`, `volume`, `shares_outstanding` |
+| **Ownership Structure** | Shareholder composition snapshots | `ticker`, `date`, `shareholder_name`, `shares_held`, `ownership_pct`, `shareholder_type` |
+| **Major Shareholders** | Detailed ≥5% holders | `ticker`, `date`, `shareholder_name`, `shares_held`, `is_foreign`, `is_state`, `is_institution` |
+| **Corporate Actions** | Dividends, stock splits, bonus shares, rights issues | `ticker`, `ex_date`, `action_type`, `ratio`, `record_date` |
+| **Company Profile** | Sector, exchange, listing date, charter capital | `ticker`, `exchange`, `industry_code`, `listing_date`, `fol_limit` |
+| **Financial Statements** | Quarterly/annual financials | `ticker`, `period`, `revenue`, `net_income`, `total_assets`, `equity` |
+| **Foreign Ownership** | Daily foreign ownership tracking | `ticker`, `date`, `foreign_shares`, `foreign_pct`, `fol_limit`, `foreign_room` |
+| **Fund Holdings** | Semi-annual fund portfolio disclosures | `fund_name`, `report_date`, `ticker`, `shares_held`, `market_value` |
+
+: DataCore.vn Data Tables Used in This Chapter {#tbl-datacore-tables}
+
+```{python}
+#| label: datacore-reader
+#| code-summary: "DataCore.vn Unified Data Reader"
+#| eval: false
+
+class DataCoreReader:
+    """
+    Unified data reader for DataCore.vn datasets.
+    
+    Assumes data has been downloaded from DataCore.vn and stored locally.
+    Supports both Parquet (recommended for performance) and CSV formats.
+    
+    Parameters
+    ----------
+    data_dir : str or Path
+        Root directory containing DataCore.vn data files
+    file_format : str
+        'parquet' or 'csv' (default: 'parquet')
+    """
+    
+    # Expected file names in the data directory
+    FILE_MAP = {
+        'prices': 'stock_prices',
+        'ownership': 'ownership_structure',
+        'major_shareholders': 'major_shareholders',
+        'corporate_actions': 'corporate_actions',
+        'company_profile': 'company_profile',
+        'financials': 'financial_statements',
+        'foreign_ownership': 'foreign_ownership_daily',
+        'fund_holdings': 'fund_holdings',
+    }
+    
+    def __init__(self, data_dir: Union[str, Path], file_format: str = 'parquet'):
+        self.data_dir = Path(data_dir)
+        self.fmt = file_format
+        self._cache = {}
+        
+        # Verify data directory exists
+        if not self.data_dir.exists():
+            raise FileNotFoundError(
+                f"Data directory not found: {self.data_dir}\n"
+                f"Please download data from DataCore.vn and place it in this directory."
+            )
+        
+        print(f"DataCore.vn reader initialized: {self.data_dir}")
+        available = [f.stem for f in self.data_dir.glob(f'*.{self.fmt}')]
+        print(f"Available datasets: {available}")
+    
+    def _read(self, key: str) -> pd.DataFrame:
+        """Read and cache a dataset."""
+        if key in self._cache:
+            return self._cache[key]
+        
+        fname = self.FILE_MAP.get(key, key)
+        filepath = self.data_dir / f"{fname}.{self.fmt}"
+        
+        if not filepath.exists():
+            raise FileNotFoundError(
+                f"Dataset not found: {filepath}\n"
+                f"Expected file: {fname}.{self.fmt} in {self.data_dir}"
+            )
+        
+        if self.fmt == 'parquet':
+            df = pd.read_parquet(filepath)
+        else:
+            df = pd.read_csv(filepath, parse_dates=True)
+        
+        # Auto-detect and parse date columns
+        for col in df.columns:
+            if 'date' in col.lower() or col.lower() in ['period', 'ex_date', 'record_date']:
+                try:
+                    df[col] = pd.to_datetime(df[col])
+                except (ValueError, TypeError):
+                    pass
+        
+        self._cache[key] = df
+        print(f"Loaded {key}: {len(df):,} rows, {len(df.columns)} columns")
+        return df
+    
+    @property
+    def prices(self) -> pd.DataFrame:
+        return self._read('prices')
+    
+    @property
+    def ownership(self) -> pd.DataFrame:
+        return self._read('ownership')
+    
+    @property
+    def major_shareholders(self) -> pd.DataFrame:
+        return self._read('major_shareholders')
+    
+    @property
+    def corporate_actions(self) -> pd.DataFrame:
+        return self._read('corporate_actions')
+    
+    @property
+    def company_profile(self) -> pd.DataFrame:
+        return self._read('company_profile')
+    
+    @property
+    def financials(self) -> pd.DataFrame:
+        return self._read('financials')
+    
+    @property
+    def foreign_ownership(self) -> pd.DataFrame:
+        return self._read('foreign_ownership')
+    
+    @property
+    def fund_holdings(self) -> pd.DataFrame:
+        return self._read('fund_holdings')
+    
+    def clear_cache(self):
+        """Clear all cached datasets to free memory."""
+        self._cache.clear()
+
+# Initialize reader — adjust path to your local DataCore.vn data
+# dc = DataCoreReader('/path/to/datacore_data', file_format='parquet')
+```
+
+This chapter proceeds as follows. @sec-data-pipeline builds the complete data pipeline from raw DataCore.vn extracts to clean, analysis-ready datasets, with particular attention to corporate action adjustments. @sec-ownership-taxonomy defines Vietnam's unique ownership taxonomy. @sec-ownership-metrics computes institutional ownership ratios, concentration, and breadth for the Vietnamese market. @sec-foreign-ownership develops specialized foreign ownership analytics including FOL utilization and room premium. @sec-trades derives institutional trades from ownership disclosure snapshots. @sec-flows-turnover computes fund-level flows and turnover. @sec-state-ownership analyzes state ownership dynamics. @sec-modern-extensions introduces network analysis, ML classification, and event-study frameworks. @sec-empirical-applications presents complete empirical applications, and @sec-conclusion concludes.
+
+## Data Pipeline {#sec-data-pipeline}
+
+### Stock Price Data and Corporate Action Adjustments {#sec-price-pipeline}
+
+Vietnam's equity market is notorious for frequent corporate actions, particularly stock dividends and bonus share issuances, that dramatically alter share counts. A company issuing a 30% stock dividend means every 100 shares become 130 shares, and the reference price adjusts downward proportionally. Failure to properly adjust historical shares and prices for these events is the single most common source of error in Vietnamese equity research.
+
+```{python}
+#| label: corporate-actions
+#| code-summary: "Build Cumulative Adjustment Factors from Corporate Actions"
+#| eval: false
+
+# ============================================================================
+# Step 1: Corporate Action Adjustment Factors
+# ============================================================================
+
+def build_adjustment_factors(corporate_actions: pd.DataFrame) -> pd.DataFrame:
+    """
+    Build cumulative adjustment factors from the corporate actions history.
+    
+    In Vietnam, the most common share-altering corporate actions are:
+    1. Stock dividends (cổ tức bằng cổ phiếu): e.g., 30% → ratio = 0.30
+       Effect: shares × (1 + 0.30), price × (1 / 1.30)
+    2. Bonus shares (thưởng cổ phiếu): mechanically identical to stock dividends
+    3. Stock splits (chia tách): e.g., 2:1 → ratio = 2.0
+       Effect: shares × 2, price × 0.5
+    4. Rights issues (phát hành thêm): dilutive, but not all shareholders exercise
+       We approximate with the subscription ratio
+    5. Reverse splits (gộp cổ phiếu): rare in Vietnam
+       Effect: shares ÷ ratio, price × ratio
+    
+    We construct a FORWARD-LOOKING cumulative adjustment factor such that:
+       adjusted_shares = raw_shares × cum_adj_factor(from_date, to_date)
+       adjusted_price = raw_price / cum_adj_factor(from_date, to_date)
+    
+    This is analogous to CRSP's cfacshr in the US context.
+    
+    Parameters
+    ----------
+    corporate_actions : pd.DataFrame
+        DataCore.vn corporate actions with columns:
+        ticker, ex_date, action_type, ratio
+        
+        action_type values:
+        - 'stock_dividend': ratio = dividend rate (e.g., 0.30 for 30%)
+        - 'bonus_shares': ratio = bonus rate (e.g., 0.20 for 20%)
+        - 'stock_split': ratio = split factor (e.g., 2.0 for 2:1)
+        - 'reverse_split': ratio = merge factor (e.g., 5.0 for 5:1 merge)
+        - 'rights_issue': ratio = subscription rate (e.g., 0.10 for 10:1)
+        - 'cash_dividend': ratio = VND per share (no share adjustment needed)
+    
+    Returns
+    -------
+    pd.DataFrame
+        Adjustment factors: ticker, ex_date, point_factor, cum_factor
+    """
+    # Filter to share-altering events only
+    share_events = ['stock_dividend', 'bonus_shares', 'stock_split', 
+                    'reverse_split', 'rights_issue']
+    ca = corporate_actions[
+        corporate_actions['action_type'].isin(share_events)
+    ].copy()
+    
+    if len(ca) == 0:
+        print("No share-altering corporate actions found.")
+        return pd.DataFrame(columns=['ticker', 'ex_date', 'point_factor', 'cum_factor'])
+    
+    # Compute point adjustment factor for each event
+    def compute_point_factor(row):
+        atype = row['action_type']
+        ratio = row['ratio']
+        
+        if atype in ['stock_dividend', 'bonus_shares']:
+            # 30% stock dividend: 100 shares → 130 shares
+            return 1 + ratio
+        elif atype == 'stock_split':
+            # 2:1 split: 100 shares → 200 shares
+            return ratio
+        elif atype == 'reverse_split':
+            # 5:1 reverse: 500 shares → 100 shares
+            return 1.0 / ratio
+        elif atype == 'rights_issue':
+            # Approximate: assume all rights exercised
+            # In practice, this overestimates the adjustment
+            return 1 + ratio
+        else:
+            return 1.0
+    
+    ca['point_factor'] = ca.apply(compute_point_factor, axis=1)
+    
+    # Sort chronologically within each ticker
+    ca = ca.sort_values(['ticker', 'ex_date']).reset_index(drop=True)
+    
+    # Cumulative factor: product of all point factors from listing to date
+    # This gives us a running "total adjustment" for each ticker
+    ca['cum_factor'] = ca.groupby('ticker')['point_factor'].cumprod()
+    
+    # Summary statistics
+    n_tickers = ca['ticker'].nunique()
+    n_events = len(ca)
+    avg_events = n_events / n_tickers if n_tickers > 0 else 0
+    
+    print(f"Corporate action adjustment factors built:")
+    print(f"  Tickers with adjustments: {n_tickers:,}")
+    print(f"  Total share-altering events: {n_events:,}")
+    print(f"  Average events per ticker: {avg_events:.1f}")
+    print(f"\nEvent type distribution:")
+    print(ca['action_type'].value_counts().to_string())
+    
+    return ca[['ticker', 'ex_date', 'action_type', 'ratio', 
+               'point_factor', 'cum_factor']]
+
+
+def adjust_shares(shares: float, ticker: str, from_date, to_date, 
+                  adj_factors: pd.DataFrame) -> float:
+    """
+    Adjust a share count from one date to another for corporate actions.
+    
+    Example: If a company had a 30% stock dividend with ex_date between
+    from_date and to_date, then 1000 shares at from_date = 1300 shares 
+    at to_date.
+    
+    Parameters
+    ----------
+    shares : float
+        Number of shares at from_date
+    ticker : str
+        Stock ticker
+    from_date, to_date : pd.Timestamp
+        Period for adjustment
+    adj_factors : pd.DataFrame
+        Output of build_adjustment_factors()
+    
+    Returns
+    -------
+    float
+        Adjusted shares at to_date
+    """
+    events = adj_factors[
+        (adj_factors['ticker'] == ticker) &
+        (adj_factors['ex_date'] > pd.Timestamp(from_date)) &
+        (adj_factors['ex_date'] <= pd.Timestamp(to_date))
+    ]
+    
+    if len(events) == 0:
+        return shares
+    
+    total_factor = events['point_factor'].prod()
+    return shares * total_factor
+
+
+# Example usage:
+# adj_factors = build_adjustment_factors(dc.corporate_actions)
+```
+
+::: {.callout-important title="The Stock Dividend Problem in Vietnam"}
+Vietnamese companies issue stock dividends with remarkable frequency, many growth companies do so 2-3 times per year. Consider **Vinhomes (VHM)** or **FPT Corporation**: their share counts may double or triple over a 5-year period purely from stock dividends. If you compare raw ownership shares from 2019 to 2024 without adjustment, you will obtain nonsensical ownership ratios. **Every time-series analysis of Vietnamese ownership data must use adjusted shares.** This is the Vietnamese equivalent of the CRSP cfacshr adjustment factor problem in US data, but more severe because the events are more frequent and larger in magnitude.
+:::
+
+```{python}
+#| label: price-processing
+#| code-summary: "Process DataCore.vn Price Data with Adjustments"
+#| eval: false
+
+# ============================================================================
+# Step 2: Process Stock Price Data
+# ============================================================================
+
+def process_price_data(prices: pd.DataFrame, 
+                       adj_factors: pd.DataFrame,
+                       company_profile: pd.DataFrame) -> pd.DataFrame:
+    """
+    Process DataCore.vn stock price data:
+    1. Align dates to month-end and quarter-end
+    2. Merge company metadata (exchange, sector, FOL limit)
+    3. Compute adjusted prices and shares outstanding
+    4. Compute market capitalization
+    5. Create quarter-end snapshots
+    
+    Parameters
+    ----------
+    prices : pd.DataFrame
+        Daily/monthly price data from DataCore.vn
+    adj_factors : pd.DataFrame
+        Corporate action adjustment factors
+    company_profile : pd.DataFrame
+        Company metadata including exchange, sector, FOL
+    
+    Returns
+    -------
+    pd.DataFrame
+        Quarter-end processed stock data
+    """
+    df = prices.copy()
+    
+    # Standardize date
+    df['date'] = pd.to_datetime(df['date'])
+    df['month_end'] = df['date'] + pd.offsets.MonthEnd(0)
+    df['quarter_end'] = df['date'] + pd.offsets.QuarterEnd(0)
+    
+    # Merge company profile
+    profile_cols = ['ticker', 'exchange', 'industry_code', 'fol_limit', 
+                    'listing_date', 'company_name']
+    profile_cols = [c for c in profile_cols if c in company_profile.columns]
+    df = df.merge(company_profile[profile_cols], on='ticker', how='left')
+    
+    # Build cumulative adjustment factor for each ticker-date
+    # For each observation, compute the total adjustment from listing to that date
+    df = df.sort_values(['ticker', 'date'])
+    
+    # Merge adjustment events
+    # For each ticker-date, find the cumulative factor as of that date
+    def get_cum_factor_at_date(group):
+        ticker = group.name
+        ticker_adj = adj_factors[adj_factors['ticker'] == ticker].copy()
+        
+        if len(ticker_adj) == 0:
+            group['cum_adj_factor'] = 1.0
+            return group
+        
+        # For each date, find cumulative factor (product of all events up to that date)
+        group = group.sort_values('date')
+        group['cum_adj_factor'] = 1.0
+        
+        for _, event in ticker_adj.iterrows():
+            mask = group['date'] >= event['ex_date']
+            group.loc[mask, 'cum_adj_factor'] *= event['point_factor']
+        
+        return group
+    
+    df = df.groupby('ticker', group_keys=False).apply(get_cum_factor_at_date)
+    
+    # Adjusted price and shares
+    # adjusted_close should already be provided by DataCore.vn
+    # But we compute our own for consistency
+    if 'adjusted_close' not in df.columns:
+        df['adjusted_close'] = df['close'] / df['cum_adj_factor']
+    
+    # Adjusted shares outstanding
+    df['adjusted_shares'] = df['shares_outstanding'] * df['cum_adj_factor']
+    
+    # Market capitalization (in billion VND)
+    df['market_cap'] = df['close'] * df['shares_outstanding'] / 1e9
+    
+    # Monthly returns
+    df = df.sort_values(['ticker', 'date'])
+    df['ret'] = df.groupby('ticker')['adjusted_close'].pct_change()
+    
+    # Keep quarter-end observations
+    # For daily data: keep last trading day of each quarter
+    df_quarterly = (df.sort_values(['ticker', 'quarter_end', 'date'])
+                      .groupby(['ticker', 'quarter_end'])
+                      .last()
+                      .reset_index())
+    
+    print(f"Processed price data:")
+    print(f"  Total records (daily): {len(df):,}")
+    print(f"  Quarter-end records: {len(df_quarterly):,}")
+    print(f"  Unique tickers: {df_quarterly['ticker'].nunique():,}")
+    print(f"  Date range: {df_quarterly['quarter_end'].min()} to "
+          f"{df_quarterly['quarter_end'].max()}")
+    print(f"\nExchange distribution:")
+    print(df_quarterly.groupby('exchange')['ticker'].nunique().to_string())
+    
+    return df_quarterly
+
+# prices_q = process_price_data(dc.prices, adj_factors, dc.company_profile)
+```
+
+### Ownership Structure Data {#sec-ownership-data}
+
+Vietnamese ownership data from DataCore.vn captures the composition of shareholders as disclosed in annual reports, semi-annual reports, and event-driven disclosures. The key distinction from US 13F data is that Vietnamese disclosures provide a **complete ownership decomposition**, not just institutional long positions, but the full breakdown into state, institutional, foreign, and individual ownership.
+
+```{python}
+#| label: ownership-processing
+#| code-summary: "Process and Standardize Ownership Structure Data"
+#| eval: false
+
+# ============================================================================
+# Step 3: Process Ownership Structure Data
+# ============================================================================
+
+class OwnershipType:
+    """
+    Vietnam's ownership taxonomy.
+    
+    Unlike the US where 13F captures only institutional long positions,
+    Vietnamese disclosure provides a complete ownership decomposition.
+    We classify shareholders into five mutually exclusive categories.
+    """
+    STATE = 'state'                    # Nhà nước (government entities, SOE parents)
+    FOREIGN_INST = 'foreign_inst'      # Tổ chức nước ngoài
+    DOMESTIC_INST = 'domestic_inst'    # Tổ chức trong nước (non-state)
+    INDIVIDUAL = 'individual'          # Cá nhân
+    TREASURY = 'treasury'              # Cổ phiếu quỹ
+    
+    ALL_TYPES = [STATE, FOREIGN_INST, DOMESTIC_INST, INDIVIDUAL, TREASURY]
+    INSTITUTIONAL = [STATE, FOREIGN_INST, DOMESTIC_INST]
+    FOREIGN = [FOREIGN_INST]  # Can be expanded if foreign individuals are tracked
+
+
+def classify_shareholders(ownership: pd.DataFrame) -> pd.DataFrame:
+    """
+    Classify shareholders into Vietnam's ownership taxonomy.
+    
+    DataCore.vn may provide a `shareholder_type` field, but naming 
+    conventions vary. This function standardizes the classification 
+    using a combination of provided flags and name-based heuristics.
+    
+    The classification challenge in Vietnam (noted by @huang2023factors):
+    DataCore.vn may not always cleanly separate institution types, so we 
+    use a cascading approach:
+    1. Use explicit flags (is_state, is_foreign, is_institution) if available
+    2. Apply name-based heuristics for Vietnamese entity names
+    3. Default to 'individual' for unclassified shareholders
+    
+    Parameters
+    ----------
+    ownership : pd.DataFrame
+        Raw ownership data from DataCore.vn
+    
+    Returns
+    -------
+    pd.DataFrame
+        Ownership data with standardized `owner_type` column
+    """
+    df = ownership.copy()
+    
+    # --- Method 1: Use explicit flags if available ---
+    if all(col in df.columns for col in ['is_state', 'is_foreign', 'is_institution']):
+        conditions = [
+            (df['is_state'] == True),
+            (df['is_foreign'] == True) & (df['is_institution'] == True),
+            (df['is_foreign'] == True) & (df['is_institution'] != True),
+            (df['is_institution'] == True) & (df['is_state'] != True) & 
+                (df['is_foreign'] != True),
+        ]
+        choices = [
+            OwnershipType.STATE,
+            OwnershipType.FOREIGN_INST,
+            OwnershipType.FOREIGN_INST,  # Foreign individuals often grouped
+            OwnershipType.DOMESTIC_INST,
+        ]
+        df['owner_type'] = np.select(conditions, choices, 
+                                      default=OwnershipType.INDIVIDUAL)
+    
+    # --- Method 2: Name-based heuristics ---
+    elif 'shareholder_name' in df.columns:
+        name = df['shareholder_name'].str.lower().fillna('')
+        
+        # State entities: government ministries, SCIC, state corporations
+        state_keywords = [
+            'bộ tài chính', 'tổng công ty đầu tư', 'scic', 
+            'ủy ban nhân dân', 'nhà nước', 'state capital',
+            'tổng công ty', 'vốn nhà nước', 'bộ công thương',
+            'bộ quốc phòng', 'bộ giao thông', 'vinashin',
+        ]
+        is_state = name.apply(
+            lambda x: any(kw in x for kw in state_keywords)
+        )
+        
+        # Foreign entities: common fund names, foreign company patterns
+        foreign_keywords = [
+            'fund', 'investment', 'capital', 'limited', 'ltd', 'inc',
+            'corporation', 'holdings', 'asset management', 'pte',
+            'gmbh', 'management', 'partners', 'advisors',
+            'dragon capital', 'vinacapital', 'templeton', 
+            'blackrock', 'jpmorgan', 'samsung', 'mirae',
+        ]
+        # Also check for non-Vietnamese characters as a heuristic
+        is_foreign_name = name.apply(
+            lambda x: any(kw in x for kw in foreign_keywords)
+        )
+        
+        # Domestic institutions: Vietnamese bank, securities, insurance names
+        domestic_inst_keywords = [
+            'ngân hàng', 'chứng khoán', 'bảo hiểm', 'quỹ đầu tư',
+            'công ty quản lý', 'bảo việt', 'techcombank', 'vietcombank',
+            'bidv', 'vietinbank', 'vpbank', 'mb bank', 'ssi', 'hsc',
+            'vcsc', 'vndirect', 'fpt capital', 'manulife',
+        ]
+        is_domestic_inst = name.apply(
+            lambda x: any(kw in x for kw in domestic_inst_keywords)
+        )
+        
+        # Treasury shares
+        is_treasury = name.str.contains('cổ phiếu quỹ|treasury', case=False)
+        
+        # Apply classification cascade
+        df['owner_type'] = OwnershipType.INDIVIDUAL  # Default
+        df.loc[is_domestic_inst, 'owner_type'] = OwnershipType.DOMESTIC_INST
+        df.loc[is_foreign_name, 'owner_type'] = OwnershipType.FOREIGN_INST
+        df.loc[is_state, 'owner_type'] = OwnershipType.STATE
+        df.loc[is_treasury, 'owner_type'] = OwnershipType.TREASURY
+    
+    # --- Method 3: Use shareholder_type directly ---
+    elif 'shareholder_type' in df.columns:
+        type_map = {
+            'state': OwnershipType.STATE,
+            'foreign_institution': OwnershipType.FOREIGN_INST,
+            'foreign_individual': OwnershipType.FOREIGN_INST,
+            'domestic_institution': OwnershipType.DOMESTIC_INST,
+            'individual': OwnershipType.INDIVIDUAL,
+            'treasury': OwnershipType.TREASURY,
+        }
+        df['owner_type'] = df['shareholder_type'].str.lower().map(type_map)
+        df['owner_type'] = df['owner_type'].fillna(OwnershipType.INDIVIDUAL)
+    
+    else:
+        raise ValueError(
+            "Cannot classify shareholders. Expected one of:\n"
+            "  1. Columns: is_state, is_foreign, is_institution\n"
+            "  2. Column: shareholder_name (for heuristic classification)\n"
+            "  3. Column: shareholder_type (pre-classified)"
+        )
+    
+    # Summary
+    print("Ownership classification results:")
+    print(df['owner_type'].value_counts().to_string())
+    
+    return df
+
+# ownership_classified = classify_shareholders(dc.ownership)
+```
+
+------------------------------------------------------------------------
+
+## Vietnam's Ownership Taxonomy {#sec-ownership-taxonomy}
+
+### The Five Ownership Categories
+
+Vietnam's ownership structure is decomposed into five mutually exclusive categories that together sum to 100% of shares outstanding:
+
+| Category | Vietnamese Term | Description | Typical Share (2020s) |
+|:-----------------|:-----------------|:-----------------|:------------------|
+| **State** | Sở hữu Nhà nước | Government entities, SCIC, SOE parent companies | \~15-25% of market cap |
+| **Foreign Institutional** | Tổ chức nước ngoài | Foreign funds, banks, corporations | \~15-20% |
+| **Domestic Institutional** | Tổ chức trong nước | Vietnamese funds, banks, insurance, securities firms | \~5-10% |
+| **Individual** | Cá nhân | Retail investors (both Vietnamese and foreign individuals) | \~55-65% |
+| **Treasury** | Cổ phiếu quỹ | Company's own repurchased shares | \~0-2% |
+
+: Vietnam's Ownership Taxonomy {#tbl-ownership-taxonomy}
+
+This taxonomy differs fundamentally from the US 13F framework in several ways:
+
+1.  **Completeness:** We observe 100% of ownership, not just institutional long positions above \$100 million AUM.
+2.  **State as a category:** State ownership is a first-class analytical category, not subsumed under "All Others" as in the LSEG type code system.
+3.  **Individual visibility:** We observe aggregate individual ownership directly, whereas in the US, individual ownership is merely the residual (100% − institutional ownership).
+4.  **No short position ambiguity:** Vietnam's market has very limited short-selling infrastructure, so ownership data genuinely represents long positions.
+
+```{python}
+#| label: ownership-decomposition
+#| code-summary: "Compute Full Ownership Decomposition for Each Stock-Period"
+#| eval: false
+
+# ============================================================================
+# Step 4: Compute Ownership Decomposition
+# ============================================================================
+
+def compute_ownership_decomposition(ownership: pd.DataFrame,
+                                     prices_q: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute the full ownership decomposition for each stock at each 
+    disclosure date.
+    
+    For each stock-date combination, aggregates shares held by each 
+    ownership category and computes ownership ratios relative to 
+    total shares outstanding.
+    
+    Parameters
+    ----------
+    ownership : pd.DataFrame
+        Classified ownership data (output of classify_shareholders)
+    prices_q : pd.DataFrame
+        Quarter-end price data with shares_outstanding
+    
+    Returns
+    -------
+    pd.DataFrame
+        Stock-period level ownership decomposition with columns for
+        each ownership type's share count and percentage
+    """
+    # Aggregate shares by ticker, date, and owner type
+    agg = (ownership.groupby(['ticker', 'date', 'owner_type'])['shares_held']
+                    .sum()
+                    .reset_index())
+    
+    # Pivot to wide format: one column per ownership type
+    wide = agg.pivot_table(
+        index=['ticker', 'date'],
+        columns='owner_type',
+        values='shares_held',
+        fill_value=0
+    ).reset_index()
+    
+    # Rename columns
+    type_cols = [c for c in wide.columns if c in OwnershipType.ALL_TYPES]
+    rename_map = {t: f'shares_{t}' for t in type_cols}
+    wide = wide.rename(columns=rename_map)
+    
+    # Total institutional shares
+    inst_cols = [f'shares_{t}' for t in OwnershipType.INSTITUTIONAL 
+                 if f'shares_{t}' in wide.columns]
+    wide['shares_institutional'] = wide[inst_cols].sum(axis=1)
+    
+    # Total foreign shares (for FOL tracking)
+    foreign_cols = [f'shares_{t}' for t in OwnershipType.FOREIGN 
+                    if f'shares_{t}' in wide.columns]
+    wide['shares_foreign_total'] = wide[foreign_cols].sum(axis=1)
+    
+    # Align with quarter-end dates for merging with price data
+    wide['quarter_end'] = wide['date'] + pd.offsets.QuarterEnd(0)
+    
+    # Merge with price data to get shares outstanding
+    merged = wide.merge(
+        prices_q[['ticker', 'quarter_end', 'shares_outstanding', 
+                  'adjusted_shares', 'market_cap', 'exchange', 
+                  'industry_code', 'fol_limit', 'close']],
+        on=['ticker', 'quarter_end'],
+        how='left'
+    )
+    
+    # Compute ownership ratios
+    tso = merged['shares_outstanding']
+    for col in merged.columns:
+        if col.startswith('shares_') and col != 'shares_outstanding':
+            ratio_col = col.replace('shares_', 'pct_')
+            merged[ratio_col] = merged[col] / tso
+            merged.loc[tso <= 0, ratio_col] = np.nan
+    
+    # Derived measures
+    merged['pct_free_float'] = 1 - merged.get('pct_state', 0) - merged.get('pct_treasury', 0)
+    
+    # SOE flag: state ownership > 50%
+    merged['is_soe'] = (merged.get('pct_state', 0) > 0.50).astype(int)
+    
+    # FOL utilization
+    if 'fol_limit' in merged.columns and 'pct_foreign_total' in merged.columns:
+        merged['fol_utilization'] = merged['pct_foreign_total'] / merged['fol_limit']
+        merged['foreign_room'] = merged['fol_limit'] - merged['pct_foreign_total']
+        merged.loc[merged['fol_limit'] <= 0, ['fol_utilization', 'foreign_room']] = np.nan
+    
+    # Number of institutional owners (breadth)
+    n_owners = (ownership[ownership['owner_type'].isin(OwnershipType.INSTITUTIONAL)]
+                .groupby(['ticker', 'date'])['shareholder_name']
+                .nunique()
+                .reset_index()
+                .rename(columns={'shareholder_name': 'n_inst_owners'}))
+    
+    n_foreign_owners = (ownership[ownership['owner_type'] == OwnershipType.FOREIGN_INST]
+                        .groupby(['ticker', 'date'])['shareholder_name']
+                        .nunique()
+                        .reset_index()
+                        .rename(columns={'shareholder_name': 'n_foreign_owners'}))
+    
+    merged = merged.merge(n_owners, on=['ticker', 'date'], how='left')
+    merged = merged.merge(n_foreign_owners, on=['ticker', 'date'], how='left')
+    merged[['n_inst_owners', 'n_foreign_owners']] = (
+        merged[['n_inst_owners', 'n_foreign_owners']].fillna(0)
+    )
+    
+    print(f"Ownership decomposition computed:")
+    print(f"  Stock-period observations: {len(merged):,}")
+    print(f"  Unique tickers: {merged['ticker'].nunique():,}")
+    print(f"\nMean ownership structure:")
+    pct_cols = [c for c in merged.columns if c.startswith('pct_')]
+    print(merged[pct_cols].mean().round(4).to_string())
+    
+    return merged
+
+# ownership_decomp = compute_ownership_decomposition(
+#     ownership_classified, prices_q
+# )
+```
+
+------------------------------------------------------------------------
+
+## Institutional Ownership Measures {#sec-ownership-metrics}
+
+### Ownership Ratio {#sec-io-ratio}
+
+The **Institutional Ownership Ratio (IOR)** for stock $i$ at time $t$ in Vietnam is:
+
+$$
+IOR_{i,t} = \frac{S_{i,t}^{state} + S_{i,t}^{foreign\_inst} + S_{i,t}^{domestic\_inst}}{TSO_{i,t}}
+$$ {#eq-ior-vn}
+
+where $S_{i,t}^{type}$ denotes adjusted shares held by each ownership category and $TSO_{i,t}$ is total shares outstanding. Unlike the US where the IOR can exceed 100% due to long-only reporting and short selling, the Vietnamese IOR is bounded by construction in $[0, 1]$ because we observe the complete ownership decomposition.
+
+We also compute category-specific ownership ratios:
+
+$$
+IOR_{i,t}^{foreign} = \frac{S_{i,t}^{foreign\_inst}}{TSO_{i,t}}, \quad
+IOR_{i,t}^{state} = \frac{S_{i,t}^{state}}{TSO_{i,t}}, \quad
+IOR_{i,t}^{domestic} = \frac{S_{i,t}^{domestic\_inst}}{TSO_{i,t}}
+$$ {#eq-ior-components}
+
+### Concentration: Herfindahl-Hirschman Index {#sec-hhi}
+
+The **Institutional Ownership Concentration** via the Herfindahl-Hirschman Index is:
+
+$$
+IOC_{i,t}^{HHI} = \sum_{j=1}^{N_{i,t}} \left(\frac{S_{i,j,t}}{\sum_{k=1}^{N_{i,t}} S_{i,k,t}}\right)^2
+$$ {#eq-hhi-vn}
+
+In Vietnam, the HHI is particularly informative because it captures the dominance of state shareholders. A company where the government holds 65% will have a mechanically high HHI even if the remaining 35% is diversely held.
+
+We therefore compute **separate HHI measures** for different ownership categories:
+
+$$
+HHI_{i,t}^{total} = \sum_{j} w_{i,j,t}^2, \quad
+HHI_{i,t}^{non-state} = \sum_{j \notin state} \left(\frac{S_{i,j,t}}{\sum_{k \notin state} S_{i,k,t}}\right)^2
+$$ {#eq-hhi-decomposed}
+
+The non-state HHI is more comparable to the US institutional HHI, as it captures concentration among market-driven investors.
+
+### Breadth of Ownership {#sec-breadth}
+
+Following @chen2002breadth, **Institutional Breadth** ($N_{i,t}$) is the number of institutional investors holding stock $i$ in period $t$. The **Change in Breadth** is:
+
+$$
+\Delta Breadth_{i,t} = \frac{N_{i,t}^{cont} - N_{i,t-1}^{cont}}{TotalInstitutions_{t-1}}
+$$ {#eq-dbreadth-vn}
+
+where $N_{i,t}^{cont}$ counts only institutions that appear in the disclosure universe in both periods $t$ and $t-1$, following the @lehavy2008investor algorithm. This adjustment is particularly important in Vietnam where:
+
+-   New funds launch frequently (especially ETFs tracking VN30)
+-   Foreign funds enter and exit the market
+-   Domestic securities firms consolidate or spin off asset management divisions
+
+```{python}
+#| label: compute-all-metrics
+#| code-summary: "Compute All Institutional Ownership Metrics for Vietnam"
+#| eval: false
+
+# ============================================================================
+# Step 5: Compute All IO Metrics
+# ============================================================================
+
+def compute_io_metrics_vietnam(ownership: pd.DataFrame,
+                                ownership_decomp: pd.DataFrame,
+                                adj_factors: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute security-level institutional ownership metrics adapted for Vietnam.
+    
+    Computes:
+    1. Ownership ratios by category (state, foreign, domestic inst, individual)
+    2. HHI concentration (total, non-state, foreign-only)
+    3. Number of institutional owners (total, foreign, domestic)
+    4. Change in breadth (Lehavy-Sloan adjusted)
+    5. FOL-related metrics (utilization, room, near-cap indicator)
+    
+    Parameters
+    ----------
+    ownership : pd.DataFrame
+        Classified ownership data with individual shareholder records
+    ownership_decomp : pd.DataFrame
+        Aggregated ownership decomposition (output of compute_ownership_decomposition)
+    adj_factors : pd.DataFrame
+        Corporate action adjustment factors
+    
+    Returns
+    -------
+    pd.DataFrame
+        Stock-period level metrics
+    """
+    # Start with the ownership decomposition
+    metrics = ownership_decomp.copy()
+    
+    # --- HHI Concentration ---
+    # Total HHI: across all institutional shareholders
+    inst_ownership = ownership[
+        ownership['owner_type'].isin(OwnershipType.INSTITUTIONAL)
+    ].copy()
+    
+    def compute_hhi_group(group):
+        """Compute HHI for a group of shareholders."""
+        total = group['shares_held'].sum()
+        if total <= 0:
+            return np.nan
+        weights = group['shares_held'] / total
+        return (weights ** 2).sum()
+    
+    # Total institutional HHI
+    hhi_total = (inst_ownership.groupby(['ticker', 'date'])
+                               .apply(compute_hhi_group)
+                               .reset_index(name='hhi_institutional'))
+    metrics = metrics.merge(hhi_total, on=['ticker', 'date'], how='left')
+    
+    # Non-state HHI (exclude state shareholders)
+    non_state = ownership[
+        ownership['owner_type'].isin([OwnershipType.FOREIGN_INST, 
+                                       OwnershipType.DOMESTIC_INST])
+    ]
+    hhi_nonstate = (non_state.groupby(['ticker', 'date'])
+                             .apply(compute_hhi_group)
+                             .reset_index(name='hhi_non_state'))
+    metrics = metrics.merge(hhi_nonstate, on=['ticker', 'date'], how='left')
+    
+    # Foreign-only HHI
+    foreign_only = ownership[ownership['owner_type'] == OwnershipType.FOREIGN_INST]
+    hhi_foreign = (foreign_only.groupby(['ticker', 'date'])
+                               .apply(compute_hhi_group)
+                               .reset_index(name='hhi_foreign'))
+    metrics = metrics.merge(hhi_foreign, on=['ticker', 'date'], how='left')
+    
+    # --- Change in Breadth (Lehavy-Sloan Algorithm) ---
+    metrics = metrics.sort_values(['ticker', 'date'])
+    
+    # Get list of all institutions filing in each period
+    inst_by_period = (inst_ownership.groupby('date')['shareholder_name']
+                                     .apply(set)
+                                     .to_dict())
+    
+    # For each stock-period: count continuing institutions
+    def compute_breadth_change(group):
+        group = group.sort_values('date').reset_index(drop=True)
+        group['dbreadth'] = np.nan
+        
+        for i in range(1, len(group)):
+            current_date = group.loc[i, 'date']
+            prev_date = group.loc[i-1, 'date']
+            
+            # Institutions in universe for both periods
+            current_universe = inst_by_period.get(current_date, set())
+            prev_universe = inst_by_period.get(prev_date, set())
+            continuing_universe = current_universe & prev_universe
+            
+            if len(prev_universe) == 0:
+                continue
+            
+            # Count continuing institutions holding this stock in each period
+            ticker = group.loc[i, 'ticker']
+            
+            current_holders = set(
+                inst_ownership[
+                    (inst_ownership['ticker'] == ticker) & 
+                    (inst_ownership['date'] == current_date)
+                ]['shareholder_name']
+            )
+            prev_holders = set(
+                inst_ownership[
+                    (inst_ownership['ticker'] == ticker) & 
+                    (inst_ownership['date'] == prev_date)
+                ]['shareholder_name']
+            )
+            
+            # Count only continuing institutions
+            n_current_cont = len(current_holders & continuing_universe)
+            n_prev_cont = len(prev_holders & continuing_universe)
+            
+            group.loc[i, 'dbreadth'] = (
+                (n_current_cont - n_prev_cont) / len(prev_universe)
+            )
+        
+        return group
+    
+    metrics = metrics.groupby('ticker', group_keys=False).apply(compute_breadth_change)
+    
+    # --- FOL Indicators ---
+    if 'fol_utilization' in metrics.columns:
+        metrics['near_fol_cap'] = (metrics['fol_utilization'] > 0.90).astype(int)
+        metrics['at_fol_cap'] = (metrics['fol_utilization'] > 0.98).astype(int)
+    
+    print(f"IO metrics computed for Vietnam:")
+    print(f"  Observations: {len(metrics):,}")
+    print(f"\nKey metric distributions:")
+    summary_cols = ['pct_institutional', 'pct_state', 'pct_foreign_total',
+                    'hhi_institutional', 'n_inst_owners', 'dbreadth']
+    summary_cols = [c for c in summary_cols if c in metrics.columns]
+    print(metrics[summary_cols].describe().round(4).to_string())
+    
+    return metrics
+
+# io_metrics = compute_io_metrics_vietnam(
+#     ownership_classified, ownership_decomp, adj_factors
+# )
+```
+
+### Time Series Visualization
+
+```{python}
+#| label: fig-io-timeseries-vn
+#| fig-cap: "Time Series of Ownership Structure in Vietnamese Listed Companies. Panel A shows the evolution of ownership composition across all HOSE/HNX stocks. Panel B decomposes institutional ownership by foreign vs domestic components. The decline in state ownership reflects Vietnam's ongoing equitization program, while the growth in foreign institutional ownership tracks the market's progressive opening to international investors."
+#| fig-height: 12
+#| eval: false
+
+def plot_ownership_timeseries_vietnam(metrics: pd.DataFrame):
+    """
+    Create publication-quality time series plots of Vietnamese 
+    ownership structure evolution.
+    """
+    fig, axes = plt.subplots(3, 1, figsize=(12, 14))
+    
+    # Aggregate across all stocks (market-cap weighted)
+    ts = metrics.groupby('quarter_end').apply(
+        lambda g: pd.Series({
+            'pct_state': np.average(g['pct_state'].fillna(0), 
+                                     weights=g['market_cap'].fillna(1)),
+            'pct_foreign': np.average(g['pct_foreign_total'].fillna(0), 
+                                       weights=g['market_cap'].fillna(1)),
+            'pct_domestic_inst': np.average(g['pct_domestic_inst'].fillna(0), 
+                                             weights=g['market_cap'].fillna(1)),
+            'pct_individual': np.average(g['pct_individual'].fillna(0), 
+                                          weights=g['market_cap'].fillna(1)),
+            'n_stocks': g['ticker'].nunique(),
+            'total_mktcap': g['market_cap'].sum(),
+            'median_n_inst': g['n_inst_owners'].median(),
+            'median_hhi': g['hhi_institutional'].median(),
+            'pct_soe': g['is_soe'].mean(),
+        })
+    ).reset_index()
+    
+    # ---- Panel A: Ownership Composition (Stacked Area) ----
+    ax = axes[0]
+    dates = ts['quarter_end']
+    ax.stackplot(dates,
+                 ts['pct_state'] * 100,
+                 ts['pct_foreign'] * 100,
+                 ts['pct_domestic_inst'] * 100,
+                 ts['pct_individual'] * 100,
+                 labels=['State', 'Foreign Institutional', 
+                         'Domestic Institutional', 'Individual'],
+                 colors=[OWNER_COLORS['State'], OWNER_COLORS['Foreign Institutional'],
+                         OWNER_COLORS['Domestic Institutional'], OWNER_COLORS['Individual']],
+                 alpha=0.8)
+    ax.set_ylabel('Ownership Share (%)')
+    ax.set_title('Panel A: Ownership Composition of Vietnamese Listed Companies '
+                 '(Market-Cap Weighted)')
+    ax.legend(loc='upper right', frameon=True, framealpha=0.9)
+    ax.set_ylim(0, 100)
+    
+    # ---- Panel B: Institutional Ownership by Component ----
+    ax = axes[1]
+    ax.plot(dates, ts['pct_state'] * 100, label='State',
+            color=OWNER_COLORS['State'], linewidth=2)
+    ax.plot(dates, ts['pct_foreign'] * 100, label='Foreign Institutional',
+            color=OWNER_COLORS['Foreign Institutional'], linewidth=2)
+    ax.plot(dates, ts['pct_domestic_inst'] * 100, label='Domestic Institutional',
+            color=OWNER_COLORS['Domestic Institutional'], linewidth=2)
+    total_inst = (ts['pct_state'] + ts['pct_foreign'] + ts['pct_domestic_inst']) * 100
+    ax.plot(dates, total_inst, label='Total Institutional',
+            color=OWNER_COLORS['Total Institutional'], linewidth=2.5, linestyle='--')
+    ax.set_ylabel('Ownership Ratio (%)')
+    ax.set_title('Panel B: Institutional Ownership Components')
+    ax.legend(loc='upper left', frameon=True, framealpha=0.9)
+    
+    # ---- Panel C: Market Structure ----
+    ax = axes[2]
+    ax2 = ax.twinx()
+    ax.plot(dates, ts['n_stocks'], color='#1f77b4', linewidth=2, label='# Listed Stocks')
+    ax2.plot(dates, ts['total_mktcap'] / 1000, color='#d62728', linewidth=2, 
+             label='Total Market Cap (Trillion VND)')
+    ax.set_ylabel('Number of Listed Stocks', color='#1f77b4')
+    ax2.set_ylabel('Market Cap (Trillion VND)', color='#d62728')
+    ax.set_title('Panel C: Vietnamese Stock Market Development')
+    
+    # Combine legends
+    lines1, labels1 = ax.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax.legend(lines1 + lines2, labels1 + labels2, loc='upper left', framealpha=0.9)
+    
+    plt.tight_layout()
+    plt.savefig('fig_ownership_timeseries_vn.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+# plot_ownership_timeseries_vietnam(io_metrics)
+```
+
+```{python}
+#| label: fig-io-by-exchange
+#| fig-cap: "Mean Institutional Ownership by Exchange and Size Quintile. HOSE-listed firms attract significantly more institutional (especially foreign) ownership than HNX or UPCOM firms, consistent with size, liquidity, and governance quality differences across exchanges."
+#| eval: false
+
+def plot_io_by_exchange_size(metrics: pd.DataFrame):
+    """Plot IO ratios by exchange and size quintile."""
+    df = metrics[metrics['market_cap'].notna() & (metrics['market_cap'] > 0)].copy()
+    
+    # Size quintiles within each quarter
+    df['size_quintile'] = df.groupby('quarter_end')['market_cap'].transform(
+        lambda x: pd.qcut(x, 5, labels=['Q1\n(Small)', 'Q2', 'Q3', 'Q4', 'Q5\n(Large)'],
+                          duplicates='drop')
+    )
+    
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharey=True)
+    
+    metrics_to_plot = [
+        ('pct_institutional', 'Total Institutional'),
+        ('pct_foreign_total', 'Foreign Institutional'),
+        ('pct_state', 'State'),
+    ]
+    
+    for ax, (col, title) in zip(axes, metrics_to_plot):
+        for exchange, color in EXCHANGE_COLORS.items():
+            data = df[df['exchange'] == exchange]
+            if len(data) == 0:
+                continue
+            means = data.groupby('size_quintile')[col].mean() * 100
+            ax.bar(np.arange(len(means)) + list(EXCHANGE_COLORS.keys()).index(exchange) * 0.25,
+                   means, width=0.25, label=exchange, color=color, alpha=0.8)
+        
+        ax.set_title(title)
+        ax.set_xlabel('Size Quintile')
+        if ax == axes[0]:
+            ax.set_ylabel('Mean Ownership (%)')
+        ax.legend()
+        ax.set_xticks(np.arange(5) + 0.25)
+        ax.set_xticklabels(['Q1\n(Small)', 'Q2', 'Q3', 'Q4', 'Q5\n(Large)'])
+    
+    plt.tight_layout()
+    plt.savefig('fig_io_by_exchange_size.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+# plot_io_by_exchange_size(io_metrics)
+```
+
+```{python}
+#| label: tbl-io-summary
+#| tbl-cap: "Summary Statistics of Ownership Structure in Vietnam by Size Quintile and Exchange (Pooled 2010-2024)"
+#| eval: false
+
+def tabulate_io_summary(metrics: pd.DataFrame, start_year: int = 2010) -> pd.DataFrame:
+    """
+    Create publication-quality summary table of Vietnamese ownership
+    structure by firm size.
+    """
+    df = metrics[
+        (metrics['quarter_end'].dt.year >= start_year) &
+        (metrics['market_cap'].notna()) & (metrics['market_cap'] > 0)
+    ].copy()
+    
+    df['size_quintile'] = df.groupby('quarter_end')['market_cap'].transform(
+        lambda x: pd.qcut(x, 5, labels=['Q1 (Small)', 'Q2', 'Q3', 'Q4', 'Q5 (Large)'],
+                          duplicates='drop')
+    )
+    
+    table = df.groupby('size_quintile').agg(
+        N=('ticker', 'count'),
+        Mean_MktCap=('market_cap', 'mean'),
+        Mean_IO_Total=('pct_institutional', 'mean'),
+        Mean_State=('pct_state', 'mean'),
+        Mean_Foreign=('pct_foreign_total', 'mean'),
+        Mean_Domestic_Inst=('pct_domestic_inst', 'mean'),
+        Mean_Individual=('pct_individual', 'mean'),
+        Median_N_Owners=('n_inst_owners', 'median'),
+        Median_HHI=('hhi_institutional', 'median'),
+        Pct_SOE=('is_soe', 'mean'),
+        Mean_FOL_Util=('fol_utilization', 'mean'),
+    ).round(4)
+    
+    # Format
+    table['N'] = table['N'].apply(lambda x: f"{x:,.0f}")
+    table['Mean_MktCap'] = table['Mean_MktCap'].apply(lambda x: f"{x:,.0f}B VND")
+    for col in ['Mean_IO_Total', 'Mean_State', 'Mean_Foreign', 
+                'Mean_Domestic_Inst', 'Mean_Individual', 'Pct_SOE', 'Mean_FOL_Util']:
+        table[col] = table[col].apply(lambda x: f"{x:.1%}" if pd.notna(x) else "—")
+    table['Median_N_Owners'] = table['Median_N_Owners'].apply(lambda x: f"{x:.0f}")
+    table['Median_HHI'] = table['Median_HHI'].apply(lambda x: f"{x:.3f}" if pd.notna(x) else "—")
+    
+    table.columns = ['N', 'Mean Mkt Cap', 'IO Total', 'State', 'Foreign', 
+                      'Dom. Inst.', 'Individual', 'Med. # Owners', 
+                      'Med. HHI', '% SOE', 'FOL Util.']
+    
+    return table
+
+# io_summary = tabulate_io_summary(io_metrics)
+# print(io_summary.to_string())
+```
+
+------------------------------------------------------------------------
+
+## Foreign Ownership Dynamics {#sec-foreign-ownership}
+
+### Foreign Ownership Limits and the FOL Premium {#sec-fol}
+
+Vietnam's Foreign Ownership Limits create a unique market segmentation. When a stock reaches its FOL, the only way for a new foreign investor to buy is if an existing foreign holder sells. This creates a de facto "foreign-only" market for FOL-constrained stocks, with documented price premiums [@vo2015foreign].
+
+The **FOL Utilization Ratio** for stock $i$ at time $t$ is:
+
+$$
+FOL\_Util_{i,t} = \frac{ForeignOwnership_{i,t}}{FOL\_Limit_i}
+$$ {#eq-fol-util}
+
+Stocks are classified by FOL proximity (@tbl-fol-zones).
+
+| FOL Zone   | Utilization Range | Market Implication                            |
+|:-----------------|:-----------------|:-----------------------------------|
+| **Green**  | \< 50%            | Ample foreign room; normal trading            |
+| **Yellow** | 50-80%            | Moderate room; some foreign interest pressure |
+| **Orange** | 80-95%            | Limited room; foreign premium emerging        |
+| **Red**    | 95-100%           | Near cap; significant foreign premium         |
+| **Capped** | ≈ 100%            | At limit; foreign-only secondary market       |
+
+: FOL Proximity Zones {#tbl-fol-zones}
+
+```{python}
+#| label: fol-analysis
+#| code-summary: "Comprehensive Foreign Ownership Limit Analysis"
+#| eval: false
+
+# ============================================================================
+# Step 6: Foreign Ownership Limit Analysis
+# ============================================================================
+
+class FOLAnalyzer:
+    """
+    Analyze Foreign Ownership Limit dynamics in the Vietnamese market.
+    
+    Key analyses:
+    1. FOL utilization tracking and classification
+    2. FOL premium estimation (price impact of being near cap)
+    3. Foreign room dynamics (opening/closing events)
+    4. Cross-sectional determinants of foreign ownership
+    """
+    
+    FOL_ZONES = {
+        'Green': (0, 0.50),
+        'Yellow': (0.50, 0.80),
+        'Orange': (0.80, 0.95),
+        'Red': (0.95, 1.00),
+        'Capped': (1.00, 1.50),
+    }
+    
+    def __init__(self, io_metrics: pd.DataFrame,
+                 foreign_daily: Optional[pd.DataFrame] = None):
+        """
+        Parameters
+        ----------
+        io_metrics : pd.DataFrame
+            Full ownership metrics from compute_io_metrics_vietnam()
+        foreign_daily : pd.DataFrame, optional
+            Daily foreign ownership tracking from DataCore.vn
+        """
+        self.metrics = io_metrics.copy()
+        self.foreign_daily = foreign_daily
+    
+    def classify_fol_zones(self) -> pd.DataFrame:
+        """Classify stocks into FOL proximity zones."""
+        df = self.metrics.copy()
+        
+        if 'fol_utilization' not in df.columns:
+            print("FOL utilization not available in metrics.")
+            return df
+        
+        conditions = []
+        choices = []
+        for zone, (lo, hi) in self.FOL_ZONES.items():
+            conditions.append(
+                (df['fol_utilization'] >= lo) & (df['fol_utilization'] < hi)
+            )
+            choices.append(zone)
+        
+        df['fol_zone'] = np.select(conditions, choices, default='Unknown')
+        
+        # Summary
+        zone_dist = df.groupby('fol_zone')['ticker'].nunique()
+        print("FOL Zone Distribution (unique stocks):")
+        print(zone_dist.to_string())
+        
+        return df
+    
+    def estimate_fol_premium(self) -> pd.DataFrame:
+        """
+        Estimate the FOL premium using a cross-sectional approach.
+        
+        For each period, regress stock valuations (P/B or P/E) on FOL 
+        utilization, controlling for fundamentals. The coefficient on 
+        FOL utilization captures the premium investors pay for stocks 
+        near their foreign ownership cap.
+        
+        Alternative: Compare returns of stocks transitioning between 
+        FOL zones as a natural experiment.
+        """
+        df = self.metrics.copy()
+        df = df[df['fol_utilization'].notna() & df['market_cap'].notna()].copy()
+        
+        # FOL zone dummies
+        df['near_cap'] = (df['fol_utilization'] > 0.90).astype(int)
+        df['at_cap'] = (df['fol_utilization'] > 0.98).astype(int)
+        
+        # Price-to-book as valuation measure
+        # (Assumes 'equity' is available from financial data)
+        if 'equity' in df.columns:
+            df['pb_ratio'] = df['market_cap'] * 1e9 / df['equity']
+        else:
+            # Use market cap as proxy for cross-sectional analysis
+            df['log_mktcap'] = np.log(df['market_cap'])
+        
+        # Fama-MacBeth style: run cross-sectional regressions each period
+        results = []
+        for quarter, group in df.groupby('quarter_end'):
+            group = group.dropna(subset=['fol_utilization', 'log_mktcap'])
+            if len(group) < 50:
+                continue
+            
+            y = group['log_mktcap']
+            X = sm.add_constant(group[['fol_utilization', 'pct_state', 
+                                        'n_inst_owners']])
+            try:
+                model = sm.OLS(y, X).fit()
+                results.append({
+                    'quarter': quarter,
+                    'beta_fol': model.params.get('fol_utilization', np.nan),
+                    'tstat_fol': model.tvalues.get('fol_utilization', np.nan),
+                    'r2': model.rsquared,
+                    'n': len(group),
+                })
+            except Exception:
+                continue
+        
+        if results:
+            results_df = pd.DataFrame(results)
+            print("FOL Premium (Fama-MacBeth Regression):")
+            print(f"  Mean β(FOL_util): {results_df['beta_fol'].mean():.4f}")
+            print(f"  t-statistic: {results_df['beta_fol'].mean() / "
+                  f"(results_df['beta_fol'].std() / np.sqrt(len(results_df))):.2f}")
+            return results_df
+        
+        return pd.DataFrame()
+    
+    def analyze_foreign_room_events(self) -> pd.DataFrame:
+        """
+        Analyze events where foreign room opens or closes.
+        
+        Room-opening events (FOL cap raised, foreign seller exits) can
+        trigger significant price movements as pent-up foreign demand 
+        is released. Room-closing events (approaching cap) can create
+        selling pressure as foreign investors anticipate illiquidity.
+        """
+        if self.foreign_daily is None:
+            print("Daily foreign ownership data required for event analysis.")
+            return pd.DataFrame()
+        
+        df = self.foreign_daily.copy()
+        df = df.sort_values(['ticker', 'date'])
+        
+        # Compute daily change in foreign room
+        df['foreign_room_change'] = df.groupby('ticker')['foreign_room'].diff()
+        
+        # Identify room-opening events (room increases by > 1 percentage point)
+        df['room_open_event'] = (df['foreign_room_change'] > 0.01).astype(int)
+        
+        # Identify room-closing events (room decreases to < 2%)
+        df['room_close_event'] = (
+            (df['foreign_room'] < 0.02) & 
+            (df.groupby('ticker')['foreign_room'].shift(1) >= 0.02)
+        ).astype(int)
+        
+        events = df[
+            (df['room_open_event'] == 1) | (df['room_close_event'] == 1)
+        ].copy()
+        
+        print(f"Foreign room events identified:")
+        print(f"  Room-opening events: {df['room_open_event'].sum():,}")
+        print(f"  Room-closing events: {df['room_close_event'].sum():,}")
+        
+        return events
+
+# fol_analyzer = FOLAnalyzer(io_metrics, dc.foreign_ownership)
+# fol_classified = fol_analyzer.classify_fol_zones()
+# fol_premium = fol_analyzer.estimate_fol_premium()
+```
+
+```{python}
+#| label: fig-fol-utilization
+#| fig-cap: "Foreign Ownership Limit Utilization Distribution by Sector. Banking stocks cluster near the 30% cap, while many large-cap non-bank stocks approach the standard 49% limit. The bimodal distribution in 'Others' reflects the mix of stocks with and without meaningful foreign interest."
+#| eval: false
+
+def plot_fol_utilization(metrics: pd.DataFrame):
+    """Plot FOL utilization distribution by sector."""
+    df = metrics[metrics['fol_utilization'].notna()].copy()
+    
+    # Assign broad sectors
+    sector_map = {
+        'Banking': ['VCB', 'BID', 'CTG', 'TCB', 'VPB', 'MBB', 'ACB', 'HDB', 'STB', 'TPB'],
+        'Real Estate': ['VHM', 'VIC', 'NVL', 'KDH', 'DXG', 'HDG', 'VRE'],
+        'Technology': ['FPT', 'CMG', 'FOX'],
+        'Consumer': ['VNM', 'MSN', 'SAB', 'MWG', 'PNJ'],
+    }
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    for sector, tickers in sector_map.items():
+        data = df[df['ticker'].isin(tickers)]['fol_utilization']
+        if len(data) > 0:
+            ax.hist(data * 100, bins=30, alpha=0.4, label=sector, density=True)
+    
+    ax.axvline(x=30, color='red', linestyle='--', alpha=0.7, label='Banking FOL (30%)')
+    ax.axvline(x=49, color='blue', linestyle='--', alpha=0.7, label='Standard FOL (49%)')
+    ax.set_xlabel('FOL Utilization (%)')
+    ax.set_ylabel('Density')
+    ax.set_title('Foreign Ownership Limit Utilization Distribution')
+    ax.legend()
+    
+    plt.tight_layout()
+    plt.savefig('fig_fol_utilization.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+# plot_fol_utilization(io_metrics)
+```
+
+## Institutional Trades {#sec-trades}
+
+### Trade Inference in Vietnam {#sec-trade-inference}
+
+In the US, institutional trades are inferred from quarterly 13F holding snapshots. In Vietnam, the challenge is more acute because disclosure frequency varies:
+
+-   **Major shareholders (**$\ge$ **5%)**: Must disclose within 7 business days of crossing ownership thresholds (5%, 10%, 15%, 20%, 25%, 50%, 65%, 75%)
+-   **Fund portfolio reports:** Semi-annual disclosure required; some funds report quarterly
+-   **Annual reports:** Provide complete shareholder register but only once per year
+-   **Daily foreign ownership:** HOSE/HNX publish aggregate daily foreign buy/sell data
+
+We derive trades from the **change in ownership between consecutive disclosure dates**, applying the same logic as the US @ben2013hedge algorithm but adapted for Vietnam's irregular disclosure intervals.
+
+```{python}
+#| label: derive-trades-vn
+#| code-summary: "Derive Institutional Trades from Vietnamese Ownership Disclosures"
+#| eval: false
+
+# ============================================================================
+# Step 7: Derive Institutional Trades
+# ============================================================================
+
+def derive_trades_vietnam(ownership: pd.DataFrame,
+                           adj_factors: pd.DataFrame) -> pd.DataFrame:
+    """
+    Derive institutional trades from changes in ownership disclosures.
+    
+    Adapted from Ben-David, Franzoni, and Moussawi (2012) for 
+    Vietnam's irregular disclosure frequency.
+    
+    Key differences from US approach:
+    1. Disclosure intervals are irregular (not always quarterly)
+    2. We observe ALL institutional types, not just 13F filers
+    3. No $100M AUM threshold (we see all institutional holders)
+    4. Must adjust for corporate actions between disclosure dates
+    
+    Trade types:
+    +1: Initiating Buy (new position)
+    +2: Incremental Buy (increased existing position)
+    -1: Terminating Sale (fully exited position)
+    -2: Incremental Sale (reduced existing position)
+    
+    Parameters
+    ----------
+    ownership : pd.DataFrame
+        Classified ownership with: ticker, date, shareholder_name, 
+        shares_held, owner_type
+    adj_factors : pd.DataFrame
+        Corporate action adjustment factors
+    
+    Returns
+    -------
+    pd.DataFrame
+        Trade-level data: date, shareholder_name, ticker, trade, 
+        buysale, owner_type
+    """
+    # Focus on institutional shareholders only
+    inst = ownership[
+        ownership['owner_type'].isin(OwnershipType.INSTITUTIONAL)
+    ].copy()
+    
+    inst = inst.sort_values(['shareholder_name', 'ticker', 'date']).reset_index(drop=True)
+    
+    trades_list = []
+    
+    for (shareholder, ticker), group in inst.groupby(['shareholder_name', 'ticker']):
+        group = group.reset_index(drop=True)
+        
+        for i in range(len(group)):
+            current = group.iloc[i]
+            current_date = current['date']
+            current_shares = current['shares_held']
+            owner_type = current['owner_type']
+            
+            if i == 0:
+                # First observation: if institution appears, it's an initiating buy
+                # (we don't know if they held before our data starts)
+                # Skip the very first observation to avoid false initiating buys
+                continue
+            
+            prev = group.iloc[i - 1]
+            prev_date = prev['date']
+            prev_shares = prev['shares_held']
+            
+            # Adjust previous shares for corporate actions between dates
+            prev_shares_adj = adjust_shares(
+                prev_shares, ticker, prev_date, current_date, adj_factors
+            )
+            
+            # Compute trade (in adjusted shares)
+            trade = current_shares - prev_shares_adj
+            
+            # Classify trade type
+            if abs(trade) < 1:  # De minimis threshold
+                continue
+            
+            if prev_shares_adj <= 0 and current_shares > 0:
+                buysale = 1  # Initiating buy
+            elif prev_shares_adj > 0 and current_shares <= 0:
+                buysale = -1  # Terminating sale
+            elif trade > 0:
+                buysale = 2  # Incremental buy
+            else:
+                buysale = -2  # Incremental sale
+            
+            trades_list.append({
+                'date': current_date,
+                'shareholder_name': shareholder,
+                'ticker': ticker,
+                'trade': trade,
+                'prev_shares_adj': prev_shares_adj,
+                'current_shares': current_shares,
+                'buysale': buysale,
+                'owner_type': owner_type,
+                'days_between': (current_date - prev_date).days,
+            })
+    
+    trades = pd.DataFrame(trades_list)
+    
+    if len(trades) > 0:
+        print(f"Trades derived: {len(trades):,}")
+        print(f"\nTrade type distribution:")
+        labels = {1: 'Initiating Buy', 2: 'Incremental Buy',
+                  -1: 'Terminating Sale', -2: 'Incremental Sale'}
+        for bs, label in sorted(labels.items()):
+            n = (trades['buysale'] == bs).sum()
+            print(f"  {label}: {n:,} ({n/len(trades):.1%})")
+        
+        print(f"\nBy owner type:")
+        print(trades.groupby('owner_type')['trade'].agg(['count', 'mean', 'median'])
+              .round(0).to_string())
+    
+    return trades
+
+# trades = derive_trades_vietnam(ownership_classified, adj_factors)
+```
+
+::: {.callout-warning title="Corporate Action Adjustment in Trade Derivation"}
+When computing trades as $\Delta Shares = Shares_t - Shares_{t-1}$, the previous period's shares **must** be adjusted for any corporate actions between $t-1$ and $t$. If VNM issued a 20% stock dividend between the two disclosure dates, then 1,000 shares at $t-1$ should be compared to 1,200 adjusted shares, not 1,000 raw shares. Failing to make this adjustment would create a phantom "buy" of 200 shares that never actually occurred.
+:::
+
+```{python}
+#| label: vectorized-trades-vn
+#| code-summary: "Vectorized Trade Derivation for Large Datasets"
+
+def derive_trades_vectorized_vietnam(ownership: pd.DataFrame,
+                                      adj_factors: pd.DataFrame) -> pd.DataFrame:
+    """
+    Vectorized version of Vietnamese trade derivation.
+    
+    Uses pandas groupby and vectorized operations instead of Python loops.
+    Approximately 20-50x faster for large datasets.
+    
+    Note: Corporate action adjustment is applied per-group, which still
+    requires some iteration but is much faster than row-by-row.
+    """
+    inst = ownership[
+        ownership['owner_type'].isin(OwnershipType.INSTITUTIONAL) &
+        (ownership['shares_held'] > 0)
+    ].copy()
+    
+    inst = inst.sort_values(['shareholder_name', 'ticker', 'date']).reset_index(drop=True)
+    
+    # Lagged values
+    inst['prev_date'] = inst.groupby(['shareholder_name', 'ticker'])['date'].shift(1)
+    inst['prev_shares'] = inst.groupby(['shareholder_name', 'ticker'])['shares_held'].shift(1)
+    inst['is_first'] = inst['prev_date'].isna()
+    
+    # Remove first observations (no prior to compare)
+    inst = inst[~inst['is_first']].copy()
+    
+    # Adjust previous shares for corporate actions
+    # Vectorized: for each row, apply adjustment between prev_date and date
+    def adjust_row(row):
+        return adjust_shares(
+            row['prev_shares'], row['ticker'], 
+            row['prev_date'], row['date'], adj_factors
+        )
+    
+    inst['prev_shares_adj'] = inst.apply(adjust_row, axis=1)
+    
+    # Compute trade
+    inst['trade'] = inst['shares_held'] - inst['prev_shares_adj']
+    inst['days_between'] = (inst['date'] - inst['prev_date']).dt.days
+    
+    # Classify trade type
+    inst['buysale'] = np.select(
+        [
+            (inst['prev_shares_adj'] <= 0) & (inst['shares_held'] > 0),
+            (inst['prev_shares_adj'] > 0) & (inst['shares_held'] <= 0),
+            inst['trade'] > 0,
+            inst['trade'] < 0,
+        ],
+        [1, -1, 2, -2],
+        default=0
+    )
+    
+    # Remove zero trades
+    trades = inst[inst['buysale'] != 0].copy()
+    
+    trades = trades[['date', 'shareholder_name', 'ticker', 'trade', 
+                     'buysale', 'owner_type', 'days_between',
+                     'prev_shares_adj', 'shares_held']].copy()
+    trades = trades.rename(columns={'shares_held': 'current_shares'})
+    
+    print(f"Vectorized trades: {len(trades):,}")
+    return trades
+
+# trades = derive_trades_vectorized_vietnam(ownership_classified, adj_factors)
+```
+
+## Fund-Level Flows and Turnover {#sec-flows-turnover}
+
+### Portfolio Assets and Returns from Fund Holdings
+
+Using DataCore.vn's fund holdings data, we compute fund-level portfolio analytics analogous to the US 13F approach:
+
+$$
+Assets_{j,t} = \sum_{i=1}^{N_{j,t}} S_{i,j,t} \times P_{i,t}
+$$ {#eq-assets-vn}
+
+$$
+R_{j,t \to t+1}^{holdings} = \frac{\sum_{i} S_{i,j,t} \times P_{i,t} \times R_{i,t \to t+1}}{\sum_{i} S_{i,j,t} \times P_{i,t}}
+$$ {#eq-hret-vn}
+
+$$
+NetFlows_{j,t} = Assets_{j,t} - Assets_{j,t-1} \times (1 + R_{j,t-1 \to t}^{holdings})
+$$ {#eq-flows-vn}
+
+### Turnover Measures
+
+Following @carhart1997persistence, adapted for Vietnam's fund reporting:
+
+$$
+Turnover_{j,t}^{Carhart} = \frac{\min(TotalBuys_{j,t}, TotalSales_{j,t})}{\overline{Assets}_{j,t}}
+$$ {#eq-turnover-vn}
+
+```{python}
+#| label: fund-analytics
+#| code-summary: "Fund-Level Portfolio Analytics from DataCore.vn Fund Holdings"
+#| eval: false
+
+# ============================================================================
+# Step 8: Fund-Level Portfolio Analytics
+# ============================================================================
+
+def compute_fund_analytics(fund_holdings: pd.DataFrame,
+                            prices_q: pd.DataFrame,
+                            adj_factors: pd.DataFrame) -> Dict:
+    """
+    Compute fund-level portfolio analytics from DataCore.vn fund holdings.
+    
+    Vietnamese fund disclosure is typically semi-annual (some quarterly),
+    which limits the frequency of these analytics compared to the US
+    quarterly approach.
+    
+    Returns
+    -------
+    dict with keys:
+        'fund_assets': pd.DataFrame of fund-level assets and returns
+        'fund_trades': pd.DataFrame of fund-level derived trades
+        'fund_aggregates': pd.DataFrame of flows and turnover
+    """
+    fh = fund_holdings.copy()
+    fh = fh[fh['shares_held'] > 0].copy()
+    
+    # Merge with prices
+    fh = fh.merge(
+        prices_q[['ticker', 'quarter_end', 'close', 'adjusted_close', 'ret']],
+        left_on=['ticker', 'report_date'],
+        right_on=['ticker', 'quarter_end'],
+        how='inner'
+    )
+    
+    # Portfolio value
+    fh['holding_value'] = fh['shares_held'] * fh['close']
+    
+    # --- Fund-Level Assets ---
+    fund_assets = fh.groupby(['fund_name', 'report_date']).agg(
+        total_assets=('holding_value', lambda x: x.sum() / 1e9),  # Billion VND
+        n_stocks=('ticker', 'nunique'),
+    ).reset_index()
+    
+    # Holdings return (value-weighted)
+    fh['weight'] = fh.groupby(['fund_name', 'report_date'])['holding_value'].transform(
+        lambda x: x / x.sum()
+    )
+    fund_hret = (fh.groupby(['fund_name', 'report_date'])
+                   .apply(lambda g: np.average(g['ret'].fillna(0), weights=g['weight']))
+                   .reset_index(name='holdings_return'))
+    
+    fund_assets = fund_assets.merge(fund_hret, on=['fund_name', 'report_date'])
+    
+    # --- Fund-Level Trades ---
+    # Derive trades from changes in holdings
+    fh_sorted = fh.sort_values(['fund_name', 'ticker', 'report_date'])
+    fh_sorted['prev_shares'] = fh_sorted.groupby(['fund_name', 'ticker'])['shares_held'].shift(1)
+    fh_sorted['prev_date'] = fh_sorted.groupby(['fund_name', 'ticker'])['report_date'].shift(1)
+    
+    # Adjust for corporate actions
+    fh_sorted['prev_shares_adj'] = fh_sorted.apply(
+        lambda r: adjust_shares(r['prev_shares'], r['ticker'], 
+                                r['prev_date'], r['report_date'], adj_factors)
+        if pd.notna(r['prev_shares']) else np.nan,
+        axis=1
+    )
+    
+    fh_sorted['trade'] = fh_sorted['shares_held'] - fh_sorted['prev_shares_adj']
+    fh_sorted['trade_value'] = fh_sorted['trade'] * fh_sorted['close'] / 1e9  # Billion VND
+    
+    # Aggregate buys and sells per fund-period
+    fund_trades = fh_sorted[fh_sorted['trade'].notna()].copy()
+    fund_flows = fund_trades.groupby(['fund_name', 'report_date']).agg(
+        total_buys=('trade_value', lambda x: x[x > 0].sum()),
+        total_sales=('trade_value', lambda x: -x[x < 0].sum()),
+    ).reset_index()
+    
+    # --- Fund-Level Aggregates ---
+    fund_agg = fund_assets.merge(fund_flows, on=['fund_name', 'report_date'], how='left')
+    fund_agg[['total_buys', 'total_sales']] = fund_agg[['total_buys', 'total_sales']].fillna(0)
+    
+    fund_agg = fund_agg.sort_values(['fund_name', 'report_date'])
+    fund_agg['lag_assets'] = fund_agg.groupby('fund_name')['total_assets'].shift(1)
+    fund_agg['lag_hret'] = fund_agg.groupby('fund_name')['holdings_return'].shift(1)
+    
+    # Net flows
+    fund_agg['net_flows'] = (fund_agg['total_assets'] - 
+                              fund_agg['lag_assets'] * (1 + fund_agg['holdings_return']))
+    
+    # Turnover (Carhart definition)
+    fund_agg['avg_assets'] = (fund_agg['total_assets'] + fund_agg['lag_assets']) / 2
+    fund_agg['turnover'] = (
+        fund_agg[['total_buys', 'total_sales']].min(axis=1) / fund_agg['avg_assets']
+    )
+    
+    # Annualize (approximate, since disclosure may be semi-annual)
+    fund_agg['periods_per_year'] = 365 / fund_agg.groupby('fund_name')['report_date'].diff().dt.days
+    fund_agg['turnover_annual'] = fund_agg['turnover'] * fund_agg['periods_per_year'].fillna(2)
+    
+    print(f"Fund analytics computed:")
+    print(f"  Unique funds: {fund_agg['fund_name'].nunique():,}")
+    print(f"  Fund-period observations: {len(fund_agg):,}")
+    print(f"\nTurnover statistics:")
+    print(fund_agg[['turnover', 'turnover_annual']].describe().round(4))
+    
+    return {
+        'fund_assets': fund_assets,
+        'fund_trades': fund_trades,
+        'fund_aggregates': fund_agg,
+    }
+
+# fund_analytics = compute_fund_analytics(dc.fund_holdings, prices_q, adj_factors)
+```
+
+------------------------------------------------------------------------
+
+## State Ownership Analysis {#sec-state-ownership}
+
+### Equitization and the Decline of State Ownership
+
+Vietnam's equitization (cổ phần hóa) program has been a defining feature of the market since the early 2000s. The program converts state-owned enterprises into joint-stock companies, typically with the state retaining a controlling or significant minority stake that is then gradually reduced through secondary offerings.
+
+```{python}
+#| label: state-ownership-analysis
+#| code-summary: "Analyze State Ownership Dynamics and Equitization Trends"
+#| eval: false
+
+# ============================================================================
+# Step 9: State Ownership Analysis
+# ============================================================================
+
+def analyze_state_ownership(metrics: pd.DataFrame) -> Dict:
+    """
+    Comprehensive analysis of state ownership in Vietnam.
+    
+    Computes:
+    1. Aggregate state ownership trends
+    2. SOE population dynamics (entry/exit from SOE classification)
+    3. Equitization event detection (large drops in state ownership)
+    4. State ownership by sector and size
+    5. Governance implications (state as blockholder)
+    """
+    df = metrics.copy()
+    
+    # --- 1. Aggregate Trends ---
+    ts = df.groupby('quarter_end').agg(
+        n_soe=('is_soe', 'sum'),
+        n_total=('ticker', 'nunique'),
+        pct_soe=('is_soe', 'mean'),
+        mean_state_pct=('pct_state', 'mean'),
+        median_state_pct=('pct_state', 'median'),
+        # Market cap share of SOEs
+        soe_mktcap=('market_cap', lambda x: x[df.loc[x.index, 'is_soe'] == 1].sum()),
+        total_mktcap=('market_cap', 'sum'),
+    ).reset_index()
+    ts['soe_mktcap_share'] = ts['soe_mktcap'] / ts['total_mktcap']
+    
+    # --- 2. Equitization Events ---
+    # Detect large drops in state ownership (>10 percentage points)
+    df_sorted = df.sort_values(['ticker', 'quarter_end'])
+    df_sorted['state_change'] = df_sorted.groupby('ticker')['pct_state'].diff()
+    
+    equitization_events = df_sorted[
+        df_sorted['state_change'] < -0.10  # > 10pp drop
+    ][['ticker', 'quarter_end', 'pct_state', 'state_change', 'market_cap']].copy()
+    
+    # --- 3. By Sector ---
+    if 'industry_code' in df.columns:
+        by_sector = df.groupby('industry_code').agg(
+            mean_state=('pct_state', 'mean'),
+            pct_soe=('is_soe', 'mean'),
+            n_firms=('ticker', 'nunique'),
+        ).sort_values('mean_state', ascending=False)
+    else:
+        by_sector = None
+    
+    print(f"State Ownership Analysis:")
+    print(f"  Current SOE count: {ts.iloc[-1]['n_soe']:.0f} / {ts.iloc[-1]['n_total']:.0f}")
+    print(f"  SOE market cap share: {ts.iloc[-1]['soe_mktcap_share']:.1%}")
+    print(f"  Mean state ownership: {ts.iloc[-1]['mean_state_pct']:.1%}")
+    print(f"\nEquitization events detected: {len(equitization_events):,}")
+    
+    return {
+        'trends': ts,
+        'equitization_events': equitization_events,
+        'by_sector': by_sector,
+    }
+
+# state_analysis = analyze_state_ownership(io_metrics)
+```
+
+```{python}
+#| label: fig-state-ownership
+#| fig-cap: "Evolution of State Ownership in Vietnam. Panel A shows the declining share of SOEs and their market cap weight. Panel B shows the distribution of state ownership percentages, illustrating the bimodal pattern between firms with negligible state ownership and those with dominant state control."
+#| fig-height: 10
+#| eval: false
+
+def plot_state_ownership(state_analysis: Dict, metrics: pd.DataFrame):
+    """Plot state ownership dynamics."""
+    fig, axes = plt.subplots(2, 1, figsize=(12, 10))
+    ts = state_analysis['trends']
+    
+    # Panel A: SOE trends
+    ax = axes[0]
+    ax.plot(ts['quarter_end'], ts['pct_soe'] * 100, 
+            label='% of Firms that are SOEs', linewidth=2, color='#d62728')
+    ax.plot(ts['quarter_end'], ts['soe_mktcap_share'] * 100,
+            label='SOE Market Cap Share (%)', linewidth=2, color='#1f77b4')
+    ax.plot(ts['quarter_end'], ts['mean_state_pct'] * 100,
+            label='Mean State Ownership (%)', linewidth=2, color='#2ca02c', linestyle='--')
+    ax.set_ylabel('Percentage')
+    ax.set_title('Panel A: State Ownership and SOE Prevalence Over Time')
+    ax.legend(frameon=True, framealpha=0.9)
+    
+    # Panel B: Distribution
+    ax = axes[1]
+    # Use most recent period
+    latest = metrics[metrics['quarter_end'] == metrics['quarter_end'].max()]
+    state_pct = latest['pct_state'].dropna() * 100
+    
+    ax.hist(state_pct, bins=50, color='#d62728', alpha=0.7, edgecolor='black')
+    ax.axvline(x=50, color='black', linestyle='--', alpha=0.7, label='50% (SOE threshold)')
+    ax.set_xlabel('State Ownership (%)')
+    ax.set_ylabel('Number of Companies')
+    ax.set_title('Panel B: Distribution of State Ownership (Most Recent Quarter)')
+    ax.legend()
+    
+    plt.tight_layout()
+    plt.savefig('fig_state_ownership.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+# plot_state_ownership(state_analysis, io_metrics)
+```
+
+------------------------------------------------------------------------
+
+## Modern Extensions {#sec-modern-extensions}
+
+### Network Analysis of Co-Ownership {#sec-network}
+
+Institutional co-ownership networks capture how stocks are connected through shared investors. In Vietnam, these networks reveal the influence structure of major domestic conglomerates (e.g., Vingroup, Masan, FPT) and the overlap between foreign fund portfolios.
+
+```{python}
+#| label: coownership-network
+#| code-summary: "Construct Co-Ownership Network for Vietnamese Stocks"
+#| eval: false
+
+def construct_stock_coownership_network(ownership: pd.DataFrame,
+                                         period: str,
+                                         min_overlap: int = 3) -> Dict:
+    """
+    Construct a stock-level co-ownership network.
+    
+    Two stocks are connected if they share institutional investors.
+    Edge weight = number of shared institutional investors.
+    
+    This is particularly informative in Vietnam where:
+    - Foreign fund portfolios concentrate on the same blue-chips
+    - Conglomerate cross-holdings create explicit linkages
+    - State ownership creates implicit connections (SCIC holds multiple stocks)
+    
+    Parameters
+    ----------
+    ownership : pd.DataFrame
+        Classified ownership data
+    period : str
+        Analysis date
+    min_overlap : int
+        Minimum shared investors to create an edge
+    
+    Returns
+    -------
+    dict with network statistics and adjacency data
+    """
+    import networkx as nx
+    
+    date = pd.Timestamp(period)
+    
+    # Get institutional holders for this period
+    inst = ownership[
+        (ownership['date'] == date) &
+        (ownership['owner_type'].isin(OwnershipType.INSTITUTIONAL))
+    ][['ticker', 'shareholder_name', 'owner_type']].copy()
+    
+    # Create bipartite mapping: institution → set of stocks held
+    inst_to_stocks = inst.groupby('shareholder_name')['ticker'].apply(set).to_dict()
+    
+    # Stock → set of institutions
+    stock_to_inst = inst.groupby('ticker')['shareholder_name'].apply(set).to_dict()
+    
+    # Build stock-level network
+    stocks = list(stock_to_inst.keys())
+    G = nx.Graph()
+    
+    for i in range(len(stocks)):
+        for j in range(i + 1, len(stocks)):
+            shared = stock_to_inst[stocks[i]] & stock_to_inst[stocks[j]]
+            if len(shared) >= min_overlap:
+                G.add_edge(stocks[i], stocks[j], weight=len(shared),
+                           shared_investors=list(shared)[:5])  # Store sample
+    
+    # Add node attributes
+    for stock in stocks:
+        if stock in G.nodes:
+            G.nodes[stock]['n_inst_holders'] = len(stock_to_inst[stock])
+    
+    # Network statistics
+    stats = {
+        'n_nodes': G.number_of_nodes(),
+        'n_edges': G.number_of_edges(),
+        'density': nx.density(G) if G.number_of_nodes() > 1 else 0,
+        'avg_clustering': nx.average_clustering(G, weight='weight') if G.number_of_nodes() > 0 else 0,
+        'n_components': nx.number_connected_components(G),
+    }
+    
+    # Centrality measures
+    if G.number_of_nodes() > 0:
+        degree_cent = nx.degree_centrality(G)
+        stats['most_connected'] = sorted(degree_cent.items(), 
+                                          key=lambda x: x[1], reverse=True)[:10]
+        
+        if G.number_of_nodes() > 2:
+            try:
+                eigen_cent = nx.eigenvector_centrality_numpy(G, weight='weight')
+                stats['most_central'] = sorted(eigen_cent.items(),
+                                                key=lambda x: x[1], reverse=True)[:10]
+            except Exception:
+                stats['most_central'] = []
+    
+    print(f"Co-Ownership Network ({period}):")
+    for k, v in stats.items():
+        if k not in ['most_connected', 'most_central']:
+            print(f"  {k}: {v}")
+    
+    if 'most_connected' in stats:
+        print(f"\nMost connected stocks:")
+        for stock, cent in stats['most_connected'][:5]:
+            print(f"  {stock}: {cent:.3f}")
+    
+    return {'graph': G, 'stats': stats}
+
+# network = construct_stock_coownership_network(
+#     ownership_classified, '2024-06-30'
+# )
+```
+
+### ML-Enhanced Investor Classification {#sec-ml-classification}
+
+Vietnam's investor classification challenge is distinct from the US. While the US has the Bushee typology based on portfolio turnover and concentration, Vietnam requires classification of both investor **type** (when not explicitly labeled) and investor **behavior** (active vs passive, short-term vs long-term).
+
+```{python}
+#| label: ml-classification-vn
+#| code-summary: "Machine Learning Investor Classification for Vietnam"
+#| eval: false
+
+def classify_investors_vietnam(ownership: pd.DataFrame,
+                                prices_q: pd.DataFrame,
+                                n_clusters: int = 4) -> pd.DataFrame:
+    """
+    ML-based classification of Vietnamese institutional investors.
+    
+    Features adapted for Vietnam's market:
+    1. Portfolio concentration (HHI of holdings)
+    2. Holding duration (average time in positions)
+    3. Size preference (average market cap of holdings)
+    4. Sector concentration
+    5. Foreign/domestic indicator
+    6. Trading frequency (inverse of average days between disclosures)
+    
+    Expected clusters for Vietnam:
+    - Passive State Holders: SOE parents, SCIC - low turnover, concentrated
+    - Active Foreign Funds: Dragon Capital, VinaCapital - moderate turnover
+    - Domestic Securities Firms: SSI, VNDirect - high turnover, diversified
+    - Long-Term Foreign: Pension funds, sovereign wealth - low turnover
+    """
+    from sklearn.cluster import KMeans
+    from sklearn.preprocessing import StandardScaler
+    
+    inst = ownership[
+        ownership['owner_type'].isin(OwnershipType.INSTITUTIONAL)
+    ].copy()
+    
+    # Merge with price data
+    inst = inst.merge(
+        prices_q[['ticker', 'quarter_end', 'close', 'market_cap']],
+        left_on=['ticker', 'date'],
+        right_on=['ticker', 'quarter_end'],
+        how='left'
+    )
+    
+    inst['holding_value'] = inst['shares_held'] * inst['close'].fillna(0)
+    
+    # Compute features per investor-period
+    features = inst.groupby(['shareholder_name', 'date']).agg(
+        n_stocks=('ticker', 'nunique'),
+        total_value=('holding_value', 'sum'),
+        hhi_portfolio=('holding_value', 
+                        lambda x: ((x/x.sum())**2).sum() if x.sum() > 0 else np.nan),
+        avg_mktcap=('market_cap', 'mean'),
+        is_foreign=('owner_type', 
+                     lambda x: (x == OwnershipType.FOREIGN_INST).any().astype(int)),
+        is_state=('owner_type', 
+                   lambda x: (x == OwnershipType.STATE).any().astype(int)),
+    ).reset_index()
+    
+    # Average across all periods per investor
+    investor_features = features.groupby('shareholder_name').agg(
+        avg_n_stocks=('n_stocks', 'mean'),
+        avg_hhi=('hhi_portfolio', 'mean'),
+        avg_mktcap=('avg_mktcap', 'mean'),
+        avg_total_value=('total_value', 'mean'),
+        is_foreign=('is_foreign', 'max'),
+        is_state=('is_state', 'max'),
+        n_periods=('date', 'nunique'),
+    ).dropna()
+    
+    # Feature matrix
+    feature_cols = ['avg_n_stocks', 'avg_hhi', 'avg_mktcap', 'avg_total_value']
+    X = investor_features[feature_cols].copy()
+    
+    # Log-transform
+    for col in feature_cols:
+        X[col] = np.log1p(X[col].clip(lower=0))
+    
+    # Add binary features
+    X['is_foreign'] = investor_features['is_foreign']
+    X['is_state'] = investor_features['is_state']
+    
+    # Standardize
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    
+    # K-means
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=20)
+    investor_features['cluster'] = kmeans.fit_predict(X_scaled)
+    
+    # Label clusters
+    cluster_profiles = investor_features.groupby('cluster').agg({
+        'avg_n_stocks': 'mean',
+        'avg_hhi': 'mean',
+        'avg_total_value': 'mean',
+        'is_foreign': 'mean',
+        'is_state': 'mean',
+        'shareholder_name': 'count',
+    }).rename(columns={'shareholder_name': 'n_investors'})
+    
+    print("Investor Clusters:")
+    print(cluster_profiles.round(3).to_string())
+    
+    return investor_features
+
+# investor_classes = classify_investors_vietnam(ownership_classified, prices_q)
+```
+
+### Event Study: Ownership Disclosure Shocks {#sec-event-study}
+
+Vietnam's threshold-based major shareholder disclosure creates natural events for studying the price impact of ownership changes.
+
+```{python}
+#| label: event-study
+#| code-summary: "Event Study Framework for Ownership Disclosure Events"
+#| eval: false
+
+def ownership_event_study(major_shareholders: pd.DataFrame,
+                           prices: pd.DataFrame,
+                           event_window: Tuple[int, int] = (-5, 20),
+                           estimation_window: int = 120) -> pd.DataFrame:
+    """
+    Event study of ownership disclosure announcements.
+    
+    Vietnam requires major shareholders (≥5%) to disclose within 7 
+    business days of crossing ownership thresholds. These disclosures 
+    can be informationally significant, especially:
+    1. Foreign fund accumulation (signal of quality)
+    2. State divestiture (equitization signal)
+    3. Insider purchases (management confidence signal)
+    
+    Uses market model for expected returns:
+    E[R_i,t] = α_i + β_i × R_m,t
+    
+    Parameters
+    ----------
+    major_shareholders : pd.DataFrame
+        Disclosure events from DataCore.vn
+    prices : pd.DataFrame
+        Daily stock prices
+    event_window : tuple
+        (pre_event_days, post_event_days)
+    estimation_window : int
+        Days before event window for market model estimation
+    """
+    events = major_shareholders.copy()
+    events = events.sort_values(['ticker', 'date'])
+    
+    # Identify significant ownership changes
+    events['ownership_change'] = events.groupby(
+        ['ticker', 'shareholder_name']
+    )['ownership_pct'].diff()
+    
+    significant_events = events[
+        events['ownership_change'].abs() > 0.01  # > 1 percentage point
+    ].copy()
+    
+    significant_events['event_type'] = np.where(
+        significant_events['ownership_change'] > 0, 'accumulation', 'divestiture'
+    )
+    
+    # Merge with daily prices
+    prices_daily = prices[['ticker', 'date', 'ret']].copy()
+    prices_daily = prices_daily.sort_values(['ticker', 'date'])
+    
+    # VN-Index as market return (ticker code depends on data provider)
+    if 'VNINDEX' in prices_daily['ticker'].values:
+        market_ret = prices_daily[prices_daily['ticker'] == 'VNINDEX'][['date', 'ret']].copy()
+        market_ret = market_ret.rename(columns={'ret': 'mkt_ret'})
+    else:
+        # Use equal-weighted market return as proxy
+        market_ret = (prices_daily.groupby('date')['ret']
+                                  .mean()
+                                  .reset_index()
+                                  .rename(columns={'ret': 'mkt_ret'}))
+    
+    # For each event, compute abnormal returns
+    results = []
+    pre, post = event_window
+    
+    for _, event in significant_events.iterrows():
+        ticker = event['ticker']
+        event_date = event['date']
+        
+        # Get stock returns around the event
+        stock_ret = prices_daily[prices_daily['ticker'] == ticker].copy()
+        stock_ret = stock_ret.merge(market_ret, on='date', how='left')
+        stock_ret = stock_ret.sort_values('date').reset_index(drop=True)
+        
+        # Find event date index
+        event_idx = stock_ret[stock_ret['date'] >= event_date].index
+        if len(event_idx) == 0:
+            continue
+        event_idx = event_idx[0]
+        
+        # Estimation window
+        est_start = max(0, event_idx - estimation_window + pre)
+        est_end = event_idx + pre
+        est_data = stock_ret.iloc[est_start:est_end].dropna(subset=['ret', 'mkt_ret'])
+        
+        if len(est_data) < 30:
+            continue
+        
+        # Market model
+        X = sm.add_constant(est_data['mkt_ret'])
+        y = est_data['ret']
+        try:
+            model = sm.OLS(y, X).fit()
+        except Exception:
+            continue
+        
+        # Event window abnormal returns
+        ew_start = event_idx + pre
+        ew_end = min(event_idx + post + 1, len(stock_ret))
+        event_data = stock_ret.iloc[ew_start:ew_end].copy()
+        
+        if len(event_data) == 0:
+            continue
+        
+        event_data['expected_ret'] = (model.params['const'] + 
+                                       model.params['mkt_ret'] * event_data['mkt_ret'])
+        event_data['abnormal_ret'] = event_data['ret'] - event_data['expected_ret']
+        event_data['car'] = event_data['abnormal_ret'].cumsum()
+        event_data['event_day'] = range(pre, pre + len(event_data))
+        event_data['ticker'] = ticker
+        event_data['event_date'] = event_date
+        event_data['event_type'] = event['event_type']
+        event_data['ownership_change'] = event['ownership_change']
+        event_data['shareholder_name'] = event['shareholder_name']
+        
+        results.append(event_data)
+    
+    if results:
+        all_results = pd.concat(results, ignore_index=True)
+        
+        # Average CARs by event type
+        avg_car = (all_results.groupby(['event_type', 'event_day'])['car']
+                              .agg(['mean', 'std', 'count'])
+                              .reset_index())
+        avg_car['t_stat'] = avg_car['mean'] / (avg_car['std'] / np.sqrt(avg_car['count']))
+        
+        print(f"Event Study Results:")
+        print(f"  Total events: {significant_events['event_type'].value_counts().to_string()}")
+        
+        # CAR at event day 0, +5, +10, +20
+        for et in ['accumulation', 'divestiture']:
+            print(f"\n  {et.title()} Events:")
+            subset = avg_car[avg_car['event_type'] == et]
+            for day in [0, 5, 10, 20]:
+                row = subset[subset['event_day'] == day]
+                if len(row) > 0:
+                    print(f"    CAR({day:+d}): {row.iloc[0]['mean']:.4f} "
+                          f"(t={row.iloc[0]['t_stat']:.2f})")
+        
+        return all_results
+    
+    return pd.DataFrame()
+
+# event_results = ownership_event_study(dc.major_shareholders, dc.prices)
+```
+
+------------------------------------------------------------------------
+
+## Empirical Applications {#sec-empirical-applications}
+
+### Application 1: Foreign Ownership and Stock Returns in Vietnam
+
+Does foreign institutional ownership predict returns in Vietnam? @huang2023factors find evidence consistent with the information advantage hypothesis.
+
+```{python}
+#| label: foreign-io-returns
+#| code-summary: "Test Foreign Ownership-Return Predictability"
+#| eval: false
+
+def test_foreign_io_returns(metrics: pd.DataFrame) -> pd.DataFrame:
+    """
+    Test whether changes in foreign institutional ownership predict 
+    future stock returns in Vietnam.
+    
+    Methodology:
+    1. Sort stocks into quintiles by change in foreign IO
+    2. Compute equal-weighted and VN-Index-adjusted returns
+    3. Report portfolio returns and long-short spread
+    
+    This adapts the Chen, Hong, and Stein (2002) breadth test 
+    specifically for Vietnam's foreign ownership component.
+    """
+    df = metrics.copy()
+    df = df.sort_values(['ticker', 'quarter_end'])
+    
+    # Change in foreign IO
+    df['delta_foreign'] = df.groupby('ticker')['pct_foreign_total'].diff()
+    
+    # Forward quarterly return
+    df['fwd_ret'] = df.groupby('ticker')['ret'].shift(-1)
+    
+    # Drop missing
+    df = df.dropna(subset=['delta_foreign', 'fwd_ret'])
+    
+    # Quintile portfolios each quarter
+    df['foreign_quintile'] = df.groupby('quarter_end')['delta_foreign'].transform(
+        lambda x: pd.qcut(x, 5, labels=[1, 2, 3, 4, 5], duplicates='drop')
+    )
+    
+    # Portfolio returns
+    port_ret = (df.groupby(['quarter_end', 'foreign_quintile'])['fwd_ret']
+                  .mean()
+                  .reset_index())
+    
+    port_wide = port_ret.pivot(index='quarter_end', columns='foreign_quintile', 
+                                values='fwd_ret')
+    port_wide['LS'] = port_wide[5] - port_wide[1]
+    
+    # Test significance
+    results = {}
+    for q in [1, 2, 3, 4, 5, 'LS']:
+        data = port_wide[q].dropna()
+        mean_ret = data.mean()
+        t_stat = mean_ret / (data.std() / np.sqrt(len(data)))
+        results[q] = {
+            'Mean Return (%)': mean_ret * 100,
+            't-statistic': t_stat,
+            'N quarters': len(data),
+        }
+    
+    results_df = pd.DataFrame(results).T
+    results_df.index.name = 'ΔForeign IO Quintile'
+    
+    print("Foreign Ownership Change and Future Returns (Vietnam)")
+    print("=" * 60)
+    print(results_df.round(3).to_string())
+    
+    return results_df
+
+# foreign_return_results = test_foreign_io_returns(io_metrics)
+```
+
+### Application 2: State Divestiture and Value Creation
+
+```{python}
+#| label: equitization-value
+#| code-summary: "Analyze Value Impact of State Ownership Reduction"
+#| eval: false
+
+def analyze_equitization_value(metrics: pd.DataFrame, 
+                                state_analysis: Dict) -> pd.DataFrame:
+    """
+    Test whether reductions in state ownership are associated with 
+    subsequent value creation (higher returns, improved governance).
+    
+    Hypothesis: State divestiture reduces agency costs, improves 
+    operational efficiency, and attracts institutional investors,
+    leading to positive abnormal returns.
+    
+    Uses a difference-in-differences approach:
+    Treatment: Firms experiencing >10pp drop in state ownership
+    Control: Matched firms with stable state ownership
+    """
+    df = metrics.copy()
+    events = state_analysis['equitization_events']
+    
+    if len(events) == 0:
+        print("No equitization events detected.")
+        return pd.DataFrame()
+    
+    # Get treated firms and their event quarters
+    treated = events[['ticker', 'quarter_end']].drop_duplicates()
+    treated['treated'] = 1
+    
+    # Merge with metrics
+    df = df.merge(treated, on=['ticker', 'quarter_end'], how='left')
+    df['treated'] = df['treated'].fillna(0)
+    
+    # Pre/post comparison for treated firms
+    treated_tickers = treated['ticker'].unique()
+    
+    results = []
+    for ticker in treated_tickers:
+        firm = df[df['ticker'] == ticker].sort_values('quarter_end')
+        event_row = firm[firm['treated'] == 1]
+        if len(event_row) == 0:
+            continue
+        
+        event_q = event_row.iloc[0]['quarter_end']
+        
+        # Pre-event (4 quarters before)
+        pre = firm[firm['quarter_end'] < event_q].tail(4)
+        # Post-event (4 quarters after)
+        post = firm[firm['quarter_end'] > event_q].head(4)
+        
+        if len(pre) < 2 or len(post) < 2:
+            continue
+        
+        results.append({
+            'ticker': ticker,
+            'event_quarter': event_q,
+            'state_pct_pre': pre['pct_state'].mean(),
+            'state_pct_post': post['pct_state'].mean(),
+            'foreign_pct_pre': pre['pct_foreign_total'].mean(),
+            'foreign_pct_post': post['pct_foreign_total'].mean(),
+            'n_inst_pre': pre['n_inst_owners'].mean(),
+            'n_inst_post': post['n_inst_owners'].mean(),
+            'ret_pre': pre['ret'].mean(),
+            'ret_post': post['ret'].mean(),
+        })
+    
+    if results:
+        results_df = pd.DataFrame(results)
+        
+        # Paired t-tests
+        print("Equitization Value Analysis")
+        print("=" * 60)
+        for metric in ['state_pct', 'foreign_pct', 'n_inst', 'ret']:
+            pre_col = f'{metric}_pre'
+            post_col = f'{metric}_post'
+            diff = results_df[post_col] - results_df[pre_col]
+            t_stat, p_val = stats.ttest_1samp(diff.dropna(), 0)
+            print(f"  Δ{metric}: {diff.mean():.4f} (t={t_stat:.2f}, p={p_val:.3f})")
+        
+        return results_df
+    
+    return pd.DataFrame()
+
+# equitization_results = analyze_equitization_value(io_metrics, state_analysis)
+```
+
+### Application 3: Institutional Herding in Vietnam
+
+```{python}
+#| label: herding-vn
+#| code-summary: "Compute LSV Herding Measure for Vietnamese Market"
+#| eval: false
+
+def compute_herding_vietnam(trades: pd.DataFrame,
+                             owner_types: Optional[List[str]] = None) -> pd.DataFrame:
+    """
+    Compute the Lakonishok, Shleifer, and Vishny (1992) herding measure
+    adapted for the Vietnamese market.
+    
+    Can be computed separately for:
+    - All institutional investors
+    - Foreign institutions only
+    - Domestic institutions only
+    
+    The herding measure captures whether institutions systematically
+    trade in the same direction beyond what chance would predict.
+    """
+    from scipy.stats import binom
+    
+    t = trades.copy()
+    
+    if owner_types:
+        t = t[t['owner_type'].isin(owner_types)]
+    
+    t['is_buy'] = (t['trade'] > 0).astype(int)
+    
+    # For each stock-period
+    stock_trades = t.groupby(['ticker', 'date']).agg(
+        n_traders=('shareholder_name', 'nunique'),
+        n_buyers=('is_buy', 'sum'),
+    ).reset_index()
+    
+    # Minimum traders threshold
+    stock_trades = stock_trades[stock_trades['n_traders'] >= 3]
+    stock_trades['p_buy'] = stock_trades['n_buyers'] / stock_trades['n_traders']
+    
+    # Expected proportion per period
+    E_p = stock_trades.groupby('date').apply(
+        lambda g: g['n_buyers'].sum() / g['n_traders'].sum()
+    ).reset_index(name='E_p')
+    
+    stock_trades = stock_trades.merge(E_p, on='date')
+    
+    # Adjustment factor
+    def expected_abs_dev(n, p):
+        k = np.arange(0, n + 1)
+        probs = binom.pmf(k, n, p)
+        return np.sum(probs * np.abs(k / n - p))
+    
+    stock_trades['adj_factor'] = stock_trades.apply(
+        lambda r: expected_abs_dev(int(r['n_traders']), r['E_p']), axis=1
+    )
+    
+    stock_trades['hm'] = (np.abs(stock_trades['p_buy'] - stock_trades['E_p']) - 
+                           stock_trades['adj_factor'])
+    
+    stock_trades['buy_herd'] = np.where(
+        stock_trades['p_buy'] > stock_trades['E_p'], stock_trades['hm'], np.nan
+    )
+    stock_trades['sell_herd'] = np.where(
+        stock_trades['p_buy'] < stock_trades['E_p'], stock_trades['hm'], np.nan
+    )
+    
+    # Time series of herding
+    ts_herding = stock_trades.groupby('date').agg(
+        mean_hm=('hm', 'mean'),
+        mean_buy_herd=('buy_herd', 'mean'),
+        mean_sell_herd=('sell_herd', 'mean'),
+        pct_herding=('hm', lambda x: (x > 0).mean()),
+        n_stocks=('ticker', 'nunique'),
+    ).reset_index()
+    
+    print(f"Herding Analysis ({owner_types or 'All Institutions'}):")
+    print(f"  Mean HM: {stock_trades['hm'].mean():.4f}")
+    print(f"  Mean Buy Herding: {stock_trades['buy_herd'].mean():.4f}")
+    print(f"  Mean Sell Herding: {stock_trades['sell_herd'].mean():.4f}")
+    print(f"  % stocks with herding: {(stock_trades['hm'] > 0).mean():.1%}")
+    
+    return stock_trades, ts_herding
+
+# herding_all, herding_ts = compute_herding_vietnam(trades)
+# herding_foreign, _ = compute_herding_vietnam(
+#     trades, owner_types=[OwnershipType.FOREIGN_INST]
+# )
+```
+
+## Conclusion and Practical Recommendations {#sec-conclusion}
+
+### Summary of Measures
+
+@tbl-summary-all summarizes all institutional ownership measures developed in this chapter for the Vietnamese market.
+
+| Measure | Definition | Key Adaptation for Vietnam | Python Function |
+|:-----------------|:-----------------|:-------------------|:-----------------|
+| IO Ratio | Inst. shares / TSO | Decomposed into state, foreign, domestic | `compute_ownership_decomposition()` |
+| HHI Concentration | $\sum w_j^2$ | Separate HHI for total, non-state, foreign | `compute_io_metrics_vietnam()` |
+| ΔBreadth | Lehavy-Sloan adjusted | Applied to irregular disclosure intervals | `compute_io_metrics_vietnam()` |
+| FOL Utilization | Foreign % / FOL limit | Vietnam-specific; no US equivalent | `FOLAnalyzer` |
+| FOL Premium | Price impact of FOL proximity | Cross-sectional regression approach | `FOLAnalyzer.estimate_fol_premium()` |
+| Trades | ΔShares (corp-action adjusted) | Critical: adjust for stock dividends | `derive_trades_vectorized_vietnam()` |
+| Fund Turnover | min(B,S)/avg(A) | Semi-annual frequency; annualized | `compute_fund_analytics()` |
+| SOE Status | State ownership \> 50% | Tracks equitization program | `analyze_state_ownership()` |
+| LSV Herding | $|p - E[p]| - E[|p - E[p]|]$ | Separate foreign vs domestic herding | `compute_herding_vietnam()` |
+| Co-Ownership Network | Shared institutional holders | Reveals conglomerate linkages | `construct_stock_coownership_network()` |
+
+: Summary of All Ownership Measures for Vietnam {#tbl-summary-all}
+
+### Data Quality Checklist for Vietnam
+
+::: {.callout-tip title="Vietnam Data Quality Checklist"}
+1.  [ ] **Corporate actions:** Have you built and applied adjustment factors for ALL stock dividends, bonus shares, splits, and rights issues?
+2.  [ ] **Shareholder classification:** Have you verified the owner type classification (state vs foreign vs domestic institutional vs individual)?
+3.  [ ] **FOL limits:** Are sector-specific FOL limits correctly assigned (30% for banks, 49% standard, unlimited for some sectors)?
+4.  [ ] **Disclosure dates:** Are you using the actual disclosure date (not the record date or ex-date) for ownership snapshots?
+5.  [ ] **Treasury shares:** Are treasury shares excluded from ownership ratio denominators?
+6.  [ ] **UPCOM coverage:** Does your sample include or exclude UPCOM stocks (which have weaker disclosure requirements)?
+7.  [ ] **Cross-listings:** Are you handling NVDR (Non-Voting Depository Receipts) if applicable after market reforms?
+8.  [ ] **Name consistency:** Are shareholder names standardized across disclosure periods (Vietnamese names can have multiple romanization forms)?
+9.  [ ] **Trade adjustment:** When deriving trades between periods, have you adjusted previous shares for ALL intervening corporate actions?
+10. [ ] **Fund mandate changes:** For fund analytics, have you accounted for fund mergers, closures, and mandate changes that affect time-series continuity?
+:::
+
+### Comparison with US Framework
+
+| Dimension | US (WRDS/13F) | Vietnam (DataCore.vn) |
+|:------------------|:--------------------|:-------------------------------|
+| **Disclosure** | Quarterly 13F (mandatory) | Annual reports + event-driven |
+| **Coverage** | Institutions \> \$100M AUM | All shareholders in annual reports |
+| **Ownership observed** | Long positions only | Complete decomposition |
+| **IO can exceed 100%** | Yes (short selling) | No (by construction) |
+| **Permanent ID** | CRSP PERMNO | Ticker (with manual tracking of changes) |
+| **Adjustment factors** | CRSP cfacshr | Must build from corporate actions |
+| **Investor classification** | LSEG typecode / Bushee | State/Foreign/Domestic/Individual |
+| **Short selling** | Not in 13F; exists in market | Very limited; not a concern |
+| **Unique features** | — | FOL, SOE ownership, stock dividend frequency |
+
+: US vs Vietnam Institutional Ownership Framework Comparison {#tbl-us-vn-comparison}

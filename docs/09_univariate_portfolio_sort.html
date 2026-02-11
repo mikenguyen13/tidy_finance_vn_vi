@@ -460,8 +460,26 @@ window.Quarto = {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./16_institutional_ownership.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Institutional Ownership Analytics in Vietnam</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./17_sue.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./18_event_studies.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Event Studies in Finance</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./20_conclusion.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -513,7 +531,7 @@ window.Quarto = {
 </header>
 
 
-<p>In this chapter, we dive into portfolio sorts, one of the most widely used statistical methodologies in empirical asset pricing <span class="citation" data-cites="BaliEngleMurray2016">(e.g., <a href="references.html#ref-BaliEngleMurray2016" role="doc-biblioref">Bali, Engle, and Murray 2016</a>)</span>. The key application of portfolio sorts is to examine whether one or more variables can predict future excess returns. In general, the idea is to sort individual stocks into portfolios, where the stocks within each portfolio are similar with respect to a sorting variable, such as firm size. The different portfolios then represent well-diversified investments that differ in the level of the sorting variable. You can then attribute the differences in the return distribution to the impact of the sorting variable. We start by introducing univariate portfolio sorts (which sort based on only one characteristic) and tackle bivariate sorting in <a href="11_value_bivariate.qmd">Value and Bivariate Sorts</a>.</p>
+<p>In this chapter, we dive into portfolio sorts, one of the most widely used statistical methodologies in empirical asset pricing <span class="citation" data-cites="BaliEngleMurray2016">(e.g., <a href="#ref-BaliEngleMurray2016" role="doc-biblioref">Bali, Engle, and Murray 2016</a>)</span>. The key application of portfolio sorts is to examine whether one or more variables can predict future excess returns. In general, the idea is to sort individual stocks into portfolios, where the stocks within each portfolio are similar with respect to a sorting variable, such as firm size. The different portfolios then represent well-diversified investments that differ in the level of the sorting variable. You can then attribute the differences in the return distribution to the impact of the sorting variable. We start by introducing univariate portfolio sorts (which sort based on only one characteristic) and tackle bivariate sorting in <a href="11_value_bivariate.qmd">Value and Bivariate Sorts</a>.</p>
 <p>A univariate portfolio sort considers only one sorting variable <span class="math inline">\(x_{i,t-1}\)</span>. Here, <span class="math inline">\(i\)</span> denotes the stock and <span class="math inline">\(t-1\)</span> indicates that the characteristic is observable by investors at time <span class="math inline">\(t\)</span>. The objective is to assess the cross-sectional relation between <span class="math inline">\(x_{i,t-1}\)</span> and, typically, stock excess returns <span class="math inline">\(r_{i,t}\)</span> at time <span class="math inline">\(t\)</span> as the outcome variable. To illustrate how portfolio sorts work, we use estimates for market betas from the previous chapter as our sorting variable.</p>
 <div id="6c61302c" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -645,7 +663,7 @@ window.Quarto = {
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  .assign(long_short<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"high"</span>]<span class="op">-</span>x[<span class="st">"low"</span>])</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>We compute the average return and the corresponding standard error to test whether the long-short portfolio yields on average positive or negative excess returns. In the asset pricing literature, one typically adjusts for autocorrelation by using <span class="citation" data-cites="Newey1987">Newey and West (<a href="references.html#ref-Newey1987" role="doc-biblioref">1987</a>)</span> <span class="math inline">\(t\)</span>-statistics to test the null hypothesis that average portfolio excess returns are equal to zero. One necessary input for Newey-West standard errors is a chosen bandwidth based on the number of lags employed for the estimation. Researchers often default to choosing a pre-specified lag length of six months (which is not a data-driven approach). We do so in the <code>fit()</code> function by indicating the <code>cov_type</code> as <code>HAC</code> and providing the maximum lag length through an additional keywords dictionary.</p>
+<p>We compute the average return and the corresponding standard error to test whether the long-short portfolio yields on average positive or negative excess returns. In the asset pricing literature, one typically adjusts for autocorrelation by using <span class="citation" data-cites="Newey1987">Newey and West (<a href="#ref-Newey1987" role="doc-biblioref">1987</a>)</span> <span class="math inline">\(t\)</span>-statistics to test the null hypothesis that average portfolio excess returns are equal to zero. One necessary input for Newey-West standard errors is a chosen bandwidth based on the number of lags employed for the estimation. Researchers often default to choosing a pre-specified lag length of six months (which is not a data-driven approach). We do so in the <code>fit()</code> function by indicating the <code>cov_type</code> as <code>HAC</code> and providing the maximum lag length through an additional keywords dictionary.</p>
 <div id="df68f8ec" class="cell" data-execution_count="7">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>model_fit <span class="op">=</span> (sm.OLS.from_formula(</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    formula<span class="op">=</span><span class="st">"long_short ~ 1"</span>,</span>
@@ -826,7 +844,7 @@ Summary statistics:
 </div>
 </div>
 </div>
-<p><a href="#fig-701" class="quarto-xref">Figure&nbsp;<span>10.1</span></a> illustrates the CAPM alphas of beta-sorted portfolios.</p>
+<p><a href="#fig-701" class="quarto-xref">Figure&nbsp;<span class="quarto-unresolved-ref">fig-701</span></a> illustrates the CAPM alphas of beta-sorted portfolios.</p>
 <div id="cell-fig-701" class="cell" data-execution_count="11">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>beta_portfolios_figure <span class="op">=</span> (</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  ggplot(</span>
@@ -859,7 +877,7 @@ Figure&nbsp;10.1: The figure shows CAPM alphas of beta-sorted portfolios. Portfo
 </section>
 <section id="security-market-line-and-beta-portfolios" class="level2" data-number="10.6">
 <h2 data-number="10.6" class="anchored" data-anchor-id="security-market-line-and-beta-portfolios"><span class="header-section-number">10.6</span> Security Market Line and Beta Portfolios</h2>
-<p>The CAPM predicts that our portfolios should lie on the security market line (SML). The slope of the SML is equal to the market risk premium and reflects the risk-return trade-off at any given time. <a href="#fig-702" class="quarto-xref">Figure&nbsp;<span>10.2</span></a> illustrates the security market line: We see that (not surprisingly) the high-beta portfolio returns have a high correlation with the market returns. However, it seems like the average excess returns for high-beta stocks are lower than what the security market line implies would be an “appropriate” compensation for the high market risk.</p>
+<p>The CAPM predicts that our portfolios should lie on the security market line (SML). The slope of the SML is equal to the market risk premium and reflects the risk-return trade-off at any given time. <a href="#fig-702" class="quarto-xref">Figure&nbsp;<span class="quarto-unresolved-ref">fig-702</span></a> illustrates the security market line: We see that (not surprisingly) the high-beta portfolio returns have a high correlation with the market returns. However, it seems like the average excess returns for high-beta stocks are lower than what the security market line implies would be an “appropriate” compensation for the high market risk.</p>
 <div id="cell-fig-702" class="cell" data-execution_count="12">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>sml_capm <span class="op">=</span> (sm.OLS.from_formula(</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    formula<span class="op">=</span><span class="st">"ret ~ 1 + beta"</span>, </span>
@@ -944,7 +962,7 @@ Summary statistics:
 </code></pre>
 </div>
 </div>
-<p>However, controlling for the effect of beta, the long-short portfolio yields a CAPM-adjusted alpha. The results can provide evidence regarding the validity of the CAPM in the Vietnamese market. The betting-against-beta factor has been documented extensively in developed markets <span class="citation" data-cites="Frazzini2014">(<a href="references.html#ref-Frazzini2014" role="doc-biblioref">Frazzini and Pedersen 2014</a>)</span>. Betting-against-beta corresponds to a strategy that shorts high-beta stocks and takes a (levered) long position in low-beta stocks. If borrowing constraints prevent investors from taking positions on the security market line, they are instead incentivized to buy high-beta stocks, which leads to a relatively higher price (and therefore lower expected returns than implied by the CAPM) for such high-beta stocks. As a result, the betting-against-beta strategy earns from providing liquidity to capital-constrained investors with lower risk aversion.</p>
+<p>However, controlling for the effect of beta, the long-short portfolio yields a CAPM-adjusted alpha. The results can provide evidence regarding the validity of the CAPM in the Vietnamese market. The betting-against-beta factor has been documented extensively in developed markets <span class="citation" data-cites="Frazzini2014">(<a href="#ref-Frazzini2014" role="doc-biblioref">Frazzini and Pedersen 2014</a>)</span>. Betting-against-beta corresponds to a strategy that shorts high-beta stocks and takes a (levered) long position in low-beta stocks. If borrowing constraints prevent investors from taking positions on the security market line, they are instead incentivized to buy high-beta stocks, which leads to a relatively higher price (and therefore lower expected returns than implied by the CAPM) for such high-beta stocks. As a result, the betting-against-beta strategy earns from providing liquidity to capital-constrained investors with lower risk aversion.</p>
 <div id="2a6f8d93" class="cell" data-execution_count="15">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>model_fit <span class="op">=</span> (sm.OLS.from_formula(</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    formula<span class="op">=</span><span class="st">"long_short ~ 1 + mkt_excess"</span>, </span>
@@ -969,7 +987,7 @@ Summary statistics:
 </code></pre>
 </div>
 </div>
-<p><a href="#fig-703" class="quarto-xref">Figure&nbsp;<span>10.3</span></a> shows the annual returns of the extreme beta portfolios we are mainly interested in. The figure illustrates the patterns over the sample period; each portfolio exhibits periods with positive and negative annual returns.</p>
+<p><a href="#fig-703" class="quarto-xref">Figure&nbsp;<span class="quarto-unresolved-ref">fig-703</span></a> shows the annual returns of the extreme beta portfolios we are mainly interested in. The figure illustrates the patterns over the sample period; each portfolio exhibits periods with positive and negative annual returns.</p>
 <div id="cell-fig-703" class="cell" data-execution_count="16">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>beta_longshort_year <span class="op">=</span> (beta_longshort</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  .assign(year<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"date"</span>].dt.year)</span>
@@ -1024,7 +1042,7 @@ Figure&nbsp;10.3: The figure shows annual returns of beta portfolios. We constru
 
 <!-- -->
 
-<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
 <div id="ref-BaliEngleMurray2016" class="csl-entry" role="listitem">
 Bali, Turan G, Robert F Engle, and Scott Murray. 2016. <em><span class="nocase">Empirical asset pricing: The cross section of stock returns</span></em>. John Wiley &amp; Sons. <a href="https://doi.org/10.1002/9781118445112.stat07954">https://doi.org/10.1002/9781118445112.stat07954</a>.
 </div>

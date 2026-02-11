@@ -85,7 +85,7 @@ div.csl-indent {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./20_conclusion.html" rel="next">
+<link href="./16_institutional_ownership.html" rel="next">
 <link href="./12_fama_french.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -460,8 +460,26 @@ window.Quarto = {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./16_institutional_ownership.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Institutional Ownership Analytics in Vietnam</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./17_sue.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./18_event_studies.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Event Studies in Finance</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./20_conclusion.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -523,7 +541,7 @@ window.Quarto = {
 </header>
 
 
-<p>In this chapter, we delve into the implementation of the <span class="citation" data-cites="Fama1973">Fama and MacBeth (<a href="references.html#ref-Fama1973" role="doc-biblioref">1973</a>)</span> regression approach, a cornerstone of empirical asset pricing. While portfolio sorts provide a robust, non-parametric view of the relationship between characteristics and returns, they struggle when we need to control for multiple factors simultaneously. For instance, in the Vietnamese stock market (HOSE and HNX), small-cap stocks often exhibit high illiquidity. Does the “Size effect” exist because small stocks are risky, or simply because they are illiquid? Fama-MacBeth (FM) regressions allow us to disentangle these effects in a linear framework.</p>
+<p>In this chapter, we delve into the implementation of the <span class="citation" data-cites="Fama1973">Fama and MacBeth (<a href="#ref-Fama1973" role="doc-biblioref">1973</a>)</span> regression approach, a cornerstone of empirical asset pricing. While portfolio sorts provide a robust, non-parametric view of the relationship between characteristics and returns, they struggle when we need to control for multiple factors simultaneously. For instance, in the Vietnamese stock market (HOSE and HNX), small-cap stocks often exhibit high illiquidity. Does the “Size effect” exist because small stocks are risky, or simply because they are illiquid? Fama-MacBeth (FM) regressions allow us to disentangle these effects in a linear framework.</p>
 <p>We will implement a version of the FM procedure, accounting for:</p>
 <ol type="1">
 <li><strong>Weighted Least Squares (WLS):</strong> To prevent micro-cap stocks, which are prevalent and volatile in Vietnam, from dominating the estimates.</li>
@@ -733,7 +751,7 @@ Data ready: 5,075 observations from 2017-06-30 to 2023-06-30</code></pre>
 </section>
 <section id="step-1-cross-sectional-regressions-with-wls" class="level2" data-number="12.3">
 <h2 data-number="12.3" class="anchored" data-anchor-id="step-1-cross-sectional-regressions-with-wls"><span class="header-section-number">12.3</span> Step 1: Cross-Sectional Regressions with WLS</h2>
-<p><span class="citation" data-cites="Hou2020">Hou, Xue, and Zhang (<a href="references.html#ref-Hou2020" role="doc-biblioref">2020</a>)</span> argue that micro-cap stocks distorts inference because they have high transaction costs and idiosyncratic volatility. In Vietnam, this is exacerbated by “penny stock” speculation.</p>
+<p><span class="citation" data-cites="Hou2020">Hou, Xue, and Zhang (<a href="#ref-Hou2020" role="doc-biblioref">2020</a>)</span> argue that micro-cap stocks distorts inference because they have high transaction costs and idiosyncratic volatility. In Vietnam, this is exacerbated by “penny stock” speculation.</p>
 <p>We implement <strong>Weighted Least Squares (WLS)</strong> where weights are the market capitalization of the prior month. This tests if the factors are priced in the <em>investable</em> universe, not just the equal-weighted average of tiny stocks.</p>
 <div id="bb634f49" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_cross_section(df):</span>
@@ -854,7 +872,7 @@ Figure&nbsp;12.1: Cumulative Risk Premiums in Vietnam.
 <li><strong>Size (Log Mktcap):</strong> A negative coefficient confirms the “Size Effect”—smaller firms have higher expected returns. However, using WLS often weakens this result compared to OLS, suggesting the size premium is concentrated in micro-caps.</li>
 <li><strong>Value (BM):</strong> A positive coefficient confirms the Value premium. In Vietnam, value stocks (high B/M) often outperform growth stocks, particularly in the manufacturing and banking sectors.</li>
 </ol>
-<p><a href="#fig-cumulative-premiums" class="quarto-xref">Figure&nbsp;<span>12.1</span></a> plots the cumulative sum of the monthly Fama MacBeth risk premium estimates for beta, size, and value. Because these lines cumulate estimated cross sectional prices of risk rather than actual portfolio returns, the figure should be interpreted as showing the time variation and persistence of estimated premia, not investable performance.</p>
+<p><a href="#fig-cumulative-premiums" class="quarto-xref">Figure&nbsp;<span class="quarto-unresolved-ref">fig-cumulative-premiums</span></a> plots the cumulative sum of the monthly Fama MacBeth risk premium estimates for beta, size, and value. Because these lines cumulate estimated cross sectional prices of risk rather than actual portfolio returns, the figure should be interpreted as showing the time variation and persistence of estimated premia, not investable performance.</p>
 <p>The beta premium displays a clear regime shift around 2020, with a sharp decline that only partially reverses afterward. This pattern suggests that the pricing of systematic risk in Vietnam is unstable over short samples and may be heavily influenced by episodic market conditions such as the post COVID retail trading boom. The size premium is comparatively smoother but small in magnitude, indicating only weak and time varying evidence that firm size is priced in the cross section during this period. The value premium remains close to zero throughout, implying little consistent cross sectional reward to high book to market firms in this sample window.</p>
 <p>Overall, the figure highlights that estimated risk premia in the Vietnamese market are highly time varying and sensitive to specific macro and market regimes, reinforcing the need for caution when drawing conclusions from short samples.</p>
 </section>
@@ -953,7 +971,7 @@ bm         -0.033748   -0.203307  1.000000</code></pre>
 
 <!-- -->
 
-<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
 <div id="ref-Fama1973" class="csl-entry" role="listitem">
 Fama, Eugene F., and James D. MacBeth. 1973. <span>“<span class="nocase">Risk, return, and equilibrium: Empirical tests</span>.”</span> <em><span>Journal of Political Economy</span></em> 81 (3): 607–36. <a href="https://doi.org/10.1086/260061">https://doi.org/10.1086/260061</a>.
 </div>
@@ -1512,8 +1530,8 @@ document.addEventListener("DOMContentLoaded", function () {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./20_conclusion.html" class="pagination-link" aria-label="Conclusion">
-        <span class="nav-page-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Conclusion</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./16_institutional_ownership.html" class="pagination-link" aria-label="Institutional Ownership Analytics in Vietnam">
+        <span class="nav-page-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Institutional Ownership Analytics in Vietnam</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">

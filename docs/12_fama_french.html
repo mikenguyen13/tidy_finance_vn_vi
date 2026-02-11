@@ -457,8 +457,26 @@ window.Quarto = {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./16_institutional_ownership.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Institutional Ownership Analytics in Vietnam</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./17_sue.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./18_event_studies.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Event Studies in Finance</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./20_conclusion.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -561,14 +579,14 @@ window.Quarto = {
 </header>
 
 
-<p>This chapter provides a replication of the Fama-French factor portfolios for the Vietnamese stock market. The Fama-French factor models represent a cornerstone of empirical asset pricing, originating from the seminal work of <span class="citation" data-cites="Fama1992">Fama and French (<a href="references.html#ref-Fama1992" role="doc-biblioref">1992</a>)</span> and later extended in <span class="citation" data-cites="FamaFrench2015">Fama and French (<a href="references.html#ref-FamaFrench2015" role="doc-biblioref">2015</a>)</span>. These models have transformed how academics and practitioners understand the cross-section of expected stock returns, moving beyond the single-factor Capital Asset Pricing Model to incorporate multiple sources of systematic risk.</p>
+<p>This chapter provides a replication of the Fama-French factor portfolios for the Vietnamese stock market. The Fama-French factor models represent a cornerstone of empirical asset pricing, originating from the seminal work of <span class="citation" data-cites="Fama1992">Fama and French (<a href="#ref-Fama1992" role="doc-biblioref">1992</a>)</span> and later extended in <span class="citation" data-cites="FamaFrench2015">Fama and French (<a href="#ref-FamaFrench2015" role="doc-biblioref">2015</a>)</span>. These models have transformed how academics and practitioners understand the cross-section of expected stock returns, moving beyond the single-factor Capital Asset Pricing Model to incorporate multiple sources of systematic risk.</p>
 <p>We construct both the three-factor and five-factor models at monthly and daily frequencies. The monthly factors serve as the foundation for most asset pricing tests and portfolio analyses, while the daily factors enable higher-frequency applications including short-horizon event studies, market microstructure research, and daily beta estimation. By constructing factors at both frequencies, we create a complete toolkit for empirical finance research in the Vietnamese market.</p>
 <p>The chapter proceeds as follows. We first discuss the theoretical motivation for each factor and the economic intuition behind the Fama-French methodology. We then prepare the necessary data, merging stock returns with accounting characteristics. Next, we implement the portfolio sorting procedures that form the basis of factor construction, carefully following the original Fama-French protocols while adapting them for Vietnamese market characteristics. We construct the three-factor model (market, size, and value) before extending to the five-factor model (adding profitability and investment). Finally, we construct daily factors and validate our replicated factors through various diagnostic checks.</p>
 <section id="theoretical-background" class="level2" data-number="11.1">
 <h2 data-number="11.1" class="anchored" data-anchor-id="theoretical-background"><span class="header-section-number">11.1</span> Theoretical Background</h2>
 <section id="the-evolution-from-capm-to-multi-factor-models" class="level3" data-number="11.1.1">
 <h3 data-number="11.1.1" class="anchored" data-anchor-id="the-evolution-from-capm-to-multi-factor-models"><span class="header-section-number">11.1.1</span> The Evolution from CAPM to Multi-Factor Models</h3>
-<p>The Capital Asset Pricing Model of <span class="citation" data-cites="Sharpe1964">Sharpe (<a href="references.html#ref-Sharpe1964" role="doc-biblioref">1964</a>)</span> posits that a single factor—the market portfolio—should explain all cross-sectional variation in expected returns. However, decades of empirical research have documented persistent patterns that CAPM cannot explain. <span class="citation" data-cites="Fama1992">Fama and French (<a href="references.html#ref-Fama1992" role="doc-biblioref">1992</a>)</span> demonstrated that two firm characteristics—size and book-to-market ratio—capture substantial variation in average returns that the market beta leaves unexplained.</p>
+<p>The Capital Asset Pricing Model of <span class="citation" data-cites="Sharpe1964">Sharpe (<a href="#ref-Sharpe1964" role="doc-biblioref">1964</a>)</span> posits that a single factor—the market portfolio—should explain all cross-sectional variation in expected returns. However, decades of empirical research have documented persistent patterns that CAPM cannot explain. <span class="citation" data-cites="Fama1992">Fama and French (<a href="#ref-Fama1992" role="doc-biblioref">1992</a>)</span> demonstrated that two firm characteristics—size and book-to-market ratio—capture substantial variation in average returns that the market beta leaves unexplained.</p>
 <p>Small firms tend to earn higher returns than large firms, a pattern known as the size effect. Similarly, firms with high book-to-market ratios (value stocks) tend to outperform firms with low book-to-market ratios (growth stocks), known as the value premium. The three-factor model formalizes these observations by constructing tradeable factor portfolios:</p>
 <p><span id="eq-ff3"><span class="math display">\[
 r_{i,t} - r_{f,t} = \alpha_i + \beta_i^{MKT}(r_{m,t} - r_{f,t}) + \beta_i^{SMB} \cdot SMB_t + \beta_i^{HML} \cdot HML_t + \varepsilon_{i,t}
@@ -583,7 +601,7 @@ r_{i,t} - r_{f,t} = \alpha_i + \beta_i^{MKT}(r_{m,t} - r_{f,t}) + \beta_i^{SMB} 
 </section>
 <section id="the-five-factor-extension" class="level3" data-number="11.1.2">
 <h3 data-number="11.1.2" class="anchored" data-anchor-id="the-five-factor-extension"><span class="header-section-number">11.1.2</span> The Five-Factor Extension</h3>
-<p><span class="citation" data-cites="FamaFrench2015">Fama and French (<a href="references.html#ref-FamaFrench2015" role="doc-biblioref">2015</a>)</span> extended the model to include two additional factors motivated by the dividend discount model. Firms with higher profitability should have higher expected returns (all else equal), and firms with aggressive investment policies should have lower expected returns:</p>
+<p><span class="citation" data-cites="FamaFrench2015">Fama and French (<a href="#ref-FamaFrench2015" role="doc-biblioref">2015</a>)</span> extended the model to include two additional factors motivated by the dividend discount model. Firms with higher profitability should have higher expected returns (all else equal), and firms with aggressive investment policies should have lower expected returns:</p>
 <p><span id="eq-ff5"><span class="math display">\[
 r_{i,t} - r_{f,t} = \alpha_i + \beta_i^{MKT}MKT_t + \beta_i^{SMB}SMB_t + \beta_i^{HML}HML_t + \beta_i^{RMW}RMW_t + \beta_i^{CMA}CMA_t + \varepsilon_{i,t}
 \tag{11.2}\]</span></span></p>
@@ -2275,7 +2293,7 @@ cma: Monthly-Daily correlation = 0.9884</code></pre>
 
 <!-- -->
 
-<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
 <div id="ref-Fama1992" class="csl-entry" role="listitem">
 Fama, Eugene F., and Kenneth R. French. 1992. <span>“<span class="nocase">The cross-section of expected stock returns</span>.”</span> <em><span>The Journal of Finance</span></em> 47 (2): 427–65. <a href="https://doi.org/2329112">https://doi.org/2329112</a>.
 </div>
