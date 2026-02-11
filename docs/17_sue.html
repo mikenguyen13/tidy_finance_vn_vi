@@ -163,13 +163,13 @@ window.Quarto = {
 <link rel="stylesheet" href="styles.css">
 <meta property="og:title" content="14&nbsp; Standardized Earnings Surprises (SUE) – Applying Tidy Finance with Python to Vietnam">
 <meta property="og:description" content="">
-<meta property="og:image" content="https://github.com/mikenguyen13/tidy_finance_vn/17_sue_files/figure-html/cell-7-output-1.png">
+<meta property="og:image" content="https://github.com/mikenguyen13/tidy_finance_vn/17_sue_files/figure-html/fig-sue-output-1.png">
 <meta property="og:site_name" content="Applying Tidy Finance with Python to Vietnam">
 <meta property="og:image:height" content="1046">
 <meta property="og:image:width" content="1663">
 <meta name="twitter:title" content="14&nbsp; Standardized Earnings Surprises (SUE) – Applying Tidy Finance with Python to Vietnam">
 <meta name="twitter:description" content="">
-<meta name="twitter:image" content="https://github.com/mikenguyen13/tidy_finance_vn/17_sue_files/figure-html/cell-7-output-1.png">
+<meta name="twitter:image" content="https://github.com/mikenguyen13/tidy_finance_vn/17_sue_files/figure-html/fig-sue-output-1.png">
 <meta name="twitter:image-height" content="1046">
 <meta name="twitter:image-width" content="1663">
 <meta name="twitter:card" content="summary_large_image">
@@ -541,7 +541,7 @@ window.Quarto = {
 
 
 <p>In the context of the Ho Chi Minh Stock Exchange (HOSE) and the Hanoi Stock Exchange (HNX), earnings announcements represent critical information events. Investors and quantitative analysts continuously monitor the deviation between reported earnings and market expectations. This deviation is quantified as the Standardized Earnings Surprise (SUE).</p>
-<p>This chapter details the methodology for calculating SUE using three distinct approaches frequently utilized in academic literature and institutional research. We apply these methods to a dataset of Vietnamese large-cap equities to illustrate the mechanics of the calculation. The goal is to isolate the “surprise” component of earnings, which is a known predictor of post-earnings announcement drift (PEAD) <span class="citation" data-cites="bernard1989post livnat2006comparing">(<a href="#ref-bernard1989post" role="doc-biblioref">Bernard and Thomas 1989</a>; <a href="#ref-livnat2006comparing" role="doc-biblioref">Livnat and Mendenhall 2006</a>)</span>.</p>
+<p>This chapter details the methodology for calculating SUE using three distinct approaches frequently utilized in academic literature and institutional research. We apply these methods to a dataset of Vietnamese large-cap equities to illustrate the mechanics of the calculation. The goal is to isolate the “surprise” component of earnings, which is a known predictor of post-earnings announcement drift (PEAD) <span class="citation" data-cites="bernard1989post livnat2006comparing">(<a href="references.html#ref-bernard1989post" role="doc-biblioref">Bernard and Thomas 1989</a>; <a href="references.html#ref-livnat2006comparing" role="doc-biblioref">Livnat and Mendenhall 2006</a>)</span>.</p>
 <section id="methodology" class="level2" data-number="14.1">
 <h2 data-number="14.1" class="anchored" data-anchor-id="methodology"><span class="header-section-number">14.1</span> Methodology</h2>
 <p>We define three primary methods for calculating SUE. Each method differs in how it establishes the “expected” earnings value.</p>
@@ -700,7 +700,7 @@ window.Quarto = {
 <section id="python-setup-and-data-loading" class="level3" data-number="14.3.1">
 <h3 data-number="14.3.1" class="anchored" data-anchor-id="python-setup-and-data-loading"><span class="header-section-number">14.3.1</span> Python Setup and Data Loading</h3>
 <p>First, we establish our environment and load the dataset. We ensure the data is sorted by ticker and time to allow for accurate lag calculations.</p>
-<div id="f1b8b43e" class="cell" data-execution_count="1">
+<div id="ff9e9f85" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -760,14 +760,14 @@ window.Quarto = {
 <p>We now apply the functions to calculate the three variations of SUE.</p>
 <p><strong>Step 1: Handling Seasonality (Lags)</strong></p>
 <p>For Methods 1 and 2, we require the data from the same quarter of the previous year (lag 4).</p>
-<div id="e6d20bba" class="cell" data-execution_count="2">
+<div id="513f680d" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Group by ticker to ensure we don't shift data between companies</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'eps_lag4'</span>] <span class="op">=</span> df.groupby(<span class="st">'ticker'</span>)[<span class="st">'eps_basic'</span>].shift(<span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><strong>Step 2: Adjusting for Special Items</strong></p>
 <p>For Method 2, we must strip out non-recurring items. We apply the Vietnamese Corporate Income Tax (CIT) rate of 20%.</p>
 <p>The formula for the adjustment per share is: <span class="math display">\[ \text{Adjustment} = \frac{\text{Special Items} \times (1 - 0.20)}{\text{Shares Outstanding}} \]</span></p>
-<div id="beb7cadf" class="cell" data-execution_count="3">
+<div id="e6f75f8f" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Constants</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>CIT_RATE_VN <span class="op">=</span> <span class="fl">0.20</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -784,7 +784,7 @@ window.Quarto = {
 </div>
 <p><strong>Step 3: Computing SUE Variants</strong></p>
 <p>We finalize the calculation by computing the difference between actual (or adjusted) and expected values, deflated by the stock price.</p>
-<div id="89f2fd01" class="cell" data-execution_count="4">
+<div id="f79bf391" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Method 1: Seasonal Random Walk (Standard EPS)</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sue_1'</span>] <span class="op">=</span> (df[<span class="st">'eps_basic'</span>] <span class="op">-</span> df[<span class="st">'eps_lag4'</span>]) <span class="op">/</span> df[<span class="st">'price_close'</span>]</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -806,7 +806,7 @@ window.Quarto = {
 <p>We present the calculated standardized earnings surprises for the fiscal year 2024. Positive values indicate a positive surprise (beating expectations), while negative values indicate a miss.</p>
 <section id="tabular-results-fy-2024" class="level3" data-number="14.4.1">
 <h3 data-number="14.4.1" class="anchored" data-anchor-id="tabular-results-fy-2024"><span class="header-section-number">14.4.1</span> Tabular Results (FY 2024)</h3>
-<div id="a62839bc" class="cell" data-execution_count="5">
+<div id="cef74d55" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter for 2024 results where lag data exists</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>results_2024 <span class="op">=</span> df[df[<span class="st">'fiscal_year'</span>] <span class="op">==</span> <span class="dv">2024</span>][[<span class="st">'ticker'</span>, <span class="st">'fiscal_qtr'</span>, <span class="st">'sue_1_pct'</span>, <span class="st">'sue_2_pct'</span>, <span class="st">'sue_3_pct'</span>]]</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -937,7 +937,7 @@ window.Quarto = {
 <section id="visualization" class="level3" data-number="14.4.2">
 <h3 data-number="14.4.2" class="anchored" data-anchor-id="visualization"><span class="header-section-number">14.4.2</span> Visualization</h3>
 <p>The following figure plots the Analyst-based SUE (Method 3) for the selected tickers over the 2024 fiscal year.</p>
-<div id="a0a95823" class="cell" data-execution_count="6">
+<div id="cell-fig-sue" class="cell" data-fig-width="7" data-execution_count="6">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>pivot_sue <span class="op">=</span> results_2024.pivot(index<span class="op">=</span><span class="st">'fiscal_qtr'</span>, columns<span class="op">=</span><span class="st">'ticker'</span>, values<span class="op">=</span><span class="st">'sue_3_pct'</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
@@ -953,9 +953,14 @@ window.Quarto = {
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>plt.xticks([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>])</span>
 <span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="17_sue_files/figure-html/cell-7-output-1.png" width="832" height="523" class="figure-img"></p>
+<div id="fig-sue" class="quarto-float quarto-figure quarto-figure-center anchored" width="832" height="523">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sue-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="17_sue_files/figure-html/fig-sue-output-1.png" id="fig-sue" width="832" height="523" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-sue-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14.1
+</figcaption>
 </figure>
 </div>
 </div>
@@ -970,7 +975,7 @@ window.Quarto = {
 
 <!-- -->
 
-<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
 <div id="ref-bernard1989post" class="csl-entry" role="listitem">
 Bernard, Victor L, and Jacob K Thomas. 1989. <span>“Post-Earnings-Announcement Drift: Delayed Price Response or Risk Premium?”</span> <em>Journal of Accounting Research</em> 27: 1–36.
 </div>
@@ -1756,27 +1761,30 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb8-231"><a href="#cb8-231" aria-hidden="true" tabindex="-1"></a>The following figure plots the Analyst-based SUE (Method 3) for the selected tickers over the 2024 fiscal year.</span>
 <span id="cb8-232"><a href="#cb8-232" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-235"><a href="#cb8-235" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb8-236"><a href="#cb8-236" aria-hidden="true" tabindex="-1"></a>pivot_sue <span class="op">=</span> results_2024.pivot(index<span class="op">=</span><span class="st">'fiscal_qtr'</span>, columns<span class="op">=</span><span class="st">'ticker'</span>, values<span class="op">=</span><span class="st">'sue_3_pct'</span>)</span>
-<span id="cb8-237"><a href="#cb8-237" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-238"><a href="#cb8-238" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
-<span id="cb8-239"><a href="#cb8-239" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> column <span class="kw">in</span> pivot_sue.columns:</span>
-<span id="cb8-240"><a href="#cb8-240" aria-hidden="true" tabindex="-1"></a>    plt.plot(pivot_sue.index, pivot_sue[column], marker<span class="op">=</span><span class="st">'o'</span>, label<span class="op">=</span>column)</span>
-<span id="cb8-241"><a href="#cb8-241" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-242"><a href="#cb8-242" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Method 3: Analyst Based SUE (FY 2024)'</span>)</span>
-<span id="cb8-243"><a href="#cb8-243" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Fiscal Quarter'</span>)</span>
-<span id="cb8-244"><a href="#cb8-244" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'SUE (%)'</span>)</span>
-<span id="cb8-245"><a href="#cb8-245" aria-hidden="true" tabindex="-1"></a>plt.axhline(<span class="dv">0</span>, color<span class="op">=</span><span class="st">'black'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>, linewidth<span class="op">=</span><span class="fl">0.8</span>)</span>
-<span id="cb8-246"><a href="#cb8-246" aria-hidden="true" tabindex="-1"></a>plt.legend(title<span class="op">=</span><span class="st">'Ticker'</span>)</span>
-<span id="cb8-247"><a href="#cb8-247" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>, linestyle<span class="op">=</span><span class="st">':'</span>, alpha<span class="op">=</span><span class="fl">0.6</span>)</span>
-<span id="cb8-248"><a href="#cb8-248" aria-hidden="true" tabindex="-1"></a>plt.xticks([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>])</span>
-<span id="cb8-249"><a href="#cb8-249" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
-<span id="cb8-250"><a href="#cb8-250" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb8-251"><a href="#cb8-251" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-252"><a href="#cb8-252" aria-hidden="true" tabindex="-1"></a><span class="fu">## Conclusion</span></span>
-<span id="cb8-253"><a href="#cb8-253" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-254"><a href="#cb8-254" aria-hidden="true" tabindex="-1"></a>In this chapter, we have formalized the calculation of Standardized Earnings Surprises for the Vietnamese market. By implementing three distinct methods using Python, we demonstrated that relying solely on raw EPS growth (Method 1) can be misleading in the presence of non-recurring items. Furthermore, analyst-based surprises (Method 3) often provide a cleaner signal of new information reaching the market.</span>
-<span id="cb8-255"><a href="#cb8-255" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-256"><a href="#cb8-256" aria-hidden="true" tabindex="-1"></a>For robust quantitative modeling in Vietnam, we recommend using Method 2 when analyst data is sparse (common in small-cap stocks) and Method 3 for VN30 constituents where analyst coverage is deep and liquid.</span>
+<span id="cb8-236"><a href="#cb8-236" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-width: 7</span></span>
+<span id="cb8-237"><a href="#cb8-237" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-sue</span></span>
+<span id="cb8-238"><a href="#cb8-238" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-239"><a href="#cb8-239" aria-hidden="true" tabindex="-1"></a>pivot_sue <span class="op">=</span> results_2024.pivot(index<span class="op">=</span><span class="st">'fiscal_qtr'</span>, columns<span class="op">=</span><span class="st">'ticker'</span>, values<span class="op">=</span><span class="st">'sue_3_pct'</span>)</span>
+<span id="cb8-240"><a href="#cb8-240" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-241"><a href="#cb8-241" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb8-242"><a href="#cb8-242" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> column <span class="kw">in</span> pivot_sue.columns:</span>
+<span id="cb8-243"><a href="#cb8-243" aria-hidden="true" tabindex="-1"></a>    plt.plot(pivot_sue.index, pivot_sue[column], marker<span class="op">=</span><span class="st">'o'</span>, label<span class="op">=</span>column)</span>
+<span id="cb8-244"><a href="#cb8-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-245"><a href="#cb8-245" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Method 3: Analyst Based SUE (FY 2024)'</span>)</span>
+<span id="cb8-246"><a href="#cb8-246" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Fiscal Quarter'</span>)</span>
+<span id="cb8-247"><a href="#cb8-247" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'SUE (%)'</span>)</span>
+<span id="cb8-248"><a href="#cb8-248" aria-hidden="true" tabindex="-1"></a>plt.axhline(<span class="dv">0</span>, color<span class="op">=</span><span class="st">'black'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>, linewidth<span class="op">=</span><span class="fl">0.8</span>)</span>
+<span id="cb8-249"><a href="#cb8-249" aria-hidden="true" tabindex="-1"></a>plt.legend(title<span class="op">=</span><span class="st">'Ticker'</span>)</span>
+<span id="cb8-250"><a href="#cb8-250" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>, linestyle<span class="op">=</span><span class="st">':'</span>, alpha<span class="op">=</span><span class="fl">0.6</span>)</span>
+<span id="cb8-251"><a href="#cb8-251" aria-hidden="true" tabindex="-1"></a>plt.xticks([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>])</span>
+<span id="cb8-252"><a href="#cb8-252" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb8-253"><a href="#cb8-253" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-254"><a href="#cb8-254" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-255"><a href="#cb8-255" aria-hidden="true" tabindex="-1"></a><span class="fu">## Conclusion</span></span>
+<span id="cb8-256"><a href="#cb8-256" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-257"><a href="#cb8-257" aria-hidden="true" tabindex="-1"></a>In this chapter, we have formalized the calculation of Standardized Earnings Surprises for the Vietnamese market. By implementing three distinct methods using Python, we demonstrated that relying solely on raw EPS growth (Method 1) can be misleading in the presence of non-recurring items. Furthermore, analyst-based surprises (Method 3) often provide a cleaner signal of new information reaching the market.</span>
+<span id="cb8-258"><a href="#cb8-258" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-259"><a href="#cb8-259" aria-hidden="true" tabindex="-1"></a>For robust quantitative modeling in Vietnam, we recommend using Method 2 when analyst data is sparse (common in small-cap stocks) and Method 3 for VN30 constituents where analyst coverage is deep and liquid.</span>
 </code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->

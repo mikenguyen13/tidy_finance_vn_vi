@@ -793,7 +793,7 @@ Z_{Sign} = \frac{N^{+} - 0.5N}{\sqrt{0.25N}}
 \]</span></p>
 <p><strong>Test 7: Skewness-Adjusted</strong> <span class="math inline">\(t\)</span>-Test <span class="citation" data-cites="hall1992removal">(<a href="references.html#ref-hall1992removal" role="doc-biblioref">Hall 1992</a>)</span>:</p>
 <p><span class="math display">\[
-t_{SA} = \sqrt{N}\left(\bar{z} + \frac{1}{3}\hat{\gamma}\bar{z}^2 + \frac{1}{27}\hat{\gamma}^2\bar{z}^3 + \frac{1}{6N}\hat{\gamma}\right
+t_{SA} = \sqrt{N}\left(\bar{z} + \frac{1}{3}\hat{\gamma}\bar{z}^2 + \frac{1}{27}\hat{\gamma}^2\bar{z}^3 + \frac{1}{6N}\hat{\gamma}\right)
 \]</span></p>
 <p><strong>Test 8: Wilcoxon Signed-Rank Test:</strong> A non-parametric test of whether the median CAR differs from zero.</p>
 <p>The table below summarizes the assumptions of each test:</p>
@@ -822,49 +822,49 @@ Table&nbsp;15.2: Assumption requirements for event study test statistics
 <tr class="odd">
 <td>Cross-Sectional <span class="math inline">\(t\)</span></td>
 <td style="text-align: center;">Robust</td>
-<td style="text-align: center;">✗ Assumes</td>
-<td style="text-align: center;">✗ Assumes</td>
+<td style="text-align: center;">Assumes</td>
+<td style="text-align: center;">Assumes</td>
 </tr>
 <tr class="even">
 <td>Patell Z</td>
-<td style="text-align: center;">✗ Assumes no change</td>
-<td style="text-align: center;">✗ Assumes</td>
-<td style="text-align: center;">✗ Assumes</td>
+<td style="text-align: center;">Assumes no change</td>
+<td style="text-align: center;">Assumes</td>
+<td style="text-align: center;">Assumes</td>
 </tr>
 <tr class="odd">
 <td>BMP</td>
 <td style="text-align: center;">Robust</td>
-<td style="text-align: center;">✗ Assumes</td>
-<td style="text-align: center;">✗ Assumes</td>
+<td style="text-align: center;">Assumes</td>
+<td style="text-align: center;">Assumes</td>
 </tr>
 <tr class="even">
 <td>Kolari-Pynnönen</td>
 <td style="text-align: center;">Robust</td>
 <td style="text-align: center;">Robust</td>
-<td style="text-align: center;">✗ Assumes</td>
+<td style="text-align: center;">Assumes</td>
 </tr>
 <tr class="odd">
 <td>Generalized Sign</td>
 <td style="text-align: center;">Robust</td>
-<td style="text-align: center;">✗ Assumes</td>
+<td style="text-align: center;">Assumes</td>
 <td style="text-align: center;">Robust</td>
 </tr>
 <tr class="even">
 <td>Corrado Rank</td>
 <td style="text-align: center;">Robust</td>
-<td style="text-align: center;">✗ Assumes</td>
+<td style="text-align: center;">Assumes</td>
 <td style="text-align: center;">Robust</td>
 </tr>
 <tr class="odd">
 <td>Skewness-Adjusted</td>
 <td style="text-align: center;">Robust</td>
-<td style="text-align: center;">✗ Assumes</td>
+<td style="text-align: center;">Assumes</td>
 <td style="text-align: center;">Partially</td>
 </tr>
 <tr class="even">
 <td>Wilcoxon</td>
 <td style="text-align: center;">Robust</td>
-<td style="text-align: center;">✗ Assumes</td>
+<td style="text-align: center;">Assumes</td>
 <td style="text-align: center;">Robust</td>
 </tr>
 </tbody>
@@ -889,7 +889,7 @@ Table&nbsp;15.2: Assumption requirements for event study test statistics
 </section>
 <section id="setup-and-imports" class="level3" data-number="15.3.2">
 <h3 data-number="15.3.2" class="anchored" data-anchor-id="setup-and-imports"><span class="header-section-number">15.3.2</span> Setup and Imports</h3>
-<div id="setup" class="cell" data-execution_count="1">
+<div id="setup" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.api <span class="im">as</span> sm</span>
@@ -908,7 +908,7 @@ Table&nbsp;15.2: Assumption requirements for event study test statistics
 <pre><code>All libraries loaded.</code></pre>
 </div>
 </div>
-<div id="f7affd66" class="cell" data-execution_count="2">
+<div id="f7affd66" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sqlite3</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -938,7 +938,7 @@ Table&nbsp;15.2: Assumption requirements for event study test statistics
 <span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    parse_dates<span class="op">=</span>[<span class="st">"date"</span>]</span>
 <span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="c7a193e4" class="cell" data-execution_count="3">
+<div id="c7a193e4" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>prices_monthly <span class="op">=</span> pd.read_sql_query(</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    sql<span class="op">=</span><span class="st">"""</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="st">        SELECT symbol, date, ret_excess, mktcap, mktcap_lag, risk_free</span></span>
@@ -960,7 +960,7 @@ Table&nbsp;15.2: Assumption requirements for event study test statistics
 </section>
 <section id="configuration" class="level3" data-number="15.3.3">
 <h3 data-number="15.3.3" class="anchored" data-anchor-id="configuration"><span class="header-section-number">15.3.3</span> Configuration</h3>
-<div id="config" class="cell" data-execution_count="4">
+<div id="config" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RiskModel(Enum):</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Supported risk models for expected return computation."""</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    MARKET_ADJ <span class="op">=</span> <span class="st">"market_adjusted"</span></span>
@@ -1037,7 +1037,7 @@ Model: ff3</code></pre>
 <section id="step-1-trading-calendar-construction" class="level3" data-number="15.3.4">
 <h3 data-number="15.3.4" class="anchored" data-anchor-id="step-1-trading-calendar-construction"><span class="header-section-number">15.3.4</span> Step 1: Trading Calendar Construction</h3>
 <p>A correct trading calendar is fundamental. It maps any event date to the exact calendar dates for the start/end of estimation and event windows, accounting for weekends, holidays, and non-trading days.</p>
-<div id="calendar" class="cell" data-execution_count="5">
+<div id="calendar" class="cell" data-execution_count="6">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> build_trading_calendar(trading_dates, config):</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Build a trading calendar mapping event dates to window boundaries.</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
@@ -1112,7 +1112,7 @@ estper_beg estper_end evtwin_beg    evtdate evtwin_end  cal_index
 <section id="step-2-event-date-alignment" class="level3" data-number="15.3.5">
 <h3 data-number="15.3.5" class="anchored" data-anchor-id="step-2-event-date-alignment"><span class="header-section-number">15.3.5</span> Step 2: Event Date Alignment</h3>
 <p>When an event occurs on a non-trading day, align to the <strong>next</strong> available trading day.</p>
-<div id="alignment" class="cell" data-execution_count="6">
+<div id="alignment" class="cell" data-execution_count="7">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> align_events(events, calendar, id_col<span class="op">=</span><span class="st">'symbol'</span>, date_col<span class="op">=</span><span class="st">'event_date'</span>):</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Align event dates to trading calendar.</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
@@ -1154,7 +1154,7 @@ estper_beg estper_end evtwin_beg    evtdate evtwin_end  cal_index
 <section id="step-3-data-extraction-and-factor-merging" class="level3" data-number="15.3.6">
 <h3 data-number="15.3.6" class="anchored" data-anchor-id="step-3-data-extraction-and-factor-merging"><span class="header-section-number">15.3.6</span> Step 3: Data Extraction and Factor Merging</h3>
 <p>Extract returns for each security-event across the full estimation + event window and merge risk factors.</p>
-<div id="extraction" class="cell" data-execution_count="7">
+<div id="extraction" class="cell" data-execution_count="8">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> extract_returns(aligned_events, prices, factors, config,</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>                    id_col<span class="op">=</span><span class="st">'symbol'</span>, date_col<span class="op">=</span><span class="st">'date'</span>, ret_col<span class="op">=</span><span class="st">'ret'</span>,</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                    mkt_col<span class="op">=</span><span class="st">'mkt_excess'</span>, rf_col<span class="op">=</span><span class="st">'risk_free'</span>):</span>
@@ -1234,7 +1234,7 @@ estper_beg estper_end evtwin_beg    evtdate evtwin_end  cal_index
 <section id="step-4-risk-model-estimation" class="level3" data-number="15.3.7">
 <h3 data-number="15.3.7" class="anchored" data-anchor-id="step-4-risk-model-estimation"><span class="header-section-number">15.3.7</span> Step 4: Risk Model Estimation</h3>
 <p>Estimate risk model parameters over the estimation window.</p>
-<div id="estimation" class="cell" data-execution_count="8">
+<div id="estimation" class="cell" data-execution_count="9">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> estimate_model(</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    event_returns, config, id_col<span class="op">=</span><span class="st">"symbol"</span>, date_col<span class="op">=</span><span class="st">"date"</span>, ret_col<span class="op">=</span><span class="st">"ret"</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>):</span>
@@ -1330,7 +1330,7 @@ estper_beg estper_end evtwin_beg    evtdate evtwin_end  cal_index
 <section id="step-5-abnormal-return-computation" class="level3" data-number="15.3.8">
 <h3 data-number="15.3.8" class="anchored" data-anchor-id="step-5-abnormal-return-computation"><span class="header-section-number">15.3.8</span> Step 5: Abnormal Return Computation</h3>
 <p>Compute AR, CAR, BHAR, SAR, SCAR for each firm-event-date.</p>
-<div id="abnormal-returns" class="cell" data-execution_count="9">
+<div id="abnormal-returns" class="cell" data-execution_count="10">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_abnormal_returns(</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    event_returns, params, config, id_col<span class="op">=</span><span class="st">"symbol"</span>, date_col<span class="op">=</span><span class="st">"date"</span>, ret_col<span class="op">=</span><span class="st">"ret"</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>):</span>
@@ -1446,7 +1446,7 @@ estper_beg estper_end evtwin_beg    evtdate evtwin_end  cal_index
 <section id="step-6-comprehensive-test-statistics" class="level3" data-number="15.3.9">
 <h3 data-number="15.3.9" class="anchored" data-anchor-id="step-6-comprehensive-test-statistics"><span class="header-section-number">15.3.9</span> Step 6: Comprehensive Test Statistics</h3>
 <p>Eight tests covering parametric, non-parametric, and cross-correlation-robust approaches.</p>
-<div id="tests" class="cell" data-execution_count="10">
+<div id="tests" class="cell" data-execution_count="11">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_test_statistics(event_ar, params<span class="op">=</span><span class="va">None</span>, group_col<span class="op">=</span><span class="va">None</span>):</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Compute comprehensive test statistics for abnormal returns.</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
@@ -1565,7 +1565,7 @@ estper_beg estper_end evtwin_beg    evtdate evtwin_end  cal_index
 </section>
 <section id="step-7-publication-ready-visualization" class="level3" data-number="15.3.10">
 <h3 data-number="15.3.10" class="anchored" data-anchor-id="step-7-publication-ready-visualization"><span class="header-section-number">15.3.10</span> Step 7: Publication-Ready Visualization</h3>
-<div id="visualization" class="cell" data-execution_count="11">
+<div id="visualization" class="cell" data-execution_count="12">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_event_study(daily_stats, title<span class="op">=</span><span class="st">"Cumulative Abnormal Returns Around Event Date"</span>,</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>                     figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">7</span>), save_path<span class="op">=</span><span class="va">None</span>):</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Publication-ready event study plot with CAR, BHAR, and daily AR panels."""</span></span>
@@ -1648,7 +1648,7 @@ estper_beg estper_end evtwin_beg    evtdate evtwin_end  cal_index
 <section id="the-master-pipeline" class="level3" data-number="15.3.11">
 <h3 data-number="15.3.11" class="anchored" data-anchor-id="the-master-pipeline"><span class="header-section-number">15.3.11</span> The Master Pipeline</h3>
 <p>Combine all components into one function:</p>
-<div id="master" class="cell" data-execution_count="12">
+<div id="master" class="cell" data-execution_count="13">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_event_study(events, prices, factors, config,</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>                    id_col<span class="op">=</span><span class="st">'symbol'</span>, date_col<span class="op">=</span><span class="st">'date'</span>, ret_col<span class="op">=</span><span class="st">'ret'</span>,</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>                    event_date_col<span class="op">=</span><span class="st">'event_date'</span>, mkt_col<span class="op">=</span><span class="st">'mkt_excess'</span>,</span>
@@ -1741,7 +1741,7 @@ estper_beg estper_end evtwin_beg    evtdate evtwin_end  cal_index
 <section id="demonstration-with-simulated-data" class="level2" data-number="15.4">
 <h2 data-number="15.4" class="anchored" data-anchor-id="demonstration-with-simulated-data"><span class="header-section-number">15.4</span> Demonstration with Simulated Data</h2>
 <p>Since we are building a general-purpose framework (the actual event data will be supplied later), we demonstrate the full pipeline with <strong>realistic simulated data</strong>.</p>
-<div id="simulation" class="cell" data-execution_count="13">
+<div id="simulation" class="cell" data-execution_count="14">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">2024</span>)</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Simulated trading calendar (Vietnamese market: ~245 days/year) ---</span></span>
@@ -1819,7 +1819,7 @@ Injected abnormal return: +2% on event date</code></pre>
 </div>
 <section id="running-the-full-pipeline" class="level3" data-number="15.4.1">
 <h3 data-number="15.4.1" class="anchored" data-anchor-id="running-the-full-pipeline"><span class="header-section-number">15.4.1</span> Running the Full Pipeline</h3>
-<div id="run-pipeline" class="cell" data-execution_count="14">
+<div id="run-pipeline" class="cell" data-execution_count="15">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>config <span class="op">=</span> EventStudyConfig(</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    estimation_window<span class="op">=</span><span class="dv">150</span>,</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    event_window_start<span class="op">=-</span><span class="dv">10</span>,</span>
@@ -1869,7 +1869,7 @@ group  N  mean_CAR  mean_BHAR  pct_positive     t_CS     p_CS    t_BMP    p_BMP 
 </section>
 <section id="visualizing-results" class="level3" data-number="15.4.2">
 <h3 data-number="15.4.2" class="anchored" data-anchor-id="visualizing-results"><span class="header-section-number">15.4.2</span> Visualizing Results</h3>
-<div id="cell-fig-car-dynamics" class="cell" data-execution_count="15">
+<div id="cell-fig-car-dynamics" class="cell" data-execution_count="16">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fig1 <span class="op">=</span> plot_event_study(</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    results[<span class="st">'daily_stats'</span>],</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    title<span class="op">=</span><span class="st">"Event Study: FF3 Model — Simulated Vietnamese Market"</span></span>
@@ -1888,7 +1888,7 @@ Figure&nbsp;15.1: Dynamics of cumulative abnormal returns (CARs) and buy-and-hol
 </div>
 </div>
 </div>
-<div id="cell-fig-car-distribution" class="cell" data-execution_count="16">
+<div id="cell-fig-car-distribution" class="cell" data-execution_count="17">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>fig2 <span class="op">=</span> plot_car_distribution(results[<span class="st">'event_ar'</span>], <span class="st">'CAR'</span>)</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
@@ -1907,7 +1907,7 @@ Figure&nbsp;15.2: Cross-sectional distribution of cumulative abnormal returns. T
 </section>
 <section id="complete-test-statistics" class="level3" data-number="15.4.3">
 <h3 data-number="15.4.3" class="anchored" data-anchor-id="complete-test-statistics"><span class="header-section-number">15.4.3</span> Complete Test Statistics</h3>
-<div id="tbl-test-results" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="17">
+<div id="tbl-test-results" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="18">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-test-results-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;15.3: Event study test statistics for the full sample and by subgroup
@@ -1951,7 +1951,7 @@ Table&nbsp;15.3: Event study test statistics for the full sample and by subgroup
 <section id="running-multiple-models-for-robustness" class="level3" data-number="15.4.4">
 <h3 data-number="15.4.4" class="anchored" data-anchor-id="running-multiple-models-for-robustness"><span class="header-section-number">15.4.4</span> Running Multiple Models for Robustness</h3>
 <p>A key best practice is to report results across multiple risk models. If conclusions are robust across models, this strengthens the findings:</p>
-<div id="multi-model" class="cell" data-execution_count="18">
+<div id="multi-model" class="cell" data-execution_count="19">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>models_to_run <span class="op">=</span> [</span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"Market-Adjusted"</span>, RiskModel.MARKET_ADJ),</span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"Market Model"</span>, RiskModel.MARKET_MODEL),</span>
@@ -2153,7 +2153,7 @@ Market-Adjusted 50  2.9672%   2.6468%      62.0%   2.12    2.03   2.01
 <p>Since our data provides <code>ret_excess</code> rather than raw returns, we recover raw returns as <span class="math inline">\(R_{it} = R^e_{it} + R_{f,t}\)</span>, and the market return as <span class="math inline">\(R_{m,t} = R^e_{m,t} + R_{f,t}\)</span>. The <code>extract_event_returns()</code> function handles this automatically.</p>
 <section id="loading-the-data" class="level3" data-number="15.6.1">
 <h3 data-number="15.6.1" class="anchored" data-anchor-id="loading-the-data"><span class="header-section-number">15.6.1</span> Loading the Data</h3>
-<div id="load-data" class="cell" data-execution_count="19">
+<div id="load-data" class="cell" data-execution_count="20">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Recover raw returns ---</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ret = ret_excess + risk_free</span></span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>prices_daily[<span class="st">'ret'</span>] <span class="op">=</span> prices_daily[<span class="st">'ret_excess'</span>] <span class="op">+</span> prices_daily[<span class="st">'risk_free'</span>]</span>
@@ -2211,7 +2211,7 @@ Sample daily factors:
 <section id="creating-sample-events" class="level3" data-number="15.6.2">
 <h3 data-number="15.6.2" class="anchored" data-anchor-id="creating-sample-events"><span class="header-section-number">15.6.2</span> Creating Sample Events</h3>
 <p>For this demonstration, we create a sample event file. In practice, events would come from corporate announcements (earnings, M&amp;A, dividends), regulatory changes, or other information shocks. Here we select 50 large-cap Vietnamese stocks and assign random event dates from the most recent two years of data to illustrate the pipeline mechanics.</p>
-<div id="create-events" class="cell" data-execution_count="20">
+<div id="create-events" class="cell" data-execution_count="21">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">2024</span>)</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Select the 50 largest stocks by median market cap</span></span>
@@ -2274,7 +2274,7 @@ symbol event_date   group
 </section>
 <section id="daily-event-study-fama-french-3-factor-model" class="level3" data-number="15.6.3">
 <h3 data-number="15.6.3" class="anchored" data-anchor-id="daily-event-study-fama-french-3-factor-model"><span class="header-section-number">15.6.3</span> Daily Event Study: Fama-French 3-Factor Model</h3>
-<div id="run-daily-ff3" class="cell" data-execution_count="21">
+<div id="run-daily-ff3" class="cell" data-execution_count="22">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>config_ff3 <span class="op">=</span> EventStudyConfig(</span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    estimation_window<span class="op">=</span><span class="dv">150</span>,</span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    event_window_start<span class="op">=-</span><span class="dv">10</span>,</span>
@@ -2324,7 +2324,7 @@ Group_B 13  0.034425   0.042987      0.692308 0.879892 0.396197 0.437902 0.66923
 </section>
 <section id="visualizing-daily-results" class="level3" data-number="15.6.4">
 <h3 data-number="15.6.4" class="anchored" data-anchor-id="visualizing-daily-results"><span class="header-section-number">15.6.4</span> Visualizing Daily Results</h3>
-<div id="cell-fig-daily-car" class="cell" data-execution_count="22">
+<div id="cell-fig-daily-car" class="cell" data-execution_count="23">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>fig1 <span class="op">=</span> plot_event_study(</span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    results_ff3[<span class="st">'daily_stats'</span>],</span>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    title<span class="op">=</span><span class="st">"Event Study: Fama-French 3-Factor Model — Vietnamese Market (Daily)"</span></span>
@@ -2343,7 +2343,7 @@ Figure&nbsp;15.3: Cumulative abnormal returns around event dates for Vietnamese 
 </div>
 </div>
 </div>
-<div id="cell-fig-daily-dist" class="cell" data-execution_count="23">
+<div id="cell-fig-daily-dist" class="cell" data-execution_count="24">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>fig2 <span class="op">=</span> plot_car_distribution(results_ff3[<span class="st">'event_ar'</span>], <span class="st">'CAR'</span>)</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
@@ -2362,7 +2362,7 @@ Figure&nbsp;15.4: Cross-sectional distribution of cumulative abnormal returns (C
 </section>
 <section id="complete-test-statistics-daily" class="level3" data-number="15.6.5">
 <h3 data-number="15.6.5" class="anchored" data-anchor-id="complete-test-statistics-daily"><span class="header-section-number">15.6.5</span> Complete Test Statistics (Daily)</h3>
-<div id="tbl-daily-tests" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="24">
+<div id="tbl-daily-tests" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="25">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-daily-tests-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;15.4: Event study test statistics for the full sample and by subgroup — Daily frequency, FF3 model
@@ -2405,7 +2405,7 @@ Group_B 13  3.4425%    1.4169%   4.2987%        69.2% 0.880 0.3962    0.620   0.
 </section>
 <section id="robustness-multiple-risk-models-daily" class="level3" data-number="15.6.6">
 <h3 data-number="15.6.6" class="anchored" data-anchor-id="robustness-multiple-risk-models-daily"><span class="header-section-number">15.6.6</span> Robustness: Multiple Risk Models (Daily)</h3>
-<div id="tbl-robustness-daily" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="25">
+<div id="tbl-robustness-daily" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="26">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-robustness-daily-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;15.5: Robustness of event study results across risk models — Daily frequency
@@ -2474,7 +2474,7 @@ Market-Adjusted 28  3.5338%    0.2610%   3.6936%      50.0%  1.390 0.1758   1.10
 <section id="robustness-multiple-event-windows" class="level3" data-number="15.6.7">
 <h3 data-number="15.6.7" class="anchored" data-anchor-id="robustness-multiple-event-windows"><span class="header-section-number">15.6.7</span> Robustness: Multiple Event Windows</h3>
 <p>A key practice is to examine sensitivity to the event window specification:</p>
-<div id="tbl-robustness-windows" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="26">
+<div id="tbl-robustness-windows" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="27">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-robustness-windows-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;15.6: Sensitivity of results to event window specification
@@ -2555,7 +2555,7 @@ Sensitivity to Event Window Specification (FF3 Model)
 <section id="monthly-event-study-fama-french-3-factor-model" class="level3" data-number="15.6.8">
 <h3 data-number="15.6.8" class="anchored" data-anchor-id="monthly-event-study-fama-french-3-factor-model"><span class="header-section-number">15.6.8</span> Monthly Event Study: Fama-French 3-Factor Model</h3>
 <p>For longer-horizon studies, monthly frequency is appropriate. Note that the estimation window is specified in months rather than days:</p>
-<div id="run-monthly-ff3" class="cell" data-execution_count="27">
+<div id="run-monthly-ff3" class="cell" data-execution_count="28">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create monthly events aligned to the monthly data</span></span>
 <span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Map daily event dates to the corresponding month-end</span></span>
 <span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>events_monthly <span class="op">=</span> events_demo.copy()</span>
@@ -2630,7 +2630,7 @@ Group_A  7 -0.141756  -0.135084      0.428571 -1.102110 0.312648 -1.357452 0.223
 Group_B 11  0.081606   0.062111      0.636364  1.390317 0.194599  1.177372 0.266309</code></pre>
 </div>
 </div>
-<div id="cell-fig-monthly-car" class="cell" data-execution_count="28">
+<div id="cell-fig-monthly-car" class="cell" data-execution_count="29">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">len</span>(events_monthly) <span class="op">&gt;</span> <span class="dv">0</span> <span class="kw">and</span> <span class="st">'daily_stats'</span> <span class="kw">in</span> results_monthly:</span>
 <span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    fig3 <span class="op">=</span> plot_event_study(</span>
 <span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>        results_monthly[<span class="st">'daily_stats'</span>],</span>
@@ -2653,7 +2653,7 @@ Figure&nbsp;15.5: Monthly cumulative abnormal returns around event dates. Wider 
 </section>
 <section id="daily-event-study-fama-french-5-factor-model" class="level3" data-number="15.6.9">
 <h3 data-number="15.6.9" class="anchored" data-anchor-id="daily-event-study-fama-french-5-factor-model"><span class="header-section-number">15.6.9</span> Daily Event Study: Fama-French 5-Factor Model</h3>
-<div id="run-daily-ff5" class="cell" data-execution_count="29">
+<div id="run-daily-ff5" class="cell" data-execution_count="30">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>config_ff5 <span class="op">=</span> EventStudyConfig(</span>
 <span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    estimation_window<span class="op">=</span><span class="dv">150</span>,</span>
 <span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    event_window_start<span class="op">=-</span><span class="dv">10</span>,</span>
@@ -2703,7 +2703,7 @@ Group_B 13  0.036016   0.043309      0.692308 0.965100 0.353542 0.585915 0.56878
 </section>
 <section id="comparing-ff3-vs-ff5-estimation-quality" class="level3" data-number="15.6.10">
 <h3 data-number="15.6.10" class="anchored" data-anchor-id="comparing-ff3-vs-ff5-estimation-quality"><span class="header-section-number">15.6.10</span> Comparing FF3 vs FF5 Estimation Quality</h3>
-<div id="tbl-model-comparison" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="30">
+<div id="tbl-model-comparison" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="31">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-model-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;15.7: Comparison of estimation quality between FF3 and FF5 models
@@ -2753,7 +2753,7 @@ Mean β(CMA)                               —       0.1070</code></pre>
 </section>
 <section id="event-level-detail" class="level3" data-number="15.6.11">
 <h3 data-number="15.6.11" class="anchored" data-anchor-id="event-level-detail"><span class="header-section-number">15.6.11</span> Event-Level Detail</h3>
-<div id="tbl-event-detail" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="31">
+<div id="tbl-event-detail" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="32">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-event-detail-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;15.8: Event-level detail: CARs and BHARs for each firm-event (FF3 model)
@@ -2802,7 +2802,7 @@ symbol    evtdate       CAR      BHAR   SCAR    sigma  nobs     alpha  beta_mkt_
 </section>
 <section id="daily-abnormal-return-dynamics" class="level3" data-number="15.6.12">
 <h3 data-number="15.6.12" class="anchored" data-anchor-id="daily-abnormal-return-dynamics"><span class="header-section-number">15.6.12</span> Daily Abnormal Return Dynamics</h3>
-<div id="tbl-daily-dynamics" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="32">
+<div id="tbl-daily-dynamics" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="33">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-daily-dynamics-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;15.9: Daily dynamics of mean abnormal returns and test statistics within the event window
@@ -2855,7 +2855,7 @@ Table&nbsp;15.9: Daily dynamics of mean abnormal returns and test statistics wit
 </section>
 <section id="summary-of-key-findings" class="level3" data-number="15.6.13">
 <h3 data-number="15.6.13" class="anchored" data-anchor-id="summary-of-key-findings"><span class="header-section-number">15.6.13</span> Summary of Key Findings</h3>
-<div id="summary" class="cell" data-execution_count="33">
+<div id="summary" class="cell" data-execution_count="34">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">70</span>)</span>
 <span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"EVENT STUDY RESULTS SUMMARY"</span>)</span>
 <span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">70</span>)</span>
@@ -3799,7 +3799,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb55-203"><a href="#cb55-203" aria-hidden="true" tabindex="-1"></a>**Test 7: Skewness-Adjusted** $t$-Test <span class="co">[</span><span class="ot">@hall1992removal</span><span class="co">]</span>: </span>
 <span id="cb55-204"><a href="#cb55-204" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb55-205"><a href="#cb55-205" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb55-206"><a href="#cb55-206" aria-hidden="true" tabindex="-1"></a>t_{SA} = \sqrt{N}\left(\bar{z} + \frac{1}{3}\hat{\gamma}\bar{z}^2 + \frac{1}{27}\hat{\gamma}^2\bar{z}^3 + \frac{1}{6N}\hat{\gamma}\right</span>
+<span id="cb55-206"><a href="#cb55-206" aria-hidden="true" tabindex="-1"></a>t_{SA} = \sqrt{N}\left(\bar{z} + \frac{1}{3}\hat{\gamma}\bar{z}^2 + \frac{1}{27}\hat{\gamma}^2\bar{z}^3 + \frac{1}{6N}\hat{\gamma}\right)</span>
 <span id="cb55-207"><a href="#cb55-207" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb55-208"><a href="#cb55-208" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb55-209"><a href="#cb55-209" aria-hidden="true" tabindex="-1"></a>**Test 8: Wilcoxon Signed-Rank Test:** A non-parametric test of whether the median CAR differs from zero.</span>
@@ -3808,14 +3808,14 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb55-212"><a href="#cb55-212" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb55-213"><a href="#cb55-213" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Test <span class="pp">|</span> Event-Induced Variance <span class="pp">|</span> Cross-Sectional Independence <span class="pp">|</span> Normality <span class="pp">|</span></span>
 <span id="cb55-214"><a href="#cb55-214" aria-hidden="true" tabindex="-1"></a><span class="pp">|------------------|:----------------:|:----------------:|:----------------:|</span></span>
-<span id="cb55-215"><a href="#cb55-215" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Cross-Sectional $t$ <span class="pp">|</span> Robust <span class="pp">|</span> ✗ Assumes <span class="pp">|</span> ✗ Assumes <span class="pp">|</span></span>
-<span id="cb55-216"><a href="#cb55-216" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Patell Z <span class="pp">|</span> ✗ Assumes no change <span class="pp">|</span> ✗ Assumes <span class="pp">|</span> ✗ Assumes <span class="pp">|</span></span>
-<span id="cb55-217"><a href="#cb55-217" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> BMP <span class="pp">|</span> Robust <span class="pp">|</span> ✗ Assumes <span class="pp">|</span> ✗ Assumes <span class="pp">|</span></span>
-<span id="cb55-218"><a href="#cb55-218" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Kolari-Pynnönen <span class="pp">|</span> Robust <span class="pp">|</span> Robust <span class="pp">|</span> ✗ Assumes <span class="pp">|</span></span>
-<span id="cb55-219"><a href="#cb55-219" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Generalized Sign <span class="pp">|</span> Robust <span class="pp">|</span> ✗ Assumes <span class="pp">|</span> Robust <span class="pp">|</span></span>
-<span id="cb55-220"><a href="#cb55-220" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Corrado Rank <span class="pp">|</span> Robust <span class="pp">|</span> ✗ Assumes <span class="pp">|</span> Robust <span class="pp">|</span></span>
-<span id="cb55-221"><a href="#cb55-221" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Skewness-Adjusted <span class="pp">|</span> Robust <span class="pp">|</span> ✗ Assumes <span class="pp">|</span> Partially <span class="pp">|</span></span>
-<span id="cb55-222"><a href="#cb55-222" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Wilcoxon <span class="pp">|</span> Robust <span class="pp">|</span> ✗ Assumes <span class="pp">|</span> Robust <span class="pp">|</span></span>
+<span id="cb55-215"><a href="#cb55-215" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Cross-Sectional $t$ <span class="pp">|</span> Robust <span class="pp">|</span> Assumes <span class="pp">|</span> Assumes <span class="pp">|</span></span>
+<span id="cb55-216"><a href="#cb55-216" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Patell Z <span class="pp">|</span> Assumes no change <span class="pp">|</span> Assumes <span class="pp">|</span> Assumes <span class="pp">|</span></span>
+<span id="cb55-217"><a href="#cb55-217" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> BMP <span class="pp">|</span> Robust <span class="pp">|</span> Assumes <span class="pp">|</span> Assumes <span class="pp">|</span></span>
+<span id="cb55-218"><a href="#cb55-218" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Kolari-Pynnönen <span class="pp">|</span> Robust <span class="pp">|</span> Robust <span class="pp">|</span> Assumes <span class="pp">|</span></span>
+<span id="cb55-219"><a href="#cb55-219" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Generalized Sign <span class="pp">|</span> Robust <span class="pp">|</span> Assumes <span class="pp">|</span> Robust <span class="pp">|</span></span>
+<span id="cb55-220"><a href="#cb55-220" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Corrado Rank <span class="pp">|</span> Robust <span class="pp">|</span> Assumes <span class="pp">|</span> Robust <span class="pp">|</span></span>
+<span id="cb55-221"><a href="#cb55-221" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Skewness-Adjusted <span class="pp">|</span> Robust <span class="pp">|</span> Assumes <span class="pp">|</span> Partially <span class="pp">|</span></span>
+<span id="cb55-222"><a href="#cb55-222" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Wilcoxon <span class="pp">|</span> Robust <span class="pp">|</span> Assumes <span class="pp">|</span> Robust <span class="pp">|</span></span>
 <span id="cb55-223"><a href="#cb55-223" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb55-224"><a href="#cb55-224" aria-hidden="true" tabindex="-1"></a>: Assumption requirements for event study test statistics {#tbl-test-assumptions}</span>
 <span id="cb55-225"><a href="#cb55-225" aria-hidden="true" tabindex="-1"></a></span>
