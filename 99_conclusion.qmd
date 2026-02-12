@@ -1,0 +1,47 @@
+---
+title: "Conclusion"
+format: html
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+Empirical finance in emerging and frontier markets is often judged less by the elegance of an estimator than by the credibility of its inputs and the transparency of its decisions. Vietnam makes this point vividly: trading venues and regulatory regimes have evolved quickly, firm coverage can be uneven across time, corporate actions need careful treatment, and accounting conventions require close attention to timing and comparability. Those features do not prevent high-quality research; they simply shift the center of gravity toward *reproducible data engineering*, *auditable transformations*, and *clear identification of assumptions*.
+
+## What you should take away
+
+### Reproducibility is an identification strategy
+
+In textbook settings, identification focuses on variation and exogeneity. In real-world market data, identification also depends on whether your dataset is *the same dataset* when you rerun the work next month or next year. The practical discipline of versioned inputs, deterministic transformations, and documented filters reduces the scope for accidental $p$-hacking and silent sample drift (e.g., survivorship bias from symbol changes or late-arriving delistings). Reproducible workflows are not administrative overhead; they are a commitment device that makes results more trustworthy and easier to challenge constructively [@peng2011reproducible; @sandve2013ten].
+
+### Vietnam rewards “microstructure humility”
+
+The chapters on returns, beta estimation, and factor construction emphasized that naïve carryover of developed-market defaults can be costly. Thin trading, price limits, lot-size rules, and regime changes mean that decisions like (i) return interval, (ii) stale-price handling, (iii) corporate-action adjustment, and (iv) portfolio formation frequency can materially change inference. This is not a Vietnam-only phenomenon, but it is more visible there, and therefore a useful laboratory for best practices in emerging markets.
+
+## A reproducibility checklist you can actually use
+
+The list below is designed to be operational: each item can be verified in a repository review.
+
+| Deliverable | What “done” looks like | Where it lives |
+|-----------------|---------------------------------|-----------------------|
+| Deterministic transforms | Same raw inputs yield identical normalized outputs | `R/transform_*.R` (or `python/transform_*.py`) |
+| Test suite | Coverage, identity, and corporate-action tests run in CI | `tests/` + CI config |
+| Data dictionary | Tables/fields documented with units, timing, and keys | `docs/dictionary.qmd` |
+| Research log | All key design choices recorded (filters, winsorization, periods) | `notes/research_log.md` |
+| Artifact registry | Every figure/table has a script and a checksum | `artifacts/manifest.json` |
+
+: Reproducibility deliverables for research {#tbl-repro-checklist}
+
+# Closing perspective
+
+Vietnam is not “hard mode” finance; it is *real mode* finance. The market’s growth, institutional evolution, and data idiosyncrasies force the habits that modern empirical finance increasingly requires everywhere: transparent datasets, careful treatment of identities and corporate actions, and codebases that can be rerun and audited.
+
+```{=html}
+<!-- ## Suggested next projects
+
+1. **Liquidity-aware factor models for Vietnam**: incorporate trading frictions and stale prices into factor design and evaluation.
+2. **Event studies with corporate actions and disclosures**: build a disclosure calendar and test abnormal returns with robust inference.
+3. **Integrated valuation + asset pricing**: connect DCF assumptions to cross-sectional expected return estimates.
+4. **Macro-finance linkages**: align FX, rates, and macro series with trading calendars and test regime-dependent exposures. -->
+```

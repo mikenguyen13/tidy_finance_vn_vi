@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>17&nbsp; P/E Ratio – Applying Tidy Finance with Python to Vietnam</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./30_institutional_ownership.html" rel="next">
+<link href="./19_divop.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-50a4fa9e9ef121803c2355a2deb1af4d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-d8431037eefe704a1e7a103aa5b75ea7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-50a4fa9e9ef121803c2355a2deb1af4d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="17&nbsp; P/E Ratio – Applying Tidy Finance with Python to Vietnam">
+<meta property="og:description" content="">
+<meta property="og:site_name" content="Applying Tidy Finance with Python to Vietnam">
+<meta name="twitter:title" content="17&nbsp; P/E Ratio – Applying Tidy Finance with Python to Vietnam">
+<meta name="twitter:description" content="">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./25_pe_ratio.html"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">P/E Ratio</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Applying Tidy Finance with Python to Vietnam</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/mikenguyen13/tidy_finance_vn" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./00_institutional_background.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Institutional Background and Market Structure of Vietnam’s Equity Market</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01_working_with_stock_returns.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Constructing and Analyzing Equity Return Series</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02_modern_portfolio_theory.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03_capm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">The Capital Asset Pricing Model</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04_financial_statement_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Financial Statement Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05_discounted_cash_flow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Discounted Cash Flow Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06_accessing_and_managing_financial_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Accessing and Managing VN Financial Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07_datacore_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Datacore Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08_beta_estimation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Beta Estimation</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09_univariate_portfolio_sort.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Univariate Portfolio Sorts</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12_fama_french.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13_momemtum.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Momentum Strategies</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14_fama_macbeth.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Fama-MacBeth Regressions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./17_event_studies.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Event Studies in Finance</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./18_sue.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./19_divop.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Measuring Divergence of Investor Opinion</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./25_pe_ratio.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">P/E Ratio</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./30_institutional_ownership.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Institutional Ownership Analytics in Vietnam</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./31_institutional_trade_flow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Institutional Trades, Flows, and Turnover Ratios</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99_conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#technical-schema-and-variable-engineering" id="toc-technical-schema-and-variable-engineering" class="nav-link active" data-scroll-target="#technical-schema-and-variable-engineering"><span class="header-section-number">17.0.1</span> Technical Schema and Variable Engineering</a></li>
+  <li><a href="#firm-specific-pe-valuation-metrics" id="toc-firm-specific-pe-valuation-metrics" class="nav-link" data-scroll-target="#firm-specific-pe-valuation-metrics"><span class="header-section-number">17.1</span> Firm-Specific P/E Valuation Metrics</a>
+  <ul class="collapse">
+  <li><a href="#trailing-pe-and-the-ttm-methodology" id="toc-trailing-pe-and-the-ttm-methodology" class="nav-link" data-scroll-target="#trailing-pe-and-the-ttm-methodology"><span class="header-section-number">17.1.1</span> Trailing P/E and the TTM Methodology</a></li>
+  <li><a href="#forward-pe-and-analyst-forecast-reliability" id="toc-forward-pe-and-analyst-forecast-reliability" class="nav-link" data-scroll-target="#forward-pe-and-analyst-forecast-reliability"><span class="header-section-number">17.1.2</span> Forward P/E and Analyst Forecast Reliability</a></li>
+  <li><a href="#cyclically-adjusted-price-earnings-cape-ratio" id="toc-cyclically-adjusted-price-earnings-cape-ratio" class="nav-link" data-scroll-target="#cyclically-adjusted-price-earnings-cape-ratio"><span class="header-section-number">17.1.3</span> Cyclically Adjusted Price-Earnings (CAPE) Ratio</a></li>
+  <li><a href="#unlevered-pe-and-the-leibowitz-framework" id="toc-unlevered-pe-and-the-leibowitz-framework" class="nav-link" data-scroll-target="#unlevered-pe-and-the-leibowitz-framework"><span class="header-section-number">17.1.4</span> Unlevered P/E and the Leibowitz Framework</a></li>
+  </ul></li>
+  <li><a href="#market-level-aggregation-techniques" id="toc-market-level-aggregation-techniques" class="nav-link" data-scroll-target="#market-level-aggregation-techniques"><span class="header-section-number">17.2</span> Market-Level Aggregation Techniques</a>
+  <ul class="collapse">
+  <li><a href="#the-vn-index-capitalization-weighted-aggregation" id="toc-the-vn-index-capitalization-weighted-aggregation" class="nav-link" data-scroll-target="#the-vn-index-capitalization-weighted-aggregation"><span class="header-section-number">17.2.1</span> The VN-Index: Capitalization-Weighted Aggregation</a></li>
+  <li><a href="#the-vn30-and-free-float-adjustments" id="toc-the-vn30-and-free-float-adjustments" class="nav-link" data-scroll-target="#the-vn30-and-free-float-adjustments"><span class="header-section-number">17.2.2</span> The VN30 and Free-Float Adjustments</a></li>
+  <li><a href="#median-vs.-mean-aggregation" id="toc-median-vs.-mean-aggregation" class="nav-link" data-scroll-target="#median-vs.-mean-aggregation"><span class="header-section-number">17.2.3</span> Median vs.&nbsp;Mean Aggregation</a></li>
+  </ul></li>
+  <li><a href="#implementation" id="toc-implementation" class="nav-link" data-scroll-target="#implementation"><span class="header-section-number">17.3</span> Implementation</a>
+  <ul class="collapse">
+  <li><a href="#data-ingestion-and-processing" id="toc-data-ingestion-and-processing" class="nav-link" data-scroll-target="#data-ingestion-and-processing"><span class="header-section-number">17.3.1</span> Data Ingestion and Processing</a></li>
+  <li><a href="#shiller-cape" id="toc-shiller-cape" class="nav-link" data-scroll-target="#shiller-cape"><span class="header-section-number">17.3.2</span> Shiller CAPE</a></li>
+  </ul></li>
+  <li><a href="#macroeconomic-and-regulatory-factors-in-valuation" id="toc-macroeconomic-and-regulatory-factors-in-valuation" class="nav-link" data-scroll-target="#macroeconomic-and-regulatory-factors-in-valuation"><span class="header-section-number">17.4</span> Macroeconomic and Regulatory Factors in Valuation</a>
+  <ul class="collapse">
+  <li><a href="#the-role-of-corporate-income-tax-cit" id="toc-the-role-of-corporate-income-tax-cit" class="nav-link" data-scroll-target="#the-role-of-corporate-income-tax-cit"><span class="header-section-number">17.4.1</span> The Role of Corporate Income Tax (CIT)</a></li>
+  <li><a href="#macroeconomic-determinants-inflation-and-interest-rates" id="toc-macroeconomic-determinants-inflation-and-interest-rates" class="nav-link" data-scroll-target="#macroeconomic-determinants-inflation-and-interest-rates"><span class="header-section-number">17.4.2</span> Macroeconomic Determinants: Inflation and Interest Rates</a></li>
+  </ul></li>
+  <li><a href="#synthesis-of-valuation-dynamics" id="toc-synthesis-of-valuation-dynamics" class="nav-link" data-scroll-target="#synthesis-of-valuation-dynamics"><span class="header-section-number">17.5</span> Synthesis of Valuation Dynamics</a></li>
+  <li><a href="#conclusions" id="toc-conclusions" class="nav-link" data-scroll-target="#conclusions"><span class="header-section-number">17.6</span> Conclusions</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn/edit/main/25_pe_ratio.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">P/E Ratio</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>The systematic analysis of equity valuations in frontier and emerging markets requires a robust integration of high-fidelity financial data, rigorous mathematical modeling, and an acute understanding of local regulatory frameworks. In the context of the Vietnamese equity market, the Price-Earnings (P/E) ratio serves as a primary instrument for assessing corporate performance and market sentiment. This chapter provides an exploration of P/E valuation methodologies, ranging from firm-specific trailing and forward metrics to cyclically adjusted and unlevered variations.</p>
+<!-- ## The Architecture of Vietnamese Financial Data
+
+The Datacore.vn platform organizes its financial offerings into several specialized products, each serving a distinct role in the valuation pipeline. The "Stock" data product delivers clean, daily trading data for all listed companies, supporting market tracking and strategy development. For fundamental analysis, the "Vietnam Fundamentals" dataset is indispensable, as it provides clean, comparable, and fully reconciled firm-level accounting data for every company listed on HOSE, HNX, and UPCoM from the year 2000 onward.
+
+|  |  |  |
+|----|----|----|
+| **Dataset Name** | **Scope** | **Key Variables for P/E Analysis** |
+| Stock Data | Daily Trading | `close_price`, `adjusted_close`, `volume`, `market_cap` |
+| Vietnam Fundamentals | Firm Accounting | `net_income`, `eps`, `shares_outstanding`, `total_debt` |
+| Company Data | Legal Entities | `registration_date`, `industry_code`, `legal_status` |
+| News Data | Market Events | `sentiment_score`, `article_topic`, `entity_linkage` |
+| Bank Data | Financial Sector | `branch_network`, `shareholder_structure`, `regulatory_status` | -->
+<section id="technical-schema-and-variable-engineering" class="level3" data-number="17.0.1">
+<h3 data-number="17.0.1" class="anchored" data-anchor-id="technical-schema-and-variable-engineering"><span class="header-section-number">17.0.1</span> Technical Schema and Variable Engineering</h3>
+<p>The primary identifier for equities is the symbol, typically a three-letter uppercase code, though special indices such as E1VFVN30 (ETF) or market indices like HNX-INDEX and UPCOM-INDEX follow unique naming conventions. Price data is categorized as OHLC type, encompassing ‘open’, ‘high’, ‘low’, and ‘close’. For valuation purposes, the ‘adjusted close’ is preferred to account for corporate actions such as stock splits and dividend payments.</p>
+<p>The accounting variables provided in the Vietnam Fundamentals product follow a standardized classification that reconciles different reporting standards across sectors. This reconciliation is vital because Vietnamese firms may have differing interpretations of revenue and net profit under Vietnamese Accounting Standards (VAS).</p>
+</section>
+<section id="firm-specific-pe-valuation-metrics" class="level2" data-number="17.1">
+<h2 data-number="17.1" class="anchored" data-anchor-id="firm-specific-pe-valuation-metrics"><span class="header-section-number">17.1</span> Firm-Specific P/E Valuation Metrics</h2>
+<p>At the individual firm level, the P/E ratio is the most fundamental measure of how much an investor is willing to pay for each unit of current or future profit. However, the calculation of “E” (Earnings) can take several forms, each offering a different insight into the company’s value.</p>
+<section id="trailing-pe-and-the-ttm-methodology" class="level3" data-number="17.1.1">
+<h3 data-number="17.1.1" class="anchored" data-anchor-id="trailing-pe-and-the-ttm-methodology"><span class="header-section-number">17.1.1</span> Trailing P/E and the TTM Methodology</h3>
+<p>The Trailing P/E ratio is calculated using the reported earnings from the last four quarters, known as Trailing Twelve Months (TTM). In the Vietnamese market, this is often the default metric reported by exchanges and financial news outlets.</p>
+<p>The mathematical representation is:</p>
+<p><span class="math display">\[
+P/E_{Trailing} = \frac{P_t}{\sum_{i=0}^{3} EPS_{q-i}}
+\]</span></p>
+<p>Where <span class="math inline">\(P_t\)</span> is the current market price and <span class="math inline">\(EPS_{q-i}\)</span> represents the earnings per share for each of the four most recent quarters.</p>
+</section>
+<section id="forward-pe-and-analyst-forecast-reliability" class="level3" data-number="17.1.2">
+<h3 data-number="17.1.2" class="anchored" data-anchor-id="forward-pe-and-analyst-forecast-reliability"><span class="header-section-number">17.1.2</span> Forward P/E and Analyst Forecast Reliability</h3>
+<p>Forward P/E shifts the focus from historical performance to future expectations by using consensus earnings forecasts for the next fiscal year.</p>
+<p><span class="math display">\[
+P/E_{Forward} = \frac{P_t}{EPS_{forecasted, t+1}}
+\]</span></p>
+<p>In Vietnam, these forecasts are typically generated by research departments within major securities firms such as SSI, VCSC, MBS, and FPTS. These analysts rely on financial statements, projections, models, and subjective evaluations of market sentiment to generate their estimates. However, the accuracy of these forecasts is a significant area of research. However, analysts in Vietnam are often influenced by anchoring and adjustment bias, where they base future predictions heavily on past records and then make insufficient adjustments.</p>
+<p>The accuracy of analyst earnings forecasts in Vietnam is significantly impacted by corporate governance characteristics. Specifically, state ownership has been found to have a negative impact on forecast accuracy, while institutional ownership has a positive effect. This implies that for firms with high state-controlled stakes, which are common in Vietnam’s strategic industries, researchers should apply a higher discount or “fudge factor” to forward P/E estimates provided by consensus sources.</p>
+</section>
+<section id="cyclically-adjusted-price-earnings-cape-ratio" class="level3" data-number="17.1.3">
+<h3 data-number="17.1.3" class="anchored" data-anchor-id="cyclically-adjusted-price-earnings-cape-ratio"><span class="header-section-number">17.1.3</span> Cyclically Adjusted Price-Earnings (CAPE) Ratio</h3>
+<p>The Shiller P/E, or CAPE ratio, is designed to smooth out the volatility of the business cycle by using a 10-year average of inflation-adjusted earnings. For a market like Vietnam, which has seen periods of extreme growth followed by stabilization, the CAPE ratio provides a more tempered view of valuation than trailing metrics.</p>
+<p>The calculation requires adjusting historical earnings by the Consumer Price Index (CPI). Vietnam’s CPI data is updated monthly and is available from January 1996 through early 2026, with an average year-on-year growth rate of approximately 12.2%.</p>
+<p><span class="math display">\[
+EPS_{real, t} = EPS_{nominal, t} \times \frac{CPI_{current}}{CPI_t}
+\]</span></p>
+<p><span class="math display">\[
+CAPE = \frac{P_t}{\frac{1}{10} \sum_{i=0}^{9} EPS_{real, t-i}}
+\]</span></p>
+<p>Historically, Vietnam’s CPI has reached an all-time high of 28.3% YoY in August 2008 and a record low of -2.6% in July 2000. These extreme swings mean that nominal earnings in the mid-2000s are not comparable to earnings today without the Shiller adjustment. Researchers must be mindful of the different base years used by the National Statistics Office (GSO), such as 2024=100, 2019=100, and 2014=100.</p>
+</section>
+<section id="unlevered-pe-and-the-leibowitz-framework" class="level3" data-number="17.1.4">
+<h3 data-number="17.1.4" class="anchored" data-anchor-id="unlevered-pe-and-the-leibowitz-framework"><span class="header-section-number">17.1.4</span> Unlevered P/E and the Leibowitz Framework</h3>
+<p>The concept of the “Unlevered P/E” ratio attempts to view a company’s valuation independent of its capital structure. This is particularly relevant in the Vietnamese market, where debt loads vary significantly between state-owned enterprises (SOEs) and private firms. Research by <span class="citation" data-cites="leibowitz2002levered">Leibowitz (<a href="references.html#ref-leibowitz2002levered" role="doc-biblioref">2002</a>)</span> highlights that for the investment analyst, a company is already levered, and the task is to estimate its theoretical value by inferring the underlying structure of returns.</p>
+<p>According to Leibowitz, leverage always moves the P/E toward a lower value than what would be obtained from a standard Gordon growth formula. As a company adds debt, the market discount rate for equity increases to compensate for the additional risk, which in turn compresses the P/E multiple. For example, a debt-free company with a theoretical P/E of 30 might see its P/E drop to 23 with a 40% debt ratio, and down to 20 with a 50% debt ratio.</p>
+<p>The Unlevered P/E (often proxied by Enterprise Value to EBIT or EBITDA) can be calculated using fundamental variables:</p>
+<p><span class="math display">\[
+EV = (\text{Shares Outstanding} \times \text{Price}) + \text{Total Debt} - \text{Cash}
+\]</span></p>
+<p><span class="math display">\[
+P/E_{\text{Unlevered}} \approx \frac{EV}{EBIT \times (1 - \tau)}
+\]</span></p>
+<p>Where <span class="math inline">\(\tau\)</span> is the corporate income tax rate. The standard CIT rate in Vietnam is 20%, which has been stable since the mid-2010s but is subject to new revisions under the Law on CIT ratified in June 2025.</p>
+</section>
+</section>
+<section id="market-level-aggregation-techniques" class="level2" data-number="17.2">
+<h2 data-number="17.2" class="anchored" data-anchor-id="market-level-aggregation-techniques"><span class="header-section-number">17.2</span> Market-Level Aggregation Techniques</h2>
+<p>Aggregating firm-specific metrics into a single market-level index P/E is a complex task that requires careful consideration of weighting and the inclusion of loss-making entities. In the Vietnamese market, two primary indices (i.e., the VN-Index and the VN30), provide the benchmarks for performance and valuation.</p>
+<section id="the-vn-index-capitalization-weighted-aggregation" class="level3" data-number="17.2.1">
+<h3 data-number="17.2.1" class="anchored" data-anchor-id="the-vn-index-capitalization-weighted-aggregation"><span class="header-section-number">17.2.1</span> The VN-Index: Capitalization-Weighted Aggregation</h3>
+<p>The VN-Index is a capitalization-weighted index of all companies listed on HOSE. It serves as a broad indicator of market health, where an increase in the index reflects a general rise in the stock prices of listed companies.</p>
+<p>The index value is calculated as:</p>
+<p><span class="math display">\[
+\text{VN-Index} = \frac{\sum (Price_i \times Shares_i)}{\text{Base Factor}} \times \text{Adjustment Factor}
+\]</span></p>
+<p>Similarly, the index-level P/E is typically calculated as the sum of all market capitalizations divided by the sum of all net incomes (earnings) of the constituents.</p>
+<p><span class="math display">\[
+P/E_{Market} = \frac{\sum MarketCap_i}{\sum Earnings_i}
+\]</span></p>
+<p>As of early 2026, the total market capitalization for 701 tracked companies was approximately 8,629.8 trillion VND, with total earnings of 588.9 trillion VND, yielding a median P/E of approximately 14.7x.</p>
+</section>
+<section id="the-vn30-and-free-float-adjustments" class="level3" data-number="17.2.2">
+<h3 data-number="17.2.2" class="anchored" data-anchor-id="the-vn30-and-free-float-adjustments"><span class="header-section-number">17.2.2</span> The VN30 and Free-Float Adjustments</h3>
+<p>The VN30 Index represents a basket of the 30 largest and most liquid stocks on HOSE, screened through layers of capitalization, free-float ratio, and transactional volume. Unlike the broad VN-Index, the VN30 applies a free-float adjustment to its capitalization weighting to ensure that only shares available for public trading affect the index movement.</p>
+<p>The free-float ratio (<span class="math inline">\(f\)</span>) is calculated as:</p>
+<p><span class="math inline">\(f = \frac{N - N_l}{N}\)</span></p>
+<p>Where <span class="math inline">\(N\)</span> is the total number of outstanding shares and <span class="math inline">\(N_l\)</span> is the number of limited trading shares (held by founders, state, or strategic partners).</p>
+<p>When aggregating P/E for the VN30, researchers must account for this adjustment, as it more accurately reflects the valuation of the investable universe. In the Vietnamese market, a handful of large-cap stocks can significantly skew the broad index. For instance, Vingroup (VIC) and its related companies have at times represented nearly a quarter of the VN-Index’s total weighting, creating a “closet indexing” dilemma for fund managers. Removing these high-impact stocks can reveal a much different valuation profile; while the VN-Index might trade at 13x, the market excluding VIC-related stocks could be closer to 11x.</p>
+</section>
+<section id="median-vs.-mean-aggregation" class="level3" data-number="17.2.3">
+<h3 data-number="17.2.3" class="anchored" data-anchor-id="median-vs.-mean-aggregation"><span class="header-section-number">17.2.3</span> Median vs.&nbsp;Mean Aggregation</h3>
+<p>Quantitative researchers often prefer median P/E ratios over mean P/E ratios to mitigate the influence of extreme outliers (i.e., companies with either exceptionally high P/E ratios due to temporarily low earnings or those that are technically “expensive” because of high growth expectations). <a href="#tbl-valuation-median-vs-mean-agg" class="quarto-xref">Table&nbsp;<span>17.1</span></a> shows different aggregation methods.</p>
+<div id="tbl-valuation-median-vs-mean-agg" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-valuation-median-vs-mean-agg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;17.1: Median vs.&nbsp;Mean Aggregation
+</figcaption>
+<div aria-describedby="tbl-valuation-median-vs-mean-agg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 28%">
+<col style="width: 35%">
+<col style="width: 35%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td><strong>Aggregation Method</strong></td>
+<td><strong>Mathematical Definition</strong></td>
+<td><strong>Resilience to Outliers</strong></td>
+</tr>
+<tr class="even">
+<td>Simple Mean</td>
+<td><span class="math inline">\(\frac{1}{n} \sum (P/E)_i\)</span></td>
+<td>Low (highly skewed by extreme values)</td>
+</tr>
+<tr class="odd">
+<td>Weighted Mean</td>
+<td><span class="math inline">\(\frac{\sum (Cap_i \times (P/E)_i)}{\sum Cap_i}\)</span></td>
+<td>Medium (skewed by large-cap valuation)</td>
+</tr>
+<tr class="even">
+<td>Median</td>
+<td><span class="math inline">\(\text{Median}((P/E)_1, \dots, (P/E)_n)\)</span></td>
+<td>High (most robust for market sentiment)</td>
+</tr>
+<tr class="odd">
+<td>Total-to-Total</td>
+<td><span class="math inline">\(\frac{\sum MarketCap_i}{\sum Earnings_i}\)</span></td>
+<td>High (standard for index providers)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>The Vietnamese market currently trades near its 3-year average P/E of 14.8x, suggesting that investors are relatively neutral on current valuations, expecting earnings to grow in line with historical rates.</p>
+</section>
+</section>
+<section id="implementation" class="level2" data-number="17.3">
+<h2 data-number="17.3" class="anchored" data-anchor-id="implementation"><span class="header-section-number">17.3</span> Implementation</h2>
+<section id="data-ingestion-and-processing" class="level3" data-number="17.3.1">
+<h3 data-number="17.3.1" class="anchored" data-anchor-id="data-ingestion-and-processing"><span class="header-section-number">17.3.1</span> Data Ingestion and Processing</h3>
+</section>
+<section id="shiller-cape" class="level3" data-number="17.3.2">
+<h3 data-number="17.3.2" class="anchored" data-anchor-id="shiller-cape"><span class="header-section-number">17.3.2</span> Shiller CAPE</h3>
+<p>The Shiller CAPE requires a more sophisticated approach, involving the merging of earnings data with monthly CPI series.</p>
+</section>
+</section>
+<section id="macroeconomic-and-regulatory-factors-in-valuation" class="level2" data-number="17.4">
+<h2 data-number="17.4" class="anchored" data-anchor-id="macroeconomic-and-regulatory-factors-in-valuation"><span class="header-section-number">17.4</span> Macroeconomic and Regulatory Factors in Valuation</h2>
+<p>The P/E ratio does not exist in a vacuum; it is deeply influenced by the macroeconomic environment and the regulatory framework within which companies operate.</p>
+<section id="the-role-of-corporate-income-tax-cit" class="level3" data-number="17.4.1">
+<h3 data-number="17.4.1" class="anchored" data-anchor-id="the-role-of-corporate-income-tax-cit"><span class="header-section-number">17.4.1</span> The Role of Corporate Income Tax (CIT)</h3>
+<p>The earnings component of the P/E ratio is a post-tax metric. In Vietnam, the standard CIT rate is 20%. However, there is a significant shift occurring with the ratification of the new Law on CIT in June 2025, taking effect on October 1, 2025. This law introduces:</p>
+<ul>
+<li><p>A 15% rate for enterprises with annual revenue not exceeding 3 billion VND.</p></li>
+<li><p>A 17% rate for enterprises with revenue between 3 and 50 billion VND.</p></li>
+<li><p>The maintenance of higher rates (up to 50%) for the oil, gas, and mineral resource sectors.</p></li>
+</ul>
+<p>Furthermore, Vietnam has adopted the Global Minimum Tax (GMT) rules under Pillar Two, effective January 1, 2024, to protect its tax revenue from inbound and outbound investments. These changes mean that historical P/E ratios may not be directly comparable to future ratios for companies that previously benefited from generous tax incentives, as the effective tax rate is likely to rise for large multinational subsidiaries operating in Vietnam.</p>
+</section>
+<section id="macroeconomic-determinants-inflation-and-interest-rates" class="level3" data-number="17.4.2">
+<h3 data-number="17.4.2" class="anchored" data-anchor-id="macroeconomic-determinants-inflation-and-interest-rates"><span class="header-section-number">17.4.2</span> Macroeconomic Determinants: Inflation and Interest Rates</h3>
+<p>Stock price indices, and by extension P/E ratios, are heavily influenced by fundamental macroeconomic factors such as inflation, exchange rates, and interest rates. The interest rate serves as the cost of capital for enterprises. When interest rates fall, the cost of borrowing drops, increasing corporate profits and potentially raising the P/E that investors are willing to pay.</p>
+<p>The Vietnamese dong (VND) exchange rate also plays a crucial role. In early 2025, the VND depreciated by 1.33% YTD, reflecting volatility in the timeline for Federal Reserve rate cuts. Exchange rate depreciation can be inflationary by default, which may prompt the State Bank of Vietnam to tighten monetary policy, thereby putting downward pressure on equity valuations.</p>
+</section>
+</section>
+<section id="synthesis-of-valuation-dynamics" class="level2" data-number="17.5">
+<h2 data-number="17.5" class="anchored" data-anchor-id="synthesis-of-valuation-dynamics"><span class="header-section-number">17.5</span> Synthesis of Valuation Dynamics</h2>
+<p>The Vietnamese equity market is currently in a state of transition. While the market has seen robust growth—the VN-Index rose 38% in the year leading up to early 2026—investors remain neutral on overall valuations, as reflected by the market’s alignment with its 3-year average P/E of 14.8x. This neutrality suggests that investors expect earnings growth (forecast at 14% annually) to keep pace with price appreciation.</p>
+<p>The reliability of these valuations, however, remains dependent on the quality of non-financial disclosure. While companies are increasingly required by law to provide non-financial information, the level of transparency remains at a medium level (approximately 58.5% of required disclosures). Researchers must therefore balance quantitative P/E analysis with qualitative assessments of corporate governance and sustainability strategies. Companies that effectively integrate ESG principles have been shown to experience fewer negative impacts on abnormal stock returns during uncertain periods, such as the COVID-19 pandemic.</p>
+</section>
+<section id="conclusions" class="level2" data-number="17.6">
+<h2 data-number="17.6" class="anchored" data-anchor-id="conclusions"><span class="header-section-number">17.6</span> Conclusions</h2>
+<p>The exploration of P/E ratio valuation and aggregation within the Vietnamese equity market reveals a sophisticated landscape where traditional metrics must be adapted to local realities. The reliance on trailing metrics, while common, fails to account for the cyclicality and high inflation history of the Vietnamese economy, a gap that the Shiller CAPE ratio effectively bridges through CPI-adjusted normalization. Furthermore, the sensitivity of P/E to capital structure, as defined in the Leibowitz framework, highlights the necessity of unlevered valuation metrics in a market with diverse corporate funding models.</p>
+<p>The aggregation of these metrics into market-level indices like the VN-Index and VN30 requires an awareness of concentration risks and the importance of free-float adjustments. The “Vingroup Effect” demonstrates how a single corporate ecosystem can skew index-wide valuations, necessitating a “closet indexing” awareness for fund managers and researchers.</p>
+<p>Looking forward, the evolution of the regulatory environment—specifically the CIT law of 2025 and the Global Minimum Tax—will introduce new variables into the valuation equation. The shift toward higher-quality non-financial disclosures and the increasing accuracy of analyst forecasts in institutionalized firms suggest that the Vietnamese equity market is steadily maturing, offering a more transparent and predictable environment for the application of advanced quantitative valuation techniques.</p>
+
+
+<!-- -->
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-leibowitz2002levered" class="csl-entry" role="listitem">
+Leibowitz, Martin L. 2002. <span>“The Levered p/e Ratio.”</span> <em>Financial Analysts Journal</em> 58 (6): 68–77.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const year = new Date().getFullYear();
+  document.getElementById("copyright").textContent = "© " + year;
+});
+</script>
+<script>
+(function () {
+  const GA_ID = "G-LMDLDJXXSC";   // your real GA4 ID
+  const CONSENT_KEY = "cookie_consent_v1";
+
+  function log(msg) {
+    console.log("[GA Loader]", msg);
+  }
+
+  function loadGtag() {
+    if (window.__gtag_loaded__) {
+      log("GA already loaded, skipping");
+      return;
+    }
+
+    log("Loading Google Analytics...");
+
+    window.__gtag_loaded__ = true;
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(GA_ID);
+
+    script.onload = function () {
+      log("gtag.js loaded");
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      window.gtag = gtag;
+
+      gtag("js", new Date());
+      gtag("config", GA_ID, {
+        anonymize_ip: true,
+        transport_type: "beacon"
+      });
+
+      log("GA initialized successfully");
+    };
+
+    script.onerror = function () {
+      log("FAILED to load gtag.js. Likely blocked by ad blocker or network.");
+    };
+
+    document.head.appendChild(script);
+  }
+
+  function checkConsentAndLoad() {
+    const consent = localStorage.getItem(CONSENT_KEY);
+    log("Stored consent value = " + consent);
+
+    if (consent === "accepted") {
+      loadGtag();
+    } else {
+      log("Analytics blocked due to missing or declined consent");
+    }
+  }
+
+  // Run on page load
+  checkConsentAndLoad();
+
+  // Listen for cookie banner decisions
+  window.addEventListener("cookie-consent-changed", function (e) {
+    log("Consent event received: " + e.detail);
+    if (e.detail === "accepted") {
+      loadGtag();
+    }
+  });
+
+})();
+</script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/github\.com\/mikenguyen13\/tidy_finance_vn");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./19_divop.html" class="pagination-link" aria-label="Measuring Divergence of Investor Opinion">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Measuring Divergence of Investor Opinion</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./30_institutional_ownership.html" class="pagination-link" aria-label="Institutional Ownership Analytics in Vietnam">
+        <span class="nav-page-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Institutional Ownership Analytics in Vietnam</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># P/E Ratio</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>The systematic analysis of equity valuations in frontier and emerging markets requires a robust integration of high-fidelity financial data, rigorous mathematical modeling, and an acute understanding of local regulatory frameworks. In the context of the Vietnamese equity market, the Price-Earnings (P/E) ratio serves as a primary instrument for assessing corporate performance and market sentiment. This chapter provides an exploration of P/E valuation methodologies, ranging from firm-specific trailing and forward metrics to cyclically adjusted and unlevered variations.</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- ## The Architecture of Vietnamese Financial Data</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">The Datacore.vn platform organizes its financial offerings into several specialized products, each serving a distinct role in the valuation pipeline. The "Stock" data product delivers clean, daily trading data for all listed companies, supporting market tracking and strategy development. For fundamental analysis, the "Vietnam Fundamentals" dataset is indispensable, as it provides clean, comparable, and fully reconciled firm-level accounting data for every company listed on HOSE, HNX, and UPCoM from the year 2000 onward.</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">|  |  |  |</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">|----|----|----|</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">| **Dataset Name** | **Scope** | **Key Variables for P/E Analysis** |</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">| Stock Data | Daily Trading | `close_price`, `adjusted_close`, `volume`, `market_cap` |</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">| Vietnam Fundamentals | Firm Accounting | `net_income`, `eps`, `shares_outstanding`, `total_debt` |</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">| Company Data | Legal Entities | `registration_date`, `industry_code`, `legal_status` |</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">| News Data | Market Events | `sentiment_score`, `article_topic`, `entity_linkage` |</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">| Bank Data | Financial Sector | `branch_network`, `shareholder_structure`, `regulatory_status` | --&gt;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">### Technical Schema and Variable Engineering</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>The primary identifier for equities is the symbol, typically a three-letter uppercase code, though special indices such as E1VFVN30 (ETF) or market indices like HNX-INDEX and UPCOM-INDEX follow unique naming conventions. Price data is categorized as OHLC type, encompassing 'open', 'high', 'low', and 'close'. For valuation purposes, the 'adjusted close' is preferred to account for corporate actions such as stock splits and dividend payments.</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>The accounting variables provided in the Vietnam Fundamentals product follow a standardized classification that reconciles different reporting standards across sectors. This reconciliation is vital because Vietnamese firms may have differing interpretations of revenue and net profit under Vietnamese Accounting Standards (VAS).</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">## Firm-Specific P/E Valuation Metrics</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>At the individual firm level, the P/E ratio is the most fundamental measure of how much an investor is willing to pay for each unit of current or future profit. However, the calculation of "E" (Earnings) can take several forms, each offering a different insight into the company’s value.</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="fu">### Trailing P/E and the TTM Methodology</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>The Trailing P/E ratio is calculated using the reported earnings from the last four quarters, known as Trailing Twelve Months (TTM). In the Vietnamese market, this is often the default metric reported by exchanges and financial news outlets.</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>The mathematical representation is:</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>P/E_{Trailing} = \frac{P_t}{\sum_{i=0}^{3} EPS_{q-i}}</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>Where $P_t$ is the current market price and $EPS_{q-i}$ represents the earnings per share for each of the four most recent quarters.</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="fu">### Forward P/E and Analyst Forecast Reliability</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>Forward P/E shifts the focus from historical performance to future expectations by using consensus earnings forecasts for the next fiscal year.</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>P/E_{Forward} = \frac{P_t}{EPS_{forecasted, t+1}}</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>In Vietnam, these forecasts are typically generated by research departments within major securities firms such as SSI, VCSC, MBS, and FPTS. These analysts rely on financial statements, projections, models, and subjective evaluations of market sentiment to generate their estimates. However, the accuracy of these forecasts is a significant area of research. However, analysts in Vietnam are often influenced by anchoring and adjustment bias, where they base future predictions heavily on past records and then make insufficient adjustments.</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>The accuracy of analyst earnings forecasts in Vietnam is significantly impacted by corporate governance characteristics. Specifically, state ownership has been found to have a negative impact on forecast accuracy, while institutional ownership has a positive effect. This implies that for firms with high state-controlled stakes, which are common in Vietnam’s strategic industries, researchers should apply a higher discount or "fudge factor" to forward P/E estimates provided by consensus sources.</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="fu">### Cyclically Adjusted Price-Earnings (CAPE) Ratio</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>The Shiller P/E, or CAPE ratio, is designed to smooth out the volatility of the business cycle by using a 10-year average of inflation-adjusted earnings. For a market like Vietnam, which has seen periods of extreme growth followed by stabilization, the CAPE ratio provides a more tempered view of valuation than trailing metrics.</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>The calculation requires adjusting historical earnings by the Consumer Price Index (CPI). Vietnam's CPI data is updated monthly and is available from January 1996 through early 2026, with an average year-on-year growth rate of approximately 12.2%.</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>EPS_{real, t} = EPS_{nominal, t} \times \frac{CPI_{current}}{CPI_t}</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>CAPE = \frac{P_t}{\frac{1}{10} \sum_{i=0}^{9} EPS_{real, t-i}}</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>Historically, Vietnam’s CPI has reached an all-time high of 28.3% YoY in August 2008 and a record low of -2.6% in July 2000. These extreme swings mean that nominal earnings in the mid-2000s are not comparable to earnings today without the Shiller adjustment. Researchers must be mindful of the different base years used by the National Statistics Office (GSO), such as 2024=100, 2019=100, and 2014=100.</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a><span class="fu">### Unlevered P/E and the Leibowitz Framework</span></span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>The concept of the "Unlevered P/E" ratio attempts to view a company's valuation independent of its capital structure. This is particularly relevant in the Vietnamese market, where debt loads vary significantly between state-owned enterprises (SOEs) and private firms. Research by @leibowitz2002levered highlights that for the investment analyst, a company is already levered, and the task is to estimate its theoretical value by inferring the underlying structure of returns.</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>According to Leibowitz, leverage always moves the P/E toward a lower value than what would be obtained from a standard Gordon growth formula. As a company adds debt, the market discount rate for equity increases to compensate for the additional risk, which in turn compresses the P/E multiple. For example, a debt-free company with a theoretical P/E of 30 might see its P/E drop to 23 with a 40% debt ratio, and down to 20 with a 50% debt ratio.</span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>The Unlevered P/E (often proxied by Enterprise Value to EBIT or EBITDA) can be calculated using fundamental variables:</span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>EV = (\text{Shares Outstanding} \times \text{Price}) + \text{Total Debt} - \text{Cash}</span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>P/E_{\text{Unlevered}} \approx \frac{EV}{EBIT \times (1 - \tau)}</span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>Where $\tau$ is the corporate income tax rate. The standard CIT rate in Vietnam is 20%, which has been stable since the mid-2010s but is subject to new revisions under the Law on CIT ratified in June 2025.</span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a><span class="fu">## Market-Level Aggregation Techniques</span></span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a>Aggregating firm-specific metrics into a single market-level index P/E is a complex task that requires careful consideration of weighting and the inclusion of loss-making entities. In the Vietnamese market, two primary indices (i.e., the VN-Index and the VN30), provide the benchmarks for performance and valuation.</span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a><span class="fu">### The VN-Index: Capitalization-Weighted Aggregation</span></span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>The VN-Index is a capitalization-weighted index of all companies listed on HOSE. It serves as a broad indicator of market health, where an increase in the index reflects a general rise in the stock prices of listed companies.</span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>The index value is calculated as:</span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>\text{VN-Index} = \frac{\sum (Price_i \times Shares_i)}{\text{Base Factor}} \times \text{Adjustment Factor}</span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>Similarly, the index-level P/E is typically calculated as the sum of all market capitalizations divided by the sum of all net incomes (earnings) of the constituents.</span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>P/E_{Market} = \frac{\sum MarketCap_i}{\sum Earnings_i}</span>
+<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>As of early 2026, the total market capitalization for 701 tracked companies was approximately 8,629.8 trillion VND, with total earnings of 588.9 trillion VND, yielding a median P/E of approximately 14.7x.</span>
+<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a><span class="fu">### The VN30 and Free-Float Adjustments</span></span>
+<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a>The VN30 Index represents a basket of the 30 largest and most liquid stocks on HOSE, screened through layers of capitalization, free-float ratio, and transactional volume. Unlike the broad VN-Index, the VN30 applies a free-float adjustment to its capitalization weighting to ensure that only shares available for public trading affect the index movement.</span>
+<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>The free-float ratio ($f$) is calculated as:</span>
+<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a>$f = \frac{N - N_l}{N}$</span>
+<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a>Where $N$ is the total number of outstanding shares and $N_l$ is the number of limited trading shares (held by founders, state, or strategic partners).</span>
+<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a>When aggregating P/E for the VN30, researchers must account for this adjustment, as it more accurately reflects the valuation of the investable universe. In the Vietnamese market, a handful of large-cap stocks can significantly skew the broad index. For instance, Vingroup (VIC) and its related companies have at times represented nearly a quarter of the VN-Index's total weighting, creating a "closet indexing" dilemma for fund managers. Removing these high-impact stocks can reveal a much different valuation profile; while the VN-Index might trade at 13x, the market excluding VIC-related stocks could be closer to 11x.</span>
+<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a><span class="fu">### Median vs. Mean Aggregation</span></span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a>Quantitative researchers often prefer median P/E ratios over mean P/E ratios to mitigate the influence of extreme outliers (i.e., companies with either exceptionally high P/E ratios due to temporarily low earnings or those that are technically "expensive" because of high growth expectations). @tbl-valuation-median-vs-mean-agg shows different aggregation methods.</span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span>  <span class="pp">|</span>  <span class="pp">|</span>  <span class="pp">|</span></span>
+<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a><span class="pp">|---------------------|--------------------------|--------------------------|</span></span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Aggregation Method** | **Mathematical Definition** | **Resilience to Outliers** <span class="pp">|</span></span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Simple Mean <span class="pp">|</span> $\frac{1}{n} \sum (P/E)_i$ <span class="pp">|</span> Low (highly skewed by extreme values) <span class="pp">|</span></span>
+<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Weighted Mean <span class="pp">|</span> $\frac{\sum (Cap_i \times (P/E)_i)}{\sum Cap_i}$ <span class="pp">|</span> Medium (skewed by large-cap valuation) <span class="pp">|</span></span>
+<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Median <span class="pp">|</span> $\text{Median}((P/E)_1, \dots, (P/E)_n)$ <span class="pp">|</span> High (most robust for market sentiment) <span class="pp">|</span></span>
+<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Total-to-Total <span class="pp">|</span> $\frac{\sum MarketCap_i}{\sum Earnings_i}$ <span class="pp">|</span> High (standard for index providers) <span class="pp">|</span></span>
+<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>: Median vs. Mean Aggregation {#tbl-valuation-median-vs-mean-agg}</span>
+<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a>The Vietnamese market currently trades near its 3-year average P/E of 14.8x, suggesting that investors are relatively neutral on current valuations, expecting earnings to grow in line with historical rates.</span>
+<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a><span class="fu">## Implementation</span></span>
+<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a><span class="fu">### Data Ingestion and Processing</span></span>
+<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
+<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a><span class="co"># Fetching fundamental data from Datacore.vn API</span></span>
+<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_datacore_data(symbol, start_date, end_date):</span>
+<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a>    <span class="co"># This pseudocode represents a call to the Datacore</span></span>
+<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Returns a DataFrame with columns: ['date', 'close', 'eps', 'debt', 'equity']</span></span>
+<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span>
+<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculation of Trailing P/E</span></span>
+<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'trailing_pe'</span>] <span class="op">=</span> df[<span class="st">'close'</span>] <span class="op">/</span> df[<span class="st">'eps_ttm'</span>]</span>
+<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a><span class="fu">### Shiller CAPE </span></span>
+<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>The Shiller CAPE requires a more sophisticated approach, involving the merging of earnings data with monthly CPI series.</span>
+<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
+<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a><span class="co"># Assuming cpi_df contains GSO monthly CPI data</span></span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calculate_cape(df, cpi_df):</span>
+<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> pd.merge(df, cpi_df, on<span class="op">=</span><span class="st">'date'</span>, how<span class="op">=</span><span class="st">'left'</span>)</span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Inflation adjust earnings</span></span>
+<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>    latest_cpi <span class="op">=</span> cpi_df[<span class="st">'cpi'</span>].iloc[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">'real_eps'</span>] <span class="op">=</span> df[<span class="st">'eps'</span>] <span class="op">*</span> (latest_cpi <span class="op">/</span> df[<span class="st">'cpi'</span>])</span>
+<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 10-year rolling average</span></span>
+<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">'avg_eps_10y'</span>] <span class="op">=</span> df[<span class="st">'real_eps'</span>].rolling(window<span class="op">=</span><span class="dv">120</span>).mean()</span>
+<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">'shiller_pe'</span>] <span class="op">=</span> df[<span class="st">'close'</span>] <span class="op">/</span> df[<span class="st">'avg_eps_10y'</span>]</span>
+<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> df</span>
+<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
+<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> datetime</span>
+<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a><span class="co"># Assuming your data is already loaded as dataframes:</span></span>
+<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a><span class="co"># df_pe: contains columns for date/year_quarter and the different P/E metrics</span></span>
+<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a><span class="co"># Expected columns: 'year_quarter', 'shiller_long_term_pe', 'pe_trailing_12m', </span></span>
+<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a><span class="co">#                   'unlevered_pe_trailing_12m', 'forward_pe'</span></span>
+<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a><span class="co"># For sectors: 'year_quarter', 'median_pe_energy', 'median_pe_financials', 'median_pe_infotech'</span></span>
+<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a><span class="co"># ============================================================================</span></span>
+<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a><span class="co"># PLOT 1: Various types of P/E Ratio for VNI ("P/E&gt;0" method)</span></span>
+<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a><span class="co"># ============================================================================</span></span>
+<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">7</span>))</span>
+<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot each P/E series</span></span>
+<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a>ax.plot(df_pe[<span class="st">'year_quarter'</span>], df_pe[<span class="st">'shiller_long_term_pe'</span>], </span>
+<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a>        linewidth<span class="op">=</span><span class="dv">2</span>, color<span class="op">=</span><span class="st">'#0047AB'</span>, label<span class="op">=</span><span class="st">'Shiller Long-Term P/E'</span>)</span>
+<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a>ax.plot(df_pe[<span class="st">'year_quarter'</span>], df_pe[<span class="st">'pe_trailing_12m'</span>], </span>
+<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a>        linewidth<span class="op">=</span><span class="dv">2</span>, color<span class="op">=</span><span class="st">'#DC143C'</span>, label<span class="op">=</span><span class="st">'P/E, Trailing 12 months'</span>)</span>
+<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a>ax.plot(df_pe[<span class="st">'year_quarter'</span>], df_pe[<span class="st">'unlevered_pe_trailing_12m'</span>], </span>
+<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a>        linewidth<span class="op">=</span><span class="dv">2</span>, color<span class="op">=</span><span class="st">'#20B2AA'</span>, label<span class="op">=</span><span class="st">'Unlevered P/E, Trailing 12 month'</span>)</span>
+<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a>ax.plot(df_pe[<span class="st">'year_quarter'</span>], df_pe[<span class="st">'forward_pe'</span>], </span>
+<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a>        linewidth<span class="op">=</span><span class="dv">2</span>, color<span class="op">=</span><span class="st">'#8B7355'</span>, label<span class="op">=</span><span class="st">'Forward P/E'</span>)</span>
+<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a><span class="co"># Formatting</span></span>
+<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Year-Quarter'</span>, fontsize<span class="op">=</span><span class="dv">11</span>)</span>
+<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Value of P/E'</span>, fontsize<span class="op">=</span><span class="dv">11</span>)</span>
+<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Various types of P/E Ratio for S&amp;P 500 ("P/E&gt;0" method)'</span>, fontsize<span class="op">=</span><span class="dv">12</span>, fontweight<span class="op">=</span><span class="st">'bold'</span>)</span>
+<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a>ax.legend(loc<span class="op">=</span><span class="st">'upper left'</span>, fontsize<span class="op">=</span><span class="dv">10</span>, frameon<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a>ax.grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(bottom<span class="op">=</span><span class="dv">0</span>, top<span class="op">=</span><span class="dv">50</span>)</span>
+<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a><span class="co"># Rotate x-axis labels for readability</span></span>
+<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a>plt.xticks(rotation<span class="op">=</span><span class="dv">45</span>, ha<span class="op">=</span><span class="st">'right'</span>)</span>
+<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'pe_ratios_comparison.png'</span>, dpi<span class="op">=</span><span class="dv">300</span>, bbox_inches<span class="op">=</span><span class="st">'tight'</span>)</span>
+<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a><span class="co"># ============================================================================</span></span>
+<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a><span class="co"># PLOT 2: Median Shiller's P/E Ratio for sample sectors</span></span>
+<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a><span class="co"># ============================================================================</span></span>
+<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">7</span>))</span>
+<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot each sector</span></span>
+<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a>ax.plot(df_sectors[<span class="st">'year_quarter'</span>], df_sectors[<span class="st">'median_pe_energy'</span>], </span>
+<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>        linewidth<span class="op">=</span><span class="dv">2</span>, color<span class="op">=</span><span class="st">'#0047AB'</span>, label<span class="op">=</span><span class="st">'Median P/E for Energy'</span>)</span>
+<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a>ax.plot(df_sectors[<span class="st">'year_quarter'</span>], df_sectors[<span class="st">'median_pe_financials'</span>], </span>
+<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a>        linewidth<span class="op">=</span><span class="dv">2</span>, color<span class="op">=</span><span class="st">'#DC143C'</span>, label<span class="op">=</span><span class="st">'Median P/E for Financials'</span>)</span>
+<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a>ax.plot(df_sectors[<span class="st">'year_quarter'</span>], df_sectors[<span class="st">'median_pe_infotech'</span>], </span>
+<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>        linewidth<span class="op">=</span><span class="dv">2</span>, color<span class="op">=</span><span class="st">'#20B2AA'</span>, label<span class="op">=</span><span class="st">'Median P/E for InformationTech'</span>)</span>
+<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a><span class="co"># Formatting</span></span>
+<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Year-Quarter'</span>, fontsize<span class="op">=</span><span class="dv">11</span>)</span>
+<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'P/E Ratio'</span>, fontsize<span class="op">=</span><span class="dv">11</span>)</span>
+<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">"Median Shiller's P/E Ratio for sample S&amp;P sectors"</span>, fontsize<span class="op">=</span><span class="dv">12</span>, fontweight<span class="op">=</span><span class="st">'bold'</span>)</span>
+<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>ax.legend(loc<span class="op">=</span><span class="st">'upper left'</span>, fontsize<span class="op">=</span><span class="dv">10</span>, frameon<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a>ax.grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(bottom<span class="op">=</span><span class="dv">0</span>, top<span class="op">=</span><span class="dv">40</span>)</span>
+<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a><span class="co"># Rotate x-axis labels for readability</span></span>
+<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a>plt.xticks(rotation<span class="op">=</span><span class="dv">45</span>, ha<span class="op">=</span><span class="st">'right'</span>)</span>
+<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'sector_pe_ratios.png'</span>, dpi<span class="op">=</span><span class="dv">300</span>, bbox_inches<span class="op">=</span><span class="st">'tight'</span>)</span>
+<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a><span class="co"># ============================================================================</span></span>
+<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a><span class="co"># OPTIONAL: Helper function to calculate Shiller P/E from raw data</span></span>
+<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a><span class="co"># ============================================================================</span></span>
+<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calculate_shiller_pe(df, price_col, earnings_col, window<span class="op">=</span><span class="dv">10</span>):</span>
+<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a><span class="co">    Calculate Shiller P/E ratio (CAPE - Cyclically Adjusted P/E)</span></span>
+<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a><span class="co">    Parameters:</span></span>
+<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a><span class="co">    -----------</span></span>
+<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a><span class="co">    df : pandas DataFrame</span></span>
+<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a><span class="co">        Input data with price and earnings columns</span></span>
+<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a><span class="co">    price_col : str</span></span>
+<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a><span class="co">        Column name for stock prices</span></span>
+<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a><span class="co">    earnings_col : str</span></span>
+<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a><span class="co">        Column name for earnings</span></span>
+<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a><span class="co">    window : int</span></span>
+<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a><span class="co">        Number of years for averaging earnings (default 10)</span></span>
+<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns:</span></span>
+<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a><span class="co">    --------</span></span>
+<span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a><span class="co">    pandas Series</span></span>
+<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a><span class="co">        Shiller P/E ratio</span></span>
+<span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate real earnings (inflation-adjusted, if needed)</span></span>
+<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a>    rolling_earnings <span class="op">=</span> df[earnings_col].rolling(window<span class="op">=</span>window<span class="op">*</span><span class="dv">4</span>).mean()  <span class="co"># 4 quarters per year</span></span>
+<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate Shiller P/E</span></span>
+<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a>    shiller_pe <span class="op">=</span> df[price_col] <span class="op">/</span> rolling_earnings</span>
+<span id="cb1-283"><a href="#cb1-283" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> shiller_pe</span>
+<span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calculate_pe_filtering_negatives(df, price_col, earnings_col, window<span class="op">=</span><span class="dv">4</span>):</span>
+<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a><span class="co">    Calculate P/E ratio excluding negative earnings (method 2)</span></span>
+<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a><span class="co">    Parameters:</span></span>
+<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a><span class="co">    -----------</span></span>
+<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a><span class="co">    df : pandas DataFrame</span></span>
+<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a><span class="co">        Input data</span></span>
+<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a><span class="co">    price_col : str</span></span>
+<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a><span class="co">        Column name for stock prices</span></span>
+<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a><span class="co">    earnings_col : str</span></span>
+<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a><span class="co">        Column name for earnings</span></span>
+<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a><span class="co">    window : int</span></span>
+<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a><span class="co">        Rolling window for averaging (in quarters)</span></span>
+<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns:</span></span>
+<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a><span class="co">    --------</span></span>
+<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a><span class="co">    pandas Series</span></span>
+<span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a><span class="co">        P/E ratio with negative earnings excluded</span></span>
+<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create a copy to avoid modifying original</span></span>
+<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>    df_calc <span class="op">=</span> df.copy()</span>
+<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Set negative earnings to NaN</span></span>
+<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a>    df_calc.loc[df_calc[earnings_col] <span class="op">&lt;=</span> <span class="dv">0</span>, earnings_col] <span class="op">=</span> np.nan</span>
+<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate rolling mean (excluding NaNs)</span></span>
+<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a>    rolling_earnings <span class="op">=</span> df_calc[earnings_col].rolling(window<span class="op">=</span>window, min_periods<span class="op">=</span><span class="dv">1</span>).mean()</span>
+<span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate P/E</span></span>
+<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>    pe_ratio <span class="op">=</span> df_calc[price_col] <span class="op">/</span> rolling_earnings</span>
+<span id="cb1-318"><a href="#cb1-318" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pe_ratio</span>
+<span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-322"><a href="#cb1-322" aria-hidden="true" tabindex="-1"></a><span class="co"># ============================================================================</span></span>
+<span id="cb1-323"><a href="#cb1-323" aria-hidden="true" tabindex="-1"></a><span class="co"># OPTIONAL: Example data structure and usage</span></span>
+<span id="cb1-324"><a href="#cb1-324" aria-hidden="true" tabindex="-1"></a><span class="co"># ============================================================================</span></span>
+<span id="cb1-325"><a href="#cb1-325" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-326"><a href="#cb1-326" aria-hidden="true" tabindex="-1"></a><span class="co"># If you need to load data from a CSV file:</span></span>
+<span id="cb1-327"><a href="#cb1-327" aria-hidden="true" tabindex="-1"></a><span class="co"># df_pe = pd.read_csv('your_pe_data.csv', parse_dates=['year_quarter'])</span></span>
+<span id="cb1-328"><a href="#cb1-328" aria-hidden="true" tabindex="-1"></a><span class="co"># df_sectors = pd.read_csv('your_sector_data.csv', parse_dates=['year_quarter'])</span></span>
+<span id="cb1-329"><a href="#cb1-329" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-330"><a href="#cb1-330" aria-hidden="true" tabindex="-1"></a><span class="co"># If you're calculating from raw price and earnings data:</span></span>
+<span id="cb1-331"><a href="#cb1-331" aria-hidden="true" tabindex="-1"></a><span class="co"># df_pe['shiller_long_term_pe'] = calculate_shiller_pe(df_pe, 'vni_price', 'vni_earnings_10yr_avg')</span></span>
+<span id="cb1-332"><a href="#cb1-332" aria-hidden="true" tabindex="-1"></a><span class="co"># df_pe['pe_trailing_12m'] = calculate_pe_filtering_negatives(df_pe, 'vni_price', 'vni_earnings_12m')</span></span>
+<span id="cb1-333"><a href="#cb1-333" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb1-334"><a href="#cb1-334" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-335"><a href="#cb1-335" aria-hidden="true" tabindex="-1"></a><span class="fu">## Macroeconomic and Regulatory Factors in Valuation</span></span>
+<span id="cb1-336"><a href="#cb1-336" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-337"><a href="#cb1-337" aria-hidden="true" tabindex="-1"></a>The P/E ratio does not exist in a vacuum; it is deeply influenced by the macroeconomic environment and the regulatory framework within which companies operate.</span>
+<span id="cb1-338"><a href="#cb1-338" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-339"><a href="#cb1-339" aria-hidden="true" tabindex="-1"></a><span class="fu">### The Role of Corporate Income Tax (CIT)</span></span>
+<span id="cb1-340"><a href="#cb1-340" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-341"><a href="#cb1-341" aria-hidden="true" tabindex="-1"></a>The earnings component of the P/E ratio is a post-tax metric. In Vietnam, the standard CIT rate is 20%. However, there is a significant shift occurring with the ratification of the new Law on CIT in June 2025, taking effect on October 1, 2025. This law introduces:</span>
+<span id="cb1-342"><a href="#cb1-342" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>A 15% rate for enterprises with annual revenue not exceeding 3 billion VND.</span>
+<span id="cb1-344"><a href="#cb1-344" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-345"><a href="#cb1-345" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>A 17% rate for enterprises with revenue between 3 and 50 billion VND.</span>
+<span id="cb1-346"><a href="#cb1-346" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-347"><a href="#cb1-347" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>The maintenance of higher rates (up to 50%) for the oil, gas, and mineral resource sectors.</span>
+<span id="cb1-348"><a href="#cb1-348" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-349"><a href="#cb1-349" aria-hidden="true" tabindex="-1"></a>Furthermore, Vietnam has adopted the Global Minimum Tax (GMT) rules under Pillar Two, effective January 1, 2024, to protect its tax revenue from inbound and outbound investments. These changes mean that historical P/E ratios may not be directly comparable to future ratios for companies that previously benefited from generous tax incentives, as the effective tax rate is likely to rise for large multinational subsidiaries operating in Vietnam.</span>
+<span id="cb1-350"><a href="#cb1-350" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-351"><a href="#cb1-351" aria-hidden="true" tabindex="-1"></a><span class="fu">### Macroeconomic Determinants: Inflation and Interest Rates</span></span>
+<span id="cb1-352"><a href="#cb1-352" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-353"><a href="#cb1-353" aria-hidden="true" tabindex="-1"></a>Stock price indices, and by extension P/E ratios, are heavily influenced by fundamental macroeconomic factors such as inflation, exchange rates, and interest rates. The interest rate serves as the cost of capital for enterprises. When interest rates fall, the cost of borrowing drops, increasing corporate profits and potentially raising the P/E that investors are willing to pay.</span>
+<span id="cb1-354"><a href="#cb1-354" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-355"><a href="#cb1-355" aria-hidden="true" tabindex="-1"></a>The Vietnamese dong (VND) exchange rate also plays a crucial role. In early 2025, the VND depreciated by 1.33% YTD, reflecting volatility in the timeline for Federal Reserve rate cuts. Exchange rate depreciation can be inflationary by default, which may prompt the State Bank of Vietnam to tighten monetary policy, thereby putting downward pressure on equity valuations.</span>
+<span id="cb1-356"><a href="#cb1-356" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-357"><a href="#cb1-357" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-358"><a href="#cb1-358" aria-hidden="true" tabindex="-1"></a><span class="fu">## Synthesis of Valuation Dynamics</span></span>
+<span id="cb1-359"><a href="#cb1-359" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-360"><a href="#cb1-360" aria-hidden="true" tabindex="-1"></a>The Vietnamese equity market is currently in a state of transition. While the market has seen robust growth—the VN-Index rose 38% in the year leading up to early 2026—investors remain neutral on overall valuations, as reflected by the market's alignment with its 3-year average P/E of 14.8x. This neutrality suggests that investors expect earnings growth (forecast at 14% annually) to keep pace with price appreciation.</span>
+<span id="cb1-361"><a href="#cb1-361" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-362"><a href="#cb1-362" aria-hidden="true" tabindex="-1"></a>The reliability of these valuations, however, remains dependent on the quality of non-financial disclosure. While companies are increasingly required by law to provide non-financial information, the level of transparency remains at a medium level (approximately 58.5% of required disclosures). Researchers must therefore balance quantitative P/E analysis with qualitative assessments of corporate governance and sustainability strategies. Companies that effectively integrate ESG principles have been shown to experience fewer negative impacts on abnormal stock returns during uncertain periods, such as the COVID-19 pandemic.</span>
+<span id="cb1-363"><a href="#cb1-363" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-364"><a href="#cb1-364" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-365"><a href="#cb1-365" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-366"><a href="#cb1-366" aria-hidden="true" tabindex="-1"></a><span class="fu">## Conclusions </span></span>
+<span id="cb1-367"><a href="#cb1-367" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-368"><a href="#cb1-368" aria-hidden="true" tabindex="-1"></a>The exploration of P/E ratio valuation and aggregation within the Vietnamese equity market reveals a sophisticated landscape where traditional metrics must be adapted to local realities. The reliance on trailing metrics, while common, fails to account for the cyclicality and high inflation history of the Vietnamese economy, a gap that the Shiller CAPE ratio effectively bridges through CPI-adjusted normalization. Furthermore, the sensitivity of P/E to capital structure, as defined in the Leibowitz framework, highlights the necessity of unlevered valuation metrics in a market with diverse corporate funding models.</span>
+<span id="cb1-369"><a href="#cb1-369" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-370"><a href="#cb1-370" aria-hidden="true" tabindex="-1"></a>The aggregation of these metrics into market-level indices like the VN-Index and VN30 requires an awareness of concentration risks and the importance of free-float adjustments. The "Vingroup Effect" demonstrates how a single corporate ecosystem can skew index-wide valuations, necessitating a "closet indexing" awareness for fund managers and researchers.</span>
+<span id="cb1-371"><a href="#cb1-371" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-372"><a href="#cb1-372" aria-hidden="true" tabindex="-1"></a>Looking forward, the evolution of the regulatory environment—specifically the CIT law of 2025 and the Global Minimum Tax—will introduce new variables into the valuation equation. The shift toward higher-quality non-financial disclosures and the increasing accuracy of analyst forecasts in institutionalized firms suggest that the Vietnamese equity market is steadily maturing, offering a more transparent and predictable environment for the application of advanced quantitative valuation techniques.</span>
+</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p><span id="copyright"></span> Mike. All rights reserved.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn/edit/main/25_pe_ratio.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
