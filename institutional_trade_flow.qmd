@@ -1,9 +1,15 @@
+---
+execute:
+  eval: false
+---
+
 # Institutional Trades, Flows, and Turnover Ratios
 
 ```{python}
 #| label: setup
 #| echo: false
 #| eval: true
+
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -133,7 +139,7 @@ The relationship between these measures depends on the correlation between discr
 
 ## Institutional Ownership in Emerging Markets
 
-The emerging markets literature has documented several stylized facts about institutional ownership that differ from developed market findings. @AggarwalErelFerreira2011 documented that foreign institutional ownership improves corporate governance in emerging markets. For Vietnam specifically, @VuNguyen2021 examined the relationship between ownership structure and firm performance, while @Vo2015 studied the impact of foreign ownership on stock market liquidity.
+The emerging markets literature has documented several stylized facts about institutional ownership that differ from developed market findings. @aggarwal2011does documented that foreign institutional ownership improves corporate governance in emerging markets. For Vietnam specifically, @phung2016ownership examined the relationship between ownership structure and firm performance, while @vo2015foreign studied the impact of foreign ownership on stock market liquidity.
 
 ## Net Flows and Performance Attribution
 
@@ -143,14 +149,14 @@ $$
 \text{NetFlow}_{j,t} = A_{j,t} - A_{j,t-1}(1 + R_{j,t}^p)
 $$ {#eq-netflow}
 
-where $R_{j,t}^p$ is the portfolio return. This decomposition, due to @Sirri1998, separates changes in fund assets into investment returns and investor capital allocation decisions. @CovalStafford2007 showed that flow-driven trades create price pressure, with fire sales by funds experiencing redemptions generating significant negative abnormal returns.
+where $R_{j,t}^p$ is the portfolio return. This decomposition, due to @sirri1998costly, separates changes in fund assets into investment returns and investor capital allocation decisions. @coval2007asset showed that flow-driven trades create price pressure, with fire sales by funds experiencing redemptions generating significant negative abnormal returns.
 
 # Data Infrastructure {#sec-data}
 
 @tbl-datacore-datasets summarizes the datasets used in this chapter.
 
 | Dataset | Content | Frequency | Key Variables |
-|:----------------|:----------------|:----------------|:--------------------|
+|:-----------------|:-----------------|:-----------------|:------------------|
 | Stock Prices | Daily/monthly OHLCV | Daily | `ticker`, `date`, `close`, `adjusted_close`, `volume`, `shares_outstanding` |
 | Ownership Structure | Shareholder composition | Quarterly/Annual | `ticker`, `date`, `shareholder_name`, `shares_held`, `pct`, `type` |
 | Major Shareholders | Holders $\geq$ 5% | Event-driven | `ticker`, `date`, `shareholder_name`, `shares`, `is_foreign`, `is_state` |
@@ -527,7 +533,7 @@ price_q = pd.merge_asof(
 ```
 :::
 
-The output is a quarterly panel of stock-level observations:
+The output is a quarterly panel of stock-level observations (\@tbl-institutional-price-vars)
 
 | Variable  | Description                          |
 |:----------|:-------------------------------------|
@@ -539,7 +545,7 @@ The output is a quarterly panel of stock-level observations:
 | `qret`    | Forward quarterly compounded return  |
 | `cfacshr` | Cumulative share adjustment factor   |
 
-: Quarter-End Price Panel Variables {#tbl-price-vars}
+: Quarter-End Price Panel Variables {#tbl-institutional-price-vars}
 
 # Ownership Data Processing {#sec-ownership}
 
@@ -613,7 +619,12 @@ class OwnershipType:
 
 ## Building the Holdings Panel {#sec-holdings-panel}
 
-We construct the holdings panel---the Vietnamese equivalent of merging the 13F Type 1 and Type 3 datasets. The key steps are: (i) identify the first available vintage for each shareholder-stock-report date combination; (ii) compute reporting gaps to flag first and last reports; (iii) classify shareholders; (iv) adjust shares for corporate actions.
+We construct the holdings panel (i.e., the Vietnamese equivalent of merging the 13F Type 1 and Type 3 datasets). The key steps are:
+
+1.  Identify the first available vintage for each shareholder-stock-report date combination.
+2.  Compute reporting gaps to flag first and last reports.
+3.  Classify shareholders.
+4.  Adjust shares for corporate actions.
 
 ```{python}
 #| label: holdings-panel
@@ -916,7 +927,7 @@ def compute_breadth(holdings: pd.DataFrame) -> pd.DataFrame:
     return breadth_wide
 ```
 
-\*\* ($\text{BS} = -1$) is generated for the prior position, dated to the quarter after the last report.
+($\text{BS} = -1$) is generated for the prior position, dated to the quarter after the last report.
 
 For intermediate gaps (reports at $t-2$ and $t$ but not $t-1$), we split into:
 
@@ -2078,7 +2089,7 @@ This chapter developed a framework for computing institutional trades, flows, an
 The pipeline produces several output datasets:
 
 | Output | Grain | Key Variables | Use Cases |
-|:----------------|:----------------|:--------------------|:----------------|
+|:-----------------|:-----------------|:------------------|:-----------------|
 | `holdings` | Shareholder x Ticker x Quarter | `shares_adj`, `owner_type` | Cross-sectional ownership |
 | `io_ratios` | Ticker x Quarter | `io_state`, `io_foreign`, etc. | Governance, liquidity |
 | `trades` | Shareholder x Ticker x Quarter | `trade`, `buysale` | Informed trading, herding |

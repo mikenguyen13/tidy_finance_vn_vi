@@ -86,14 +86,8 @@ tidy_finance = sqlite3.connect(
 We load the monthly stock price data from our database. The `prices_monthly` table contains adjusted returns, market capitalizations, and other variables for all stocks listed on HOSE and HNX.
 
 ```{python}
-# prices_monthly = pd.read_sql_query(
-#     sql=("SELECT symbol, date, ret, ret_excess, mktcap, mktcap_lag, "
-#         #  "exchange "
-#          "FROM prices_monthly"),
-#     con=tidy_finance,
-#     parse_dates={"date"}
-# )
 prices_monthly = pd.read_sql_query(
+    # can add "exchange" variable
     sql="""
         SELECT symbol, date, ret, ret_excess, mktcap, mktcap_lag, risk_free
         FROM prices_monthly
@@ -611,7 +605,11 @@ plot_dist
 
 We now implement a function that computes the full momentum strategy for any given $(J, K)$ pair, wrapping the steps developed above into a single reusable pipeline.
 
+
 ```{python}
+from joblib import Parallel, delayed
+import time
+
 def momentum_strategy(data, J, K, n_portfolios=10):
     """
     Implement the full Jegadeesh-Titman momentum strategy.
@@ -644,24 +642,27 @@ def momentum_strategy(data, J, K, n_portfolios=10):
     )
     df = df.drop(columns=["gross_ret"]).dropna(subset=["cum_return"])
     
-    # Step 2: Assign to momentum portfolios
-    def assign_rank(group):
-        try:
-            group["momr"] = pd.qcut(
-                group["cum_return"],
-                q=n_portfolios,
-                labels=range(1, n_portfolios + 1),
-                duplicates="drop"
-            ).astype(int)
-        except ValueError:
-            group["momr"] = pd.cut(
-                group["cum_return"].rank(method="first"),
-                bins=n_portfolios,
-                labels=range(1, n_portfolios + 1)
-            ).astype(int)
-        return group
+    # Step 2: Assign to momentum portfolios using transform
+    df["momr"] = df.groupby("date", observed=True)["cum_return"].transform(
+        lambda x: pd.qcut(
+            x,
+            q=n_portfolios,
+            labels=range(1, n_portfolios + 1),
+            duplicates="drop"
+        )
+    ).astype('Int64')
     
-    df = df.groupby("date", group_keys=False).apply(assign_rank)
+    # If any NaNs in momr, fill with rank-based assignment
+    mask = df["momr"].isna()
+    if mask.any():
+        df.loc[mask, "momr"] = df.loc[mask].groupby("date")["cum_return"].transform(
+            lambda x: pd.qcut(
+                x.rank(method="first"),
+                q=min(n_portfolios, len(x.unique())),
+                labels=False,
+                duplicates="drop"
+            )
+        ).astype('Int64') + 1
     
     # Step 3: Define holding period dates
     df = df.rename(columns={"date": "form_date"})
@@ -676,7 +677,12 @@ def momentum_strategy(data, J, K, n_portfolios=10):
         on="symbol",
         how="inner"
     )
-    port_ret = port_ret.query("hdate >= hdate1 and hdate <= hdate2")
+    
+    # Use boolean indexing
+    port_ret = port_ret[
+        (port_ret["hdate"] >= port_ret["hdate1"]) & 
+        (port_ret["hdate"] <= port_ret["hdate2"])
+    ]
     
     # Step 5: Compute equally weighted returns (two-stage averaging)
     cohort_ret = (port_ret
@@ -697,8 +703,10 @@ def momentum_strategy(data, J, K, n_portfolios=10):
         index="date", columns="momr", values="ewret"
     ).reset_index()
     
-    wide.columns = ["date"] + [f"port{i}" for i in range(1, n_portfolios + 1)]
-    wide["winners"] = wide[f"port{n_portfolios}"]
+    # Handle variable number of portfolios
+    n_cols = len(wide.columns) - 1
+    wide.columns = ["date"] + [f"port{i}" for i in range(1, n_cols + 1)]
+    wide["winners"] = wide[f"port{n_cols}"]
     wide["losers"] = wide["port1"]
     wide["long_short"] = wide["winners"] - wide["losers"]
     
@@ -709,7 +717,12 @@ def momentum_strategy(data, J, K, n_portfolios=10):
 
 We now run the momentum strategy for all 16 $(J, K)$ combinations. This is computationally intensive, so we store the key summary statistics for each specification.
 
+#### Sequential Calculation
+
 ```{python}
+#| eval: false
+#| label: momemtum-calculation-squential
+
 J_values = [3, 6, 9, 12]
 K_values = [3, 6, 9, 12]
 
@@ -747,6 +760,79 @@ for J_val, K_val in product(J_values, K_values):
 
 results_df = pd.DataFrame(results_grid)
 ```
+
+#### Parallel Calculation
+
+```{python}
+def compute_single_strategy(data, J, K):
+    """
+    Compute statistics for a single (J, K) strategy.
+    Returns a list of result dicts, one per portfolio.
+    """
+    try:
+        _, wide_result = momentum_strategy(data, J, K)
+        
+        results = []
+        for portfolio_name in ["winners", "losers", "long_short"]:
+            series = wide_result[portfolio_name].dropna()
+            n = len(series)
+            mean_ret = series.mean()
+            std_ret = series.std()
+            t_stat = mean_ret / (std_ret / np.sqrt(n)) if std_ret > 0 else np.nan
+            p_val = (2 * (1 - stats.t.cdf(abs(t_stat), df=n-1)) 
+                     if not np.isnan(t_stat) else np.nan)
+            
+            results.append({
+                "J": J,
+                "K": K,
+                "portfolio": portfolio_name,
+                "n_months": n,
+                "mean_ret": mean_ret,
+                "std_ret": std_ret,
+                "t_stat": t_stat,
+                "p_value": p_val
+            })
+        return results
+    except Exception as e:
+        print(f"Error in J={J}, K={K}: {e}")
+        return []
+```
+
+```{python}
+J_values = [3, 6, 9, 12]
+K_values = [3, 6, 9, 12]
+
+# Create list of (J, K) pairs
+params = list(product(J_values, K_values))
+
+print(f"Running {len(params)} momentum strategies in parallel with 4 cores...")
+start_time = time.time()
+
+# Parallel execution with 4 workers
+results_list = Parallel(n_jobs=4, verbose=10)(
+    delayed(compute_single_strategy)(prices_clean, J, K)
+    for J, K in params
+)
+
+# Flatten results
+results_grid = [item for sublist in results_list for item in sublist]
+results_df = pd.DataFrame(results_grid)
+
+elapsed = time.time() - start_time
+print(f"\nCompleted in {elapsed:.2f} seconds")
+```
+
+```{python}
+# Summary statistics
+print("\nResults Summary by Formation Period:")
+print(results_df.groupby("J").agg({
+    "mean_ret": "mean",
+    "std_ret": "mean",
+    "t_stat": ["mean", lambda x: (x.abs() > 1.96).sum()],
+    "n_months": "first"
+}).round(6))
+```
+
 
 ### Winners Portfolio Returns
 
@@ -1138,24 +1224,27 @@ def momentum_strategy_vw(data, J, K, n_portfolios=10):
     )
     df = df.drop(columns=["gross_ret"]).dropna(subset=["cum_return"])
     
-    # Step 2: Portfolio assignment
-    def assign_rank(group):
-        try:
-            group["momr"] = pd.qcut(
-                group["cum_return"],
-                q=n_portfolios,
-                labels=range(1, n_portfolios + 1),
-                duplicates="drop"
-            ).astype(int)
-        except ValueError:
-            group["momr"] = pd.cut(
-                group["cum_return"].rank(method="first"),
-                bins=n_portfolios,
-                labels=range(1, n_portfolios + 1)
-            ).astype(int)
-        return group
+    # Step 2: Portfolio assignment using transform (fast)
+    df["momr"] = df.groupby("date", observed=True)["cum_return"].transform(
+        lambda x: pd.qcut(
+            x,
+            q=n_portfolios,
+            labels=range(1, n_portfolios + 1),
+            duplicates="drop"
+        )
+    ).astype('Int64')
     
-    df = df.groupby("date", group_keys=False).apply(assign_rank)
+    # Fill NaNs with rank-based assignment
+    mask = df["momr"].isna()
+    if mask.any():
+        df.loc[mask, "momr"] = df.loc[mask].groupby("date")["cum_return"].transform(
+            lambda x: pd.qcut(
+                x.rank(method="first"),
+                q=min(n_portfolios, len(x.unique())),
+                labels=False,
+                duplicates="drop"
+            )
+        ).astype('Int64') + 1
     
     # Step 3: Holding period
     df = df.rename(columns={"date": "form_date"})
@@ -1172,18 +1261,25 @@ def momentum_strategy_vw(data, J, K, n_portfolios=10):
         on="symbol",
         how="inner"
     )
-    port_ret = port_ret.query("hdate >= hdate1 and hdate <= hdate2")
+    
+    # Use boolean indexing instead of query (faster)
+    port_ret = port_ret[
+        (port_ret["hdate"] >= port_ret["hdate1"]) & 
+        (port_ret["hdate"] <= port_ret["hdate2"])
+    ]
     port_ret = port_ret.dropna(subset=["mktcap_lag"])
-    port_ret = port_ret.query("mktcap_lag > 0")
+    port_ret = port_ret[port_ret["mktcap_lag"] > 0]
     
     # Step 5: Value-weighted returns within each cohort
     def vw_mean(group):
         weights = group["mktcap_lag"]
+        if weights.sum() == 0:
+            return np.nan
         return np.average(group["hret"], weights=weights)
     
     cohort_ret = (port_ret
         .groupby(["hdate", "momr", "form_date"])
-        .apply(vw_mean)
+        .apply(vw_mean, include_groups=False)
         .reset_index(name="cohort_ret")
     )
     
@@ -1198,8 +1294,11 @@ def momentum_strategy_vw(data, J, K, n_portfolios=10):
     wide = monthly_ret.pivot(
         index="date", columns="momr", values="vwret"
     ).reset_index()
-    wide.columns = ["date"] + [f"port{i}" for i in range(1, n_portfolios + 1)]
-    wide["winners"] = wide[f"port{n_portfolios}"]
+    
+    # Handle variable number of portfolios
+    n_cols = len(wide.columns) - 1
+    wide.columns = ["date"] + [f"port{i}" for i in range(1, n_cols + 1)]
+    wide["winners"] = wide[f"port{n_cols}"]
     wide["losers"] = wide["port1"]
     wide["long_short"] = wide["winners"] - wide["losers"]
     
@@ -1209,7 +1308,14 @@ def momentum_strategy_vw(data, J, K, n_portfolios=10):
 ```{python}
 # Run value-weighted J=6, K=6 strategy
 _, vw_results = momentum_strategy_vw(prices_clean, J=6, K=6)
+
+print("Value-Weighted Momentum Strategy (J=6, K=6)")
+print("=" * 50)
+print("\nPortfolio Statistics:")
+print(vw_results[["winners", "losers", "long_short"]].describe().round(4))
 ```
+
+
 
 ```{python}
 #| label: tbl-ew-vs-vw
@@ -1244,16 +1350,18 @@ pd.DataFrame(comparison)
 vw_results = vw_results.sort_values("date")
 vw_results["cumret_ls_vw"] = (1 + vw_results["long_short"]).cumprod() - 1
 
-ew_vs_vw = (ewret_wide[["date", "cumret_long_short"]]
-    .rename(columns={"cumret_long_short": "cumret"})
+ew_data = (ewret_wide[["date", "long_short"]]
+    .rename(columns={"long_short": "cumret"})
     .assign(scheme="Equally Weighted")
-    .append(
-        vw_results[["date", "cumret_ls_vw"]]
-        .rename(columns={"cumret_ls_vw": "cumret"})
-        .assign(scheme="Value Weighted"),
-        ignore_index=True
-    )
 )
+ew_data["cumret"] = (1 + ew_data["cumret"]).cumprod() - 1
+
+vw_data = (vw_results[["date", "cumret_ls_vw"]]
+    .rename(columns={"cumret_ls_vw": "cumret"})
+    .assign(scheme="Value Weighted")
+)
+
+ew_vs_vw = pd.concat([ew_data, vw_data], ignore_index=True)
 
 plot_ew_vw = (
     ggplot(ew_vs_vw, aes(x="date", y="cumret", color="scheme")) +
@@ -1273,6 +1381,7 @@ plot_ew_vw = (
 )
 plot_ew_vw
 ```
+
 
 ## Daily Momentum Analysis
 
@@ -1299,7 +1408,7 @@ print(f"Date range: {prices_daily['date'].min().date()} "
 Rather than forming momentum portfolios at the daily frequency (which would require daily rebalancing and is impractical), we use the monthly portfolio assignments and track their daily returns. This gives us the daily return series of the monthly momentum strategy.
 
 ```{python}
-# Use the monthly portfolio assignments from the J=6 baseline
+# # # Use the monthly portfolio assignments from the J=6 baseline
 monthly_assignments = portfolios_with_dates[
     ["symbol", "form_date", "momr", "hdate1", "hdate2"]
 ].copy()
@@ -1313,10 +1422,11 @@ daily_mom_returns = monthly_assignments.merge(
     how="inner"
 )
 
-# Keep only daily returns within each holding period
-daily_mom_returns = daily_mom_returns.query(
-    "ddate >= hdate1 and ddate <= hdate2"
-)
+# Use boolean indexing instead of query
+daily_mom_returns = daily_mom_returns[
+    (daily_mom_returns["ddate"] >= daily_mom_returns["hdate1"]) & 
+    (daily_mom_returns["ddate"] <= daily_mom_returns["hdate2"])
+]
 
 print(f"Daily portfolio return observations: {len(daily_mom_returns):,}")
 ```
