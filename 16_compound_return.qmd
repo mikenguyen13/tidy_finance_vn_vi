@@ -1,0 +1,1368 @@
+# Compound Returns
+
+In this chapter, we provide a treatment of compound returns. Whether constructing buy-and-hold portfolios, evaluating fund performance, computing cumulative wealth indices, or estimating long-horizon risk measures, the ability to correctly compound returns over arbitrary horizons is indispensable. We begin with the mathematical foundations: the distinction between simple and log returns, the relationship between arithmetic and geometric means, and the properties of continuously compounded returns. Along the way, we address practical complications that arise in real-world equity data, such as trading halts, price limit mechanisms, partial-period returns, and delisting events, and show how to handle them in the Vietnamese context.
+
+The chapter proceeds to rolling compound returns over standard horizons (3, 6, 9, and 12 months), compound returns aligned to fiscal period ends, forward-looking cumulative returns for event studies, and rolling volatility estimation.
+
+```{python}
+import pandas as pd
+import numpy as np
+import sqlite3
+import matplotlib.pyplot as plt
+from plotnine import *
+from mizani.formatters import percent_format, comma_format, date_format
+from itertools import product
+from datetime import datetime, timedelta
+```
+
+## Simple Returns versus Log Returns
+
+Before discussing compounding, we must distinguish between the two fundamental return conventions used in finance.
+
+### Simple (Arithmetic) Returns
+
+The simple gross return on an asset from period $t-1$ to $t$ is defined as
+
+$$
+1 + R_t = \frac{P_t + D_t}{P_{t-1}},
+$$ {#eq-simple-return}
+
+where $P_t$ denotes the price at the end of period $t$ and $D_t$ denotes any cash distributions (dividends, coupons) paid during period $t$. The simple net return is $R_t$ itself. When we speak of "returns" without qualification, we typically mean simple net returns.
+
+The key property of simple returns is that **multi-period compounding is multiplicative**:
+
+$$
+1 + R_t(k) = \prod_{j=0}^{k-1} (1 + R_{t-j}) = (1 + R_t)(1 + R_{t-1}) \cdots (1 + R_{t-k+1}),
+$$ {#eq-compound-simple}
+
+where $R_t(k)$ is the $k$-period compound return ending at time $t$. This multiplicative structure is the foundation of all compounding methods discussed in this chapter.
+
+### Continuously Compounded (Log) Returns
+
+The continuously compounded return, or log return, is defined as
+
+$$
+r_t = \ln(1 + R_t) = \ln\!\left(\frac{P_t + D_t}{P_{t-1}}\right).
+$$ {#eq-log-return}
+
+The central advantage of log returns for compounding is that **multi-period compounding becomes additive**:
+
+$$
+r_t(k) = \ln(1 + R_t(k)) = \sum_{j=0}^{k-1} r_{t-j} = r_t + r_{t-1} + \cdots + r_{t-k+1}.
+$$ {#eq-compound-log}
+
+This additive property follows directly from the logarithmic identity $\ln(ab) = \ln(a) + \ln(b)$. It is computationally convenient because summation is numerically more stable than iterated multiplication, and because many statistical procedures (means, variances, regressions) operate naturally on additive quantities.
+
+To recover the simple compound return from the sum of log returns, we apply the exponential function:
+
+$$
+R_t(k) = \exp\!\left(\sum_{j=0}^{k-1} r_{t-j}\right) - 1.
+$$ {#eq-recover-simple}
+
+### When Do They Diverge?
+
+For small returns, the approximation $r_t \approx R_t$ holds to first order (via the Taylor expansion $\ln(1+x) \approx x$ for $|x| \ll 1$). However, for large returns, which is common in emerging markets, small-cap stocks, or crisis periods, the two can diverge substantially. Consider a stock that doubles in price ($R_t = 1.0$): the log return is $r_t = \ln(2) \approx 0.693$, a 31% discrepancy. Conversely, for a stock that loses half its value ($R_t = -0.5$): the log return is $r_t = \ln(0.5) \approx -0.693$, which is 39% larger in magnitude.
+
+This divergence is especially relevant in Vietnam, where daily price limits of $\pm 7\%$ on HOSE, $\pm 10\%$ on HNX, and $\pm 15\%$ on UPCoM can produce sequences of limit-up or limit-down days. Over a week of consecutive limit-up days on HOSE, the simple return is $(1.07)^5 - 1 = 40.3\%$ while the log return is $5 \times \ln(1.07) = 33.8\%$, which is a meaningful gap.
+
+@tbl-return-comparison illustrates this divergence across a range of return magnitudes.
+
+```{python}
+#| label: tbl-return-comparison
+#| tbl-cap: "Comparison of simple and log returns for various price changes. The divergence grows with the magnitude of the simple return, which is particularly relevant for volatile emerging market stocks."
+simple_returns = [-0.50, -0.30, -0.15, -0.10, -0.07, -0.05, -0.01,
+                  0.00, 0.01, 0.05, 0.07, 0.10, 0.15, 0.30, 0.50, 1.00]
+comparison_df = pd.DataFrame({
+    "Simple Return": [f"{r:.2%}" for r in simple_returns],
+    "Log Return": [f"{np.log(1+r):.4f}" for r in simple_returns],
+    "Difference": [f"{np.log(1+r) - r:.4f}" for r in simple_returns],
+    "Relative Error (%)": [
+        f"{((np.log(1+r) - r) / abs(r) * 100):.2f}" if r != 0 else "—"
+        for r in simple_returns
+    ]
+})
+comparison_df
+```
+
+> **Key takeaway**: log returns are convenient for compounding (additive aggregation), but portfolio returns aggregate cross-sectionally in simple return space. In practice, we often transform to log returns for temporal compounding, then convert back to simple returns for reporting.
+
+## Mathematical Foundations of Compounding
+
+### Geometric Mean Return
+
+The geometric mean return over $T$ periods is
+
+$$
+\bar{R}_g = \left(\prod_{t=1}^{T} (1 + R_t)\right)^{1/T} - 1,
+$$ {#eq-geometric-mean}
+
+which represents the constant per-period return that would yield the same terminal wealth as the actual return sequence. It is always less than or equal to the arithmetic mean $\bar{R}_a = \frac{1}{T}\sum_{t=1}^{T} R_t$, with equality only when all returns are identical. The relationship between the two is approximately:
+
+$$
+\bar{R}_g \approx \bar{R}_a - \frac{\sigma^2}{2},
+$$ {#eq-arithmetic-geometric}
+
+where $\sigma^2$ is the variance of returns. This approximation, sometimes called the "volatility drag," has important implications: high-volatility assets have a larger wedge between their arithmetic and geometric means, meaning their actual compound growth understates what a naive average would suggest. In a market like Vietnam's, where individual stock volatility is often two to three times that of developed-market equities, the volatility drag can be substantial.
+
+### Wealth Index and Drawdowns
+
+Given an initial investment of $W_0$, the wealth at time $T$ is
+
+$$
+W_T = W_0 \prod_{t=1}^{T} (1 + R_t).
+$$ {#eq-wealth-index}
+
+The cumulative return (net) is simply $W_T / W_0 - 1$. The maximum drawdown, a widely used risk measure, is defined as
+
+$$
+\text{MDD} = \max_{0 \le s \le t \le T} \left(\frac{W_s - W_t}{W_s}\right),
+$$ {#eq-max-drawdown}
+
+which measures the largest peak-to-trough decline in the wealth index. We will compute this quantity alongside compound returns below. Drawdowns are particularly informative in emerging markets that experience sharp corrections, as occurred during the global financial crisis of 2008 when the VN-Index fell roughly 66% from its 2007 peak.
+
+<!--# Show the data here -->
+
+### Annualization
+
+For a $k$-period compound return $R_t(k)$ where each period has length $\Delta$ (e.g., $\Delta = 1/12$ for monthly data), the annualized return is
+
+$$
+R_{\text{ann}} = (1 + R_t(k))^{1/(k\Delta)} - 1.
+$$ {#eq-annualize}
+
+Similarly, for volatility estimated from $k$-period returns with period length $\Delta$:
+
+$$
+\sigma_{\text{ann}} = \sigma / \sqrt{\Delta},
+$$ {#eq-annualize-vol}
+
+so monthly volatility is annualized by multiplying by $\sqrt{12}$ and daily volatility by approximately $\sqrt{252}$ (assuming 252 trading days per year). For Vietnam specifically, the HOSE typically has around 245–250 trading days per year after accounting for Vietnamese public holidays, which is close enough that the $\sqrt{252}$ convention is standard.
+
+## Data Preparation
+
+We start by loading monthly stock return data from our SQLite database. As prepared in previous chapters, this database contains monthly returns sourced from [DataCore.vn](https://datacore.vn/) for all securities listed on the Ho Chi Minh Stock Exchange (HOSE), Hanoi Stock Exchange (HNX), and the Unlisted Public Company Market (UPCoM). Returns are adjusted for stock splits, bonus issues, and rights offerings, and include reinvested cash dividends.
+
+```{python}
+tidy_finance = sqlite3.connect(database="data/tidy_finance_python.sqlite")
+
+prices_monthly = pd.read_sql_query(
+    sql="""
+        SELECT symbol, date, ret_excess, ret, mktcap, mktcap_lag, risk_free
+        FROM prices_monthly
+    """,
+    con=tidy_finance,
+    parse_dates=["date"]
+).dropna()
+
+factors_ff3_monthly = pd.read_sql_query(
+    sql="SELECT date, mkt_excess FROM factors_ff3_monthly",
+    con=tidy_finance,
+    parse_dates=["date"]
+)
+
+prices_monthly = prices_monthly.merge(
+    factors_ff3_monthly,
+    on="date",
+    how="left"
+)
+
+prices_monthly["ret_total"] = prices_monthly["ret"]
+prices_monthly["mkt_total"] = (
+    prices_monthly["mkt_excess"] + prices_monthly["risk_free"]
+)
+
+```
+
+Let us inspect the sample:
+
+```{python}
+print(f"Sample period: {prices_monthly['date'].min()} to "
+      f"{prices_monthly['date'].max()}")
+print(f"Number of stocks: {prices_monthly['symbol'].nunique():,}")
+print(f"Total observations: {len(prices_monthly):,}")
+# print(f"Exchanges: {prices_monthly['exchange'].unique()}")
+```
+
+@tbl-sample-overview provides summary statistics for the raw monthly returns, broken down by exchange. Differences across exchanges reflect the size and liquidity gradient: HOSE lists the largest and most liquid firms, HNX covers mid-cap companies, and UPCoM hosts smaller and more thinly traded securities.
+
+```{python}
+#| label: tbl-sample-overview
+#| eval: false
+#| tbl-cap: "Summary statistics of monthly stock returns by exchange. HOSE firms tend to have lower return dispersion and fewer extreme observations compared to HNX and UPCoM, consistent with their larger market capitalization and greater liquidity."
+sample_stats = (
+    prices_monthly
+    .groupby("exchange")["ret_total"]
+    .describe(percentiles=[0.05, 0.25, 0.50, 0.75, 0.95])
+    .round(4)
+)
+sample_stats
+```
+
+## Method 1: Cumulative Product via GroupBy
+
+The most direct approach to compound returns uses the multiplicative property in @eq-compound-simple. For each security, we compute the cumulative product of gross returns $(1 + R_t)$ over the desired window.
+
+```{python}
+def compute_cumret_cumprod(df, ret_col="ret_total",
+                           group_col="symbol"):
+    """Compute cumulative returns using cumulative product.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Must contain `group_col`, 'date', and `ret_col`.
+    ret_col : str
+        Column name for period returns.
+    group_col : str
+        Column name for grouping (e.g., security identifier).
+
+    Returns
+    -------
+    pd.DataFrame
+        Original DataFrame augmented with 'cumret' and 'wealth_index'.
+    """
+    df = df.sort_values([group_col, "date"]).copy()
+    df["gross_ret"] = 1 + df[ret_col]
+    df["wealth_index"] = (
+        df.groupby(group_col)["gross_ret"]
+        .cumprod()
+    )
+    df["cumret"] = df["wealth_index"] - 1
+    df.drop(columns=["gross_ret"], inplace=True)
+    return df
+```
+
+Let us apply this to the full sample and examine the resulting wealth indices for a few selected stocks:
+
+```{python}
+stock_cumret = compute_cumret_cumprod(prices_monthly)
+
+# Select stocks with long histories for illustration
+stock_counts = (
+    stock_cumret.groupby("symbol")["date"]
+    .count()
+    .reset_index(name="n_obs")
+)
+long_history_stocks = (
+    stock_counts.nlargest(5, "n_obs")["symbol"].tolist()
+)
+
+sample_wealth = stock_cumret[
+    stock_cumret["symbol"].isin(long_history_stocks)
+]
+```
+
+@fig-wealth-index plots the wealth indices (value of 1 VND invested) for these five securities over the full sample period.
+
+```{python}
+#| label: fig-wealth-index
+#| fig-cap: "Wealth index (value of 1 VND invested) for selected long-history Vietnamese stocks. Each line represents the cumulative value of a 1 VND investment in a single stock, with all dividends reinvested. The divergence in terminal wealth illustrates the power of compounding over long horizons."
+#| fig-alt: "Line chart showing the growth of 1 VND invested in five different Vietnamese stocks over time."
+#| fig-pos: "htbp"
+plot_wealth = (
+    ggplot(sample_wealth, aes(x="date", y="wealth_index",
+                              color="factor(symbol)")) +
+    geom_line(size=0.6) +
+    labs(
+        x="", y="Wealth index (1 VND invested)",
+        color="Stock"
+    ) +
+    theme_minimal() +
+    theme(legend_position="bottom",
+          figure_size=(10, 5))
+)
+plot_wealth.draw()
+```
+
+### Handling Missing Returns
+
+The cumulative product approach propagates missing values: if any $R_t$ is `NaN`, the entire cumulative product from that point onward becomes `NaN`. This is conservative because it effectively assumes that a missing return renders the subsequent wealth index undefined. In many applications, this is the desired behavior because a missing return may indicate a data error or a period during which the stock was not trading.
+
+However, in the Vietnamese market, missing returns can arise from extended trading halts. The State Securities Commission (SSC) and exchanges may suspend trading in a stock for various regulatory reasons, such as financial reporting delays, pending corporate restructuring announcements, or suspected market manipulation. These halts can last days, weeks, or even months. During such halts, the stock's value has not changed (the last traded price remains the reference), so treating the missing return as zero (i.e., no price change) may be more appropriate than propagating `NaN`.
+
+```{python}
+def compute_cumret_skipna(df, ret_col="ret_total",
+                          group_col="symbol"):
+    """Compute cumulative returns, treating missing returns as zero."""
+    df = df.sort_values([group_col, "date"]).copy()
+    df["gross_ret"] = 1 + df[ret_col].fillna(0)
+    df["wealth_index"] = (
+        df.groupby(group_col)["gross_ret"]
+        .cumprod()
+    )
+    df["cumret"] = df["wealth_index"] - 1
+    df.drop(columns=["gross_ret"], inplace=True)
+    return df
+```
+
+::: callout-warning
+Treating missing returns as zero is an assumption that may or may not be appropriate. If returns are missing because the stock was halted, zero may be reasonable. If returns are missing due to data errors or because the stock was genuinely not trading (e.g., awaiting relisting after a corporate event), imputing zero can introduce bias. Always investigate the reason for missing values before deciding on a treatment.
+:::
+
+<!--# The DataCore.vn documentation provides flags for different types of trading suspensions that can guide this decision. -->
+
+## Method 2: Log-Sum-Exp Approach
+
+The log-sum-exp method exploits the additive property of log returns (@eq-compound-log). This approach is particularly useful when computing compound returns over fixed windows (e.g., annual returns from monthly data) because summation is both computationally efficient and numerically stable.
+
+```{python}
+def compute_cumret_logsum(df, ret_col="ret_total",
+                          group_col="symbol",
+                          date_col="date"):
+    """Compute cumulative returns using the log-sum-exp approach.
+
+    Steps:
+    1. Transform to log returns: r_t = ln(1 + R_t)
+    2. Cumulative sum of log returns within each group
+    3. Exponentiate to recover simple cumulative return
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+    ret_col : str
+    group_col : str
+    date_col : str
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+    df = df.sort_values([group_col, date_col]).copy()
+    df["log_ret"] = np.log(1 + df[ret_col])
+    df["cum_log_ret"] = (
+        df.groupby(group_col)["log_ret"].cumsum()
+    )
+    df["wealth_index_log"] = np.exp(df["cum_log_ret"])
+    df["cumret_log"] = df["wealth_index_log"] - 1
+    df.drop(columns=["log_ret", "cum_log_ret"], inplace=True)
+    return df
+```
+
+Let us verify that the two methods produce identical results (up to floating-point precision):
+
+```{python}
+stock_both = compute_cumret_cumprod(prices_monthly)
+stock_both = compute_cumret_logsum(stock_both)
+
+# Compare on non-missing observations
+mask = (stock_both["cumret"].notna()
+        & stock_both["cumret_log"].notna())
+max_diff = (stock_both.loc[mask, "cumret"] -
+            stock_both.loc[mask, "cumret_log"]).abs().max()
+print(f"Maximum absolute difference between methods: {max_diff:.2e}")
+```
+
+The difference is at the level of machine epsilon ($\approx 10^{-15}$), confirming numerical equivalence.
+
+### Period-Specific Compound Returns
+
+A common task is to compute compound returns within calendar periods (months, quarters, years). The log-sum-exp approach lends itself naturally to grouped aggregation:
+
+```{python}
+def compound_return_by_period(df, ret_col="ret_total",
+                              group_col="symbol",
+                              period="year"):
+    """Compute compound returns within calendar periods.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Must contain 'date' and `ret_col`.
+    period : str
+        One of 'year', 'quarter', 'month'.
+
+    Returns
+    -------
+    pd.DataFrame with compound returns per group-period.
+    """
+    df = df.copy()
+    df["log_ret"] = np.log(1 + df[ret_col])
+    if period == "year":
+        df["period"] = df["date"].dt.year
+    elif period == "quarter":
+        df["period"] = df["date"].dt.to_period("Q")
+    elif period == "month":
+        df["period"] = df["date"].dt.to_period("M")
+
+    result = (
+        df.groupby([group_col, "period"])
+        .agg(
+            cumret=(
+                "log_ret",
+                lambda x: np.exp(x.sum()) - 1
+            ),
+            n_obs=("log_ret", "count"),
+            n_miss=(ret_col, lambda x: x.isna().sum()),
+            start_date=("date", "min"),
+            end_date=("date", "max")
+        )
+        .reset_index()
+    )
+    return result
+```
+
+@tbl-annual-returns shows annual compound returns for a subset of securities.
+
+```{python}
+#| label: tbl-annual-returns
+#| tbl-cap: "Annual compound returns for selected Vietnamese securities. The number of non-missing monthly observations (n_obs) and missing observations (n_miss) are reported to flag potentially incomplete years. A stock-year with n_obs substantially below 12 indicates either partial listing or extended trading halts."
+annual_returns = compound_return_by_period(
+    prices_monthly[
+        prices_monthly["symbol"].isin(long_history_stocks)
+    ],
+    period="year"
+)
+
+recent_annual = (
+    annual_returns
+    .sort_values(["symbol", "period"])
+    .groupby("symbol")
+    .tail(5)
+    .round(4)
+)
+recent_annual.head(20)
+```
+
+::: callout-important
+When the number of non-missing observations (`n_obs`) is less than 12 for an annual return, the compound return represents only a partial year. This commonly occurs in the first and last years of a security's listing on HOSE, HNX, or UPCoM, or when a stock transfers between exchanges (e.g., from UPCoM to HOSE upon meeting listing requirements). Users should decide whether to retain or exclude such partial-year observations depending on their research design.
+:::
+
+## Method 3: Iterative Compounding with Retain Logic
+
+In some applications, we need fine-grained control over how missing values, delisting events, or other special conditions affect the compounding process. The iterative approach processes each observation sequentially, carrying forward the cumulative return and applying conditional logic at each step.
+
+```{python}
+def compute_cumret_iterative(df, ret_col="ret_total",
+                              group_col="symbol",
+                              handle_missing="carry"):
+    """Compute cumulative returns iteratively with flexible
+    missing value handling.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+    ret_col : str
+    group_col : str
+    handle_missing : str
+        'carry' : treat missing as zero return (carry forward)
+        'propagate' : propagate NaN (conservative)
+        'reset' : reset wealth index to 1 after missing spell
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+    df = df.sort_values([group_col, "date"]).copy()
+    results = []
+
+    for name, group in df.groupby(group_col):
+        cumret = 1.0
+        cumrets = []
+        for _, row in group.iterrows():
+            ret = row[ret_col]
+            if pd.notna(ret):
+                cumret = cumret * (1 + ret)
+            else:
+                if handle_missing == "propagate":
+                    cumret = np.nan
+                elif handle_missing == "reset":
+                    cumret = 1.0
+                # 'carry' does nothing (cumret unchanged)
+            cumrets.append(cumret)
+        group = group.copy()
+        group["wealth_iter"] = cumrets
+        group["cumret_iter"] = group["wealth_iter"] - 1
+        results.append(group)
+
+    return pd.concat(results, ignore_index=True)
+```
+
+::: callout-note
+The iterative method is the slowest of the four approaches because it cannot leverage NumPy's vectorized operations. For large datasets, prefer Method 1 or 2 unless the conditional logic in Method 3 is essential. On a dataset with 1 million observations, Method 1 runs in approximately 0.1 seconds versus 10+ seconds for Method 3.
+:::
+
+### Comparison of Missing Value Treatments
+
+To illustrate how the three missing-value strategies differ, consider a hypothetical stock with one missing return in the middle of its history:
+
+```{python}
+#| label: tbl-missing-comparison
+#| tbl-cap: "Effect of different missing value treatments on cumulative returns. The 'carry' strategy assumes zero return for missing periods (appropriate for trading halts); 'propagate' makes all subsequent values undefined (conservative); 'reset' restarts the cumulative product after the missing spell."
+example = pd.DataFrame({
+    "symbol": [1]*6,
+    "date": pd.date_range("2024-01-31", periods=6, freq="ME"),
+    "ret_total": [0.05, 0.03, np.nan, 0.04, -0.02, 0.06]
+})
+
+carry = compute_cumret_iterative(example, handle_missing="carry")
+propagate = compute_cumret_iterative(
+    example, handle_missing="propagate"
+)
+reset = compute_cumret_iterative(example, handle_missing="reset")
+
+comparison = pd.DataFrame({
+    "Date": example["date"].dt.strftime("%Y-%m"),
+    "Return": example["ret_total"],
+    "Carry": carry["cumret_iter"].round(6),
+    "Propagate": propagate["cumret_iter"].round(6),
+    "Reset": reset["cumret_iter"].round(6)
+})
+comparison
+```
+
+## Method 4: Rolling Compound Returns
+
+For many empirical applications, including momentum strategies, performance evaluation, and risk estimation, we need compound returns over rolling windows of fixed length. This section implements efficient rolling compounding using pandas.
+
+### Rolling Window via Log Returns
+
+The most efficient approach combines the log-sum-exp method with rolling sums:
+
+```{python}
+def rolling_compound_return(df, ret_col="ret_total",
+                             group_col="symbol",
+                             windows=[3, 6, 9, 12]):
+    """Compute rolling compound returns over specified windows.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Must be sorted by [group_col, 'date'] with no gaps.
+    ret_col : str
+    group_col : str
+    windows : list of int
+        Rolling window lengths (in periods).
+
+    Returns
+    -------
+    pd.DataFrame with new columns ret_{k} for each window k.
+    """
+    df = df.sort_values([group_col, "date"]).copy()
+    df["log_ret"] = np.log(1 + df[ret_col])
+
+    for k in windows:
+        rolling_logsum = (
+            df.groupby(group_col)["log_ret"]
+            .transform(
+                lambda x: x.rolling(
+                    window=k, min_periods=k
+                ).sum()
+            )
+        )
+        df[f"ret_{k}"] = np.exp(rolling_logsum) - 1
+
+    df.drop(columns=["log_ret"], inplace=True)
+    return df
+```
+
+We apply this to our full sample to compute 3-, 6-, 9-, and 12-month trailing compound returns:
+
+```{python}
+stock_rolling = rolling_compound_return(
+    prices_monthly,
+    windows=[3, 6, 9, 12]
+)
+```
+
+Let us also compute the same rolling returns for the market index, which serves as a benchmark for excess return calculations:
+
+```{python}
+# Compute market rolling returns
+market_monthly = (
+    prices_monthly[["date", "mkt_total"]]
+    .drop_duplicates()
+    .sort_values("date")
+    .copy()
+)
+market_monthly["log_mkt"] = np.log(1 + market_monthly["mkt_total"])
+
+for k in [3, 6, 9, 12]:
+    market_monthly[f"mkt_{k}"] = (
+        np.exp(
+            market_monthly["log_mkt"]
+            .rolling(window=k, min_periods=k)
+            .sum()
+        ) - 1
+    )
+
+market_monthly.drop(columns=["log_mkt"], inplace=True)
+
+# Merge market rolling returns back
+stock_rolling = stock_rolling.merge(
+    market_monthly[
+        ["date"] + [f"mkt_{k}" for k in [3, 6, 9, 12]]
+    ],
+    on="date",
+    how="left"
+)
+```
+
+@fig-rolling-returns displays the distribution of 12-month rolling compound returns over time.
+
+```{python}
+#| label: fig-rolling-returns
+#| fig-cap: "Cross-sectional distribution of 12-month rolling compound returns for Vietnamese stocks over time. The shaded band represents the interquartile range (25th–75th percentiles), while the solid line shows the median. Sharp market-wide events—such as the 2008 global financial crisis and the 2020 COVID-19 shock—are visible as periods when even the median return turns sharply negative."
+#| fig-alt: "Time series chart showing the distribution of 12-month rolling stock returns in Vietnam."
+#| fig-pos: "htbp"
+rolling_stats = (
+    stock_rolling
+    .dropna(subset=["ret_12"])
+    .groupby("date")["ret_12"]
+    .agg(["median", lambda x: x.quantile(0.25),
+           lambda x: x.quantile(0.75)])
+    .reset_index()
+)
+rolling_stats.columns = ["date", "median", "p25", "p75"]
+
+plot_rolling = (
+    ggplot(rolling_stats, aes(x="date")) +
+    geom_ribbon(aes(ymin="p25", ymax="p75"),
+                alpha=0.3, fill="#2166ac") +
+    geom_line(aes(y="median"), color="#2166ac", size=0.7) +
+    geom_hline(yintercept=0, linetype="dashed") +
+    labs(x="", y="12-month compound return") +
+    scale_y_continuous(labels=percent_format()) +
+    theme_minimal() +
+    theme(figure_size=(10, 5))
+)
+plot_rolling.draw()
+```
+
+### Verifying Rolling Returns
+
+It is prudent to verify rolling compound returns against a direct calculation. We select one stock and recompute its 12-month return manually:
+
+```{python}
+#| label: tbl-rolling-verify
+#| tbl-cap: "Verification of rolling compound return calculation. The 'Direct' column computes the product of the preceding 12 monthly gross returns minus one; 'Rolling' uses our log-sum-exp function. Differences are at machine precision."
+test_stock = long_history_stocks[0]
+test_data = (
+    stock_rolling[stock_rolling["symbol"] == test_stock]
+    .sort_values("date")
+    .tail(15)
+    .copy()
+)
+
+# Direct computation
+test_data["direct_ret_12"] = (
+    test_data["ret_total"]
+    .transform(
+        lambda x: x.add(1).rolling(
+            12, min_periods=12
+        ).apply(np.prod, raw=True) - 1
+    )
+)
+
+verify = (
+    test_data[["date", "ret_12", "direct_ret_12"]]
+    .dropna()
+    .tail(5)
+    .copy()
+)
+verify["difference"] = (
+    verify["ret_12"] - verify["direct_ret_12"]
+).abs()
+verify.round(8)
+```
+
+## Delisting Returns and Survivorship Bias
+
+A critical practical concern when computing compound returns is the treatment of securities that are removed from an exchange. Delisting occurs for various reasons: mergers and acquisitions, bankruptcy, failure to meet listing requirements, voluntary withdrawal, or transfer to another exchange. If delisting returns are not incorporated, the resulting compound returns suffer from survivorship bias: they overstate performance because the worst outcomes (bankruptcies, forced delistings) are excluded [@shumway1997delisting].
+
+### The Vietnamese Context
+
+In Vietnam, securities can be removed from their exchange listing for several reasons as specified by the SSC and exchange regulations:
+
+-   **Mandatory delisting**: when a firm has accumulated losses exceeding its charter capital, fails to meet financial reporting obligations for three consecutive years, or has its business license revoked.
+-   **Voluntary delisting**: when a firm's shareholders vote to withdraw from the exchange.
+-   **Transfer**: when a firm moves from UPCoM to HOSE/HNX (upgrade) or from HOSE/HNX to UPCoM (downgrade). These transfers are not true delistings in the economic sense but require careful handling in return calculations.
+
+Unlike more developed markets where detailed delisting return data is systematically compiled, Vietnamese market data may not always provide an explicit delisting return. When a stock is delisted for cause (e.g., bankruptcy), the last traded price may significantly overstate the security's recovery value. Researchers should be aware of this limitation and consider imputing delisting returns based on the delisting reason, following the methodology of @shumway1997delisting.
+
+### Incorporating Delisting Returns
+
+When a security is delisted, a final "delisting return" captures the value change between the last regular trading day and the realization of value after delisting. This return must be combined with the regular return in the delisting month:
+
+$$
+R_t^{\text{adj}} = (1 + R_t)(1 + R_t^{\text{delist}}) - 1,
+$$ {#eq-delisting-adj}
+
+where $R_t$ is the regular return and $R_t^{\text{delist}}$ is the delisting return. If the regular return is missing (the stock ceased trading before month end), we use the delisting return alone.
+
+```{python}
+def adjust_for_delisting(df, ret_col="ret_total",
+                          dlret_col="dlret"):
+    """Adjust returns for delisting events.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Must contain `ret_col` and `dlret_col`.
+
+    Returns
+    -------
+    pd.DataFrame with adjusted return column 'ret_adj'.
+    """
+    df = df.copy()
+    df["ret_adj"] = df[ret_col]
+
+    # Case 1: Both regular and delisting returns available
+    mask_both = df[ret_col].notna() & df[dlret_col].notna()
+    df.loc[mask_both, "ret_adj"] = (
+        (1 + df.loc[mask_both, ret_col]) *
+        (1 + df.loc[mask_both, dlret_col]) - 1
+    )
+
+    # Case 2: Only delisting return available
+    mask_dlret_only = (
+        df[ret_col].isna() & df[dlret_col].notna()
+    )
+    df.loc[mask_dlret_only, "ret_adj"] = (
+        df.loc[mask_dlret_only, dlret_col]
+    )
+
+    return df
+```
+
+### Impact of Delisting Adjustment
+
+The magnitude of the delisting bias depends on the frequency and severity of delisting events. @shumway1997delisting showed that, in developed markets, ignoring delisting returns introduces an upward bias of approximately 1% per year in equal-weighted portfolio returns. The bias is larger for small-cap stocks and value stocks, which are more prone to financial distress. In Vietnam, where smaller firms on HNX and UPCoM face tighter liquidity constraints and higher default risk, the bias may be even more pronounced. In emerging market delistings, mandatory delistings often involve firms with severe financial distress where residual equity value is near zero, implying delisting returns close to $-100\%$ in the worst cases.
+
+## Rolling Volatility Estimation
+
+Stock return volatility is a key input for risk management, option pricing, and many empirical asset pricing models. A common approach is to estimate rolling standard deviations of returns over a trailing window.
+
+### 24-Month Rolling Volatility
+
+Following @ben2012hedge, we compute the total stock return volatility as the rolling standard deviation of monthly returns over a 24-month window:
+
+$$
+\hat{\sigma}_{i,t}^{24} = \sqrt{\frac{1}{23}\sum_{j=0}^{23}(R_{i,t-j} - \bar{R}_{i,t}^{24})^2},
+$$ {#eq-rolling-vol}
+
+where $\bar{R}_{i,t}^{24} = \frac{1}{24}\sum_{j=0}^{23} R_{i,t-j}$ is the trailing 24-month mean return.
+
+```{python}
+def rolling_volatility(df, ret_col="ret_total",
+                        group_col="symbol",
+                        window=24):
+    """Compute rolling return volatility.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+    ret_col : str
+    group_col : str
+    window : int
+        Rolling window length in periods.
+
+    Returns
+    -------
+    pd.DataFrame with 'vol_{window}' column (annualized).
+    """
+    df = df.sort_values([group_col, "date"]).copy()
+    df[f"vol_{window}"] = (
+        df.groupby(group_col)[ret_col]
+        .transform(
+            lambda x: x.rolling(
+                window=window, min_periods=window
+            ).std()
+        )
+    )
+    # Annualize (monthly to annual)
+    df[f"vol_{window}_ann"] = df[f"vol_{window}"] * np.sqrt(12)
+    return df
+```
+
+```{python}
+stock_vol = rolling_volatility(stock_rolling)
+```
+
+@fig-vol-distribution shows the cross-sectional distribution of annualized 24-month volatility over time.
+
+```{python}
+#| label: fig-vol-distribution
+#| fig-cap: "Cross-sectional distribution of annualized 24-month rolling stock return volatility for Vietnamese equities. The median volatility (solid line) and interquartile range (shaded band) capture both secular trends and crisis episodes. Vietnamese stocks exhibit structurally higher volatility than developed-market peers, with the median annualized volatility typically ranging between 30% and 50%."
+#| fig-alt: "Time series of the cross-sectional distribution of stock return volatility in Vietnam."
+#| fig-pos: "htbp"
+vol_stats = (
+    stock_vol
+    .dropna(subset=["vol_24_ann"])
+    .groupby("date")["vol_24_ann"]
+    .agg(["median", lambda x: x.quantile(0.25),
+           lambda x: x.quantile(0.75)])
+    .reset_index()
+)
+vol_stats.columns = ["date", "median", "p25", "p75"]
+
+plot_vol = (
+    ggplot(vol_stats, aes(x="date")) +
+    geom_ribbon(aes(ymin="p25", ymax="p75"),
+                alpha=0.3, fill="#b2182b") +
+    geom_line(aes(y="median"), color="#b2182b", size=0.7) +
+    labs(x="", y="Annualized 24-month volatility") +
+    scale_y_continuous(labels=percent_format()) +
+    theme_minimal() +
+    theme(figure_size=(10, 5))
+)
+plot_vol.draw()
+```
+
+### Volatility and Compound Returns: The Variance Drain
+
+As noted in @eq-arithmetic-geometric, the geometric mean return falls below the arithmetic mean by approximately $\sigma^2/2$. This "variance drain" or "volatility drag" means that two portfolios with the same arithmetic mean return but different volatilities will have different compound returns: the lower-volatility portfolio will compound to greater terminal wealth.
+
+This effect is quantitatively important in Vietnam. A stock with an arithmetic mean monthly return of 1.5% and a monthly standard deviation of 10% suffers a volatility drag of approximately $0.10^2/2 = 0.5\%$ per month, or roughly 6% per year. This is consistent with the observation that Vietnamese investors face substantial erosion of compound wealth from the high idiosyncratic volatility of individual stocks. We can verify this empirically by sorting stocks into volatility quintiles and comparing compound returns:
+
+```{python}
+#| label: tbl-vol-drag
+#| tbl-cap: "Arithmetic mean, geometric mean, and volatility by volatility quintile for Vietnamese stocks. The difference between arithmetic and geometric mean increases with volatility, confirming the variance drain effect. The magnitude of the drag is notably large for the highest-volatility quintile, typical of small and illiquid stocks on HNX and UPCoM."
+annual_data = compound_return_by_period(
+    prices_monthly, period="year"
+)
+annual_data = annual_data[annual_data["n_obs"] >= 10].copy()
+
+vol_annual = (
+    prices_monthly
+    .groupby(["symbol", prices_monthly["date"].dt.year])[
+        "ret_total"
+    ]
+    .agg(["std", "mean", "count"])
+    .reset_index()
+)
+vol_annual.columns = ["symbol", "period", "monthly_std",
+                       "monthly_mean", "n_months"]
+vol_annual = vol_annual[vol_annual["n_months"] >= 10].copy()
+vol_annual["ann_vol"] = vol_annual["monthly_std"] * np.sqrt(12)
+vol_annual["arith_mean_ann"] = vol_annual["monthly_mean"] * 12
+
+vol_analysis = annual_data.merge(
+    vol_annual, on=["symbol", "period"]
+)
+
+vol_analysis["vol_quintile"] = (
+    vol_analysis.groupby("period")["ann_vol"]
+    .transform(
+        lambda x: pd.qcut(
+            x, 5, labels=[1, 2, 3, 4, 5], duplicates="drop"
+        )
+    )
+)
+
+vol_summary = (
+    vol_analysis
+    .groupby("vol_quintile")
+    .agg(
+        arithmetic_mean=("arith_mean_ann", "mean"),
+        geometric_mean=("cumret", "mean"),
+        avg_volatility=("ann_vol", "mean"),
+        n_stockyears=("cumret", "count")
+    )
+    .round(4)
+    .reset_index()
+)
+vol_summary
+```
+
+## Compound Returns Around Fiscal Year Ends
+
+A widely used approach in accounting and finance research aligns compound returns to firm-specific fiscal period end dates. This is essential for computing buy-and-hold abnormal returns (BHARs) for event studies, post-earnings-announcement drift, and other studies where the event date varies by firm.
+
+In Vietnam, the majority of listed firms follow a calendar fiscal year (January–December), as required by the Law on Accounting unless the Ministry of Finance grants an exemption. However, firms in certain industries (e.g., agriculture, tourism) may use non-standard fiscal years ending in March, June, or September.
+
+<!--# The DataCore.vn financial statements database records the firm-specific fiscal year end for each firm-year. -->
+
+### Aligning Returns to Fiscal Periods
+
+The key challenge is that fiscal year ends differ across firms. We need to compute compound returns over windows anchored at these firm-specific dates.
+
+```{python}
+def compound_returns_around_event(
+    returns_df, events_df,
+    id_col="symbol", date_col="date",
+    event_date_col="datadate", ret_col="ret_total",
+    pre_windows=[3, 6, 9, 12],
+    post_windows=[3, 6]
+):
+    """Compute compound returns in windows around firm-specific
+    event dates.
+
+    Parameters
+    ----------
+    returns_df : pd.DataFrame
+        Monthly returns with [id_col, date_col, ret_col].
+    events_df : pd.DataFrame
+        Event dates with [id_col, event_date_col].
+    pre_windows : list of int
+        Trailing window lengths (months before event).
+    post_windows : list of int
+        Forward window lengths (months after event).
+
+    Returns
+    -------
+    pd.DataFrame with compound returns for each window.
+    """
+    returns_df = returns_df.sort_values(
+        [id_col, date_col]
+    ).copy()
+    events_df = events_df.copy()
+
+    # Align event dates to month ends
+    events_df["event_month"] = (
+        pd.to_datetime(events_df[event_date_col])
+        + pd.offsets.MonthEnd(0)
+    )
+
+    results = []
+
+    for _, event in events_df.iterrows():
+        sid = event[id_col]
+        edate = event["event_month"]
+
+        sec_rets = returns_df[
+            returns_df[id_col] == sid
+        ].copy()
+        sec_rets = sec_rets.set_index(date_col)[ret_col]
+
+        row = {id_col: sid,
+               event_date_col: event[event_date_col]}
+
+        # Pre-event compound returns
+        for k in pre_windows:
+            start = edate - pd.DateOffset(months=k-1)
+            start = (start - pd.offsets.MonthEnd(0)
+                     + pd.offsets.MonthEnd(0))
+            window_rets = sec_rets[
+                (sec_rets.index >= start)
+                & (sec_rets.index <= edate)
+            ]
+            if len(window_rets) >= k * 0.8:
+                cumret = (
+                    np.exp(np.log(1 + window_rets).sum()) - 1
+                )
+            else:
+                cumret = np.nan
+            row[f"ret_pre_{k}"] = cumret
+
+        # Post-event compound returns
+        for k in post_windows:
+            start = edate + pd.DateOffset(months=1)
+            end = (edate + pd.DateOffset(months=k)
+                   + pd.offsets.MonthEnd(0))
+            window_rets = sec_rets[
+                (sec_rets.index >= start)
+                & (sec_rets.index <= end)
+            ]
+            if len(window_rets) >= k * 0.8:
+                cumret = (
+                    np.exp(np.log(1 + window_rets).sum()) - 1
+                )
+            else:
+                cumret = np.nan
+            row[f"ret_post_{k}"] = cumret
+
+        results.append(row)
+
+    return pd.DataFrame(results)
+```
+
+### Buy-and-Hold Abnormal Returns versus Cumulative Abnormal Returns
+
+For event studies and performance evaluation, we often want the **excess** compound return, which is the stock's compound return minus a benchmark's compound return over the same window. The buy-and-hold abnormal return (BHAR) is defined as
+
+$$
+\text{BHAR}_{i,t}(k) = \prod_{j=1}^{k}(1 + R_{i,t+j}) - \prod_{j=1}^{k}(1 + R_{b,t+j}),
+$$ {#eq-bhar}
+
+where $R_{b,t}$ is the benchmark return (market index, size-matched portfolio, etc.). This differs from the cumulative abnormal return (CAR), which sums simple abnormal returns:
+
+$$
+\text{CAR}_{i,t}(k) = \sum_{j=1}^{k}(R_{i,t+j} - R_{b,t+j}).
+$$ {#eq-car}
+
+The BHAR better captures the actual investor experience because it reflects the compounding of returns, whereas the CAR implicitly assumes daily rebalancing to maintain equal dollar positions in the stock and benchmark [@barber1997detecting]. The distinction is particularly important in Vietnam, where individual stock returns can be highly volatile and the compounding effect is therefore magnified. @lyon1999improved provide further analysis of the statistical properties of BHARs and recommend bootstrapped critical values for inference.
+
+```{python}
+def compute_bhar(stock_returns, benchmark_returns):
+    """Compute buy-and-hold abnormal return.
+
+    Parameters
+    ----------
+    stock_returns : array-like
+        Sequence of stock returns.
+    benchmark_returns : array-like
+        Sequence of benchmark returns (same length).
+
+    Returns
+    -------
+    float : BHAR
+    """
+    stock_cumret = (
+        np.prod(1 + np.array(stock_returns)) - 1
+    )
+    bench_cumret = (
+        np.prod(1 + np.array(benchmark_returns)) - 1
+    )
+    return stock_cumret - bench_cumret
+```
+
+## Book Value of Equity
+
+Many empirical applications that use compound returns also require firm-level accounting variables. A commonly used variable is the book value of equity, computed following @daniel1997evidence:
+
+$$
+\text{BE} = \text{SE} + \text{DT} + \text{ITC} - \text{PS},
+$$ {#eq-book-equity}
+
+where SE is stockholders' equity, DT is deferred taxes, ITC is investment tax credit, and PS is the preferred stock value. For preferred stock, the hierarchy is: redemption value if available, then liquidating value, then carrying value.
+
+In Vietnam, the accounting standards (Vietnamese Accounting Standards, VAS, and increasingly IFRS adoption) provide a somewhat different chart of accounts. Stockholders' equity is reported on the balance sheet as *Vốn chủ sở hữu*, which includes contributed capital (*Vốn góp của chủ sở hữu*), share premium (*Thặng dư vốn cổ phần*), treasury stock adjustments, retained earnings (*Lợi nhuận sau thuế chưa phân phối*), and other reserves. Deferred tax assets and liabilities are reported separately. Preferred stock is rare among Vietnamese listed firms (most issue only common shares), but when present, its book value should be subtracted from total equity.
+
+```{python}
+def compute_book_equity(df):
+    """Compute book value of equity for Vietnamese firms.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Must contain at minimum: equity (stockholders' equity),
+        deferred_tax (deferred tax liabilities, net),
+        pref_stock (preferred stock, if applicable).
+
+    Returns
+    -------
+    pd.DataFrame with 'be' column.
+    """
+    df = df.copy()
+    df["pref"] = df.get(
+        "pref_stock", pd.Series(0, index=df.index)
+    )
+    df["dt"] = df.get(
+        "deferred_tax", pd.Series(0, index=df.index)
+    )
+    df["be"] = (
+        df["equity"].fillna(0)
+        + df["dt"].fillna(0)
+        - df["pref"].fillna(0)
+    )
+    # Set non-positive book equity to NaN
+    df.loc[df["be"] <= 0, "be"] = np.nan
+    return df
+```
+
+## Maximum Drawdown
+
+The maximum drawdown is a key risk metric that complements volatility. While volatility measures the dispersion of returns symmetrically, the maximum drawdown captures the worst cumulative loss an investor could experience: a measure that aligns more closely with how investors psychologically experience risk [@kahneman2013prospect].
+
+```{python}
+def compute_max_drawdown(df, ret_col="ret_total",
+                          group_col="symbol"):
+    """Compute maximum drawdown for each security.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+    ret_col : str
+    group_col : str
+
+    Returns
+    -------
+    pd.DataFrame with 'max_drawdown' and running drawdown.
+    """
+    df = df.sort_values([group_col, "date"]).copy()
+    df["gross_ret"] = 1 + df[ret_col]
+    df["wealth"] = (
+        df.groupby(group_col)["gross_ret"].cumprod()
+    )
+    df["peak"] = df.groupby(group_col)["wealth"].cummax()
+    df["drawdown"] = (
+        (df["wealth"] - df["peak"]) / df["peak"]
+    )
+
+    max_dd = (
+        df.groupby(group_col)["drawdown"]
+        .min()
+        .reset_index(name="max_drawdown")
+    )
+    df = df.merge(max_dd, on=group_col)
+    df.drop(columns=["gross_ret"], inplace=True)
+    return df
+```
+
+@fig-drawdown illustrates the drawdown profile for a selected stock.
+
+```{python}
+#| label: fig-drawdown
+#| fig-cap: "Drawdown profile for a selected Vietnamese stock showing the percentage decline from each running peak. The maximum drawdown (horizontal dashed line) represents the worst peak-to-trough loss over the full sample. Vietnamese stocks frequently exhibit drawdowns exceeding 50%, reflecting the market's high volatility and susceptibility to sentiment-driven corrections."
+#| fig-alt: "Time series chart of drawdowns for a single Vietnamese stock."
+#| fig-pos: "htbp"
+dd_data = compute_max_drawdown(
+    prices_monthly[
+        prices_monthly["symbol"] == long_history_stocks[0]
+    ]
+)
+mdd = dd_data["max_drawdown"].iloc[0]
+
+plot_dd = (
+    ggplot(dd_data, aes(x="date", y="drawdown")) +
+    geom_area(fill="#b2182b", alpha=0.4) +
+    geom_line(color="#b2182b", size=0.5) +
+    geom_hline(yintercept=mdd, linetype="dashed") +
+    labs(x="", y="Drawdown from peak") +
+    scale_y_continuous(labels=percent_format()) +
+    theme_minimal() +
+    theme(figure_size=(10, 4))
+)
+plot_dd.draw()
+```
+
+## Putting It All Together: A Comprehensive Pipeline
+
+We now combine all the methods into a single pipeline that produces a research-ready dataset with rolling compound returns, market returns, volatility, and drawdown measures.
+
+```{python}
+def build_compound_return_dataset(
+    stock_df, windows=[3, 6, 9, 12], vol_window=24
+):
+    """Build comprehensive compound return dataset.
+
+    Parameters
+    ----------
+    stock_df : pd.DataFrame
+        Monthly stock return data with columns:
+        symbol, date, ret_total, mkt_total.
+    windows : list of int
+        Rolling compound return windows.
+    vol_window : int
+        Rolling volatility window.
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+    df = stock_df.sort_values(["symbol", "date"]).copy()
+
+    # Step 1: Log returns
+    df["log_ret"] = np.log(1 + df["ret_total"])
+    df["log_mkt"] = np.log(1 + df["mkt_total"])
+
+    # Step 2: Rolling compound returns (stock and market)
+    for k in windows:
+        df[f"ret_{k}"] = np.exp(
+            df.groupby("symbol")["log_ret"]
+            .transform(
+                lambda x: x.rolling(k, min_periods=k).sum()
+            )
+        ) - 1
+
+        df[f"mkt_{k}"] = np.exp(
+            df["log_mkt"]
+            .rolling(k, min_periods=k)
+            .sum()
+        ) - 1
+
+        # Excess compound return (BHAR vs market)
+        df[f"exret_{k}"] = df[f"ret_{k}"] - df[f"mkt_{k}"]
+
+    # Step 3: Cumulative return (full history)
+    df["wealth"] = (
+        df.groupby("symbol")["log_ret"]
+        .cumsum()
+        .apply(np.exp)
+    )
+    df["cumret"] = df["wealth"] - 1
+
+    # Step 4: Rolling volatility
+    df[f"vol_{vol_window}"] = (
+        df.groupby("symbol")["ret_total"]
+        .transform(
+            lambda x: x.rolling(
+                vol_window, min_periods=vol_window
+            ).std()
+        )
+    ) * np.sqrt(12)  # annualize
+
+    # Step 5: Drawdown
+    df["peak"] = df.groupby("symbol")["wealth"].cummax()
+    df["drawdown"] = (df["wealth"] - df["peak"]) / df["peak"]
+
+    # Clean up
+    df.drop(
+        columns=["log_ret", "log_mkt", "peak"], inplace=True
+    )
+
+    return df
+```
+
+```{python}
+# Build the full dataset
+compound_dataset = build_compound_return_dataset(prices_monthly)
+```
+
+@tbl-summary-stats provides summary statistics for the key variables in our compound return dataset.
+
+```{python}
+#| label: tbl-summary-stats
+#| tbl-cap: "Summary statistics for compound return variables across all Vietnamese stock-month observations. Returns are in decimal form (0.10 = 10%). The wide dispersion of 12-month compound returns and the high median volatility reflect the emerging market characteristics of the Vietnamese equity market."
+summary_cols = ["ret_total", "ret_3", "ret_6", "ret_12",
+                "exret_3", "exret_12", "vol_24", "drawdown"]
+available_cols = [c for c in summary_cols
+                  if c in compound_dataset.columns]
+
+summary = (
+    compound_dataset[available_cols]
+    .describe(percentiles=[0.05, 0.25, 0.50, 0.75, 0.95])
+    .T
+    .round(4)
+)
+summary
+```
+
+## Cross-Sectional Distribution of Compound Returns
+
+To understand how compound returns vary across securities, we examine the cross-sectional distribution at different horizons.
+
+```{python}
+#| label: fig-horizon-comparison
+#| fig-cap: "Cross-sectional distribution of compound returns at different horizons (3, 6, and 12 months) for Vietnamese stocks. Longer horizons exhibit greater dispersion and more pronounced right skewness, reflecting the compounding of idiosyncratic risk. The fat tails are more extreme than those typically observed in developed markets, consistent with the higher volatility environment."
+#| fig-alt: "Overlaid density plots of compound returns at 3, 6, and 12 month horizons for Vietnamese stocks."
+#| fig-pos: "htbp"
+horizon_data = pd.DataFrame()
+for k in [3, 6, 12]:
+    col = f"ret_{k}"
+    temp = compound_dataset[[col]].dropna().copy()
+    temp.columns = ["compound_return"]
+    temp["horizon"] = f"{k} months"
+    lo, hi = temp["compound_return"].quantile([0.01, 0.99])
+    temp = temp[
+        (temp["compound_return"] >= lo)
+        & (temp["compound_return"] <= hi)
+    ]
+    horizon_data = pd.concat([horizon_data, temp])
+
+plot_horizons = (
+    ggplot(horizon_data,
+           aes(x="compound_return", fill="horizon")) +
+    geom_density(alpha=0.4) +
+    geom_vline(xintercept=0, linetype="dashed") +
+    labs(x="Compound return", y="Density", fill="Horizon") +
+    scale_x_continuous(labels=percent_format()) +
+    theme_minimal() +
+    theme(legend_position="bottom",
+          figure_size=(10, 5))
+)
+plot_horizons.draw()
+```
+
+## Vietnam-Specific Considerations
+
+### Price Limits and Their Effect on Compounding
+
+Vietnam's stock exchanges impose daily price limits that cap the maximum price change from the reference price. As of the latest regulations:
+
+-   **HOSE**: $\pm 7\%$
+-   **HNX**: $\pm 10\%$
+-   **UPCoM**: $\pm 15\%$
+
+These limits truncate the daily return distribution and can create sequences of limit-hit days when large information events occur. For compound return computation, this means that the adjustment to new information may be spread over multiple days rather than occurring instantaneously. When computing monthly compound returns from daily data, this is handled correctly because the compound return accumulates the full adjustment regardless of how many days it takes.
+
+However, price limits can introduce bias in short-horizon return computations. If a large positive event occurs and the stock hits the limit-up ceiling for several consecutive days, the 1-day or 1-week compound return will understate the true information content of the event [@kim2013reconsidering]. For event study applications, researchers should verify that the event window is long enough to accommodate the price-limit-induced delay in price adjustment.
+
+### Foreign Ownership Limits
+
+Vietnam imposes foreign ownership limits (FOL) on listed companies, typically capped at 49% for most industries and lower (30% or less) for certain restricted sectors such as banking and telecommunications. When a stock reaches its FOL, foreign investors can only purchase shares from other foreign sellers, creating a parallel premium market for foreign-board shares. This does not directly affect the computation of compound returns (which use official traded prices), but researchers studying cross-border portfolio returns should be aware that the effective price paid by foreign investors may differ from the board price [@vo2017foreign].
+
+### The VN-Index and Market Benchmarks
+
+For benchmark compound returns, Vietnam's primary indices are:
+
+-   **VN-Index**: The capitalization-weighted index of all HOSE-listed stocks.
+-   **VN30**: The 30 largest and most liquid stocks on HOSE, reviewed semi-annually.
+-   **HNX-Index**: The capitalization-weighted index of HNX-listed stocks.
+
+The VN-Index is the most widely used benchmark and is the default market return in our dataset.
+
+## Performance Considerations
+
+When working with large datasets, computational efficiency matters. @tbl-performance-benchmark compares the execution time of our four compounding methods on a standardized dataset.
+
+```{python}
+#| label: tbl-performance-benchmark
+#| tbl-cap: "Execution time comparison for different compounding methods on a dataset of 10,000 stock-month observations. The cumulative product and log-sum-exp methods are orders of magnitude faster than the iterative approach due to NumPy vectorization."
+import time
+
+np.random.seed(42)
+n_stocks = 100
+n_months = 100
+test_df = pd.DataFrame({
+    "symbol": np.repeat(range(n_stocks), n_months),
+    "date": np.tile(
+        pd.date_range("2015-01-31", periods=n_months,
+                       freq="ME"),
+        n_stocks
+    ),
+    "ret_total": np.random.normal(
+        0.01, 0.08, n_stocks * n_months
+    )
+})
+
+methods = {}
+
+t0 = time.time()
+_ = compute_cumret_cumprod(test_df)
+methods["Cumulative Product"] = time.time() - t0
+
+t0 = time.time()
+_ = compute_cumret_logsum(test_df)
+methods["Log-Sum-Exp"] = time.time() - t0
+
+t0 = time.time()
+_ = compute_cumret_iterative(test_df)
+methods["Iterative (carry)"] = time.time() - t0
+
+t0 = time.time()
+_ = rolling_compound_return(test_df, windows=[12])
+methods["Rolling (12-month)"] = time.time() - t0
+
+perf_df = pd.DataFrame({
+    "Method": methods.keys(),
+    "Time (seconds)": [f"{v:.4f}" for v in methods.values()],
+    "Relative Speed": [
+        f"{v/min(methods.values()):.1f}x"
+        for v in methods.values()
+    ]
+})
+perf_df
+```
+
+## Common Pitfalls and Best Practices
+
+Several subtle issues can lead to incorrect compound return calculations. We summarize the most important ones:
+
+**Gaps in the time series.** If a security has months with no observations (not even a missing return flag), rolling window calculations based on positional indexing will produce incorrect results. The rolling window will span the wrong calendar period. Always ensure that the time series is complete, fill gaps with explicit missing values before computing rolling statistics. This is particularly relevant in Vietnam, where trading suspensions can create gaps.
+
+**Survivorship bias.** As discussed in the delisting returns section, excluding securities that cease trading biases compound returns upward. Always incorporate delisting returns when available. When delisting returns are unavailable (as is sometimes the case in Vietnamese data), consider using imputed values based on the delisting reason.
+
+**Look-ahead bias.** When aligning compound returns to fiscal year ends for cross-sectional analysis, be careful not to use returns from before the fiscal year end to predict post-announcement returns. Vietnamese firms are required to publish audited annual financial statements within 90 days of the fiscal year end, so a buffer of at least 3 months is advisable when constructing forward-looking compound returns.
+
+**Numerical overflow and underflow.** For very long compounding horizons or extreme returns, the cumulative product can overflow (`inf`) or underflow (0). The log-sum-exp approach is more robust to such numerical issues because it operates in log space where the range is compressed.
+
+**Annualization of partial periods.** When computing annualized returns from partial-period data (e.g., 7 months of data annualized to 12), the annualization formula $(1+R)^{12/k} - 1$ assumes that the observed return rate will persist. This assumption is stronger for short partial periods and can produce misleading results. Report the actual compound return and the number of periods alongside any annualized figures.
+
+**Exchange transfers.** In Vietnam, stocks sometimes transfer between UPCoM, HNX, and HOSE. These transfers may involve temporary trading halts and can cause apparent gaps in the return series. When computing compound returns that span an exchange transfer, ensure that the return series is continuous across the transfer date.
+
+<!-- ## Exercises
+
+1.  Compute the annual compound return for the VN-Index for each year in the sample. How does it compare to the simple sum of monthly returns? In which years is the difference largest, and why?
+
+2.  Implement a function that computes the **Calmar ratio** (annualized return divided by the absolute value of maximum drawdown) for each security. Which securities have the highest Calmar ratios over the most recent 5-year period? Do they tend to be on HOSE, HNX, or UPCoM?
+
+3.  Sort stocks into quintiles based on their 12-month trailing compound return (the momentum signal) and compute the equal-weighted average return of each quintile in the subsequent month. Does the momentum effect appear in Vietnamese data? Compare your findings with evidence from @vo2018does.
+
+4.  Extend the `rolling_compound_return` function to handle overlapping fiscal years, where the compounding window is aligned to each firm's fiscal year end rather than calendar months.
+
+5.  Compare the BHAR and CAR measures for a set of randomly chosen event dates. Under what conditions do they diverge most? Relate your findings to the theoretical discussion of @barber1997detecting.
+
+6.  Compute the cross-sectional correlation between 24-month rolling volatility and subsequent 12-month compound returns. Is there a risk-return tradeoff in the Vietnamese equity market cross section? How does this compare to the positive risk-return relationship documented in developed markets by @ghysels2005there?
+
+7.  Examine how daily price limits affect the computation of weekly compound returns. Select stocks that hit the limit-up or limit-down ceiling on at least one day, and compare their weekly compound return to similar-magnitude events in stocks that did not hit the limit. -->

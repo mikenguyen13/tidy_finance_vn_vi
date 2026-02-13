@@ -32,7 +32,7 @@ Several characteristics of the Vietnamese market make the Return Gap analysis pa
 -   **Information asymmetry**: In an emerging market with less analyst coverage, the scope for informed interim trading and hence positive Return Gap may be larger than in more efficient markets.
 -   **Regulatory environment**: Vietnam's State Securities Commission (SSC) has progressively strengthened disclosure and governance requirements, making temporal analysis of Return Gap especially informative.
 
-# Theoretical Framework {#sec-theory}
+# Theoretical Framework {#sec-return-gaptheory}
 
 ## Decomposing Fund Returns
 
@@ -146,7 +146,7 @@ $$ {#eq-hac}
 
 and $\hat{\Gamma}_\ell = \frac{1}{T}\sum_{t=\ell+1}^{T} \hat{\epsilon}_t \hat{\epsilon}_{t-\ell} \mathbf{x}_t \mathbf{x}_{t-\ell}'$. The standard lag choice is $L = \lfloor 4(T/100)^{2/9} \rfloor$.
 
-# Data and Sample Construction {#sec-data}
+# Data and Sample Construction {#sec-return-gapdata}
 
 ## Data Sources
 
@@ -198,7 +198,7 @@ sns.set_style("whitegrid")
 np.random.seed(42)
 ```
 
-## Loading and Preparing Stock Market Data {#sec-stock-data}
+## Loading and Preparing Stock Market Data {#sec-return-gapstock-data}
 
 The first step is to load the stock-level data, which provides the foundation for computing hypothetical holdings returns.
 
@@ -271,7 +271,7 @@ print(f"Date range: {stock_data['date'].min():%Y-%m} to "
 stock_data.head(10)
 ```
 
-## Loading Fund Holdings Data {#sec-holdings-data}
+## Loading Fund Holdings Data {#sec-return-gapholdings-data}
 
 ```{python}
 #| label: load-holdings-data
@@ -323,7 +323,7 @@ print(f"Unique funds: {holdings_raw['fund_id'].nunique()}")
 holdings_raw.head(10)
 ```
 
-## Loading Fund Returns and Characteristics {#sec-fund-returns}
+## Loading Fund Returns and Characteristics {#sec-return-gapfund-returns}
 
 ```{python}
 #| label: load-fund-returns
@@ -357,7 +357,7 @@ print(f"Fund-month observations: {fund_returns.shape[0]:,}")
 fund_returns.head(10)
 ```
 
-## Sample Selection: Domestic Equity Funds {#sec-sample-selection}
+## Sample Selection: Domestic Equity Funds {#sec-return-gapsample-selection}
 
 Following the approach of @kacperczyk2008unobserved, we restrict our sample to domestic equity funds.
 
@@ -391,9 +391,9 @@ print("\nObjective distribution:")
 print(fund_master["objective"].value_counts().to_string())
 ```
 
-# Computing the Return Gap {#sec-computing}
+# Computing the Return Gap {#sec-return-gapcomputing}
 
-## Step 1: Prepare Holdings Vintages {#sec-vintages}
+## Step 1: Prepare Holdings Vintages {#sec-return-gapvintages}
 
 A critical first step is to correctly handle the *vintage* structure of holdings data. Each holdings report has two key dates: the **report date** ($\tau$, the as-of date) and the **filing date** ($f$, when it becomes public). We keep only the first vintage per fund-report date.
 
@@ -426,7 +426,7 @@ sample_fund = holdings_vintaged["fund_id"].iloc[0]
  .drop_duplicates().head(8))
 ```
 
-## Step 2: Adjust Shares for Corporate Actions {#sec-adjust-shares}
+## Step 2: Adjust Shares for Corporate Actions {#sec-return-gapadjust-shares}
 
 ```{python}
 #| label: adjust-shares
@@ -440,7 +440,7 @@ def adjust_holdings_shares(holdings, stock_data):
 holdings_adj = adjust_holdings_shares(holdings_vintaged, stock_data)
 ```
 
-## Step 3: Compute Hypothetical Holdings Returns {#sec-hypothetical-returns}
+## Step 3: Compute Hypothetical Holdings Returns {#sec-return-gaphypothetical-returns}
 
 This is the core computation. For each fund, we take the disclosed holdings as of report date $\tau$, and for each month $t$ in $(\tau, \tau_{\text{next}}]$, compute the value-weighted return using lagged dollar values as weights.
 
@@ -480,7 +480,7 @@ print(f"\nSummary:")
 print(holdings_returns[["hret", "n_stocks", "assets_bn"]].describe().round(4).to_string())
 ```
 
-## Step 4: Compute Gross Fund Returns {#sec-gross-returns}
+## Step 4: Compute Gross Fund Returns {#sec-return-gapgross-returns}
 
 ```{python}
 #| label: compute-gross-returns
@@ -499,7 +499,7 @@ fund_ret_clean = prepare_fund_returns(fund_returns, equity_fund_ids)
 print(f"Equity fund-months: {fund_ret_clean.shape[0]:,}")
 ```
 
-## Step 5: Merge and Compute Return Gap {#sec-merge-return-gap}
+## Step 5: Merge and Compute Return Gap {#sec-return-gapmerge-return-gap}
 
 ```{python}
 #| label: compute-return-gap
@@ -585,9 +585,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-# Portfolio Sorting Analysis {#sec-portfolios}
+# Portfolio Sorting Analysis {#sec-return-gapportfolios}
 
-## Forming Return Gap Decile Portfolios {#sec-decile-portfolios}
+## Forming Return Gap Decile Portfolios {#sec-return-gapdecile-portfolios}
 
 Each month $t$, we sort funds into decile portfolios based on their lagged 12-month average Return Gap ($\overline{\text{RG}}_{i,t-4}^{12}$). Portfolio 1 contains funds with the lowest Return Gap.
 
@@ -683,7 +683,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-# Risk-Adjusted Performance {#sec-risk-adjusted}
+# Risk-Adjusted Performance {#sec-return-gaprisk-adjusted}
 
 ## Risk Factors
 
@@ -838,7 +838,7 @@ def long_short_analysis(port_returns, factors, n_portfolios=10):
 print(long_short_analysis(port_returns, factors).to_string(index=False))
 ```
 
-# Cross-Sectional Determinants {#sec-determinants}
+# Cross-Sectional Determinants {#sec-return-gapdeterminants}
 
 ## Fama-MacBeth Regressions
 
@@ -884,7 +884,7 @@ print("=" * 60)
 print(fama_macbeth_regression(reg_data, "return_gap", ["log_tna","expense_pct","log_nstocks"]).to_string(index=False))
 ```
 
-# Persistence {#sec-persistence}
+# Persistence {#sec-return-gappersistence}
 
 ```{python}
 #| label: fig-transition-heatmap
@@ -914,7 +914,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-# Robustness Checks {#sec-robustness}
+# Robustness Checks {#sec-return-gaprobustness}
 
 ## Alternative Holding Periods
 
@@ -986,7 +986,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-# Extensions Beyond the Standard Framework {#sec-extensions}
+# Extensions Beyond the Standard Framework {#sec-return-gapextensions}
 
 ## Extension 1: Decomposing Return Gap by Source
 
@@ -1115,7 +1115,7 @@ result.index.name = "Size Tercile"; result.columns.name = "RG Tercile"
 print(result.to_string())
 ```
 
-# Vietnamese Market Considerations {#sec-vietnam}
+# Vietnamese Market Considerations {#sec-return-gapvietnam}
 
 ## Institutional Features Affecting Return Gap
 
@@ -1155,7 +1155,7 @@ Vietnamese fund disclosure norms differ from the U.S. quarterly mandate. The SSC
 
 : Comparison of Return Gap context between developed and Vietnamese markets {#tbl-return-gaps-comparison}
 
-# Conclusion {#sec-conclusion}
+# Conclusion {#sec-return-gapconclusion}
 
 This chapter has presented an implementation of the Return Gap measure for the Vietnamese mutual fund industry. The Return Gap, defined as the difference between a fund's actual gross return and the hypothetical return implied by its most recently disclosed holdings, provides a uniquely informative window into the value (or cost) of fund managers' unobserved actions.
 

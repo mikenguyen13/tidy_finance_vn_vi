@@ -146,7 +146,7 @@ $$ {#eq-netflow}
 
 where $R_{j,t}^p$ is the portfolio return. This decomposition, due to @sirri1998costly, separates changes in fund assets into investment returns and investor capital allocation decisions. @coval2007asset showed that flow-driven trades create price pressure, with fire sales by funds experiencing redemptions generating significant negative abnormal returns.
 
-# Data Infrastructure {#sec-data}
+# Data Infrastructure {#sec-institutionaldata}
 
 @tbl-datacore-datasets summarizes the datasets used in this chapter.
 
@@ -162,7 +162,7 @@ where $R_{j,t}^p$ is the portfolio return. This decomposition, due to @sirri1998
 
 : DataCore.vn Datasets Used in This Chapter {#tbl-datacore-datasets}
 
-## Data Reader Class {#sec-reader}
+## Data Reader Class {#sec-institutionalreader}
 
 We begin by defining a unified data reader that handles file loading, date parsing, and basic validation:
 
@@ -288,11 +288,11 @@ class DataCoreReader:
 # dc = DataCoreReader('/path/to/datacore_data', file_format='parquet')
 ```
 
-# Stock Price and Return Processing {#sec-crsp}
+# Stock Price and Return Processing {#sec-institutionalcrsp}
 
 The first step processes stock data to obtain adjusted prices, shares outstanding, and quarterly returns.
 
-## Price Data Extraction and Adjustment {#sec-price-adj}
+## Price Data Extraction and Adjustment {#sec-institutionalprice-adj}
 
 Vietnamese stock data requires careful adjustment for frequent corporate actions. Unlike the US where CRSP provides a cumulative adjustment factor (`cfacpr`, `cfacshr`), in Vietnam we must construct adjustment factors from the corporate actions history.
 
@@ -412,7 +412,7 @@ def adjust_shares_between_dates(
     return shares * relative_factor
 ```
 
-## Monthly and Quarterly Price Processing {#sec-price-processing}
+## Monthly and Quarterly Price Processing {#sec-institutionalprice-processing}
 
 ```{python}
 #| label: price-processing
@@ -542,9 +542,9 @@ The output is a quarterly panel of stock-level observations (\@tbl-institutional
 
 : Quarter-End Price Panel Variables {#tbl-institutional-price-vars}
 
-# Ownership Data Processing {#sec-ownership}
+# Ownership Data Processing {#sec-institutionalownership}
 
-## Ownership Taxonomy {#sec-taxonomy}
+## Ownership Taxonomy {#sec-institutionaltaxonomy}
 
 We define a classification system for Vietnamese shareholders that maps to the categories available in DataCore.vn:
 
@@ -612,7 +612,7 @@ class OwnershipType:
         return cls.INDIVIDUAL
 ```
 
-## Building the Holdings Panel {#sec-holdings-panel}
+## Building the Holdings Panel {#sec-institutionalholdings-panel}
 
 We construct the holdings panel (i.e., the Vietnamese equivalent of merging the 13F Type 1 and Type 3 datasets). The key steps are:
 
@@ -753,11 +753,11 @@ def build_holdings_panel(
     return holdings
 ```
 
-# Institutional Ownership Metrics {#sec-io-metrics}
+# Institutional Ownership Metrics {#sec-institutionalio-metrics}
 
 Before computing trades, we establish the standard institutional ownership metrics that serve as both outputs and inputs to the trading analysis.
 
-## Institutional Ownership Ratio {#sec-io-ratio}
+## Institutional Ownership Ratio {#sec-institutionalio-ratio}
 
 The institutional ownership ratio (IO) for stock $i$ at time $t$ is:
 
@@ -826,7 +826,7 @@ def compute_io_ratios(
     return io_wide
 ```
 
-## Ownership Concentration: Herfindahl-Hirschman Index {#sec-hhi}
+## Ownership Concentration: Herfindahl-Hirschman Index {#sec-institutionalhhi}
 
 The HHI measures ownership concentration:
 
@@ -867,7 +867,7 @@ def compute_hhi(holdings: pd.DataFrame) -> pd.DataFrame:
     return hhi_overall.merge(hhi_inst, on=['ticker', 'rdate'], how='left')
 ```
 
-## Ownership Breadth {#sec-breadth}
+## Ownership Breadth {#sec-institutionalbreadth}
 
 Following @chen2000value, ownership breadth is the number of institutional holders:
 
@@ -929,7 +929,7 @@ For intermediate gaps (reports at $t-2$ and $t$ but not $t-1$), we split into:
 -   A terminating sale at $t-1$ of $-h_{j,i,t-2}^{\text{adj}}$;
 -   An initiating buy at $t$ of $h_{j,i,t}$.
 
-## Implementation {#sec-trade-impl}
+## Implementation {#sec-institutionaltrade-impl}
 
 ```{python}
 #| label: trade-computation
@@ -1048,7 +1048,7 @@ def compute_trades(
     return trades
 ```
 
-### Trade Visualization {#sec-trade-viz}
+### Trade Visualization {#sec-institutionaltrade-viz}
 
 ```{python}
 #| label: fig-trade-distribution
@@ -1138,11 +1138,11 @@ def plot_net_trading_by_type(trades: pd.DataFrame, price_q: pd.DataFrame):
 # plot_net_trading_by_type(trades, price_q)
 ```
 
-# Portfolio Assets, Flows, and Returns {#sec-assets-flows}
+# Portfolio Assets, Flows, and Returns {#sec-institutionalassets-flows}
 
 This section computes total portfolio assets, aggregates buys and sales, and portfolio-level returns for each institutional investor.
 
-## Total Assets and Portfolio Returns {#sec-assets}
+## Total Assets and Portfolio Returns {#sec-institutionalassets}
 
 For each manager $j$ and quarter $t$, portfolio assets are:
 
@@ -1197,7 +1197,7 @@ def compute_assets_and_returns(
     return assets
 ```
 
-## Aggregate Buys and Sales {#sec-aggregate-buysales}
+## Aggregate Buys and Sales {#sec-institutionalaggregate-buysales}
 
 Total buys and sales for manager $j$ in quarter $t$:
 
@@ -1253,9 +1253,9 @@ def compute_buys_sales(
     return flows
 ```
 
-# Net Flows and Turnover Ratios {#sec-turnover}
+# Net Flows and Turnover Ratios {#sec-institutionalturnover}
 
-## Net Flows {#sec-netflows}
+## Net Flows {#sec-institutionalnetflows}
 
 Net flows separate capital allocation decisions from investment returns:
 
@@ -1269,7 +1269,7 @@ $$ {#eq-netflow-def}
 For state entities or corporate cross-holders, "net flows" do not necessarily reflect investment decisions. State ownership changes often result from government policy (equitization, divestment programs). Interpretation should account for institutional context.
 :::
 
-## Three Turnover Measures {#sec-turnover-measures}
+## Three Turnover Measures {#sec-institutionalturnover-measures}
 
 ```{python}
 #| label: turnover-computation
@@ -1352,7 +1352,7 @@ def compute_aggregates(
     return agg
 ```
 
-### Turnover Summary Statistics {#sec-turnover-stats}
+### Turnover Summary Statistics {#sec-institutionalturnover-stats}
 
 ```{python}
 #| label: tbl-turnover-summary
@@ -1425,11 +1425,11 @@ def plot_turnover_timeseries(
 # plot_turnover_timeseries(aggregates, holdings)
 ```
 
-# Foreign Ownership Analytics {#sec-foreign}
+# Foreign Ownership Analytics {#sec-institutionalforeign}
 
 Vietnam's foreign ownership limits create unique analytical dimensions absent from developed market studies.
 
-## FOL Utilization {#sec-fol-util}
+## FOL Utilization {#sec-institutionalfol-util}
 
 $$
 \text{FOL\_Util}_{i,t} = \frac{FO_{i,t}}{FOL_i}
@@ -1464,7 +1464,7 @@ def compute_fol_analytics(
     return fo
 ```
 
-## Room Premium Regression {#sec-room-premium}
+## Room Premium Regression {#sec-institutionalroom-premium}
 
 When foreign ownership approaches the FOL, remaining "room" becomes scarce. We model:
 
@@ -1554,7 +1554,7 @@ def plot_fol_utilization(fol_analytics: pd.DataFrame):
 # plot_fol_utilization(fol_analytics)
 ```
 
-# Complete Pipeline {#sec-pipeline}
+# Complete Pipeline {#sec-institutionalpipeline}
 
 We integrate all steps into a single end-to-end function:
 
@@ -1640,9 +1640,9 @@ def run_complete_pipeline(
 # results = run_complete_pipeline(dc, '2010-01-01', '2024-12-31')
 ```
 
-# Advanced Extensions {#sec-extensions}
+# Advanced Extensions {#sec-institutionalextensions}
 
-## Herding Measures {#sec-herding}
+## Herding Measures {#sec-institutionalherding}
 
 Following @sias2004institutional, the Lakonishok-Shleifer-Vishny herding measure is:
 
@@ -1701,7 +1701,7 @@ def compute_lsv_herding(
                'n_traders', 'herding', 'buy_herding', 'sell_herding']]
 ```
 
-## Demand Persistence {#sec-persistence}
+## Demand Persistence {#sec-institutionalpersistence}
 
 @sias2004institutional showed institutional demand is persistent:
 
@@ -1753,7 +1753,7 @@ def plot_demand_persistence(persistence: pd.DataFrame):
     plt.show()
 ```
 
-## Information Content of Trades {#sec-info-content}
+## Information Content of Trades {#sec-institutionalinfo-content}
 
 Following @alexander2007does, the InfoTrade ratio measures the proportion of dollar trading from entry/exit decisions vs. position adjustments:
 
@@ -1795,9 +1795,9 @@ def compute_info_trade_ratio(
     return info
 ```
 
-# Empirical Applications {#sec-applications}
+# Empirical Applications {#sec-institutionalapplications}
 
-## Application 1: Institutional Ownership Changes and Future Returns {#sec-app-returns}
+## Application 1: Institutional Ownership Changes and Future Returns {#sec-institutionalapp-returns}
 
 We test whether changes in institutional ownership predict future stock returns [@chen2000value] via Fama-MacBeth regressions:
 
@@ -1870,7 +1870,7 @@ def fama_macbeth_io_returns(
     return fm
 ```
 
-## Application 2: Turnover and Performance {#sec-app-turnover}
+## Application 2: Turnover and Performance {#sec-institutionalapp-turnover}
 
 @yan2008liquidity documented a positive turnover-performance relationship. We test in Vietnam:
 
@@ -1912,7 +1912,7 @@ def turnover_performance_regression(
     return {'model': model, 'n': len(panel)}
 ```
 
-## Application 3: Foreign vs. Domestic Trading {#sec-app-foreign-domestic}
+## Application 3: Foreign vs. Domestic Trading {#sec-institutionalapp-foreign-domestic}
 
 ```{python}
 #| label: foreign-domestic-comparison
@@ -1981,9 +1981,9 @@ def plot_cumulative_net_buying(
     plt.show()
 ```
 
-# Data Quality and Robustness {#sec-robustness}
+# Data Quality and Robustness {#sec-institutionalrobustness}
 
-## Common Pitfalls {#sec-pitfalls}
+## Common Pitfalls {#sec-institutionalpitfalls}
 
 ### Corporate Action Misadjustment
 
@@ -2008,7 +2008,7 @@ Vietnamese ownership disclosure dates may not align with calendar quarter ends. 
 
 Vietnamese institutions frequently rename. Without a stable identifier, the same entity may appear as two different shareholders, creating phantom entries/exits. We recommend maintaining a master entity mapping table.
 
-## Validation Checks {#sec-validation}
+## Validation Checks {#sec-institutionalvalidation}
 
 ```{python}
 #| label: validation
@@ -2067,7 +2067,7 @@ def validate_pipeline_outputs(
 # validate_pipeline_outputs(results)
 ```
 
-# Summary {#sec-summary}
+# Summary {#sec-institutionalsummary}
 
 This chapter developed a framework for computing institutional trades, flows, and turnover ratios in the Vietnamese equity market. The key contributions include:
 
@@ -2093,7 +2093,7 @@ The pipeline produces several output datasets (@tbl-institutional-outputs)
 
 : Summary of Pipeline Output Datasets {#tbl-institutional-outputs}
 
-<!-- # Exercises {#sec-exercises}
+<!-- # Exercises {#sec-institutionalexercises}
 
 1.  **Corporate Action Sensitivity.** Download corporate action data for VNM from DataCore.vn and compute the cumulative share adjustment factor from 2010 to 2024. How many phantom trades would be generated without adjustment? Plot the factor.
 

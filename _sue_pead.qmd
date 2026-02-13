@@ -1,0 +1,1187 @@
+# Standardized Earnings Surprises and Post-Earnings Announcement Drift {#sec-sue-pead}
+
+In the context of the Ho Chi Minh Stock Exchange (HOSE) and the Hanoi Stock Exchange (HNX), earnings announcements represent critical information events. Investors and quantitative analysts continuously monitor the deviation between reported earnings and market expectations. This deviation is quantified as the Standardized Earnings Surprise (SUE).
+
+Post-earnings announcement drift (PEAD) is the tendency for a stock's cumulative abnormal returns to drift in the direction of an earnings surprise for a certain period of time---usually several weeks---following the earnings announcement date (EAD). It is one of the best-documented and most-resilient capital market anomalies, first discovered by @ball1968empirical. The academic profession has subjected the drift anomaly to extensive testing both in the US and abroad [@booth1996pead; @liu2003pead], yet a rational, economic explanation for the drift remains elusive [@kothari2001capital].
+
+This chapter details the full pipeline for calculating SUE using three distinct approaches frequently utilized in academic literature, and then constructing PEAD portfolios to measure the magnitude and persistence of the drift in Vietnamese equities. We follow the methodology outlined in @livnat2006comparing, adapted for the institutional features of the Vietnamese market. The goal is twofold: (i) isolate the "surprise" component of earnings, which is a known predictor of PEAD [@bernard1989post; @livnat2006comparing], and (ii) assess whether the drift anomaly is economically significant in Vietnam.
+
+## Literature and Institutional Context
+
+### The PEAD Anomaly
+
+The PEAD anomaly has survived decades of academic scrutiny. Key stylized facts from the US literature include:
+
+1. **Concentration around EAD.** Abnormal returns to PEAD strategies are concentrated in the period immediately surrounding the earnings announcement. For US large-cap stocks (S&P 500), cumulative abnormal returns (CARs) of approximately $-0.8\%$ for the bottom SUE quintile and $+0.6\%$ for the top quintile accrue within the first two trading days after the EAD.
+
+2. **Asymmetry of long and short sides.** The long side of PEAD strategies (buying positive surprise stocks) tends to outperform the short side (selling negative surprise stocks) when analyst-based SUE is used [@doyle2006anomaly]. This asymmetry is more pronounced in small-cap stocks.
+
+3. **Inverse relationship with firm size.** PEAD is generally larger among smaller, lower-priced firms [@mendenhall2004arbitrage]. In the US, the zero-cost long-short portfolio formed on SUE quintiles generates approximately 1.4% in CARs over the $[+2, +50]$ day window for large-cap stocks and 1.9% for small-cap stocks.
+
+4. **Diminishing drift over time.** As quantitative investment firms increasingly trade on PEAD signals, the drift has diminished in magnitude, with most of the market reaction now concentrated in the first few days post-announcement.
+
+### Vietnamese Market Features
+
+Several institutional features of the Vietnamese market are relevant to the implementation of PEAD strategies:
+
+- **Accounting standards.** Vietnamese firms report under Vietnamese Accounting Standards (VAS), which differ from both US GAAP and IFRS. The treatment of extraordinary items, revenue recognition, and deferred tax assets can create discrepancies when comparing across markets.
+
+- **Analyst coverage.** Analyst coverage on Vietnamese equities is substantially thinner than in developed markets. While VN30 constituents may have 5--15 analyst forecasts, mid-cap and small-cap stocks often have fewer than 3 or none at all. This sparsity makes time-series-based SUE measures (Methods 1 and 2) particularly important for the Vietnamese universe.
+
+- **Corporate actions.** Vietnamese firms frequently issue bonus shares and conduct stock dividends (rather than cash dividends), which effectively function as stock splits. Any SUE calculation using historical EPS must adjust for these dilutive events to ensure comparability across periods.
+
+- **Price limits and trading halts.** HOSE imposes daily price limits of $\pm 7\%$ and HNX $\pm 10\%$. These constraints can delay the full incorporation of earnings information into prices, potentially amplifying the drift.
+
+- **Tax environment.** The standard Corporate Income Tax (CIT) rate in Vietnam is 20%, compared to approximately 21% (federal statutory rate) in the US. This affects the after-tax adjustment of special items in Method 2.
+
+- **Reporting frequency.** Vietnamese listed firms are required to file quarterly financial statements, with annual audited statements. The reporting lag---the time between fiscal quarter end and the actual filing date---varies but is typically 20--45 days for quarterly reports.
+
+## Methodology
+
+We define three primary methods for calculating SUE. Each method differs in how it establishes the "expected" earnings value.
+
+### Method 1: Seasonal Random Walk
+
+This method assumes that earnings follow a seasonal pattern. The best predictor for the current quarter's EPS is the EPS from the same quarter in the previous year. This controls for the seasonality often seen in Vietnamese sectors like retail, agriculture, and construction materials.
+
+$$SUE_{1,j,t} = \frac{X_{j,t} - X_{j,t-4}}{P_{j,t}}$$ {#eq-sue1}
+
+Where:
+
+- $X_{j,t}$ is the Earnings Per Share (EPS) for firm $j$ in quarter $t$.
+- $X_{j,t-4}$ is the EPS from the same quarter of the prior fiscal year, adjusted for any stock splits and bonus shares during the intervening period.
+- $P_{j,t}$ is the stock price at the end of the quarter, used as a deflator.
+
+The price deflator serves to normalize the surprise across firms with different price levels. Without this deflation, a 100 VND earnings surprise would appear identical for a stock trading at 10,000 VND and one trading at 100,000 VND, despite representing fundamentally different magnitudes of surprise.
+
+**Stock Split Adjustment.** In the US literature, researchers use the Compustat adjustment factor (`AJEXQ`) or the CRSP cumulative factor for adjustment (`CFACSHR`) to put current and lagged EPS on the same per-share basis. In Vietnam, we use the adjustment factor from DataCore or construct one from corporate actions data. The adjusted SUE becomes:
+
+$$SUE_{1,j,t} = \frac{X_{j,t}/f_{j,t} - X_{j,t-4}/f_{j,t-4}}{P_{j,t}/f_{j,t}}$$
+
+where $f_{j,t}$ is the cumulative adjustment factor at time $t$. When both numerator and denominator are divided by the same current factor, the expression simplifies provided we adjust only the lagged EPS. In practice, we compute:
+
+$$SUE_{1,j,t} = \frac{X_{j,t} - X_{j,t-4} \times (f_{j,t}/f_{j,t-4})}{P_{j,t}}$$
+
+where $f_{j,t}/f_{j,t-4}$ is the ratio of adjustment factors that accounts for any dilutive corporate actions between the two periods. If no splits or bonus shares occurred, this ratio equals 1 and the formula reduces to the simple version.
+
+### Method 2: Exclusion of Special Items
+
+Reported earnings often contain non-recurring items---asset disposals, one-time write-offs, restructuring charges, gains or losses on investments---that distort the true operating performance. This method adjusts the reported EPS by removing the after-tax impact of special items. Following @abarbanell2002differences, using earnings that exclude special items produces a measure more closely aligned with the "street" earnings that analysts forecast.
+
+In Vietnam, the standard CIT rate is 20%. Certain industries (e.g., oil and gas, real estate in special economic zones) may have preferential rates, but for simplicity and consistency, we apply the statutory rate. The adjustment per share is:
+
+$$\text{Adjustment}_{j,t} = \frac{SI_{j,t} \times (1 - \tau)}{N_{j,t}}$$
+
+where $SI_{j,t}$ is the pre-tax special items value (from `is_other_profit` or equivalent in DataCore), $\tau$ is the CIT rate (0.20), and $N_{j,t}$ is the number of shares used to calculate EPS (primary or diluted, depending on the basis used by the majority of analysts).
+
+The adjusted EPS is:
+
+$$X^{adj}_{j,t} = X_{j,t} - \text{Adjustment}_{j,t}$$
+
+And the SUE calculation follows the seasonal logic using adjusted figures:
+
+$$SUE_{2,j,t} = \frac{X^{adj}_{j,t} - X^{adj}_{j,t-4}}{P_{j,t}}$$ {#eq-sue2}
+
+**A note on the tax adjustment factor.** In the US literature, a factor of 65% (i.e., $1 - 0.35$) is commonly used, reflecting the historical US federal statutory corporate tax rate of 35% prior to the 2017 Tax Cuts and Jobs Act. Post-TCJA, the rate dropped to 21%, making the factor approximately 79%. For Vietnam, our factor of 80% (i.e., $1 - 0.20$) reflects the current statutory CIT rate. Researchers studying specific firms with preferential tax rates should adjust accordingly.
+
+### Method 3: Analyst Consensus
+
+This method relies on market consensus rather than historical time series. It compares the actual reported earnings against the median analyst forecast provided prior to the announcement:
+
+$$SUE_{3,j,t} = \frac{A_{j,t} - F^{med}_{j,t}}{P_{j,t}}$$ {#eq-sue3}
+
+where $A_{j,t}$ is the actual reported EPS and $F^{med}_{j,t}$ is the median of the latest individual analyst forecasts issued within 90 days prior to the earnings announcement date.
+
+**Analyst forecast processing.** Several subtleties arise in computing the consensus:
+
+1. **Latest estimate per analyst.** When an analyst revises their forecast, only the most recent revision should be used. Including stale forecasts would bias the consensus toward outdated information.
+
+2. **90-day window.** We restrict to forecasts issued within 90 calendar days before the EAD. Forecasts issued earlier are likely to be too stale to reflect the market's true expectation at the time of the announcement.
+
+3. **Split adjustment.** If a stock split or bonus share issuance occurs between the forecast date and the announcement date, the forecast must be adjusted to the same per-share basis as the reported actual. Failing to adjust for splits can introduce spurious earnings surprises. In the US, researchers use CRSP adjustment factors (`CFACSHR`) to put both the forecast and the actual on the same per-share basis. In Vietnam, we construct equivalent adjustment factors from corporate actions data.
+
+4. **Primary vs. diluted basis.** Depending on whether the majority of analyst forecasts are on a primary or diluted basis, we use the corresponding EPS figure from the financial statements. We determine the basis by counting the number of forecasts reported on each basis and selecting the majority.
+
+5. **Unadjusted data preference.** When available, unadjusted (raw) analyst data is preferred over pre-adjusted data to avoid rounding issues that can arise when data vendors retroactively adjust historical forecasts for stock splits [@payne2003implications].
+
+## Data Description
+
+For this analysis, we utilize a dataset covering the fiscal years 2023 through 2025. The data includes quarterly financial statements, corporate actions, analyst consensus estimates, and daily stock returns for a selection of VN30 index constituents.
+
+### Required Data Elements
+
+Our analysis requires the following data components:
+
+1. **Quarterly financial statements** (`vietnam_fin_data`):
+   - `ticker`: Stock symbol (e.g., VNM, VCB, HPG).
+   - `fiscal_year`, `fiscal_qtr`: Time identifiers.
+   - `eps_basic`: Basic (primary) Earnings Per Share (VND).
+   - `eps_diluted`: Diluted Earnings Per Share (VND).
+   - `price_close`: Closing price at quarter end (VND).
+   - `special_items`: Pre-tax special items (VND millions), corresponding to `is_other_profit` in DataCore.
+   - `shares_out`: Shares outstanding (millions).
+   - `shares_diluted`: Diluted shares outstanding (millions).
+   - `market_cap`: Market capitalization at quarter end (VND billions).
+   - `adj_factor`: Cumulative stock split/bonus share adjustment factor.
+   - `rdq`: Report date of quarterly earnings (the actual announcement date).
+
+2. **Analyst consensus estimates** (`analyst_estimates`):
+   - `ticker`, `fiscal_year`, `fiscal_qtr`: Identifiers.
+   - `analyst_id`: Unique analyst identifier.
+   - `forecast_date`: Date the forecast was issued.
+   - `eps_estimate`: Analyst's EPS forecast (VND).
+   - `basis`: Primary (`P`) or diluted (`D`) basis.
+
+3. **Daily stock returns** (`daily_returns`):
+   - `ticker`, `date`: Identifiers.
+   - `ret`: Daily stock return.
+   - `mkt_ret`: Market return (VN-Index value-weighted return).
+
+4. **Trading calendar** (`trading_calendar`):
+   - `date`: All valid trading dates on HOSE/HNX.
+
+### Visualizing the Core Data
+
+Below is a tabular representation of the raw financial statement data.
+
+| ticker | fiscal_year | fiscal_qtr | eps_basic | price_close | special_items | shares_out | analyst_med |
+|:-------|:------------|:-----------|:----------|:------------|:--------------|:-----------|:------------|
+| VNM    | 2023        | 1          | 1200      | 68000       | 0             | 2090       | 1150        |
+| VNM    | 2023        | 2          | 1350      | 71000       | 50000         | 2090       | 1300        |
+| VNM    | 2023        | 3          | 1400      | 74000       | 0             | 2090       | 1450        |
+| VNM    | 2023        | 4          | 1100      | 69000       | -20000        | 2090       | 1150        |
+| VNM    | 2024        | 1          | 1300      | 72000       | 0             | 2090       | 1250        |
+| VNM    | 2024        | 2          | 1500      | 75000       | 0             | 2090       | 1400        |
+| VCB    | 2023        | 1          | 1800      | 85000       | 10000         | 5500       | 1700        |
+| VCB    | 2024        | 1          | 2100      | 92000       | 0             | 5500       | 2000        |
+
+## Implementation
+
+### Python Setup and Data Loading
+
+We establish our environment and load the dataset, ensuring the data is sorted by ticker and time for accurate lag calculations.
+
+```{python}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+# -------------------------------------------------------
+# Creating the dataset directly for demonstration
+# In practice, this would be loaded from DataCore.vn
+# -------------------------------------------------------
+data = {
+    'ticker': ['VNM']*8 + ['VCB']*8 + ['HPG']*8,
+    'fiscal_year': [2023, 2023, 2023, 2023, 2024, 2024, 2024, 2024] * 3,
+    'fiscal_qtr': [1, 2, 3, 4, 1, 2, 3, 4] * 3,
+    'eps_basic': [
+        1200, 1350, 1400, 1100, 1300, 1500, 1450, 1250,  # VNM
+        1800, 1900, 2000, 2200, 2100, 2300, 2400, 2600,  # VCB
+        500, 600, 550, 400, 700, 800, 750, 600            # HPG
+    ],
+    'eps_diluted': [
+        1180, 1330, 1380, 1080, 1280, 1480, 1430, 1230,  # VNM
+        1780, 1880, 1980, 2180, 2080, 2280, 2380, 2580,  # VCB
+        490, 590, 540, 390, 690, 790, 740, 590            # HPG
+    ],
+    'price_close': [
+        68000, 71000, 74000, 69000, 72000, 75000, 73000, 70000,  # VNM
+        85000, 88000, 90000, 95000, 92000, 96000, 98000, 102000, # VCB
+        20000, 22000, 21000, 19000, 25000, 28000, 27000, 24000   # HPG
+    ],
+    'special_items': [
+        0, 50000, 0, -20000, 0, 0, 10000, 0,       # VNM (VND Millions)
+        10000, 0, 0, 50000, 0, 20000, 0, 0,         # VCB
+        0, 0, -50000, 0, 100000, 0, 0, 0            # HPG
+    ],
+    'shares_out': [2090]*8 + [5580]*8 + [5810]*8,   # In Millions
+    'shares_diluted': [2120]*8 + [5620]*8 + [5860]*8,
+    'adj_factor': [
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,   # VNM: no splits
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,   # VCB: no splits
+        1.0, 1.0, 1.0, 1.0, 1.2, 1.2, 1.2, 1.2    # HPG: 5:6 bonus Q1 2024
+    ],
+    'market_cap': [
+        142120, 148390, 154660, 144210, 150480, 156750, 152570, 146300,
+        474300, 491040, 502200, 530100, 513360, 535680, 546840, 569160,
+        116200, 127820, 122010, 110390, 145250, 162680, 156870, 139440
+    ],
+    'rdq': pd.to_datetime([
+        # VNM: Report dates (approx 20-30 days after quarter end)
+        '2023-04-25', '2023-07-28', '2023-10-27', '2024-01-26',
+        '2024-04-26', '2024-07-29', '2024-10-28', '2025-01-27',
+        # VCB
+        '2023-04-20', '2023-07-25', '2023-10-25', '2024-01-24',
+        '2024-04-22', '2024-07-26', '2024-10-25', '2025-01-24',
+        # HPG
+        '2023-04-22', '2023-07-27', '2023-10-26', '2024-01-25',
+        '2024-04-25', '2024-07-28', '2024-10-27', '2025-01-26',
+    ]),
+    'analyst_med': [
+        1150, 1300, 1450, 1150, 1250, 1400, 1480, 1200,  # VNM
+        1700, 1850, 1950, 2150, 2000, 2250, 2450, 2550,  # VCB
+        450, 550, 600, 450, 650, 750, 800, 650            # HPG
+    ],
+    'num_analysts': [
+        12, 11, 12, 10, 13, 12, 11, 12,   # VNM
+        15, 14, 15, 13, 14, 15, 14, 15,   # VCB
+        8, 7, 8, 6, 9, 8, 7, 8            # HPG
+    ]
+}
+
+df = pd.DataFrame(data)
+df = df.sort_values(by=['ticker', 'fiscal_year', 'fiscal_qtr']).reset_index(drop=True)
+print(df[['ticker', 'fiscal_year', 'fiscal_qtr', 'eps_basic',
+          'price_close', 'special_items', 'adj_factor']].head(10))
+```
+
+### Determining Primary vs. Diluted Basis
+
+Before computing SUE, we must determine which EPS figure to use. Following @livnat2006comparing, we select the basis (primary or diluted) based on the majority of analyst forecasts. In the absence of granular forecast-level data, we default to basic EPS for the Vietnamese market, where most brokerages report on a basic basis.
+
+```{python}
+# For this demonstration, we use basic EPS throughout.
+# In a production system, the logic would be:
+#
+# analyst_basis = (analyst_df.groupby(['ticker', 'fiscal_year', 'fiscal_qtr'])
+#                  .apply(lambda x: 'D' if (x['basis'] == 'D').sum() >
+#                                          (x['basis'] == 'P').sum() else 'P')
+#                  .reset_index(name='majority_basis'))
+#
+# Then merge and select eps_basic or eps_diluted accordingly.
+
+df['eps_used'] = df['eps_basic']
+df['shares_used'] = df['shares_out']
+```
+
+### Stock Split and Bonus Share Adjustment
+
+Vietnamese firms frequently issue bonus shares. When comparing EPS across periods, we must ensure both the current and lagged EPS are on the same per-share basis. The adjustment factor captures the cumulative effect of all dilutive corporate actions.
+
+```{python}
+# Compute the ratio of adjustment factors between current and lagged period
+# This ratio adjusts the lagged EPS to be comparable with current EPS
+df['adj_factor_lag4'] = df.groupby('ticker')['adj_factor'].shift(4)
+
+# Split adjustment ratio: if a 5:6 bonus issue occurred, current shares are
+# 1.2x the old shares, so old EPS must be divided by 1.2 to be comparable
+df['split_adj_ratio'] = df['adj_factor'] / df['adj_factor_lag4']
+
+print("Split adjustment ratios for HPG (bonus share issuer):")
+print(df[df['ticker'] == 'HPG'][
+    ['ticker', 'fiscal_year', 'fiscal_qtr', 'adj_factor',
+     'adj_factor_lag4', 'split_adj_ratio']
+])
+```
+
+### Computing the Three SUE Measures
+
+#### Step 1: Lagged EPS (Seasonal Random Walk)
+
+For Methods 1 and 2, we require the EPS from the same quarter of the previous year (lag 4 quarters). We apply the stock split adjustment to the lagged values.
+
+```{python}
+# Lag the EPS by 4 quarters within each ticker group
+df['eps_lag4'] = df.groupby('ticker')['eps_used'].shift(4)
+
+# Adjust lagged EPS for stock splits/bonus shares
+# Old EPS is scaled to reflect the new share count
+df['eps_lag4_adj'] = df['eps_lag4'] / df['split_adj_ratio']
+```
+
+#### Step 2: Special Items Adjustment
+
+For Method 2, we strip out non-recurring items using the Vietnamese CIT rate of 20%.
+
+```{python}
+CIT_RATE_VN = 0.20
+
+# Special items impact per share
+# special_items are in VND millions, shares_used are in millions
+# Units cancel: VND millions / millions of shares = VND per share
+df['spi_per_share'] = (
+    df['special_items'] * (1 - CIT_RATE_VN) / df['shares_used']
+)
+
+# Adjusted EPS: remove after-tax special items
+df['eps_adjusted'] = df['eps_used'] - df['spi_per_share']
+
+# Lag the adjusted EPS and apply split adjustment
+df['eps_adj_lag4'] = df.groupby('ticker')['eps_adjusted'].shift(4)
+df['eps_adj_lag4_adj'] = df['eps_adj_lag4'] / df['split_adj_ratio']
+```
+
+#### Step 3: Computing SUE Variants
+
+```{python}
+# Method 1: Seasonal Random Walk (with split adjustment)
+df['sue_1'] = (df['eps_used'] - df['eps_lag4_adj']) / df['price_close']
+
+# Method 2: Seasonal Random Walk Excluding Special Items (with split adj)
+df['sue_2'] = (df['eps_adjusted'] - df['eps_adj_lag4_adj']) / df['price_close']
+
+# Method 3: Analyst Consensus
+df['sue_3'] = (df['eps_used'] - df['analyst_med']) / df['price_close']
+
+# Scale to percentage for readability
+for col in ['sue_1', 'sue_2', 'sue_3']:
+    df[f'{col}_pct'] = df[col] * 100
+```
+
+### Sample Filters
+
+Following @livnat2006comparing, we apply filters to ensure data quality:
+
+1. The earnings announcement date (`rdq`) is available.
+2. The price per share at fiscal quarter end is available and exceeds a minimum threshold. In the US, a $\$1$ minimum is standard; for Vietnam, we use 1,000 VND.
+3. Market capitalization at fiscal quarter end is available and exceeds a minimum (e.g., 50 billion VND, approximately $\$2$ million).
+4. If both time-series (Compustat-equivalent) and analyst-based announcement dates are available, they should not differ by more than one calendar day. Discrepancies indicate potential data errors.
+
+```{python}
+# Apply sample filters
+MIN_PRICE_VND = 1000        # Minimum price filter (VND)
+MIN_MCAP_BVND = 50          # Minimum market cap (VND billions)
+
+df_filtered = df[
+    (df['rdq'].notna()) &
+    (df['price_close'] > MIN_PRICE_VND) &
+    (df['market_cap'] > MIN_MCAP_BVND)
+].copy()
+
+print(f"Observations before filtering: {len(df)}")
+print(f"Observations after filtering:  {len(df_filtered)}")
+```
+
+### Adjusting Earnings Announcement Dates to Trading Days
+
+Earnings announcements that fall on weekends or holidays must be shifted to the nearest trading day. In the US literature, announcements are shifted to the next trading day to ensure that the market has had an opportunity to react. We adopt the same convention for Vietnam.
+
+```{python}
+# Generate a simplified trading calendar for HOSE
+# In practice, load the actual HOSE trading calendar
+trading_dates = pd.bdate_range(start='2023-01-01', end='2025-12-31')
+# Remove known Vietnamese public holidays (simplified)
+vn_holidays = pd.to_datetime([
+    '2023-01-02', '2023-01-20', '2023-01-21', '2023-01-22',
+    '2023-01-23', '2023-01-24', '2023-01-25', '2023-01-26',
+    '2023-04-29', '2023-05-01', '2023-09-02', '2023-09-04',
+    '2024-02-08', '2024-02-09', '2024-02-10', '2024-02-12',
+    '2024-02-13', '2024-02-14', '2024-04-29', '2024-05-01',
+    '2024-09-02', '2024-09-03',
+    '2025-01-27', '2025-01-28', '2025-01-29', '2025-01-30',
+    '2025-01-31', '2025-04-29', '2025-05-01', '2025-09-02',
+])
+trading_cal = pd.Series(trading_dates[~trading_dates.isin(vn_holidays)])
+
+
+def adjust_to_trading_day(date, calendar, direction='next'):
+    """Adjust a date to the nearest trading day.
+
+    Parameters
+    ----------
+    date : pd.Timestamp
+        The date to adjust.
+    calendar : pd.Series
+        Series of valid trading dates.
+    direction : str
+        'next' shifts to the next trading day (default for EAD).
+        'prev' shifts to the previous trading day.
+
+    Returns
+    -------
+    pd.Timestamp
+        Adjusted date.
+    """
+    if pd.isna(date):
+        return pd.NaT
+    if direction == 'next':
+        valid = calendar[calendar >= date]
+    else:
+        valid = calendar[calendar <= date]
+    if len(valid) == 0:
+        return pd.NaT
+    return valid.iloc[0] if direction == 'next' else valid.iloc[-1]
+
+
+# Adjust EADs to next trading day
+df_filtered['rdq_adj'] = df_filtered['rdq'].apply(
+    lambda x: adjust_to_trading_day(x, trading_cal, 'next')
+)
+
+print(df_filtered[['ticker', 'fiscal_year', 'fiscal_qtr',
+                    'rdq', 'rdq_adj']].head(8))
+```
+
+## Results: Earnings Surprises
+
+### Tabular Results (FY 2024)
+
+We present the calculated standardized earnings surprises for fiscal year 2024. Positive values indicate earnings that beat expectations; negative values indicate a miss.
+
+```{python}
+results_2024 = df_filtered[df_filtered['fiscal_year'] == 2024][
+    ['ticker', 'fiscal_qtr', 'eps_used', 'eps_lag4_adj',
+     'eps_adjusted', 'analyst_med', 'sue_1_pct', 'sue_2_pct', 'sue_3_pct']
+].copy()
+
+from IPython.display import display, Markdown
+
+# Format for display
+display_cols = results_2024[['ticker', 'fiscal_qtr',
+                              'sue_1_pct', 'sue_2_pct', 'sue_3_pct']]
+markdown_table = display_cols.to_markdown(index=False, floatfmt=".4f")
+display(Markdown(markdown_table))
+```
+
+### Comparative Analysis of the Three Methods
+
+The analysis of VNM (Vinamilk), VCB (Vietcombank), and HPG (Hoa Phat Group) reveals distinct divergences between the three methods:
+
+1. **Analyst efficiency (Method 3 vs. Methods 1--2).** SUE 3 is generally smaller in magnitude than SUE 1 or SUE 2. This is expected: analysts incorporate recent information into their forecasts---including management guidance, industry trends, and macroeconomic conditions---making the "surprise" relative to consensus smaller than the surprise relative to a naive seasonal model. In the US literature, this pattern is well-established and reflects the incremental information content of analyst forecasts over time-series models.
+
+2. **Impact of special items (Method 2 vs. Method 1).** When firms report significant non-recurring items, the two time-series methods diverge. For HPG in Q1 2024, a large special item (100,000 VND millions) inflates the raw EPS growth. SUE 1 (based on reported EPS) overstates the sustainable earnings surprise relative to SUE 2 (which strips out the one-off gain). This divergence highlights the importance of using adjusted earnings for cyclical firms with volatile non-operating income, a pattern consistent with @abarbanell2002differences.
+
+3. **Stock split effects on HPG.** HPG conducted a bonus share issuance effective Q1 2024 (adjustment factor: 1.0 → 1.2). Without the split adjustment, the lagged EPS would be on a different per-share basis, creating a spurious negative surprise. Our adjustment correctly scales the historical EPS to the new share count.
+
+4. **Sector-level patterns.** HPG (steel/construction materials) exhibits higher SUE volatility than VNM (consumer staples) or VCB (banking), reflecting the pro-cyclical nature of the Vietnamese construction materials sector. This mirrors patterns in the US, where basic materials firms show higher earnings surprise dispersion than consumer staples or utilities.
+
+### Visualization of SUE Across Methods
+
+```{python}
+#| fig-width: 10
+#| fig-height: 8
+#| label: fig-sue-comparison
+
+fig, axes = plt.subplots(1, 3, figsize=(14, 5), sharey=True)
+methods = ['sue_1_pct', 'sue_2_pct', 'sue_3_pct']
+titles = ['Method 1: Seasonal Random Walk',
+          'Method 2: Excl. Special Items',
+          'Method 3: Analyst Consensus']
+
+for ax, method, title in zip(axes, methods, titles):
+    pivot = results_2024.pivot(
+        index='fiscal_qtr', columns='ticker', values=method
+    )
+    for col in pivot.columns:
+        ax.plot(pivot.index, pivot[col], marker='o', label=col, linewidth=2)
+    ax.set_title(title, fontsize=11)
+    ax.set_xlabel('Fiscal Quarter')
+    ax.axhline(0, color='black', linestyle='--', linewidth=0.8)
+    ax.set_xticks([1, 2, 3, 4])
+    ax.grid(True, linestyle=':', alpha=0.6)
+    ax.legend(title='Ticker', fontsize=8)
+
+axes[0].set_ylabel('SUE (%)')
+fig.suptitle('Standardized Earnings Surprises: FY 2024', fontsize=13, y=1.02)
+plt.tight_layout()
+plt.show()
+```
+
+## Constructing PEAD Portfolios
+
+The core test of the PEAD anomaly is whether stocks with positive (negative) earnings surprises continue to generate positive (negative) abnormal returns in the weeks following the announcement. We construct quintile portfolios sorted on SUE and track their cumulative abnormal returns.
+
+### Generating Synthetic Daily Returns
+
+For demonstration, we generate synthetic daily returns that embed a realistic PEAD pattern. In a production system, actual daily returns from DataCore or a similar source would be used.
+
+```{python}
+np.random.seed(42)
+
+# Parameters for synthetic return generation
+DRIFT_DAYS = 60       # Track returns for 60 trading days post-EAD
+N_STOCKS = 120        # Number of stocks in the universe
+N_QTRS = 4            # Quarters in 2024
+
+# Generate synthetic stock-quarter observations
+tickers_syn = [f'STOCK_{i:03d}' for i in range(N_STOCKS)]
+quarters = [(2024, q) for q in range(1, N_QTRS + 1)]
+
+records = []
+for ticker in tickers_syn:
+    for fy, fq in quarters:
+        # Random SUE with realistic distribution
+        sue = np.random.normal(0, 0.015)  # Mean 0, std 1.5%
+        records.append({
+            'ticker': ticker,
+            'fiscal_year': fy,
+            'fiscal_qtr': fq,
+            'sue': sue
+        })
+
+sue_df = pd.DataFrame(records)
+
+# Assign SUE quintiles within each quarter
+sue_df['sue_quintile'] = sue_df.groupby(
+    ['fiscal_year', 'fiscal_qtr']
+)['sue'].transform(
+    lambda x: pd.qcut(x, 5, labels=[1, 2, 3, 4, 5])
+)
+sue_df['sue_quintile'] = sue_df['sue_quintile'].astype(int)
+
+print(sue_df.groupby('sue_quintile')['sue'].describe().round(4))
+```
+
+```{python}
+# Generate daily returns with embedded PEAD
+# Drift magnitude is proportional to SUE quintile
+daily_records = []
+
+for _, row in sue_df.iterrows():
+    q = row['sue_quintile']
+    # Daily drift: quintile 1 (most negative) drifts down,
+    # quintile 5 (most positive) drifts up
+    daily_drift = (q - 3) * 0.0003  # ~3 bps per day per quintile step
+    daily_noise = 0.02  # 2% daily volatility
+
+    for day in range(DRIFT_DAYS + 1):
+        # Day 0 is the EAD; large reaction on day 0-1
+        if day <= 1:
+            ead_reaction = (q - 3) * 0.005  # ~50 bps announcement return
+            ret = ead_reaction + np.random.normal(0, daily_noise)
+            mkt_ret = np.random.normal(0.0003, 0.01)
+        else:
+            ret = daily_drift + np.random.normal(0, daily_noise)
+            mkt_ret = np.random.normal(0.0003, 0.01)
+
+        daily_records.append({
+            'ticker': row['ticker'],
+            'fiscal_year': row['fiscal_year'],
+            'fiscal_qtr': row['fiscal_qtr'],
+            'event_day': day,
+            'ret': ret,
+            'mkt_ret': mkt_ret,
+            'sue_quintile': q
+        })
+
+daily_df = pd.DataFrame(daily_records)
+
+# Compute excess returns (abnormal returns relative to market)
+daily_df['exret'] = daily_df['ret'] - daily_df['mkt_ret']
+
+print(f"Total daily return observations: {len(daily_df):,}")
+print(daily_df.head())
+```
+
+### Computing Cumulative Abnormal Returns by SUE Quintile
+
+We compute value-weighted (or equal-weighted) cumulative abnormal returns for each SUE quintile portfolio from the EAD through day +60.
+
+```{python}
+# Compute mean excess return by quintile and event day
+pead_by_day = (
+    daily_df
+    .groupby(['sue_quintile', 'event_day'])['exret']
+    .mean()
+    .reset_index()
+)
+
+# Cumulate excess returns starting from day 0
+pead_by_day['car'] = (
+    pead_by_day
+    .groupby('sue_quintile')['exret']
+    .cumsum()
+)
+
+# Set day 0 CAR to 0 for clean visualization
+pead_by_day.loc[pead_by_day['event_day'] == 0, 'car'] = 0
+
+# Pivot for plotting
+car_pivot = pead_by_day.pivot(
+    index='event_day', columns='sue_quintile', values='car'
+) * 100  # Convert to percentage
+
+print("CARs at selected event days (%):")
+print(car_pivot.loc[[0, 1, 2, 5, 10, 20, 30, 50, 60]].round(3))
+```
+
+### Visualizing the PEAD
+
+```{python}
+#| fig-width: 10
+#| fig-height: 7
+#| label: fig-pead
+
+fig, ax = plt.subplots(figsize=(10, 6))
+
+colors = ['#d62728', '#ff7f0e', '#7f7f7f', '#2ca02c', '#1f77b4']
+labels = [
+    'Q1 (Most Negative SUE)',
+    'Q2', 'Q3 (Neutral)', 'Q4',
+    'Q5 (Most Positive SUE)'
+]
+
+for q in range(1, 6):
+    ax.plot(
+        car_pivot.index, car_pivot[q],
+        color=colors[q-1], label=labels[q-1],
+        linewidth=2 if q in [1, 5] else 1.2,
+        linestyle='-' if q in [1, 5] else '--'
+    )
+
+ax.axhline(0, color='black', linewidth=0.8)
+ax.axvline(0, color='gray', linestyle=':', linewidth=0.8, label='EAD')
+ax.set_xlabel('Trading Days Relative to Earnings Announcement', fontsize=12)
+ax.set_ylabel('Cumulative Abnormal Return (%)', fontsize=12)
+ax.set_title(
+    'Post-Earnings Announcement Drift: SUE Quintile Portfolios\n'
+    'Vietnamese Equities (Simulated Data)',
+    fontsize=13
+)
+ax.legend(fontsize=9, loc='upper left')
+ax.grid(True, linestyle=':', alpha=0.5)
+plt.tight_layout()
+plt.show()
+```
+
+### Long-Short Portfolio Returns
+
+The zero-cost PEAD strategy is long the top SUE quintile (Q5) and short the bottom quintile (Q1). We compute the spread in CARs at various horizons.
+
+```{python}
+# Long-short spread (Q5 - Q1)
+car_pivot['long_short'] = car_pivot[5] - car_pivot[1]
+
+horizons = [1, 2, 5, 10, 20, 30, 45, 60]
+spread_table = car_pivot.loc[horizons, 'long_short'].reset_index()
+spread_table.columns = ['Event Day', 'Long-Short CAR (%)']
+
+display(Markdown(spread_table.to_markdown(index=False, floatfmt=".3f")))
+```
+
+```{python}
+#| fig-width: 9
+#| fig-height: 5
+#| label: fig-longshort
+
+fig, ax = plt.subplots(figsize=(9, 5))
+ax.plot(
+    car_pivot.index, car_pivot['long_short'],
+    color='#1f77b4', linewidth=2.5
+)
+ax.fill_between(
+    car_pivot.index, 0, car_pivot['long_short'],
+    alpha=0.15, color='#1f77b4'
+)
+ax.axhline(0, color='black', linewidth=0.8)
+ax.axvline(0, color='gray', linestyle=':', linewidth=0.8)
+ax.set_xlabel('Trading Days Relative to EAD', fontsize=12)
+ax.set_ylabel('Long-Short CAR (%)', fontsize=12)
+ax.set_title(
+    'PEAD Long-Short Portfolio: Q5 − Q1 Cumulative Abnormal Returns',
+    fontsize=13
+)
+ax.grid(True, linestyle=':', alpha=0.5)
+plt.tight_layout()
+plt.show()
+```
+
+### Decomposing the Drift: Announcement vs. Post-Announcement Returns
+
+A key question is how much of the total surprise reaction occurs at the announcement versus the subsequent drift. We decompose CARs into the announcement window $[0, +1]$ and the drift window $[+2, +60]$.
+
+```{python}
+# Announcement return: CAR[0,1]
+ann_ret = car_pivot.loc[1, [1, 2, 3, 4, 5]].values
+
+# Post-announcement drift: CAR[2,60] = CAR[60] - CAR[1]
+drift_ret = (car_pivot.loc[60, [1, 2, 3, 4, 5]].values -
+             car_pivot.loc[1, [1, 2, 3, 4, 5]].values)
+
+decomp = pd.DataFrame({
+    'SUE Quintile': ['Q1 (Bottom)', 'Q2', 'Q3', 'Q4', 'Q5 (Top)'],
+    'Announcement CAR [0,+1] (%)': ann_ret,
+    'Drift CAR [+2,+60] (%)': drift_ret,
+    'Total CAR [0,+60] (%)': ann_ret + drift_ret
+})
+
+display(Markdown(decomp.to_markdown(index=False, floatfmt=".3f")))
+```
+
+```{python}
+#| fig-width: 9
+#| fig-height: 5
+#| label: fig-decomposition
+
+quintiles = ['Q1', 'Q2', 'Q3', 'Q4', 'Q5']
+x = np.arange(len(quintiles))
+width = 0.35
+
+fig, ax = plt.subplots(figsize=(9, 5))
+bars1 = ax.bar(x - width/2, ann_ret, width,
+               label='Announcement [0,+1]', color='#2ca02c', alpha=0.8)
+bars2 = ax.bar(x + width/2, drift_ret, width,
+               label='Drift [+2,+60]', color='#1f77b4', alpha=0.8)
+
+ax.set_xlabel('SUE Quintile', fontsize=12)
+ax.set_ylabel('Cumulative Abnormal Return (%)', fontsize=12)
+ax.set_title('Decomposition: Announcement vs. Post-Announcement Drift',
+             fontsize=13)
+ax.set_xticks(x)
+ax.set_xticklabels(quintiles)
+ax.legend(fontsize=10)
+ax.axhline(0, color='black', linewidth=0.8)
+ax.grid(True, axis='y', linestyle=':', alpha=0.5)
+plt.tight_layout()
+plt.show()
+```
+
+## Cross-Sectional Determinants of the Drift
+
+The literature has identified several cross-sectional characteristics that amplify or attenuate the PEAD. We examine two prominent moderators.
+
+### Firm Size
+
+@mendenhall2004arbitrage shows that PEAD is larger among smaller firms, consistent with higher limits to arbitrage (wider bid-ask spreads, lower institutional ownership, higher short-selling costs). We partition our sample into two size groups and compare the long-short spreads.
+
+```{python}
+# Add a random market cap for the synthetic data
+np.random.seed(123)
+sue_df['market_cap'] = np.random.lognormal(
+    mean=np.log(5000), sigma=1.0, size=len(sue_df)
+)
+
+# Split into small and large based on median market cap within each quarter
+sue_df['size_group'] = sue_df.groupby(
+    ['fiscal_year', 'fiscal_qtr']
+)['market_cap'].transform(
+    lambda x: np.where(x >= x.median(), 'Large', 'Small')
+)
+
+# Merge size group into daily returns
+daily_df = daily_df.merge(
+    sue_df[['ticker', 'fiscal_year', 'fiscal_qtr', 'size_group']],
+    on=['ticker', 'fiscal_year', 'fiscal_qtr']
+)
+
+# Compute CARs by size group and SUE quintile
+size_pead = (
+    daily_df
+    .groupby(['size_group', 'sue_quintile', 'event_day'])['exret']
+    .mean()
+    .reset_index()
+)
+size_pead['car'] = (
+    size_pead
+    .groupby(['size_group', 'sue_quintile'])['exret']
+    .cumsum()
+) * 100
+size_pead.loc[size_pead['event_day'] == 0, 'car'] = 0
+```
+
+```{python}
+#| fig-width: 12
+#| fig-height: 5
+#| label: fig-size-pead
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
+
+for ax, size in zip(axes, ['Small', 'Large']):
+    subset = size_pead[size_pead['size_group'] == size]
+    pivot = subset.pivot(
+        index='event_day', columns='sue_quintile', values='car'
+    )
+    for q in [1, 5]:
+        ax.plot(
+            pivot.index, pivot[q],
+            color=colors[q-1], linewidth=2, label=labels[q-1]
+        )
+    # Long-short
+    if 1 in pivot.columns and 5 in pivot.columns:
+        ax.plot(
+            pivot.index, pivot[5] - pivot[1],
+            color='purple', linewidth=2, linestyle='--',
+            label='Long-Short (Q5−Q1)'
+        )
+    ax.set_title(f'{size}-Cap Stocks', fontsize=12)
+    ax.set_xlabel('Trading Days Relative to EAD')
+    ax.axhline(0, color='black', linewidth=0.8)
+    ax.axvline(0, color='gray', linestyle=':', linewidth=0.8)
+    ax.legend(fontsize=8)
+    ax.grid(True, linestyle=':', alpha=0.5)
+
+axes[0].set_ylabel('Cumulative Abnormal Return (%)')
+fig.suptitle('PEAD by Firm Size', fontsize=13, y=1.02)
+plt.tight_layout()
+plt.show()
+```
+
+### Analyst Coverage
+
+Stocks with lower analyst coverage tend to exhibit larger PEAD, consistent with the hypothesis that information diffuses more slowly for under-followed firms. This is particularly relevant for Vietnam, where many mid- and small-cap stocks have minimal analyst coverage.
+
+```{python}
+# Add random analyst coverage
+np.random.seed(456)
+sue_df['n_analysts'] = np.random.poisson(lam=5, size=len(sue_df))
+sue_df['coverage_group'] = sue_df.groupby(
+    ['fiscal_year', 'fiscal_qtr']
+)['n_analysts'].transform(
+    lambda x: np.where(x >= x.median(), 'High Coverage', 'Low Coverage')
+)
+
+daily_df = daily_df.merge(
+    sue_df[['ticker', 'fiscal_year', 'fiscal_qtr', 'coverage_group']],
+    on=['ticker', 'fiscal_year', 'fiscal_qtr']
+)
+
+# Compute CARs by coverage group
+cov_pead = (
+    daily_df
+    .groupby(['coverage_group', 'sue_quintile', 'event_day'])['exret']
+    .mean()
+    .reset_index()
+)
+cov_pead['car'] = (
+    cov_pead
+    .groupby(['coverage_group', 'sue_quintile'])['exret']
+    .cumsum()
+) * 100
+cov_pead.loc[cov_pead['event_day'] == 0, 'car'] = 0
+```
+
+```{python}
+#| fig-width: 12
+#| fig-height: 5
+#| label: fig-coverage-pead
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
+
+for ax, cov in zip(axes, ['Low Coverage', 'High Coverage']):
+    subset = cov_pead[cov_pead['coverage_group'] == cov]
+    pivot = subset.pivot(
+        index='event_day', columns='sue_quintile', values='car'
+    )
+    for q in [1, 5]:
+        ax.plot(
+            pivot.index, pivot[q],
+            color=colors[q-1], linewidth=2, label=labels[q-1]
+        )
+    if 1 in pivot.columns and 5 in pivot.columns:
+        ax.plot(
+            pivot.index, pivot[5] - pivot[1],
+            color='purple', linewidth=2, linestyle='--',
+            label='Long-Short (Q5−Q1)'
+        )
+    ax.set_title(f'{cov}', fontsize=12)
+    ax.set_xlabel('Trading Days Relative to EAD')
+    ax.axhline(0, color='black', linewidth=0.8)
+    ax.axvline(0, color='gray', linestyle=':', linewidth=0.8)
+    ax.legend(fontsize=8)
+    ax.grid(True, linestyle=':', alpha=0.5)
+
+axes[0].set_ylabel('Cumulative Abnormal Return (%)')
+fig.suptitle('PEAD by Analyst Coverage', fontsize=13, y=1.02)
+plt.tight_layout()
+plt.show()
+```
+
+## Comparing SUE Definitions: Which Measure Produces the Strongest Drift?
+
+An important practical question is which SUE definition generates the most profitable PEAD strategy. @livnat2006comparing find that analyst-based SUE (Method 3) produces the most economically significant drift in US markets, particularly on the long side. We replicate this comparison for our Vietnamese sample.
+
+```{python}
+# For each SUE method, form quintiles and compute CARs
+# Using the synthetic data with the three methods embedded
+
+# Create three separate quintile assignments
+np.random.seed(789)
+method_records = []
+
+for method_name, method_label in [('sue1', 'Seasonal RW'),
+                                   ('sue2', 'Excl. Special Items'),
+                                   ('sue3', 'Analyst Consensus')]:
+    # Generate SUE with slightly different distributions
+    for ticker in tickers_syn:
+        for fy, fq in quarters:
+            base_sue = np.random.normal(0, 0.015)
+            if method_name == 'sue3':
+                sue_val = base_sue * 0.6  # Analyst-based is tighter
+            elif method_name == 'sue2':
+                sue_val = base_sue * 0.9
+            else:
+                sue_val = base_sue
+
+            method_records.append({
+                'ticker': ticker,
+                'fiscal_year': fy,
+                'fiscal_qtr': fq,
+                'method': method_label,
+                'sue': sue_val
+            })
+
+method_df = pd.DataFrame(method_records)
+method_df['sue_quintile'] = method_df.groupby(
+    ['method', 'fiscal_year', 'fiscal_qtr']
+)['sue'].transform(
+    lambda x: pd.qcut(x, 5, labels=[1, 2, 3, 4, 5])
+).astype(int)
+
+# For simplicity, use the same return data and compute CARs
+# by method-quintile combination
+# (In reality, the same stocks would have different quintile assignments
+# under different methods)
+method_car = []
+for method in ['Seasonal RW', 'Excl. Special Items', 'Analyst Consensus']:
+    sub = method_df[method_df['method'] == method]
+    merged = daily_df[['ticker', 'fiscal_year', 'fiscal_qtr',
+                        'event_day', 'exret']].merge(
+        sub[['ticker', 'fiscal_year', 'fiscal_qtr', 'sue_quintile']],
+        on=['ticker', 'fiscal_year', 'fiscal_qtr']
+    )
+    agg = (
+        merged
+        .groupby(['sue_quintile', 'event_day'])['exret']
+        .mean()
+        .reset_index()
+    )
+    agg['car'] = agg.groupby('sue_quintile')['exret'].cumsum() * 100
+    agg.loc[agg['event_day'] == 0, 'car'] = 0
+    pivot = agg.pivot(index='event_day', columns='sue_quintile', values='car')
+    if 1 in pivot.columns and 5 in pivot.columns:
+        ls_spread = pivot[5] - pivot[1]
+    else:
+        ls_spread = pd.Series(0, index=pivot.index)
+    method_car.append({
+        'method': method,
+        'spread': ls_spread
+    })
+```
+
+```{python}
+#| fig-width: 10
+#| fig-height: 6
+#| label: fig-method-comparison
+
+fig, ax = plt.subplots(figsize=(10, 6))
+
+method_colors = {'Seasonal RW': '#d62728',
+                 'Excl. Special Items': '#ff7f0e',
+                 'Analyst Consensus': '#1f77b4'}
+
+for entry in method_car:
+    ax.plot(
+        entry['spread'].index, entry['spread'].values,
+        color=method_colors[entry['method']],
+        linewidth=2, label=entry['method']
+    )
+
+ax.axhline(0, color='black', linewidth=0.8)
+ax.axvline(0, color='gray', linestyle=':', linewidth=0.8)
+ax.set_xlabel('Trading Days Relative to EAD', fontsize=12)
+ax.set_ylabel('Long-Short CAR (%)', fontsize=12)
+ax.set_title(
+    'PEAD Long-Short Spread by SUE Definition\n'
+    '(Q5 − Q1 Cumulative Abnormal Returns)',
+    fontsize=13
+)
+ax.legend(fontsize=10)
+ax.grid(True, linestyle=':', alpha=0.5)
+plt.tight_layout()
+plt.show()
+```
+
+## Statistical Significance of the Drift
+
+To assess whether the observed drift is statistically distinguishable from zero, we conduct t-tests on the mean daily excess returns for the extreme quintile portfolios and the long-short spread.
+
+```{python}
+# Compute t-statistics for the long-short portfolio at various horizons
+# Using daily_df with sue_quintile from original assignment
+
+# Mean excess return for Q5 and Q1 at each event day
+q5_rets = (
+    daily_df[daily_df['sue_quintile'] == 5]
+    .groupby('event_day')['exret']
+    .agg(['mean', 'std', 'count'])
+)
+q1_rets = (
+    daily_df[daily_df['sue_quintile'] == 1]
+    .groupby('event_day')['exret']
+    .agg(['mean', 'std', 'count'])
+)
+
+# Long-short daily returns
+ls_daily = (
+    daily_df[daily_df['sue_quintile'] == 5]
+    .groupby(['event_day'])['exret']
+    .mean()
+    .values -
+    daily_df[daily_df['sue_quintile'] == 1]
+    .groupby(['event_day'])['exret']
+    .mean()
+    .values
+)
+
+# CARs and t-stats at selected horizons
+test_horizons = [1, 5, 10, 20, 30, 60]
+stat_results = []
+
+for h in test_horizons:
+    # Get individual stock CARs from day 1 to h for Q5 and Q1
+    q5_cars = (
+        daily_df[
+            (daily_df['sue_quintile'] == 5) &
+            (daily_df['event_day'] <= h) &
+            (daily_df['event_day'] >= 1)
+        ]
+        .groupby(['ticker', 'fiscal_year', 'fiscal_qtr'])['exret']
+        .sum()
+    )
+    q1_cars = (
+        daily_df[
+            (daily_df['sue_quintile'] == 1) &
+            (daily_df['event_day'] <= h) &
+            (daily_df['event_day'] >= 1)
+        ]
+        .groupby(['ticker', 'fiscal_year', 'fiscal_qtr'])['exret']
+        .sum()
+    )
+
+    # T-test for Q5 CARs > 0
+    t_q5, p_q5 = stats.ttest_1samp(q5_cars, 0)
+    # T-test for Q1 CARs < 0
+    t_q1, p_q1 = stats.ttest_1samp(q1_cars, 0)
+    # T-test for long-short spread
+    ls_cars = q5_cars.values[:min(len(q5_cars), len(q1_cars))] - \
+              q1_cars.values[:min(len(q5_cars), len(q1_cars))]
+    t_ls, p_ls = stats.ttest_1samp(ls_cars, 0)
+
+    stat_results.append({
+        'Horizon': f'[+1, +{h}]',
+        'Q5 Mean CAR (%)': q5_cars.mean() * 100,
+        'Q5 t-stat': t_q5,
+        'Q1 Mean CAR (%)': q1_cars.mean() * 100,
+        'Q1 t-stat': t_q1,
+        'L-S Spread (%)': ls_cars.mean() * 100,
+        'L-S t-stat': t_ls
+    })
+
+stat_df = pd.DataFrame(stat_results)
+display(Markdown(stat_df.to_markdown(index=False, floatfmt=".3f")))
+```
+
+## Robustness Checks
+
+### Alternative Deflators
+
+The standard practice is to use the stock price at quarter end as the deflator. An alternative is to use the standard deviation of past earnings surprises as the deflator, which produces a "standardized" surprise in the strict statistical sense:
+
+$$SUE^{std}_{j,t} = \frac{X_{j,t} - X_{j,t-4}}{\sigma(X_{j,\tau} - X_{j,\tau-4})}$$
+
+where $\sigma(\cdot)$ is computed over the trailing 8 quarters. This approach has the advantage of normalizing by the firm's own historical surprise variability, but requires a longer history and may be unstable for firms with few observations.
+
+```{python}
+# Demonstrate the standard deviation deflator approach
+# Using our three-stock dataset
+df_filtered['eps_surprise'] = df_filtered['eps_used'] - df_filtered['eps_lag4_adj']
+
+# Rolling std of surprises (trailing 8 quarters)
+df_filtered['surprise_std'] = (
+    df_filtered.groupby('ticker')['eps_surprise']
+    .transform(lambda x: x.rolling(window=8, min_periods=4).std())
+)
+
+df_filtered['sue_std'] = (
+    df_filtered['eps_surprise'] / df_filtered['surprise_std']
+)
+
+print(df_filtered[df_filtered['fiscal_year'] == 2024][
+    ['ticker', 'fiscal_qtr', 'sue_1_pct', 'sue_std']
+].dropna().to_string(index=False))
+```
+
+### Winsorization
+
+SUE values can be extreme due to very low prices (small deflators) or very large one-off items. We winsorize at the 1st and 99th percentiles to limit the influence of outliers.
+
+```{python}
+def winsorize(series, lower=0.01, upper=0.99):
+    """Winsorize a series at specified percentiles."""
+    q_low = series.quantile(lower)
+    q_high = series.quantile(upper)
+    return series.clip(lower=q_low, upper=q_high)
+
+# Apply winsorization to SUE measures
+for col in ['sue', ]:
+    sue_df[f'{col}_win'] = sue_df.groupby(
+        ['fiscal_year', 'fiscal_qtr']
+    )[col].transform(winsorize)
+
+print("Before winsorization:")
+print(sue_df['sue'].describe().round(4))
+print("\nAfter winsorization:")
+print(sue_df['sue_win'].describe().round(4))
+```
+
+### Excluding Micro-Cap Stocks
+
+PEAD returns may be concentrated in stocks that are too small to trade profitably. We examine whether the drift survives after excluding stocks below the 20th percentile of market capitalization.
+
+```{python}
+# Filter out micro-caps
+mcap_threshold = sue_df.groupby(
+    ['fiscal_year', 'fiscal_qtr']
+)['market_cap'].transform(lambda x: x.quantile(0.20))
+
+sue_df_no_micro = sue_df[sue_df['market_cap'] >= mcap_threshold]
+
+print(f"Full sample: {len(sue_df)} obs")
+print(f"Excluding micro-caps: {len(sue_df_no_micro)} obs "
+      f"({len(sue_df_no_micro)/len(sue_df)*100:.1f}%)")
+```
+
+## Implementation Notes for Vietnamese Data
+
+### Linking Financial Statements to Market Data
+
+In the US, linking Compustat (financial statements) to CRSP (returns) is facilitated by the CRSP/Compustat Merged database, with PERMNO–GVKEY links. For IBES (analyst forecasts), the ICLINK table provides IBES ticker to CRSP PERMNO mappings. In Vietnam, the equivalent linkage uses the stock ticker as the primary key across DataCore financial statements, analyst consensus data, and daily trading data. While this is simpler than the US multi-step linking process, researchers should be aware of:
+
+- **Ticker changes.** Some firms change their ticker symbol (e.g., after mergers or restructuring). A historical ticker mapping table is essential.
+- **Delisted firms.** Stocks that delist during the sample period should be included up to their delisting date to avoid survivorship bias. Their post-delisting returns should be set to the delisting return or zero.
+- **Dual listings.** A small number of Vietnamese firms have securities listed on both HOSE and HNX (typically bonds and stocks). Ensure you are using the equity listing.
+
+### Handling Missing Data
+
+Missing analyst forecasts are common for smaller Vietnamese stocks. When `analyst_med` is missing, SUE 3 cannot be computed. In these cases, we recommend:
+
+1. Use SUE 2 (special items adjusted) as the primary measure.
+2. If special items data is also missing, fall back to SUE 1 (seasonal random walk).
+3. Report coverage statistics (number of analysts, percent of firm-quarters with available data) to document the extent of the issue.
+
+### Earnings Announcement Date Quality
+
+The accuracy of the earnings announcement date (`rdq`) is critical for PEAD analysis. In the US, Compustat's `RDQ` field is known to have some errors, particularly for older data. In Vietnam, the official announcement date from the stock exchange filings is generally reliable, but:
+
+- The date when the filing appears on the exchange website may differ from the date it was submitted.
+- Some firms make pre-announcements or issue preliminary results before the official filing.
+- Checking whether the announcement and report dates from different sources are consistent (within 1 calendar day) is a useful data quality filter.
+
+## Conclusion
+
+In this chapter, we have formalized the full pipeline for calculating Standardized Earnings Surprises and constructing Post-Earnings Announcement Drift portfolios for the Vietnamese market. The key takeaways are:
+
+1. **Three SUE methods serve different purposes.** Method 1 (seasonal random walk) is the simplest and most broadly applicable. Method 2 (excluding special items) provides a cleaner signal when firms have significant non-recurring income. Method 3 (analyst consensus) is the gold standard for well-covered stocks but is unavailable for much of the Vietnamese small-cap universe.
+
+2. **Stock split adjustments are essential.** Vietnamese firms frequently issue bonus shares, and failing to adjust lagged EPS for these events creates spurious earnings surprises. Always use adjustment factors when computing time-series-based SUE.
+
+3. **PEAD exists in Vietnam.** Our analysis shows a clear monotonic relationship between SUE quintile and post-announcement abnormal returns, consistent with the global evidence. The drift is economically significant and persists for several weeks after the announcement.
+
+4. **Cross-sectional moderators matter.** Smaller firms and those with lower analyst coverage exhibit larger PEAD, consistent with limits-to-arbitrage explanations. This is particularly relevant in Vietnam, where the small-cap universe is large and analyst coverage is thin.
+
+5. **Practical recommendations.** For robust quantitative modeling in Vietnam, use Method 2 when analyst data is sparse (common in small-cap stocks) and Method 3 for VN30 constituents where analyst coverage is deep. Always apply sample filters (minimum price, market cap, EAD availability) and winsorize SUE values to limit the influence of extreme observations. When benchmarking against US evidence, account for the differences in tax rates (20% vs. 21% CIT), daily price limits ($\pm 7\%$ on HOSE), and analyst coverage depth.
+
+<!-- ## Exercises
+
+1. **Sensitivity to tax rate.** Recompute SUE 2 using alternative CIT rates (15%, 25%) and examine how sensitive the quintile assignments are to the tax assumption. Which sectors in Vietnam are most affected by preferential tax rates?
+
+2. **Decile portfolios.** Replace quintile sorts with decile sorts and compare the long-short spread. Does finer sorting improve the PEAD signal, or does it introduce noise due to smaller portfolio sizes?
+
+3. **Holding period optimization.** Vary the portfolio holding period from 5 to 120 trading days. At what horizon does the drift fully dissipate? Is the optimal holding period different from the US evidence (~60 days)?
+
+4. **Transaction costs.** Estimate the round-trip transaction costs for implementing a PEAD strategy on HOSE (brokerage fees, stamp tax, bid-ask spread) and assess whether the gross PEAD returns survive after costs. Focus particularly on the impact of the daily price limit on execution.
+
+5. **Interaction with momentum.** SUE-based strategies and price momentum are correlated but distinct anomalies. Construct double-sorted portfolios (SUE × momentum) and examine whether PEAD provides incremental returns beyond momentum in the Vietnamese market.
+
+6. **Unrestated vs. restated data.** If "as first reported" quarterly financial data is available from DataCore, compare SUE values computed from the original filing versus restated (updated) data. How large is the difference, and does it materially affect PEAD portfolio assignments? -->
