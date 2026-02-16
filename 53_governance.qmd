@@ -1,0 +1,1474 @@
+# Corporate Governance
+
+Corporate governance (i.e., the system of rules, practices, and processes by which firms are directed and controlled) has been one of the most actively studied determinants of equity returns since the early 2000s. The insight is simple yet powerful: firms that grant shareholders stronger rights tend to outperform firms in which management is entrenched by anti-takeover provisions. This chapter applies that insight to the Vietnamese market, where governance quality varies considerably across listed firms and institutional development remains evolving.
+
+## Theoretical Background
+
+### The Governance-Return Nexus
+
+The theoretical motivation for a link between corporate governance and stock returns rests on agency theory [@jensen1976theory]. Managers, as agents of shareholders, may pursue private benefits at the expense of firm value. Anti-takeover provisions, staggered boards, poison pills, and other defensive mechanisms insulate management from the disciplining force of the market for corporate control. When shareholders cannot easily replace underperforming managers, agency costs rise, investment efficiency falls, and firm value declines.
+
+@gompers2003corporate formalized this intuition by constructing a **Governance Index (G-Index)** based on 24 governance provisions tracked by the Investor Responsibility Research Center (IRRC) in the United States. Each provision that restricts shareholder rights increments the index by one. Thus:
+
+$$
+G\text{-Index}_i = \sum_{k=1}^{24} \mathbf{1}\{\text{Provision } k \text{ is present for firm } i\}
+$$ {#eq-gindex-definition}
+
+where $\mathbf{1}\{\cdot\}$ is the indicator function. Higher values of the G-Index correspond to weaker shareholder rights.
+
+The key empirical finding was striking: during the 1990s, a portfolio that bought firms with the strongest shareholder rights (G-Index $\leq 5$, labeled the **Democracy Portfolio**) and sold firms with the weakest shareholder rights (G-Index $\geq 14$, labeled the **Dictatorship Portfolio**) earned an abnormal return of approximately 8.5% per year.
+
+### Adapting the Framework to Vietnam
+
+Vietnam's corporate governance landscape differs fundamentally from that of the United States. The Vietnamese market is characterized by:
+
+1.  **State ownership**: Many listed firms retain significant government ownership stakes, which creates a distinct agency problem where the state acts as a controlling shareholder rather than dispersed minority shareholders facing entrenched management.
+
+2.  **Concentrated ownership**: Family and controlling-group ownership is prevalent, shifting the primary agency conflict from manager-shareholder to controlling-majority vs. minority shareholders [@claessens2000separation].
+
+3.  **Evolving legal framework**: Vietnam's corporate governance code has been progressively strengthened through Decree 71/2017/ND-CP and subsequent circulars, but enforcement remains uneven.
+
+4.  **Dual listing and foreign ownership caps**: Foreign ownership limits create segmented investor bases with potentially different governance preferences.
+
+Despite these differences, the core economic logic applies: firms with better governance (i.e., greater board independence, stronger audit committees, more transparent disclosure, better minority shareholder protections) should command higher valuations and deliver superior risk-adjusted returns, all else equal.
+
+For the Vietnamese market, we construct a governance index analogous to the G-Index using governance provisions. While the specific provisions differ from the 24 IRRC items used in the US context, the methodology is identical: count the number of provisions that restrict shareholder rights or entrench management.
+
+### The Vietnamese Governance Index (VN-GIndex)
+
+We define the Vietnamese Governance Index based on the following categories of provisions (@tbl-gindex-categories)
+
+| Category | Provisions | Direction |
+|-----------------------|-------------------------|-------------------------|
+| Board Structure | Staggered board, CEO duality, board size \< 5 | ↑ restricts rights |
+| Ownership | State ownership \> 50%, no independent directors | ↑ restricts rights |
+| Shareholder Rights | Supermajority requirements, limited voting rights | ↑ restricts rights |
+| Transparency | No English-language annual report, delayed filings | ↑ restricts rights |
+| Anti-takeover | Poison pill equivalents, golden parachutes | ↑ restricts rights |
+| Audit | No independent audit committee, related-party auditor | ↑ restricts rights |
+
+: Categories of governance provisions for the VN-GIndex {#tbl-gindex-categories}
+
+The VN-GIndex for firm $i$ at time $t$ is:
+
+$$
+\text{VN-GIndex}_{i,t} = \sum_{k=1}^{K} \mathbf{1}\{\text{Provision } k \text{ is present for firm } i \text{ at time } t\}
+$$ {#eq-vngindex}
+
+where $K$ is the total number of governance provisions tracked. Higher values indicate weaker governance.
+
+## Data Preparation
+
+We use three primary datasets:
+
+1.  **Governance data**: Firm-level governance provisions, updated annually or when material changes occur.
+2.  **Stock market data**: Monthly returns, prices, and shares outstanding for all firms listed on HOSE and HNX.
+3.  **Factor data**: Vietnamese Fama-French factors (market, size, value) and a momentum factor.
+
+```{python}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from statsmodels.regression.linear_model import OLS
+from scipy import stats
+import warnings
+import sqlite3
+
+warnings.filterwarnings("ignore")
+
+pd.options.display.float_format = "{:.4f}".format
+
+tidy_finance = sqlite3.connect(
+    database="data/tidy_finance_python.sqlite"
+)
+```
+
+### Loading Governance Data
+
+The governance dataset contains firm-level governance characteristics. Each observation corresponds to a firm-year, with binary indicators for the presence of each governance provision.
+
+```{python}
+#| label: load-governance
+#| echo: true
+#| eval: false
+
+governance_raw = pd.read_csv(
+    "data/datacore_governance.csv",
+    parse_dates=["date_effective", "date_expires"]
+)
+
+governance_raw.info()
+```
+
+```{python}
+#| label: tbl-governance-head
+#| tbl-cap: "First observations of the governance dataset"
+#| eval: false
+
+governance_raw.head(10)
+```
+
+The key variables are:
+
+-   `symbol`: The stock symbol on HOSE or HNX.
+-   `date_effective`: The date when the governance data became effective (analogous to the rebalancing date).
+-   `date_expires`: The last date for which this governance vintage is valid.
+-   `year`: The governance data vintage year.
+
+### Computing the VN-GIndex
+
+We compute the governance index by summing the binary indicators of governance provision. The provision columns are identified by the prefix `gov_`.
+
+```{python}
+#| label: compute-gindex
+#| eval: false
+# Identify governance provision columns
+gov_columns = [
+    col for col in governance_raw.columns if col.startswith("gov_")
+]
+
+print(f"Number of governance provisions tracked: {len(gov_columns)}")
+print(f"Provisions: {gov_columns}")
+
+# Compute VN-GIndex as sum of all provision indicators
+governance = governance_raw.assign(
+    gindex=lambda x: x[gov_columns].sum(axis=1)
+)
+
+governance[["symbol", "year", "gindex"]].describe()
+```
+
+### Distribution of the VN-GIndex
+
+Understanding the cross-sectional distribution of the governance index is essential for defining portfolio cutoffs. In the US, @gompers2003corporate used fixed cutoffs of $\leq 5$ for Democracy and $\geq 14$ for Dictatorship. For Vietnam, we examine the empirical distribution and set cutoffs at appropriate percentiles.
+
+```{python}
+#| label: fig-gindex-distribution
+#| fig-cap: "Cross-sectional distribution of the VN-GIndex by vintage year. The dashed vertical lines indicate the 20th and 80th percentiles used to define Democracy and Dictatorship portfolios."
+#| fig-alt: "Histogram of VN-GIndex values across firms, faceted by year."
+#| eval: false
+
+fig, axes = plt.subplots(
+    2, 3, figsize=(12, 7), sharey=True, sharex=True
+)
+axes = axes.flatten()
+
+years = sorted(governance["year"].unique())
+
+for idx, yr in enumerate(years[:6]):
+    ax = axes[idx]
+    data_yr = governance.query(f"year == {yr}")["gindex"]
+    
+    p20 = data_yr.quantile(0.20)
+    p80 = data_yr.quantile(0.80)
+    
+    ax.hist(data_yr, bins=range(0, int(data_yr.max()) + 2), 
+            edgecolor="white", color="#2c5f8a", alpha=0.85)
+    ax.axvline(p20, color="#d63e2a", linestyle="--", linewidth=1.5, 
+               label=f"P20={p20:.0f}")
+    ax.axvline(p80, color="#e8a317", linestyle="--", linewidth=1.5, 
+               label=f"P80={p80:.0f}")
+    ax.set_title(f"{yr}", fontsize=11, fontweight="bold")
+    ax.legend(fontsize=8)
+    ax.set_xlabel("VN-GIndex")
+
+for idx in range(len(years), len(axes)):
+    axes[idx].set_visible(False)
+
+axes[0].set_ylabel("Number of Firms")
+axes[3].set_ylabel("Number of Firms")
+
+fig.suptitle(
+    "Distribution of VN-GIndex by Governance Vintage Year",
+    fontsize=13, fontweight="bold", y=1.01
+)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: tbl-gindex-summary
+#| tbl-cap: "Summary statistics of the VN-GIndex by vintage year"
+#| eval: false
+
+gindex_summary = (
+    governance
+    .groupby("year")["gindex"]
+    .describe()
+    .round(2)
+)
+
+gindex_summary
+```
+
+### Classifying Firms: Democracy, Neutral, and Dictatorship
+
+Rather than using fixed cutoffs (which may be inappropriate given varying index ranges across markets), we use percentile-based classification. Firms in the bottom quintile of the VN-GIndex distribution within each vintage year are classified as **Democracy** firms, and firms in the top quintile are classified as **Dictatorship** firms.
+
+```{python}
+#| label: classify-firms
+#| eval: false
+
+def classify_governance(group):
+    """Classify firms into Democracy, Neutral, or Dictatorship
+    within each governance vintage year."""
+    p20 = group["gindex"].quantile(0.20)
+    p80 = group["gindex"].quantile(0.80)
+    
+    conditions = [
+        group["gindex"] <= p20,
+        group["gindex"] >= p80
+    ]
+    choices = ["Democracy", "Dictatorship"]
+    
+    group = group.assign(
+        gx=np.select(conditions, choices, default="Neutral"),
+        gx_code=np.select(
+            conditions, [1, 3], default=2
+        )
+    )
+    return group
+
+governance_classified = (
+    governance
+    .groupby("year", group_keys=False)
+    .apply(classify_governance)
+)
+
+# Summary of classification
+classification_counts = (
+    governance_classified
+    .groupby(["year", "gx"])
+    .size()
+    .unstack(fill_value=0)
+    [["Democracy", "Neutral", "Dictatorship"]]
+)
+
+classification_counts
+```
+
+```{python}
+#| label: tbl-classification
+#| tbl-cap: "Number of firms in each governance category by vintage year"
+#| eval: false
+
+classification_counts
+```
+
+We exclude firms with dual-class share structures, as these create a distinct governance arrangement that conflates voting rights with economic ownership. In the US, @gompers2003corporate similarly excluded dual-class firms.
+
+```{python}
+#| label: exclude-dualclass
+#| eval: false
+
+# Exclude dual-class firms if flagged in the data
+if "dual_class" in governance_classified.columns:
+    governance_classified = governance_classified.query(
+        "dual_class == 0"
+    )
+    print("Dual-class firms excluded.")
+else:
+    print("No dual_class indicator found; proceeding with all firms.")
+
+# Keep only Democracy and Dictatorship firms for the long-short strategy
+portfolio_firms = governance_classified.query(
+    "gx in ['Democracy', 'Dictatorship']"
+).copy()
+
+print(f"\nFirms in portfolio universe: {len(portfolio_firms)}")
+print(portfolio_firms["gx"].value_counts())
+```
+
+### Loading Stock Market Data
+
+We merge the governance classifications with monthly stock return data.
+
+```{python}
+#| label: load-stock-data
+
+prices_monthly = pd.read_sql_query(
+    sql="""
+        SELECT symbol, date, ret, ret_excess, mktcap, mktcap_lag, risk_free
+        FROM prices_monthly
+    """,
+    con=tidy_finance,
+    parse_dates={"date"}
+).dropna()
+
+prices_monthly.info()
+```
+
+The stock market data contains:
+
+-   `symbol`: Stock symbol.
+-   `date`: End-of-month date.
+-   `ret`: Monthly total return (including dividends).
+-   `retx`: Monthly return excluding dividends (price return only).
+-   `price`: End-of-month closing price (adjusted).
+-   `shares_outstanding`: Number of shares outstanding (in thousands).
+
+```{python}
+#| label: compute-mktcap
+
+prices_monthly[["symbol", "date", "ret", "mktcap"]].describe()
+```
+
+### Linking Governance and Stock Data
+
+Each governance vintage is valid from `date_effective` through `date_expires`. We assign monthly stock returns to the appropriate governance vintage. This is the portfolio rebalancing logic: portfolios are reformed when new governance data becomes available and held until the next vintage.
+
+```{python}
+#| label: merge-governance-stocks
+#| eval: false
+
+# Merge: each stock-month gets its governance classification
+# if the month falls within [date_effective, date_expires]
+merged = pd.merge(
+    portfolio_firms[
+        ["symbol", "year", "gindex", "gx", "gx_code",
+         "date_effective", "date_expires"]
+    ],
+    prices_monthly[["symbol", "date", "ret", "retx", "mktcap"]],
+    on="symbol",
+    how="inner"
+)
+
+# Keep only months within the governance validity window
+merged = merged.query(
+    "date >= date_effective and date <= date_expires"
+).sort_values(["symbol", "date"])
+
+print(f"Total firm-month observations: {len(merged):,}")
+merged.head()
+```
+
+### Computing Lagged Market Capitalization for Weighting
+
+Value-weighted portfolio returns require weighting each stock by its beginning-of-period market capitalization. We use the previous month's market capitalization as the weight. For the first observation of each stock in a given vintage, we estimate the beginning-of-period market value by dividing the current market value by $(1 + r_{x,t})$, where $r_{x,t}$ is the price return.
+
+The value-weighted return of portfolio $p$ in month $t$ is:
+
+$$
+r_{p,t}^{vw} = \sum_{i \in p} w_{i,t-1} \cdot r_{i,t}, \quad w_{i,t-1} = \frac{\text{MV}_{i,t-1}}{\sum_{j \in p} \text{MV}_{j,t-1}}
+$$ {#eq-vw-return}
+
+where $\text{MV}_{i,t-1}$ is the market capitalization of stock $i$ at the end of month $t-1$.
+
+```{python}
+#| label: compute-lag-mktcap
+#| eval: false
+
+merged = merged.sort_values(["symbol", "date"])
+
+# Lagged market value (previous month)
+merged["mktcap_lag"] = merged.groupby("symbol")["mktcap"].shift(1)
+
+# For first observation: estimate beginning-of-month market cap
+first_obs = merged.groupby("symbol")["date"].transform("min")
+mask_first = merged["date"] == first_obs
+
+merged.loc[mask_first, "mktcap_lag"] = (
+    merged.loc[mask_first, "mktcap"] 
+    / (1 + merged.loc[mask_first, "retx"])
+)
+
+# Handle any remaining missing weights
+mask_missing = merged["mktcap_lag"].isna()
+merged.loc[mask_missing, "mktcap_lag"] = (
+    merged.loc[mask_missing, "mktcap"]
+    / (1 + merged.loc[mask_missing, "retx"])
+)
+
+# Drop observations with missing returns or weights
+merged = merged.dropna(subset=["ret", "mktcap_lag"])
+merged = merged.query("mktcap_lag > 0")
+
+print(f"Clean firm-month observations: {len(merged):,}")
+```
+
+## Portfolio Construction
+
+### Value-Weighted Portfolio Returns
+
+We now compute the value-weighted monthly returns for the Democracy and Dictatorship portfolios.
+
+```{python}
+#| label: compute-portfolio-returns
+#| eval: false
+
+def value_weighted_return(group):
+    """Compute value-weighted return for a group of stocks."""
+    weights = group["mktcap_lag"]
+    total_weight = weights.sum()
+    if total_weight == 0:
+        return np.nan
+    vw_ret = (group["ret"] * weights).sum() / total_weight
+    return vw_ret
+
+# Compute VW returns by date and governance group
+portfolio_returns = (
+    merged
+    .groupby(["date", "gx"])
+    .apply(value_weighted_return, include_groups=False)
+    .reset_index()
+    .rename(columns={0: "ret_vw"})
+)
+
+# Also compute equal-weighted returns for robustness
+portfolio_returns_ew = (
+    merged
+    .groupby(["date", "gx"])["ret"]
+    .mean()
+    .reset_index()
+    .rename(columns={"ret": "ret_ew"})
+)
+
+# Merge EW returns
+portfolio_returns = portfolio_returns.merge(
+    portfolio_returns_ew, on=["date", "gx"], how="left"
+)
+
+portfolio_returns.head(10)
+```
+
+### Long-Short Portfolio: Democracy minus Dictatorship
+
+The trading strategy goes long the Democracy portfolio and short the Dictatorship portfolio. The monthly return of this long-short strategy is:
+
+$$
+r_{t}^{D-D} = r_{t}^{\text{Democracy}} - r_{t}^{\text{Dictatorship}}
+$$ {#eq-long-short}
+
+```{python}
+#| label: compute-long-short
+#| eval: false
+
+# Pivot to wide format
+returns_wide = portfolio_returns.pivot(
+    index="date", columns="gx", values=["ret_vw", "ret_ew"]
+)
+
+# Flatten column names
+returns_wide.columns = [
+    f"{val}_{grp}" for val, grp in returns_wide.columns
+]
+returns_wide = returns_wide.reset_index()
+
+# Compute long-short returns
+returns_wide = returns_wide.assign(
+    ret_diff_vw=lambda x: (
+        x["ret_vw_Democracy"] - x["ret_vw_Dictatorship"]
+    ),
+    ret_diff_ew=lambda x: (
+        x["ret_ew_Democracy"] - x["ret_ew_Dictatorship"]
+    )
+)
+
+returns_wide = returns_wide.sort_values("date").reset_index(drop=True)
+
+print(f"Monthly return series: {len(returns_wide)} months")
+returns_wide.head()
+```
+
+### Portfolio Characteristics Over Time
+
+Before examining returns, we document the number of firms and average governance scores in each portfolio over time.
+
+```{python}
+#| label: tbl-portfolio-chars
+#| eval: false
+#| tbl-cap: "Portfolio characteristics by governance group and year"
+
+portfolio_chars = (
+    merged
+    .assign(year_month=lambda x: x["date"].dt.to_period("Y"))
+    .groupby(["year_month", "gx"])
+    .agg(
+        n_firms=("symbol", "nunique"),
+        avg_gindex=("gindex", "mean"),
+        avg_mktcap=("mktcap", "mean"),
+        median_mktcap=("mktcap", "median")
+    )
+    .round(2)
+)
+
+portfolio_chars
+```
+
+## Empirical Results
+
+### Summary Statistics of Portfolio Returns
+
+```{python}
+#| label: tbl-return-summary
+#| tbl-cap: "Summary statistics of monthly portfolio returns (in percent)"
+#| eval: false
+
+return_cols = [
+    "ret_vw_Democracy", "ret_vw_Dictatorship", "ret_diff_vw",
+    "ret_ew_Democracy", "ret_ew_Dictatorship", "ret_diff_ew"
+]
+
+summary_stats = (
+    returns_wide[return_cols]
+    .mul(100)  # Convert to percent
+    .describe()
+    .T
+    .assign(
+        skewness=returns_wide[return_cols].mul(100).skew(),
+        sharpe=lambda x: x["mean"] / x["std"] * np.sqrt(12)
+    )
+    .round(3)
+)
+
+summary_stats.index = [
+    "Democracy (VW)", "Dictatorship (VW)", "Long-Short (VW)",
+    "Democracy (EW)", "Dictatorship (EW)", "Long-Short (EW)"
+]
+
+summary_stats[["mean", "std", "min", "25%", "50%", "75%", "max", 
+               "skewness", "sharpe"]]
+```
+
+The **Sharpe ratio** is computed as:
+
+$$
+\text{SR} = \frac{\bar{r}_p}{\sigma_p} \times \sqrt{12}
+$$ {#eq-sharpe}
+
+where $\bar{r}_p$ and $\sigma_p$ are the sample mean and standard deviation of monthly portfolio returns, and the $\sqrt{12}$ scaling annualizes the ratio.
+
+### T-Test: Is the Long-Short Return Statistically Significant?
+
+The null hypothesis is that the mean monthly return difference between the Democracy and Dictatorship portfolios is zero:
+
+$$
+H_0: \mathbb{E}[r_t^{\text{Democracy}} - r_t^{\text{Dictatorship}}] = 0
+$$ {#eq-ttest-null}
+
+```{python}
+#| label: tbl-ttest
+#| tbl-cap: "T-test for the mean difference between Democracy and Dictatorship portfolio returns"
+#| eval: false
+
+def perform_ttest(series, label):
+    """Perform a one-sample t-test and return results."""
+    clean = series.dropna()
+    t_stat, p_value = stats.ttest_1samp(clean, 0)
+    return {
+        "Portfolio": label,
+        "Mean (%)": clean.mean() * 100,
+        "Std (%)": clean.std() * 100,
+        "T-statistic": t_stat,
+        "P-value": p_value,
+        "N months": len(clean),
+        "Significant (5%)": "Yes" if p_value < 0.05 else "No"
+    }
+
+ttest_results = pd.DataFrame([
+    perform_ttest(returns_wide["ret_diff_vw"], "VW Long-Short"),
+    perform_ttest(returns_wide["ret_diff_ew"], "EW Long-Short"),
+    perform_ttest(returns_wide["ret_vw_Democracy"], "VW Democracy"),
+    perform_ttest(returns_wide["ret_vw_Dictatorship"], "VW Dictatorship")
+])
+
+ttest_results.round(4)
+```
+
+### Cumulative Returns: The Visual Case for Governance
+
+One of the most compelling ways to present the governance effect is through cumulative wealth plots. We track the growth of \$1 invested in each portfolio at the beginning of the sample period.
+
+The cumulative return at time $T$ is:
+
+$$
+W_T = \prod_{t=1}^{T} (1 + r_{p,t})
+$$ {#eq-cumret}
+
+```{python}
+#| label: fig-cumulative-returns
+#| fig-cap: "Cumulative value of $1 invested in the Democracy portfolio (strong shareholder rights) versus the Dictatorship portfolio (weak shareholder rights). The shaded area represents the cumulative outperformance of the Democracy strategy."
+#| fig-alt: "Line chart showing cumulative returns of Democracy and Dictatorship portfolios over time."
+#| eval: false
+
+returns_wide = returns_wide.sort_values("date")
+
+cum_democracy = (1 + returns_wide["ret_vw_Democracy"]).cumprod()
+cum_dictatorship = (1 + returns_wide["ret_vw_Dictatorship"]).cumprod()
+
+fig, ax = plt.subplots(figsize=(10, 6))
+
+ax.plot(
+    returns_wide["date"], cum_democracy,
+    color="#1a6b3c", linewidth=2, label="Democracy Portfolio"
+)
+ax.plot(
+    returns_wide["date"], cum_dictatorship,
+    color="#c0392b", linewidth=1.5, linestyle="--",
+    label="Dictatorship Portfolio"
+)
+ax.fill_between(
+    returns_wide["date"],
+    cum_democracy, cum_dictatorship,
+    where=cum_democracy >= cum_dictatorship,
+    alpha=0.15, color="#1a6b3c", label="Outperformance"
+)
+ax.fill_between(
+    returns_wide["date"],
+    cum_democracy, cum_dictatorship,
+    where=cum_democracy < cum_dictatorship,
+    alpha=0.15, color="#c0392b"
+)
+
+ax.set_xlabel("Date", fontsize=11)
+ax.set_ylabel("Cumulative Value of $1 Invested", fontsize=11)
+ax.set_title(
+    "Democracy vs. Dictatorship Portfolios: Cumulative Returns",
+    fontsize=13, fontweight="bold"
+)
+ax.legend(fontsize=10, loc="upper left")
+ax.grid(True, alpha=0.3)
+ax.set_xlim(returns_wide["date"].min(), returns_wide["date"].max())
+
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: fig-cumulative-longshort
+#| fig-cap: "Cumulative return of the long-short (Democracy minus Dictatorship) strategy. Values above 1.0 indicate cumulative outperformance of Democracy over Dictatorship."
+#| eval: false
+
+cum_longshort = (1 + returns_wide["ret_diff_vw"]).cumprod()
+
+fig, ax = plt.subplots(figsize=(10, 4))
+
+ax.plot(
+    returns_wide["date"], cum_longshort,
+    color="#2c5f8a", linewidth=2
+)
+ax.axhline(y=1.0, color="gray", linestyle=":", linewidth=1)
+ax.fill_between(
+    returns_wide["date"], 1.0, cum_longshort,
+    where=cum_longshort >= 1.0, alpha=0.2, color="#2c5f8a"
+)
+ax.fill_between(
+    returns_wide["date"], 1.0, cum_longshort,
+    where=cum_longshort < 1.0, alpha=0.2, color="#c0392b"
+)
+
+ax.set_xlabel("Date", fontsize=11)
+ax.set_ylabel("Cumulative Long-Short Return", fontsize=11)
+ax.set_title(
+    "Long-Short Governance Strategy: Cumulative Performance",
+    fontsize=13, fontweight="bold"
+)
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
+
+### Rolling Performance
+
+The governance premium may not be constant over time. We examine 12-month rolling average returns and rolling Sharpe ratios to assess stability.
+
+```{python}
+#| label: fig-rolling-returns
+#| fig-cap: "12-month rolling average return of the long-short governance strategy. Dashed horizontal line at zero."
+#| eval: false
+
+rolling_mean = (
+    returns_wide["ret_diff_vw"]
+    .rolling(window=12, min_periods=6)
+    .mean() * 12 * 100  # Annualized
+)
+
+rolling_std = (
+    returns_wide["ret_diff_vw"]
+    .rolling(window=12, min_periods=6)
+    .std() * np.sqrt(12) * 100
+)
+
+fig, axes = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
+
+# Rolling annualized return
+axes[0].plot(
+    returns_wide["date"], rolling_mean,
+    color="#2c5f8a", linewidth=1.5
+)
+axes[0].axhline(0, color="gray", linestyle="--", linewidth=0.8)
+axes[0].set_ylabel("Annualized Return (%)")
+axes[0].set_title(
+    "12-Month Rolling Annualized Return: Long-Short Governance Strategy",
+    fontweight="bold"
+)
+axes[0].grid(True, alpha=0.3)
+
+# Rolling annualized volatility
+axes[1].plot(
+    returns_wide["date"], rolling_std,
+    color="#c0392b", linewidth=1.5
+)
+axes[1].set_ylabel("Annualized Volatility (%)")
+axes[1].set_xlabel("Date")
+axes[1].set_title(
+    "12-Month Rolling Annualized Volatility",
+    fontweight="bold"
+)
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Risk-Adjusted Performance: Factor Model Analysis
+
+### The Four-Factor Model
+
+Raw returns alone do not tell us whether the governance strategy generates **abnormal** returns (i.e., returns that cannot be explained by exposure to common risk factors). We estimate the following four-factor model:
+
+$$
+r_{t}^{D-D} - r_{f,t} = \alpha + \beta_1 (r_{m,t} - r_{f,t}) + \beta_2 \text{SMB}_t + \beta_3 \text{HML}_t + \beta_4 \text{UMD}_t + \varepsilon_t
+$$ {#eq-four-factor}
+
+where:
+
+-   $r_{t}^{D-D}$ is the long-short governance portfolio return,
+-   $r_{f,t}$ is the risk-free rate,
+-   $r_{m,t} - r_{f,t}$ is the market excess return (MKTRF),
+-   $\text{SMB}_t$ is the size factor (Small Minus Big),
+-   $\text{HML}_t$ is the value factor (High Minus Low book-to-market),
+-   $\text{UMD}_t$ is the momentum factor (Up Minus Down),
+-   $\alpha$ is the abnormal return (the intercept of interest).
+
+The **alpha** ($\alpha$) represents the average monthly return that cannot be attributed to exposure to the four systematic risk factors. A statistically significant positive alpha indicates that the governance strategy generates genuine abnormal returns.
+
+### Loading Factor Data
+
+```{python}
+#| label: load-factors
+
+factors_ff5_monthly = pd.read_sql_query(
+    sql="SELECT * FROM factors_ff5_monthly",
+    con=tidy_finance,
+    parse_dates={"date"}
+)
+
+factors_ff5_monthly.info()
+```
+
+```{python}
+momentum_factor = pd.read_sql_query(
+    sql="SELECT * FROM momentum_factor_monthly",
+    con=tidy_finance,
+    parse_dates={"date"}
+)
+
+factors_ff3_monthly = (
+    factors_ff5_monthly
+    .merge(momentum_factor, on="date")
+    .rename(columns={"mkt_excess": "mktrf", "wml": "umd"})
+)
+```
+
+
+```{python}
+#| label: tbl-factors-summary
+#| tbl-cap: "Summary statistics of Vietnamese Fama-French-Carhart factors (monthly, in percent)"
+
+factor_cols = ["mktrf", "smb", "hml", "umd", "risk_free"]
+
+(
+    factors_ff3_monthly[factor_cols]
+    .mul(100)
+    .describe()
+    .T
+    .round(3)
+)
+```
+
+### Merging Portfolio Returns with Factor Data
+
+```{python}
+#| label: merge-factors
+#| eval: false
+
+# Merge on year-month
+returns_wide["ym"] = returns_wide["date"].dt.to_period("M")
+factors_ff3_monthly["ym"] = factors_ff3_monthly["date"].dt.to_period("M")
+
+analysis_data = returns_wide.merge(
+    factors_ff3_monthly[["ym", "mktrf", "smb", "hml", "umd", "rf"]],
+    on="ym",
+    how="inner"
+)
+
+# Compute excess returns
+analysis_data = analysis_data.assign(
+    ret_excess_democracy=lambda x: x["ret_vw_Democracy"] - x["rf"],
+    ret_excess_dictatorship=lambda x: x["ret_vw_Dictatorship"] - x["rf"],
+    ret_excess_longshort=lambda x: x["ret_diff_vw"]
+    # Long-short is already excess (self-financing)
+)
+
+print(f"Observations for regression: {len(analysis_data)}")
+```
+
+### CAPM Regression
+
+We start with the single-factor CAPM to understand the market exposure of each portfolio:
+
+$$
+r_{p,t} - r_{f,t} = \alpha_p + \beta_p (r_{m,t} - r_{f,t}) + \varepsilon_{p,t}
+$$ {#eq-capm}
+
+```{python}
+#| label: tbl-capm-results
+#| tbl-cap: "CAPM regression results for Democracy, Dictatorship, and Long-Short portfolios"
+#| eval: false
+
+def run_regression(y, X, hac=True):
+    """Run OLS regression with optional HAC standard errors."""
+    X_const = sm.add_constant(X)
+    model = OLS(y, X_const).fit(
+        cov_type="HAC" if hac else "nonrobust",
+        cov_kwds={"maxlags": 6} if hac else {}
+    )
+    return model
+
+portfolios = {
+    "Democracy": analysis_data["ret_excess_democracy"],
+    "Dictatorship": analysis_data["ret_excess_dictatorship"],
+    "Long-Short": analysis_data["ret_excess_longshort"]
+}
+
+capm_results = {}
+for name, y in portfolios.items():
+    X = analysis_data[["mktrf"]]
+    model = run_regression(y, X, hac=True)
+    capm_results[name] = {
+        "Alpha (%)": model.params["const"] * 100,
+        "Alpha t-stat": model.tvalues["const"],
+        "Beta (MKTRF)": model.params["mktrf"],
+        "Beta t-stat": model.tvalues["mktrf"],
+        "R-squared": model.rsquared,
+        "N": int(model.nobs)
+    }
+
+pd.DataFrame(capm_results).T.round(4)
+```
+
+### Three-Factor Fama-French Model
+
+The three-factor model [@Fama1993] augments the CAPM with size (SMB) and value (HML) factors:
+
+$$
+r_{p,t} - r_{f,t} = \alpha_p + \beta_1 \text{MKTRF}_t + \beta_2 \text{SMB}_t + \beta_3 \text{HML}_t + \varepsilon_{p,t}
+$$ {#eq-ff3}
+
+```{python}
+#| label: tbl-ff3-results
+#| tbl-cap: "Fama-French three-factor model results with Newey-West standard errors"
+#| eval: false
+
+ff3_results = {}
+for name, y in portfolios.items():
+    X = analysis_data[["mktrf", "smb", "hml"]]
+    model = run_regression(y, X, hac=True)
+    ff3_results[name] = {
+        "Alpha (%)": model.params["const"] * 100,
+        "Alpha t-stat": model.tvalues["const"],
+        "MKTRF": model.params["mktrf"],
+        "SMB": model.params["smb"],
+        "HML": model.params["hml"],
+        "R-squared": model.rsquared
+    }
+
+pd.DataFrame(ff3_results).T.round(4)
+```
+
+### Four-Factor Carhart Model
+
+Adding the momentum factor [@Carhart1997] controls for the well-documented tendency of past winners to continue outperforming past losers:
+
+```{python}
+#| label: tbl-ff4-results
+#| tbl-cap: "Four-factor Carhart model results for governance portfolios. Standard errors are Newey-West adjusted with 6 lags."
+#| eval: false
+
+ff4_results = {}
+for name, y in portfolios.items():
+    X = analysis_data[["mktrf", "smb", "hml", "umd"]]
+    model = run_regression(y, X, hac=True)
+    ff4_results[name] = {
+        "Alpha (%)": model.params["const"] * 100,
+        "Alpha t-stat": model.tvalues["const"],
+        "Alpha p-value": model.pvalues["const"],
+        "MKTRF": model.params["mktrf"],
+        "MKTRF t": model.tvalues["mktrf"],
+        "SMB": model.params["smb"],
+        "SMB t": model.tvalues["smb"],
+        "HML": model.params["hml"],
+        "HML t": model.tvalues["hml"],
+        "UMD": model.params["umd"],
+        "UMD t": model.tvalues["umd"],
+        "R-squared": model.rsquared,
+        "Adj R-sq": model.rsquared_adj,
+        "N": int(model.nobs)
+    }
+
+ff4_df = pd.DataFrame(ff4_results).T
+ff4_df.round(4)
+```
+
+```{python}
+#| label: ff4-detailed-longshort
+#| eval: false
+
+# Detailed regression output for the long-short portfolio
+X = sm.add_constant(analysis_data[["mktrf", "smb", "hml", "umd"]])
+y = analysis_data["ret_excess_longshort"]
+
+model_ls = OLS(y, X).fit(
+    cov_type="HAC", cov_kwds={"maxlags": 6}
+)
+
+print(model_ls.summary())
+```
+
+### Interpreting the Factor Loadings
+
+The factor loadings reveal important characteristics of the governance portfolios:
+
+1.  **Market beta (**$\beta_{\text{MKTRF}}$): If the long-short portfolio has a near-zero market beta, the governance strategy is approximately market-neutral. A positive beta would indicate that Democracy firms are more sensitive to market movements than Dictatorship firms.
+
+2.  **Size factor (**$\beta_{\text{SMB}}$): A positive loading suggests the strategy tilts toward smaller firms. If Democracy firms tend to be smaller (or Dictatorship firms larger), the size factor captures this differential.
+
+3.  **Value factor (**$\beta_{\text{HML}}$): A positive loading indicates a value tilt. Governance and value may be related if poorly governed firms also tend to have high book-to-market ratios (i.e., they are "cheap" because of governance risk).
+
+4.  **Momentum factor (**$\beta_{\text{UMD}}$): The momentum loading captures whether the governance effect overlaps with price momentum. In the US, @gompers2003corporate found a near-zero momentum loading, suggesting the governance effect is distinct from momentum.
+
+### Robustness: White Heteroskedasticity-Consistent Standard Errors
+
+As a robustness check, we also report results with White (HC1) standard errors, following the original methodology:
+
+```{python}
+#| label: tbl-white-results
+#| tbl-cap: "Four-factor model with White heteroskedasticity-consistent standard errors (HC1)"
+#| eval: false
+
+white_results = {}
+for name, y in portfolios.items():
+    X = sm.add_constant(analysis_data[["mktrf", "smb", "hml", "umd"]])
+    model = OLS(y, X).fit(cov_type="HC1")
+    white_results[name] = {
+        "Alpha (%)": model.params["const"] * 100,
+        "Alpha t-stat": model.tvalues["const"],
+        "Alpha p-value": model.pvalues["const"],
+        "R-squared": model.rsquared
+    }
+
+pd.DataFrame(white_results).T.round(4)
+```
+
+## Deeper Analysis
+
+### Governance Quintile Portfolios
+
+Rather than focusing solely on the extreme portfolios, we examine returns across all five governance quintiles. This allows us to assess whether the governance-return relationship is monotonic.
+
+```{python}
+#| label: quintile-portfolios
+#| eval: false
+
+def assign_quintile(group):
+    """Assign governance quintile within each vintage year."""
+    group = group.copy()
+    group["gindex_quintile"] = pd.qcut(
+        group["gindex"], q=5, labels=[1, 2, 3, 4, 5],
+        duplicates="drop"
+    )
+    return group
+
+governance_quintiles = (
+    governance
+    .groupby("year", group_keys=False)
+    .apply(assign_quintile)
+)
+
+# Merge with stock data
+if "dual_class" in governance_quintiles.columns:
+    governance_quintiles = governance_quintiles.query("dual_class == 0")
+
+merged_q = pd.merge(
+    governance_quintiles[
+        ["symbol", "year", "gindex", "gindex_quintile",
+         "date_effective", "date_expires"]
+    ],
+    prices_monthly[["symbol", "date", "ret", "retx", "mktcap"]],
+    on="symbol",
+    how="inner"
+)
+
+merged_q = merged_q.query(
+    "date >= date_effective and date <= date_expires"
+).sort_values(["symbol", "date"])
+
+# Compute lagged market value
+merged_q = merged_q.sort_values(["symbol", "date"])
+merged_q["mktcap_lag"] = merged_q.groupby("symbol")["mktcap"].shift(1)
+
+first_obs_q = merged_q.groupby("symbol")["date"].transform("min")
+mask_first_q = merged_q["date"] == first_obs_q
+merged_q.loc[mask_first_q, "mktcap_lag"] = (
+    merged_q.loc[mask_first_q, "mktcap"]
+    / (1 + merged_q.loc[mask_first_q, "retx"])
+)
+
+mask_missing_q = merged_q["mktcap_lag"].isna()
+merged_q.loc[mask_missing_q, "mktcap_lag"] = (
+    merged_q.loc[mask_missing_q, "mktcap"]
+    / (1 + merged_q.loc[mask_missing_q, "retx"])
+)
+
+merged_q = merged_q.dropna(subset=["ret", "mktcap_lag"])
+merged_q = merged_q.query("mktcap_lag > 0")
+```
+
+```{python}
+#| label: fig-quintile-returns
+#| fig-cap: "Average monthly value-weighted returns by governance quintile. Quintile 1 represents the strongest shareholder rights (Democracy) and Quintile 5 the weakest (Dictatorship). Error bars show 95% confidence intervals."
+#| eval: false
+
+# Compute VW returns by quintile and date
+quintile_returns = (
+    merged_q
+    .groupby(["date", "gindex_quintile"])
+    .apply(
+        lambda g: np.average(g["ret"], weights=g["mktcap_lag"])
+        if g["mktcap_lag"].sum() > 0 else np.nan,
+        include_groups=False
+    )
+    .reset_index()
+    .rename(columns={0: "ret_vw"})
+)
+
+# Average across time
+quintile_avg = (
+    quintile_returns
+    .groupby("gindex_quintile")["ret_vw"]
+    .agg(["mean", "std", "count"])
+    .assign(
+        se=lambda x: x["std"] / np.sqrt(x["count"]),
+        ci95=lambda x: 1.96 * x["std"] / np.sqrt(x["count"])
+    )
+)
+
+fig, ax = plt.subplots(figsize=(8, 5))
+
+quintiles = quintile_avg.index.astype(int)
+means = quintile_avg["mean"] * 100 * 12  # Annualized
+ci = quintile_avg["ci95"] * 100 * 12
+
+bars = ax.bar(
+    quintiles, means, yerr=ci,
+    color=["#1a6b3c", "#5fa35f", "#b0b0b0", "#d4836a", "#c0392b"],
+    edgecolor="white", linewidth=0.5, capsize=5,
+    error_kw={"linewidth": 1.5}
+)
+
+ax.axhline(0, color="gray", linestyle="--", linewidth=0.8)
+ax.set_xlabel("VN-GIndex Quintile\n(1 = Strongest Rights → 5 = Weakest Rights)",
+              fontsize=10)
+ax.set_ylabel("Annualized Return (%)", fontsize=10)
+ax.set_title(
+    "Average Annualized Returns by Governance Quintile",
+    fontsize=12, fontweight="bold"
+)
+ax.set_xticks(quintiles)
+ax.grid(axis="y", alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: tbl-quintile-summary
+#| tbl-cap: "Average monthly returns and four-factor alphas by governance quintile"
+#| eval: false
+
+# Merge quintile returns with factors
+quintile_wide = quintile_returns.pivot(
+    index="date", columns="gindex_quintile", values="ret_vw"
+)
+quintile_wide.columns = [f"Q{int(c)}" for c in quintile_wide.columns]
+quintile_wide = quintile_wide.reset_index()
+
+quintile_wide["ym"] = quintile_wide["date"].dt.to_period("M")
+quintile_analysis = quintile_wide.merge(
+    factors_ff3_monthly[["ym", "mktrf", "smb", "hml", "umd", "rf"]],
+    on="ym", how="inner"
+)
+
+quintile_factor_results = {}
+for q in range(1, 6):
+    col = f"Q{q}"
+    if col in quintile_analysis.columns:
+        y = quintile_analysis[col] - quintile_analysis["rf"]
+        X = sm.add_constant(
+            quintile_analysis[["mktrf", "smb", "hml", "umd"]]
+        )
+        model = OLS(y.dropna(), X.loc[y.dropna().index]).fit(
+            cov_type="HAC", cov_kwds={"maxlags": 6}
+        )
+        quintile_factor_results[f"Quintile {q}"] = {
+            "Mean Return (%)": y.mean() * 100,
+            "Alpha (%)": model.params["const"] * 100,
+            "Alpha t-stat": model.tvalues["const"],
+            "MKTRF Beta": model.params["mktrf"],
+            "R-squared": model.rsquared
+        }
+
+# Add 5-1 spread
+if "Q1" in quintile_analysis.columns and "Q5" in quintile_analysis.columns:
+    y_spread = quintile_analysis["Q1"] - quintile_analysis["Q5"]
+    X = sm.add_constant(
+        quintile_analysis[["mktrf", "smb", "hml", "umd"]]
+    )
+    model_spread = OLS(
+        y_spread.dropna(), X.loc[y_spread.dropna().index]
+    ).fit(cov_type="HAC", cov_kwds={"maxlags": 6})
+    quintile_factor_results["Q1 - Q5"] = {
+        "Mean Return (%)": y_spread.mean() * 100,
+        "Alpha (%)": model_spread.params["const"] * 100,
+        "Alpha t-stat": model_spread.tvalues["const"],
+        "MKTRF Beta": model_spread.params["mktrf"],
+        "R-squared": model_spread.rsquared
+    }
+
+pd.DataFrame(quintile_factor_results).T.round(4)
+```
+
+### Subsample Analysis
+
+The governance premium may vary across market regimes. We split the sample at the midpoint and examine whether the effect is concentrated in a particular subperiod.
+
+```{python}
+#| label: tbl-subsample
+#| tbl-cap: "Four-factor alpha of the long-short governance strategy across subperiods"
+#| eval: false
+
+midpoint = analysis_data["date"].quantile(0.5)
+
+subperiods = {
+    "Full Sample": analysis_data,
+    "First Half": analysis_data.query(f"date <= '{midpoint}'"),
+    "Second Half": analysis_data.query(f"date > '{midpoint}'")
+}
+
+subsample_results = {}
+for period_name, df in subperiods.items():
+    if len(df) < 12:
+        continue
+    y = df["ret_excess_longshort"]
+    X = sm.add_constant(df[["mktrf", "smb", "hml", "umd"]])
+    model = OLS(y, X).fit(
+        cov_type="HAC", cov_kwds={"maxlags": 6}
+    )
+    subsample_results[period_name] = {
+        "Alpha (% monthly)": model.params["const"] * 100,
+        "Alpha (% annual)": model.params["const"] * 100 * 12,
+        "T-statistic": model.tvalues["const"],
+        "P-value": model.pvalues["const"],
+        "N months": int(model.nobs),
+        "Date Range": f"{df['date'].min().strftime('%Y-%m')} to "
+                      f"{df['date'].max().strftime('%Y-%m')}"
+    }
+
+pd.DataFrame(subsample_results).T
+```
+
+### Equal-Weighted Robustness
+
+Value-weighting may cause the results to be driven by a few large firms. We verify robustness with equal-weighted portfolios.
+
+```{python}
+#| label: tbl-ew-robustness
+#| tbl-cap: "Four-factor model results: Equal-weighted vs. Value-weighted long-short portfolio"
+#| eval: false
+
+ew_y = analysis_data["ret_diff_ew"]
+vw_y = analysis_data["ret_excess_longshort"]
+X = sm.add_constant(analysis_data[["mktrf", "smb", "hml", "umd"]])
+
+model_ew = OLS(ew_y, X).fit(cov_type="HAC", cov_kwds={"maxlags": 6})
+model_vw = OLS(vw_y, X).fit(cov_type="HAC", cov_kwds={"maxlags": 6})
+
+comparison = pd.DataFrame({
+    "Value-Weighted": {
+        "Alpha (% monthly)": model_vw.params["const"] * 100,
+        "Alpha t-stat": model_vw.tvalues["const"],
+        "MKTRF": model_vw.params["mktrf"],
+        "SMB": model_vw.params["smb"],
+        "HML": model_vw.params["hml"],
+        "UMD": model_vw.params["umd"],
+        "R-squared": model_vw.rsquared
+    },
+    "Equal-Weighted": {
+        "Alpha (% monthly)": model_ew.params["const"] * 100,
+        "Alpha t-stat": model_ew.tvalues["const"],
+        "MKTRF": model_ew.params["mktrf"],
+        "SMB": model_ew.params["smb"],
+        "HML": model_ew.params["hml"],
+        "UMD": model_ew.params["umd"],
+        "R-squared": model_ew.rsquared
+    }
+}).T
+
+comparison.round(4)
+```
+
+### Factor Loading Stability: Rolling Regressions
+
+```{python}
+#| label: fig-rolling-alpha
+#| fig-cap: "24-month rolling four-factor alpha (annualized) of the long-short governance strategy. The shaded band represents the 95% confidence interval."
+#| eval: false
+
+window = 24
+rolling_alpha = []
+
+for i in range(window, len(analysis_data)):
+    subset = analysis_data.iloc[i - window:i]
+    y = subset["ret_excess_longshort"]
+    X = sm.add_constant(subset[["mktrf", "smb", "hml", "umd"]])
+    try:
+        model = OLS(y, X).fit()
+        rolling_alpha.append({
+            "date": subset["date"].iloc[-1],
+            "alpha": model.params["const"] * 100 * 12,
+            "alpha_se": model.bse["const"] * 100 * 12,
+            "t_stat": model.tvalues["const"]
+        })
+    except Exception:
+        pass
+
+rolling_alpha_df = pd.DataFrame(rolling_alpha)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+
+ax.plot(
+    rolling_alpha_df["date"],
+    rolling_alpha_df["alpha"],
+    color="#2c5f8a", linewidth=1.5
+)
+ax.fill_between(
+    rolling_alpha_df["date"],
+    rolling_alpha_df["alpha"] - 1.96 * rolling_alpha_df["alpha_se"],
+    rolling_alpha_df["alpha"] + 1.96 * rolling_alpha_df["alpha_se"],
+    alpha=0.2, color="#2c5f8a"
+)
+ax.axhline(0, color="gray", linestyle="--", linewidth=0.8)
+
+ax.set_xlabel("Date", fontsize=11)
+ax.set_ylabel("Annualized Alpha (%)", fontsize=11)
+ax.set_title(
+    "24-Month Rolling Four-Factor Alpha: Governance Long-Short Strategy",
+    fontsize=12, fontweight="bold"
+)
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
+
+## Comparison with International Evidence
+
+### The US Experience
+
+In the United States, @gompers2003corporate documented an annualized abnormal return of approximately 8.5% for the Democracy-minus-Dictatorship strategy during the 1990s. Subsequent research has provided important nuances:
+
+-   @bebchuk2009matters refined the G-Index to a more parsimonious **Entrenchment Index (E-Index)** based on only six provisions that matter most for firm value: staggered boards, limits to shareholder bylaw amendments, poison pills, golden parachutes, and supermajority requirements for mergers and charter amendments. The E-Index explained the governance-return relationship at least as well as the full G-Index.
+
+-   @cremers2005governance found that the governance effect was strongest in firms where external governance mechanisms (the takeover market) were active, suggesting complementarity between internal and external governance.
+
+-   The governance premium in the US has largely disappeared in more recent periods [@bebchuk2013learning], potentially because the market has learned to price governance differences. This "learning hypothesis" has implications for whether similar strategies can persist in less efficient markets like Vietnam.
+
+### Emerging Market Context
+
+The governance-return relationship in emerging markets remains an active area of research. Several features of emerging markets suggest the premium may be larger and more persistent:
+
+1.  **Information asymmetry**: Weaker disclosure requirements and less analyst coverage mean governance quality is harder to observe, creating larger mispricings [@klapper2004corporate].
+
+2.  **Weaker legal enforcement**: Where legal protections for minority shareholders are weak, firm-level governance becomes more important as a substitute [@la2000investor].
+
+3.  **Concentrated ownership**: The presence of controlling shareholders creates opportunities for tunneling and related-party transactions that good governance mechanisms can mitigate [@johnson2000tunneling].
+
+Vietnam, as a frontier-to-emerging market with all three characteristics, is a particularly interesting laboratory for testing whether governance generates abnormal returns.
+
+## Drawdown and Risk Analysis
+
+### Maximum Drawdown
+
+```{python}
+#| label: fig-drawdown
+#| eval: false
+#| fig-cap: "Drawdown of the Democracy and Dictatorship portfolios from their respective peak cumulative values."
+
+def compute_drawdown(cumulative_returns):
+    """Compute drawdown series from cumulative returns."""
+    running_max = cumulative_returns.cummax()
+    drawdown = (cumulative_returns - running_max) / running_max
+    return drawdown
+
+cum_dem = (1 + returns_wide["ret_vw_Democracy"]).cumprod()
+cum_dic = (1 + returns_wide["ret_vw_Dictatorship"]).cumprod()
+
+dd_dem = compute_drawdown(cum_dem)
+dd_dic = compute_drawdown(cum_dic)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+
+ax.fill_between(
+    returns_wide["date"], dd_dem * 100, 0,
+    alpha=0.4, color="#1a6b3c", label="Democracy"
+)
+ax.fill_between(
+    returns_wide["date"], dd_dic * 100, 0,
+    alpha=0.4, color="#c0392b", label="Dictatorship"
+)
+ax.set_xlabel("Date", fontsize=11)
+ax.set_ylabel("Drawdown (%)", fontsize=11)
+ax.set_title("Portfolio Drawdowns", fontsize=12, fontweight="bold")
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: tbl-risk-metrics
+#| eval: false
+#| tbl-cap: "Risk metrics for governance portfolios"
+
+def compute_risk_metrics(returns, name, rf=None):
+    """Compute standard risk metrics."""
+    r = returns.dropna()
+    if rf is not None:
+        excess = r - rf
+    else:
+        excess = r
+    
+    ann_return = (1 + r.mean()) ** 12 - 1
+    ann_vol = r.std() * np.sqrt(12)
+    sharpe = excess.mean() / r.std() * np.sqrt(12) if r.std() > 0 else np.nan
+    
+    cum = (1 + r).cumprod()
+    max_dd = compute_drawdown(cum).min()
+    
+    # Sortino ratio (downside deviation)
+    downside = r[r < 0].std() * np.sqrt(12)
+    sortino = excess.mean() * 12 / downside if downside > 0 else np.nan
+    
+    # Skewness and kurtosis
+    skew = r.skew()
+    kurt = r.kurtosis()
+    
+    return {
+        "Portfolio": name,
+        "Ann. Return (%)": ann_return * 100,
+        "Ann. Volatility (%)": ann_vol * 100,
+        "Sharpe Ratio": sharpe,
+        "Sortino Ratio": sortino,
+        "Max Drawdown (%)": max_dd * 100,
+        "Skewness": skew,
+        "Excess Kurtosis": kurt,
+        "% Positive Months": (r > 0).mean() * 100
+    }
+
+rf_series = analysis_data.set_index("date")["rf"].reindex(
+    returns_wide["date"]
+).fillna(0)
+
+risk_table = pd.DataFrame([
+    compute_risk_metrics(
+        returns_wide["ret_vw_Democracy"], "Democracy (VW)",
+        rf_series.values
+    ),
+    compute_risk_metrics(
+        returns_wide["ret_vw_Dictatorship"], "Dictatorship (VW)",
+        rf_series.values
+    ),
+    compute_risk_metrics(
+        returns_wide["ret_diff_vw"], "Long-Short (VW)"
+    )
+]).set_index("Portfolio")
+
+risk_table.round(3)
+```
+
+## Discussion and Interpretation
+
+### Why Might Governance Predict Returns in Vietnam?
+
+Several channels may explain a governance premium in the Vietnamese market:
+
+**The risk channel**: Poorly governed firms may be riskier in ways not captured by standard factor models. Investors require a higher expected return to hold these firms, but the return difference reverses (i.e., the governance premium is positive for well-governed firms) if the market overestimates the risk of poorly governed firms or if governance risk is partially diversifiable.
+
+**The mispricing channel**: If the market is slow to incorporate governance information into prices, perhaps because governance quality is costly to assess or because many Vietnamese investors are retail traders with limited analytical capacity, then a systematic strategy that buys good governance and sells bad governance can profit from the gradual correction of mispricings.
+
+**The cash flow channel**: Better-governed firms may generate genuinely higher cash flows because they waste less on empire-building, related-party transactions, and other value-destroying activities. To the extent that these superior cash flows are not fully anticipated by the market, good governance firms deliver positive return surprises.
+
+### State Ownership and the Governance Effect
+
+A distinctive feature of the Vietnamese market is the prevalence of state-owned enterprises (SOEs). The interaction between state ownership and governance quality creates an interesting dynamic:
+
+-   SOEs may have weak governance by conventional metrics (limited board independence, political appointments) but benefit from implicit government guarantees and preferential access to land, capital, and contracts.
+-   The governance premium may therefore differ between SOEs and private firms. We encourage readers to extend the analysis by interacting the governance index with a state ownership indicator.
+
+### Limitations
+
+Several caveats apply to this analysis:
+
+1.  **Survivorship bias**: If poorly governed firms are more likely to delist (due to financial distress or regulatory action), the Dictatorship portfolio's returns may be biased upward, attenuating the true governance premium.
+
+2.  **Transaction costs**: The long-short strategy requires short selling, which is restricted in Vietnam. Implementation via a long-only tilt toward Democracy firms may be more practical.
+
+3.  **Governance data frequency**: Unlike daily stock prices, governance data is updated infrequently (typically annually). The portfolio rebalancing frequency is therefore low, which limits the strategy's responsiveness to governance changes.
+
+4.  **Index construction**: The specific provisions included in the VN-GIndex and their equal weighting may not optimally capture governance quality. Future work could explore weighted indices, following @bebchuk2009matters.
+
+## Exercises
+
+1.  **Entrenchment Index**: Following @bebchuk2009matters, identify the subset of governance provisions in the Vietnamese data that have the strongest association with firm value (measured by Tobin's Q or market-to-book ratio). Construct a Vietnamese E-Index using only these provisions and compare its predictive power for returns to the full VN-GIndex.
+
+2.  **Fama-MacBeth regressions**: Instead of sorting firms into portfolios, estimate the governance-return relationship using Fama-MacBeth cross-sectional regressions [@Fama1973]: 
+
+$$
+r_{i,t} - r_{f,t} = \gamma_{0,t} + \gamma_{1,t} \text{VN-GIndex}_{i,t-1} + \gamma_{2,t} \mathbf{X}_{i,t-1} + \epsilon_{i,t}
+$$ 
+
+where $\mathbf{X}_{i,t-1}$ includes controls for size, book-to-market, and momentum. Report the time-series averages of $\hat{\gamma}_{1,t}$ with Newey-West standard errors.
+
+3.  **State ownership interaction**: Split the sample into SOEs (state ownership \> 50%) and private firms. Does the governance premium differ between these groups? Estimate: 
+
+$$
+r_{t}^{D-D} = \alpha + \beta_1 \text{MKTRF}_t + \beta_2 \text{SMB}_t + \beta_3 \text{HML}_t + \beta_4 \text{UMD}_t + \varepsilon_t
+$$ separately for SOE and non-SOE subsamples.
+
+4.  **Transaction cost analysis**: Compute the portfolio turnover at each rebalancing date (when new governance data becomes available). Estimate how much of the abnormal return would be consumed by transaction costs at realistic bid-ask spreads for Vietnamese equities.
+
+5.  **Governance changes**: Do firms that improve their governance (declining VN-GIndex) earn higher subsequent returns than firms whose governance deteriorates? Construct portfolios based on $\Delta \text{VN-GIndex}$ and test.
+
+6.  **Comparison with market-wide governance reforms**: Vietnam has implemented several governance reform waves (e.g., Circular 121/2012/TT-BTC, Decree 71/2017/ND-CP). Test whether the governance premium narrows after these regulatory changes using a structural break or interaction approach.
+
+## Summary
+
+This chapter adapts the influential @gompers2003corporate governance investment strategy to the Vietnamese equity market. The key methodological steps are:
+
+1.  Construct a governance index (VN-GIndex) from firm-level governance provisions available through DataCore.vn.
+2.  Classify firms into Democracy (strong rights) and Dictatorship (weak rights) portfolios based on the cross-sectional distribution of the index.
+3.  Compute value-weighted monthly portfolio returns, rebalancing when new governance data becomes available.
+4.  Evaluate the long-short (Democracy minus Dictatorship) strategy using t-tests and Fama-French-Carhart four-factor regressions.
+5.  Examine robustness across subperiods, quintile portfolios, and alternative weighting schemes.
+
