@@ -23,99 +23,33 @@ plt.rcParams.update({
 })
 ```
 
-## Introduction {#sec-intro}
+Earnings management refers to the purposeful intervention by managers in the financial reporting process to achieve outcomes that serve private objectives, whether to meet analyst forecasts, trigger bonus thresholds, avoid covenant violations, or influence equity valuations. While the concept is intuitive, its rigorous detection poses one of the most enduring methodological challenges in empirical accounting research.
 
-Earnings management refers to the purposeful intervention by managers in the
-financial reporting process to achieve outcomes that serve private
-objectives—whether to meet analyst forecasts, trigger bonus thresholds, avoid
-covenant violations, or influence equity valuations. While the concept is
-intuitive, its rigorous detection poses one of the most enduring methodological
-challenges in empirical accounting research.
+The difficulty is fundamental: researchers observe *total* accruals, which combine a legitimate component (reflecting genuine economic activity) with a discretionary component (reflecting managerial intervention). Separating these two components requires a model of what accruals *should* be absent manipulation, what the literature calls **non-discretionary accruals (NDA)**. Any residual, the gap between observed accruals and the model's prediction, is then attributed to managerial discretion. The quality of the detection method therefore hinges entirely on the quality of this model.
 
-The difficulty is fundamental: researchers observe *total* accruals, which
-combine a legitimate component (reflecting genuine economic activity) with a
-discretionary component (reflecting managerial intervention). Separating these
-two components requires a model of what accruals *should* be absent
-manipulation—what the literature calls **non-discretionary accruals**. Any
-residual, the gap between observed accruals and the model's prediction, is then
-attributed to managerial discretion. The quality of the detection method
-therefore hinges entirely on the quality of this model.
-
-This chapter examines three foundational approaches to measuring earnings
-management—the @healy1985effect model, the @jones1991earnings model, and the
-modified Jones model of @dechow1995detecting—and evaluates their statistical
-properties using simulation. We then adapt the analysis to the institutional
-setting of Vietnam, where distinct governance structures, accounting standards,
-and enforcement regimes create both unique incentives for earnings management
-and unique challenges for its detection.
+This chapter examines three foundational approaches to measuring earnings management (i.e., the @healy1985effect model, the @jones1991earnings model, and the modified Jones model of @dechow1995detecting) and evaluates their statistical properties using simulation. We then adapt the analysis to the institutional setting of Vietnam, where distinct governance structures, accounting standards, and enforcement regimes create both unique incentives for earnings management and unique challenges for its detection.
 
 ### Defining Earnings Management
 
 A useful taxonomy distinguishes three forms:
 
-1. **Accrual-based earnings management (AEM).** Managers exploit discretion
-   within accounting standards to shift the timing of revenue or expense
-   recognition. Examples include aggressive revenue recognition, delays in
-   write-downs, or manipulation of allowance estimates. This form does not
-   alter the firm's underlying cash flows.
+1.  **Accrual-based earnings management (AEM).** Managers exploit discretion within accounting standards to shift the timing of revenue or expense recognition. Examples include aggressive revenue recognition, delays in write-downs, or manipulation of allowance estimates. This form does not alter the firm's underlying cash flows.
 
-2. **Real earnings management (REM).** Managers take genuine economic
-   actions—overproduction to reduce unit costs, cutting R&D or advertising
-   expenditure, offering price discounts to accelerate sales—that have real
-   cash flow consequences [@roychowdhury2006earnings]. These actions may
-   improve current-period earnings at the expense of future value.
+2.  **Real earnings management (REM).** Managers take genuine economic actions (e.g., overproduction to reduce unit costs, cutting R&D or advertising expenditure, offering price discounts to accelerate sales) that have real cash flow consequences [@roychowdhury2006earnings]. These actions may improve current-period earnings at the expense of future value.
 
-3. **Classification shifting.** Managers reclassify core expenses as
-   non-recurring items to inflate core earnings without changing bottom-line
-   net income. This form leaves both total accruals and cash flows unchanged.
-
-@beaver1998financial observes that the boundaries are blurry: earnings
-management is just one point on a spectrum of "discretionary behaviours" that
-also includes voluntary disclosure, forecast guidance, and strategic timing of
-transactions. Moreover, earnings management need not be harmful—managers may use
-discretion to convey private information about future prospects
-[@beaver1998financial].
+3.  **Classification shifting.** Managers reclassify core expenses as non-recurring items to inflate core earnings without changing bottom-line net income. This form leaves both total accruals and cash flows unchanged.
 
 ### Why Vietnam?
 
-Vietnam's institutional environment amplifies several channels relevant to
-earnings management research:
+Vietnam's institutional environment amplifies several channels relevant to earnings management research:
 
-- **State-owned enterprise (SOE) incentives.** Partially privatized SOEs face
-  dual pressures: political targets from state shareholders and market
-  expectations from minority investors. @le2021state document that state
-  ownership is associated with distinct earnings management patterns in Vietnam,
-  with SOEs tending to smooth earnings toward government benchmarks.
+-   **State-owned enterprise (SOE) incentives.** Partially privatized SOEs face dual pressures: political targets from state shareholders and market expectations from minority investors.
 
-- **Regulatory enforcement.** Vietnam's State Securities Commission (SSC) has
-  limited resources and a short institutional history relative to bodies like the
-  U.S. SEC. Weaker enforcement reduces the expected cost of manipulation,
-  potentially increasing its prevalence [@leuz2003earnings].
+-   **Regulatory enforcement.** Vietnam's State Securities Commission (SSC) has limited resources and a short institutional history relative to bodies like the U.S. SEC. Weaker enforcement reduces the expected cost of manipulation, potentially increasing its prevalence [@leuz2003earnings].
 
-- **Accounting standards.** VAS (Vietnamese Accounting Standards) are based on
-  older IAS versions and have not fully converged with IFRS [@nguyen2020vas].
-  Certain VAS provisions—such as rules-based revenue recognition criteria and
-  prescribed depreciation methods—constrain some forms of discretion while
-  creating predictable opportunities for others.
+-   **Accounting standards.** VAS (Vietnamese Accounting Standards) are based on older IAS versions and have not fully converged with IFRS. Certain VAS provisions, such as rules-based revenue recognition criteria and prescribed depreciation methods, constrain some forms of discretion while creating predictable opportunities for others.
 
-- **Audit quality heterogeneity.** @pham2020big4 find that Big 4 auditors
-  constrain earnings management among Vietnamese listed firms, but Big 4
-  market share remains low relative to developed economies, leaving a large
-  portion of firms subject to weaker external monitoring.
-
-- **Benchmark-beating behavior.** @burgstahler1997earnings documented
-  discontinuities around zero earnings and zero earnings changes in U.S. data.
-  The Vietnamese market, with its high retail participation and emphasis on
-  headline profitability, may exhibit similar or even more pronounced patterns.
-
-This chapter proceeds as follows. @sec-models defines five models of
-non-discretionary accruals and implements them in Python. @sec-type1 evaluates
-these models under the null hypothesis of no manipulation, testing whether
-rejection rates match nominal test sizes. @sec-extreme examines model behavior
-when test firm-years are drawn from the tails of the performance distribution.
-@sec-power conducts a power analysis by introducing known artificial
-manipulation. @sec-vietnam discusses implications specific to the Vietnamese
-institutional setting.
+-   **Benchmark-beating behavior.** @burgstahler1997earnings documented discontinuities around zero earnings and zero earnings changes in U.S. data. The Vietnamese market, with its high retail participation and emphasis on headline profitability, may exhibit similar or even more pronounced patterns.
 
 ## Models of Non-Discretionary Accruals {#sec-models}
 
@@ -124,7 +58,7 @@ institutional setting.
 Let $i$ index firms and $t$ index fiscal years. Define:
 
 | Symbol | Definition |
-|--------|-----------|
+|-------------------------------|-----------------------------------------|
 | $TA_{i,t}$ | Total accruals (scaled by lagged assets) |
 | $NDA_{i,t}$ | Non-discretionary accruals (model prediction) |
 | $DA_{i,t}$ | Discretionary accruals: $DA_{i,t} = TA_{i,t} - NDA_{i,t}$ |
@@ -134,7 +68,7 @@ Let $i$ index firms and $t$ index fiscal years. Define:
 | $PPE_{i,t}$ | Gross property, plant, and equipment, scaled by $A_{i,t-1}$ |
 | $PART_{i,t}$ | Indicator equal to 1 for the test (event) year |
 
-: Notation for earnings management models {#tbl-notation}
+: Notation for earnings management models {#tbl-em-notation}
 
 Total accruals are computed using the balance sheet approach:
 
@@ -142,76 +76,53 @@ $$
 TA_{i,t} = \frac{(\Delta CA_{i,t} - \Delta Cash_{i,t}) - (\Delta CL_{i,t} - \Delta STD_{i,t}) - Dep_{i,t}}{A_{i,t-1}}
 $$ {#eq-total-accruals}
 
-where $\Delta CA$ is the change in current assets, $\Delta Cash$ is the change
-in cash, $\Delta CL$ is the change in current liabilities, $\Delta STD$ is the
-change in short-term debt, and $Dep$ is depreciation expense.
+where $\Delta CA$ is the change in current assets, $\Delta Cash$ is the change in cash, $\Delta CL$ is the change in current liabilities, $\Delta STD$ is the change in short-term debt, and $Dep$ is depreciation expense.
 
 ### Five Models
 
-We implement five models, each estimating $NDA$ during a firm-specific
-estimation window and computing $DA$ for the test year as the residual.
+We implement five models, each estimating $NDA$ during a firm-specific estimation window and computing $DA$ for the test year as the residual.
 
-**Model 1: Healy (1985).** Non-discretionary accruals equal the mean of total
-accruals during the estimation period:
+**Model 1**: @healy1985effect. Non-discretionary accruals equal the mean of total accruals during the estimation period:
 
 $$
 NDA^{Healy}_{i,t} = \frac{1}{T} \sum_{s \in \text{est}} TA_{i,s}
 $$ {#eq-healy}
 
-This is the simplest possible benchmark. Its limitation is obvious: it treats
-*all* time-variation in accruals as discretionary, even variation driven by
-changes in the firm's economic environment.
+This is the simplest possible benchmark. Its limitation is obvious: it treats *all* time-variation in accruals as discretionary, even variation driven by changes in the firm's economic environment.
 
-**Model 2: DeAngelo (1986).** Non-discretionary accruals equal last period's
-total accruals:
+**Model 2**: @deangelo1986accounting. Non-discretionary accruals equal last period's total accruals:
 
 $$
 NDA^{DeAngelo}_{i,t} = TA_{i,t-1}
 $$ {#eq-deangelo}
 
-This is equivalent to assuming that the change in total accruals is entirely
-discretionary. It performs well when accruals follow a random walk, but poorly
-when they exhibit mean-reversion or trend.
+This is equivalent to assuming that the change in total accruals is entirely discretionary. It performs well when accruals follow a random walk, but poorly when they exhibit mean-reversion or trend.
 
-**Model 3: Jones (1991).** This model controls for changes in a firm's
-economic environment by regressing accruals on revenue changes and the level of
-fixed assets:
+**Model 3**: @jones1991earnings. This model controls for changes in a firm's economic environment by regressing accruals on revenue changes and the level of fixed assets:
 
 $$
 TA_{i,t} = \alpha_1 \frac{1}{A_{i,t-1}} + \alpha_2 \Delta Rev_{i,t} + \alpha_3 PPE_{i,t} + \varepsilon_{i,t}
 $$ {#eq-jones}
 
-The parameters $\hat{\alpha}_1, \hat{\alpha}_2, \hat{\alpha}_3$ are estimated
-on the estimation-period data. Non-discretionary accruals for the test year are
-the fitted values from this regression applied to test-year covariates.
+The parameters $\hat{\alpha}_1, \hat{\alpha}_2, \hat{\alpha}_3$ are estimated on the estimation-period data. Non-discretionary accruals for the test year are the fitted values from this regression applied to test-year covariates.
 
-The economic logic is that revenue growth generates legitimate working capital
-accruals (higher receivables and inventory), while fixed assets proxy for
-non-discretionary depreciation charges. The intercept is scaled by lagged assets
-rather than included as a conventional constant, following @jones1991earnings.
+The economic logic is that revenue growth generates legitimate working capital accruals (higher receivables and inventory), while fixed assets proxy for non-discretionary depreciation charges. The intercept is scaled by lagged assets rather than included as a conventional constant, following @jones1991earnings.
 
-**Model 4: Modified Jones (Dechow et al., 1995).** The modification adjusts
-revenue changes for changes in receivables during the test year, on the premise
-that credit revenue growth is more susceptible to manipulation than cash revenue
-growth:
+**Model 4: Modified Jones** [@dechow1995detecting]. The modification adjusts revenue changes for changes in receivables during the test year, on the premise that credit revenue growth is more susceptible to manipulation than cash revenue growth:
 
 $$
 NDA^{ModJones}_{i,t} = \hat{\alpha}_1 \frac{1}{A_{i,t-1}} + \hat{\alpha}_2 (\Delta Rev_{i,t} - \Delta Rec_{i,t}) + \hat{\alpha}_3 PPE_{i,t}
 $$ {#eq-mod-jones}
 
-The coefficients are still estimated from the *unadjusted* Jones model
-(@eq-jones) on estimation-period data, but receivables are subtracted from
-revenues only when computing fitted values for the test year.
+The coefficients are still estimated from the *unadjusted* Jones model (@eq-jones) on estimation-period data, but receivables are subtracted from revenues only when computing fitted values for the test year.
 
-**Model 5: Industry Model.** This model assumes that the common component of
-accruals within an industry captures non-discretionary variation:
+**Model 5: Industry Model.** This model assumes that the common component of accruals within an industry captures non-discretionary variation:
 
 $$
 TA_{i,t} = \phi_0 + \phi_1 \cdot \widetilde{TA}_{j,t} + \eta_{i,t}
 $$ {#eq-industry}
 
-where $\widetilde{TA}_{j,t}$ is the median total accrual across all firms in
-industry $j$ (excluding firm $i$), estimated during the estimation period.
+where $\widetilde{TA}_{j,t}$ is the median total accrual across all firms in industry $j$ (excluding firm $i$), estimated during the estimation period.
 
 ### Implementation
 
@@ -348,7 +259,8 @@ def prepare_model_vars(df: pd.DataFrame) -> pd.DataFrame:
     df["ppe_at"] = df["ppegt"] / df["lag_at"]
     
     # Industry median accruals (estimation period only)
-    est_acc = df.loc[~df["part"], ["sic2", "acc_at"]].copy()
+    # est_acc = df.loc[~df["part"], ["sic2", "acc_at"]].copy()
+    est_acc = df.loc[df["part"] == False, ["sic2", "acc_at"]].copy()
     ind_median = est_acc.groupby("sic2")["acc_at"].median().rename("acc_ind")
     df = df.merge(ind_median, on="sic2", how="left")
     
@@ -364,6 +276,7 @@ def get_all_nda(df: pd.DataFrame) -> pd.DataFrame:
     year_col = "year" if "year" in df.columns else "fyear"
     
     df_mod = prepare_model_vars(df)
+    df_mod["part"] = df_mod["part"].astype(bool)
     
     results = []
     for firm, group in df_mod.groupby(firm_col):
@@ -380,21 +293,9 @@ def get_all_nda(df: pd.DataFrame) -> pd.DataFrame:
 
 ### The Salkever (1976) Correction
 
-An important but underappreciated methodological issue arises when computing
-standard errors for discretionary accruals under the Jones-type models. In the
-standard two-stage procedure, the researcher first estimates the Jones model on
-the estimation period, then computes discretionary accruals for the test year as
-a *prediction error*. But the standard error of a prediction error is larger
-than the standard error of a fitted residual, because it incorporates parameter
-uncertainty from the first-stage estimation. Ignoring this distinction leads to
-understated standard errors and inflated rejection rates—exactly the problem
-documented in @dechow1995detecting.
+An important but underappreciated methodological issue arises when computing standard errors for discretionary accruals under the Jones-type models. In the standard two-stage procedure, the researcher first estimates the Jones model on the estimation period, then computes discretionary accruals for the test year as a *prediction error*. But the standard error of a prediction error is larger than the standard error of a fitted residual, because it incorporates parameter uncertainty from the first-stage estimation. Ignoring this distinction leads to understated standard errors and inflated rejection rates,exactly the problem documented in @dechow1995detecting.
 
-@salkever1976dummy provides an elegant solution: run a single regression on the
-*combined* estimation and test periods, including a dummy variable $PART$ for the
-test year. The coefficient on $PART$ equals the prediction error (discretionary
-accruals), and its standard error correctly accounts for first-stage estimation
-uncertainty.
+@salkever1976use provides an elegant solution: run a single regression on the *combined* estimation and test periods, including a dummy variable $PART$ for the test year. The coefficient on $PART$ equals the prediction error (discretionary accruals), and its standard error correctly accounts for first-stage estimation uncertainty.
 
 For the Jones model, the Salkever single-stage regression is:
 
@@ -402,9 +303,7 @@ $$
 TA_{i,t} = \alpha_1 \frac{1}{A_{i,t-1}} + \alpha_2 \Delta Rev_{i,t} + \alpha_3 PPE_{i,t} + \delta \cdot PART_{i,t} + u_{i,t}
 $$ {#eq-salkever}
 
-The coefficient $\hat{\delta}$ is numerically identical to the two-stage
-$DA$ estimate, but its standard error $\text{se}(\hat{\delta})$ is the correct
-prediction error standard error.
+The coefficient $\hat{\delta}$ is numerically identical to the two-stage $DA$ estimate, but its standard error $\text{se}(\hat{\delta})$ is the correct prediction error standard error.
 
 ```{python}
 #| label: salkever-demo
@@ -454,29 +353,20 @@ def demonstrate_salkever(df_firm: pd.DataFrame) -> pd.DataFrame:
 
 ### Experimental Design
 
-To evaluate whether the five models produce well-calibrated test statistics, we
-conduct a simulation experiment parallel to Table 2 of @dechow1995detecting.
-The procedure is:
+To evaluate whether the five models produce well-calibrated test statistics, we conduct a simulation experiment parallel to Table 2 of @dechow1995detecting. The procedure is:
 
-1. Generate a panel of $N$ firms, each with $T$ years of financial statement
-   data.
-2. For each firm, randomly designate one year as the test year ($PART = 1$).
-   By construction, *no earnings management occurs* in this year.
-3. Estimate discretionary accruals using each of the five models.
-4. Regress $DA$ on $PART$ for each firm and record whether the null $H_0:
-   \delta = 0$ is rejected at the 5% and 1% significance levels.
-5. Compute the rejection rate across all $N$ firms.
+1.  Generate a panel of $N$ firms, each with $T$ years of financial statement data.
+2.  For each firm, randomly designate one year as the test year ($PART = 1$). By construction, *no earnings management occurs* in this year.
+3.  Estimate discretionary accruals using each of the five models.
+4.  Regress $DA$ on $PART$ for each firm and record whether the null $H_0:
+    \delta = 0$ is rejected at the 5% and 1% significance levels.
+5.  Compute the rejection rate across all $N$ firms.
 
-If the model is well-specified, rejection rates should equal the nominal test
-size (5% or 1%). Systematic over-rejection indicates that the model produces
-biased test statistics—a critical flaw for research that relies on these
-measures to draw causal inferences.
+If the model is well-specified, rejection rates should equal the nominal test size (5% or 1%). Systematic over-rejection indicates that the model produces biased test statistics, a critical flaw for research that relies on these measures to draw causal inferences.
 
 ### Data Generation
 
-We generate synthetic panel data that preserves the key cross-sectional and
-time-series properties of Vietnamese listed firms while allowing us to know with
-certainty that no manipulation exists.
+We generate synthetic panel data that preserves the key cross-sectional and time-series properties of Vietnamese listed firms while allowing us to know with certainty that no manipulation exists.
 
 ```{python}
 #| label: gen-panel
@@ -586,8 +476,7 @@ print(f"Panel: {panel_raw.shape[0]:,} firm-years, "
 
 ### Sample Construction
 
-We construct a sample of 500 firms, each with a randomly designated test year,
-mirroring the design of @dechow1995detecting.
+We construct a sample of 500 firms, each with a randomly designated test year, mirroring the design of @dechow1995detecting.
 
 ```{python}
 #| label: sample-construction
@@ -640,7 +529,8 @@ def construct_sample(
     part_df = pd.DataFrame(parts)
     df = df.merge(part_df, on=[firm_col, year_col], how="left")
     df["part"] = df["part"].fillna(False)
-    
+    df["part"] = df["part"].astype(bool)
+
     return df
 
 sample_1 = construct_sample(panel_raw, n_sample=500, seed=2024)
@@ -666,8 +556,7 @@ test_da.head().round(4)
 
 ### Firm-Level Regressions and Rejection Rates
 
-For each firm and each model, we regress $DA$ on $PART$ and record whether the
-null hypothesis of zero discretionary accruals in the test year is rejected.
+For each firm and each model, we regress $DA$ on $PART$ and record whether the null hypothesis of zero discretionary accruals in the test year is rejected.
 
 ```{python}
 #| label: type1-regressions
@@ -726,9 +615,7 @@ reg_results = firm_regressions(da_results, models)
 
 ### Results
 
-@tbl-type1-coefs reports the distribution of estimated coefficients on $PART$
-across firms. Under the null of no manipulation, we expect the mean coefficient
-to be approximately zero.
+@tbl-type1-coefs reports the distribution of estimated coefficients on $PART$ across firms. Under the null of no manipulation, we expect the mean coefficient to be approximately zero.
 
 ```{python}
 #| label: tbl-type1-coefs
@@ -745,8 +632,7 @@ coef_stats.index.name = "Model"
 coef_stats.round(4)
 ```
 
-@tbl-type1-rejection reports rejection rates. The critical comparison is whether
-these rates approximate the nominal test size.
+@tbl-type1-rejection reports rejection rates. The critical comparison is whether these rates approximate the nominal test size.
 
 ```{python}
 #| label: tbl-type1-rejection
@@ -767,9 +653,7 @@ rejection_rates
 
 ### Binomial Test for Size Distortion
 
-We formally test whether observed rejection rates differ from nominal sizes
-using a two-sided binomial test. Small $p$-values indicate significant
-mis-calibration of the test statistic.
+We formally test whether observed rejection rates differ from nominal sizes using a two-sided binomial test. Small $p$-values indicate significant mis-calibration of the test statistic.
 
 ```{python}
 #| label: tbl-binom-test
@@ -798,33 +682,17 @@ binom_df.index.name = "Model"
 binom_df
 ```
 
-::: {.callout-warning}
+::: callout-warning
 ## Interpreting Over-Rejection
 
-If the Jones and Modified Jones models show rejection rates significantly above
-5%, this signals that the standard two-stage procedure produces anti-conservative
-test statistics. The @salkever1976dummy correction addresses this by computing
-standard errors that reflect first-stage estimation uncertainty. In practical
-research on Vietnamese firms, where sample sizes per firm are often short (10–15
-years of listed history), this correction is especially important because
-prediction error variance is a larger fraction of residual variance with fewer
-estimation-period observations.
+If the Jones and Modified Jones models show rejection rates significantly above 5%, this signals that the standard two-stage procedure produces anti-conservative test statistics. The @salkever1976use correction addresses this by computing standard errors that reflect first-stage estimation uncertainty. In practical research on Vietnamese firms, where sample sizes per firm are often short (10–15 years of listed history), this correction is especially important because prediction error variance is a larger fraction of residual variance with fewer estimation-period observations.
 :::
 
 ## Extreme Performance Firms {#sec-extreme}
 
-A well-known weakness of accrual-based models is their poor performance when
-test firms experience extreme economic performance. @dechow1995detecting
-documented that all five models over-reject the null hypothesis when test
-firm-years are drawn from the tails of the earnings or cash flow distribution.
-@kothari2005performance subsequently proposed "performance matching" as a
-partial remedy.
+A well-known weakness of accrual-based models is their poor performance when test firms experience extreme economic performance. @dechow1995detecting documented that all five models over-reject the null hypothesis when test firm-years are drawn from the tails of the earnings or cash flow distribution. @kothari2005performance subsequently proposed "performance matching" as a partial remedy.
 
-The intuition for the problem is straightforward: the Jones model assumes a
-linear, symmetric relationship between revenue changes and accruals. But firms
-experiencing extreme growth or contraction generate accruals that deviate
-nonlinearly from the model's predictions, even absent any manipulation. This
-nonlinearity is misattributed to discretionary accruals.
+The intuition for the problem is straightforward: the Jones model assumes a linear, symmetric relationship between revenue changes and accruals. But firms experiencing extreme growth or contraction generate accruals that deviate nonlinearly from the model's predictions, even absent any manipulation. This nonlinearity is misattributed to discretionary accruals.
 
 ### Constructing Extreme-Performance Samples
 
@@ -889,45 +757,29 @@ if extreme_results:
 
 ### Performance Matching
 
-@kothari2005performance propose adjusting discretionary accruals by subtracting
-the DA of a performance-matched firm (one in the same industry with similar ROA).
-This removes the systematic component of accruals correlated with performance.
-The matched discretionary accrual is:
+@kothari2005performance propose adjusting discretionary accruals by subtracting the DA of a performance-matched firm (one in the same industry with similar ROA). This removes the systematic component of accruals correlated with performance. The matched discretionary accrual is:
 
 $$
 DA^{PM}_{i,t} = DA_{i,t} - DA_{i^*,t}
 $$ {#eq-performance-match}
 
-where $i^*$ is the matched control firm. This approach is particularly relevant
-in Vietnam, where the cross-section of listed firms includes many high-growth
-firms alongside stagnant SOEs—performance heterogeneity that standard models
-may mischaracterize.
+where $i^*$ is the matched control firm. This approach is particularly relevant in Vietnam, where the cross-section of listed firms includes many high-growth firms alongside stagnant SOEs, which is performance heterogeneity that standard models may mischaracterize.
 
 ## Power Analysis {#sec-power}
 
 ### Artificially Introducing Earnings Management
 
-A model that never rejects is useless even if its Type I error rate is perfect.
-We need to evaluate **power**: the probability of detecting manipulation when it
-truly exists. Following @dechow1995detecting, we introduce known artificial
-manipulation into test-year financial statements and measure detection rates.
+A model that never rejects is useless even if its Type I error rate is perfect. We need to evaluate **power**: the probability of detecting manipulation when it truly exists. Following @dechow1995detecting, we introduce known artificial manipulation into test-year financial statements and measure detection rates.
 
 We consider three forms of manipulation at varying magnitudes:
 
-1. **Expense manipulation.** Decrease current liabilities by the manipulation
-   amount (e.g., delaying recognition of accrued expenses):
-   $$LCT'_{i,t} = LCT_{i,t} - \lambda \cdot A_{i,t-1}$$
+1.  **Expense manipulation.** Decrease current liabilities by the manipulation amount (e.g., delaying recognition of accrued expenses): $$LCT'_{i,t} = LCT_{i,t} - \lambda \cdot A_{i,t-1}$$
 
-2. **Revenue manipulation.** Increase sales and receivables by the manipulation
-   amount (e.g., premature revenue recognition or channel stuffing):
-   $$Sale'_{i,t} = Sale_{i,t} + \lambda \cdot A_{i,t-1}, \quad Rect'_{i,t} = Rect_{i,t} + \lambda \cdot A_{i,t-1}$$
+2.  **Revenue manipulation.** Increase sales and receivables by the manipulation amount (e.g., premature revenue recognition or channel stuffing): $$Sale'_{i,t} = Sale_{i,t} + \lambda \cdot A_{i,t-1}, \quad Rect'_{i,t} = Rect_{i,t} + \lambda \cdot A_{i,t-1}$$
 
-3. **Margin manipulation.** Increase sales by the gross amount needed to inflate
-   net income by $\lambda \cdot A_{i,t-1}$, increasing both receivables and
-   current liabilities proportionally.
+3.  **Margin manipulation.** Increase sales by the gross amount needed to inflate net income by $\lambda \cdot A_{i,t-1}$, increasing both receivables and current liabilities proportionally.
 
-The parameter $\lambda$ represents manipulation as a fraction of lagged total
-assets, ranging from 0% to 50%.
+The parameter $\lambda$ represents manipulation as a fraction of lagged total assets, ranging from 0% to 50%.
 
 ```{python}
 #| label: manipulate-fn
@@ -991,6 +843,7 @@ def manipulate(
 
 ```{python}
 #| label: power-analysis
+#| eval: false
 #| code-summary: "Power analysis across manipulation levels and types"
 
 levels = [0.0, 0.05, 0.10, 0.20, 0.30, 0.50]
@@ -1022,11 +875,54 @@ for level in levels:
 power_df = pd.DataFrame(power_records)
 ```
 
+```{python}
+#| label: power-analysis-parallel
+#| code-summary: "Power analysis across manipulation levels and types"
+
+levels = [0.0, 0.05, 0.10, 0.20, 0.30, 0.50]
+manip_types = ["expense", "revenue", "margin"]
+
+from joblib import Parallel, delayed
+from itertools import product
+
+def _run_one(level, mtype, base_sample, models):
+    manip_sample = base_sample.copy()
+    if level > 0:
+        manip_sample = manipulate(manip_sample, level=level, manip_type=mtype)
+    da = get_all_nda(manip_sample)
+    regs = firm_regressions(da, models)
+    power = regs.groupby("model")["pos_p05"].mean()
+    return [
+        {"level": level, "type": mtype, "model": m, "power": p}
+        for m, p in power.items()
+    ]
+
+# Skip redundant level=0 runs (all manip_types identical when level=0)
+combos = [(0.0, "expense")] + [
+    (l, m) for l in levels if l > 0 for m in manip_types
+]
+
+results = Parallel(n_jobs=-1, verbose=1)(
+    delayed(_run_one)(lvl, mt, sample_1, models)
+    for lvl, mt in combos
+)
+
+# Expand level=0 result across all manip_types
+flat = []
+for (lvl, mt), batch in zip(combos, results):
+    if lvl == 0:
+        for mtype in manip_types:
+            flat.extend([{**r, "type": mtype} for r in batch])
+    else:
+        flat.extend(batch)
+
+power_df = pd.DataFrame(flat)
+```
+
+
 ### Power Functions
 
-@fig-power plots the estimated power functions. The key questions are: (i) which
-model has the highest power for a given manipulation level and type, and (ii) at
-what magnitudes does manipulation become reliably detectable?
+@fig-power plots the estimated power functions. The key questions are: (i) which model has the highest power for a given manipulation level and type, and (ii) at what magnitudes does manipulation become reliably detectable?
 
 ```{python}
 #| label: fig-power
@@ -1068,8 +964,7 @@ plt.show()
 
 ### Summary Statistics
 
-@tbl-power-summary reports power at selected manipulation levels for the Jones
-and Modified Jones models, which are most commonly used in applied research.
+@tbl-power-summary reports power at selected manipulation levels for the Jones and Modified Jones models, which are most commonly used in applied research.
 
 ```{python}
 #| label: tbl-power-summary
@@ -1084,60 +979,29 @@ power_summary.index.names = ["Model", "Level (% assets)"]
 power_summary
 ```
 
-::: {.callout-important}
+::: callout-important
 ## Implications for Vietnamese Research
 
-The power analysis has stark implications for earnings management research in
-Vietnam. The typical Vietnamese listed firm has been listed for 10–15 years,
-providing far fewer estimation-period observations than in the U.S. context where
-@dechow1995detecting had decades of Compustat data. Shorter estimation windows
-increase parameter uncertainty in the Jones model, further reducing power.
-Combined with the noisier financial data common in emerging markets, researchers
-should interpret non-rejection of the null as uninformative rather than as
-evidence of clean financial reporting.
+The power analysis has stark implications for earnings management research in Vietnam. The typical Vietnamese listed firm has been listed for 10–15 years, providing far fewer estimation-period observations than in the U.S. context where @dechow1995detecting had decades of Compustat data. Shorter estimation windows increase parameter uncertainty in the Jones model, further reducing power. Combined with the noisier financial data common in emerging markets, researchers should interpret non-rejection of the null as uninformative rather than as evidence of clean financial reporting.
 :::
 
 ## Vietnamese Institutional Context {#sec-vietnam}
 
 ### Channels of Earnings Management
 
-Several features of the Vietnamese institutional environment create distinctive
-earnings management incentives and opportunities:
+Several features of the Vietnamese institutional environment create distinctive earnings management incentives and opportunities:
 
-**Tax-driven manipulation.** Vietnamese corporate income tax (CIT) rates have
-declined from 28% (pre-2009) to 20% (2016 onwards), with preferential rates
-for firms in Special Economic Zones and high-tech sectors. The close alignment
-between VAS accounting and tax accounting creates incentives to manage earnings
-downward to reduce tax obligations—a pattern documented in developing economies
-with code-law accounting traditions [@ball2003incentives].
+**Tax-driven manipulation.** Vietnamese corporate income tax (CIT) rates have declined from 28% (pre-2009) to 20% (2016 onwards), with preferential rates for firms in Special Economic Zones and high-tech sectors. The close alignment between VAS accounting and tax accounting creates incentives to manage earnings downward to reduce tax obligations—a pattern documented in developing economies with code-law accounting traditions [@ball2003incentives].
 
-**IPO and seasoned equity offering (SEO) incentives.** Vietnam has experienced
-several waves of SOE equitization (partial privatization). Managers have
-incentives to inflate earnings before share offerings to maximize proceeds. The
-SSC requires minimum profitability thresholds for listing eligibility, creating
-sharp incentives around these regulatory cutoffs—a natural setting for the
-discontinuity analysis of @burgstahler1997earnings.
+**IPO and seasoned equity offering (SEO) incentives.** Vietnam has experienced several waves of SOE equitization (partial privatization). Managers have incentives to inflate earnings before share offerings to maximize proceeds. The SSC requires minimum profitability thresholds for listing eligibility, creating sharp incentives around these regulatory cutoffs, which is a natural setting for the discontinuity analysis of @burgstahler1997earnings.
 
-**Real earnings management in manufacturing.** @roychowdhury2006earnings
-identifies overproduction, discretionary expenditure cuts, and sales
-manipulation as the three main channels of real earnings management. Vietnam's
-large manufacturing sector (textiles, electronics assembly, food processing)
-provides ample scope for overproduction-based REM, where unit costs are reduced
-by spreading fixed overhead across larger production runs.
+**Real earnings management in manufacturing.** @roychowdhury2006earnings identifies overproduction, discretionary expenditure cuts, and sales manipulation as the three main channels of real earnings management. Vietnam's large manufacturing sector (textiles, electronics assembly, food processing) provides ample scope for overproduction-based REM, where unit costs are reduced by spreading fixed overhead across larger production runs.
 
-**Related-party transactions.** Transactions with affiliated entities are a
-well-documented channel for earnings manipulation in Asian markets. Vietnamese
-conglomerates (*tập đoàn*) often feature complex cross-ownership structures
-where transfer pricing between subsidiaries can shift profits across reporting
-entities.
+**Related-party transactions.** Transactions with affiliated entities are a well-documented channel for earnings manipulation in Asian markets. Vietnamese conglomerates (*tập đoàn*) often feature complex cross-ownership structures where transfer pricing between subsidiaries can shift profits across reporting entities.
 
 ### The Earnings Distribution Test
 
-@burgstahler1997earnings observed a striking discontinuity in the distribution
-of reported earnings around zero: far more firms report small positive earnings
-than small losses, relative to what a smooth distribution would predict. This
-pattern is interpreted as evidence that firms manage earnings to avoid reporting
-losses.
+@burgstahler1997earnings observed a striking discontinuity in the distribution of reported earnings around zero: far more firms report small positive earnings than small losses, relative to what a smooth distribution would predict. This pattern is interpreted as evidence that firms manage earnings to avoid reporting losses.
 
 We apply this test to Vietnamese-style data to illustrate the methodology.
 
@@ -1197,29 +1061,19 @@ plt.show()
 
 ### Accrual-Based vs. Real Earnings Management
 
-@cohen2008real document a shift from AEM to REM following the passage of the
-Sarbanes-Oxley Act (SOX) in 2002, suggesting that tighter regulatory scrutiny
-redirects manipulation toward less detectable channels. @zang2012evidence
-provides further evidence that firms trade off between AEM and REM based on
-their relative costs.
+@cohen2008real document a shift from AEM to REM following the passage of the Sarbanes-Oxley Act (SOX) in 2002, suggesting that tighter regulatory scrutiny redirects manipulation toward less detectable channels. @zang2012evidence provides further evidence that firms trade off between AEM and REM based on their relative costs.
 
-In Vietnam, where regulatory enforcement of accounting standards is weaker than
-in post-SOX America, we might expect AEM to remain the dominant channel. However,
-as Vietnam moves toward IFRS adoption and strengthens SSC oversight, the
-AEM-to-REM substitution hypothesis becomes testable.
+In Vietnam, where regulatory enforcement of accounting standards is weaker than in post-SOX America, we might expect AEM to remain the dominant channel. However, as Vietnam moves toward IFRS adoption and strengthens SSC oversight, the AEM-to-REM substitution hypothesis becomes testable.
 
-We can measure REM using the @roychowdhury2006earnings approach. Three proxies
-capture different manipulation channels:
+We can measure REM using the @roychowdhury2006earnings approach. Three proxies capture different manipulation channels:
 
-**Abnormal cash flow from operations.** Estimate normal CFO as a function of
-sales and sales changes:
+**Abnormal cash flow from operations.** Estimate normal CFO as a function of sales and sales changes:
 
 $$
 \frac{CFO_{i,t}}{A_{i,t-1}} = \beta_0 + \beta_1 \frac{1}{A_{i,t-1}} + \beta_2 \frac{S_{i,t}}{A_{i,t-1}} + \beta_3 \frac{\Delta S_{i,t}}{A_{i,t-1}} + \varepsilon_{i,t}
 $$ {#eq-abnormal-cfo}
 
-**Abnormal production costs.** Production costs = COGS + change in inventory.
-Normal levels are modeled as:
+**Abnormal production costs.** Production costs = COGS + change in inventory. Normal levels are modeled as:
 
 $$
 \frac{PROD_{i,t}}{A_{i,t-1}} = \beta_0 + \beta_1 \frac{1}{A_{i,t-1}} + \beta_2 \frac{S_{i,t}}{A_{i,t-1}} + \beta_3 \frac{\Delta S_{i,t}}{A_{i,t-1}} + \beta_4 \frac{\Delta S_{i,t-1}}{A_{i,t-1}} + \varepsilon_{i,t}
@@ -1231,92 +1085,40 @@ $$
 \frac{DISC_{i,t}}{A_{i,t-1}} = \beta_0 + \beta_1 \frac{1}{A_{i,t-1}} + \beta_2 \frac{S_{i,t-1}}{A_{i,t-1}} + \varepsilon_{i,t}
 $$ {#eq-abnormal-disc}
 
-Residuals from these regressions serve as proxies for real manipulation. A firm
-that overproduces will show abnormally *high* production costs and abnormally
-*low* CFO (cash tied up in inventory).
-
-## Exercises
-
-1. **Salkever equivalence.** Using the `demonstrate_salkever()` function, verify
-   numerically that the two-stage Jones $DA$ estimate equals the Salkever
-   coefficient on $PART$ for a randomly selected firm. Report both estimates
-   to six decimal places.
-
-2. **Modified Jones with Salkever.** Extend the Salkever approach to the
-   Modified Jones model. In the one-stage regression, how should $\Delta Rev$
-   be specified—adjusted or unadjusted? Justify your choice.
-
-3. **Performance matching.** Implement the @kothari2005performance
-   performance-matching procedure: for each test firm-year, find a control firm
-   in the same 2-digit industry with the closest ROA, and subtract its $DA$.
-   Re-run the Type I error analysis with performance-matched $DA$. Does
-   performance matching reduce over-rejection for extreme-performance samples?
-
-4. **SOE vs. non-SOE detection.** Split the sample by SOE status and estimate
-   discretionary accruals separately for each subsample. Are there systematic
-   differences in estimated $DA$ that might reflect genuine differences in
-   accrual quality, or could they be artifacts of the model specification?
-
-5. **Earnings discontinuity test.** Using the synthetic earnings data (or actual
-   Vietnamese data if available), formally test for a discontinuity at zero using
-   the approach of @burgstahler1997earnings. Compute the standardized difference
-   between the bin just above and just below zero:
-   $$
-   z = \frac{n_{+} - n_{-}}{\sqrt{N \cdot p \cdot (1-p)}}
-   $$
-   where $n_{+}$ and $n_{-}$ are the counts in the two adjacent bins and $p$
-   is the expected proportion under smoothness.
-
-6. **Real earnings management.** Implement the @roychowdhury2006earnings model
-   for abnormal production costs (@eq-abnormal-prod) using the synthetic panel.
-   Estimate the model cross-sectionally by year and 2-digit industry. What
-   fraction of the cross-sectional variation in production costs is explained by
-   the model?
-
-7. **Power under Vietnamese conditions.** Re-run the power analysis with a
-   shortened estimation window (7 years instead of 10) to simulate the typical
-   data availability for Vietnamese firms listed after 2007. How does the
-   reduction in estimation data affect detection power? What is the minimum
-   manipulation level that can be detected with 50% power?
-
-8. **Stub-period revenue manipulation.** @stubben2010discretionary proposes a
-   revenue-based measure of earnings management that regresses changes in
-   receivables on changes in revenue, arguing that revenue manipulation is easier
-   to detect through its receivable footprint than through the broad accrual
-   models. Implement this approach and compare its Type I error and power
-   properties to the Jones model on Vietnamese data.
+Residuals from these regressions serve as proxies for real manipulation. A firm that overproduces will show abnormally *high* production costs and abnormally *low* CFO (cash tied up in inventory).
 
 ## Summary
 
-This chapter examined the measurement and detection of earnings management,
-with a focus on methodological rigor and adaptation to Vietnam's institutional
-environment. The key takeaways are:
+This chapter examined the measurement and detection of earnings management, with a focus on methodological rigor and adaptation to Vietnam's institutional environment. The key takeaways are:
 
-- Detecting earnings management requires separating discretionary from
-  non-discretionary accruals, which depends critically on the quality of the
-  non-discretionary accrual model. All five canonical models have known
-  weaknesses.
+-   Detecting earnings management requires separating discretionary from non-discretionary accruals, which depends critically on the quality of the non-discretionary accrual model. All five canonical models have known weaknesses.
 
-- Under the null hypothesis of no manipulation, the Jones and Modified Jones
-  models over-reject when standard two-stage standard errors are used. The
-  @salkever1976dummy correction provides properly calibrated inference.
+-   Under the null hypothesis of no manipulation, the Jones and Modified Jones models over-reject when standard two-stage standard errors are used. The @salkever1976use correction provides properly calibrated inference.
 
-- When test firms experience extreme financial performance, all models exhibit
-  severe size distortion, misattributing performance-driven accrual variation to
-  managerial discretion. Performance matching [@kothari2005performance] partially
-  addresses this.
+-   When test firms experience extreme financial performance, all models exhibit severe size distortion, misattributing performance-driven accrual variation to managerial discretion. Performance matching [@kothari2005performance] partially addresses this.
 
-- Power analysis reveals that economically plausible levels of manipulation
-  (below 10% of assets) are detected with very low probability. This casts doubt
-  on studies that report null results as evidence of no manipulation.
+-   Power analysis reveals that economically plausible levels of manipulation (below 10% of assets) are detected with very low probability. This casts doubt on studies that report null results as evidence of no manipulation.
 
-- Vietnam's institutional features—SOE governance, VAS accounting rules, weak
-  enforcement, and thin audit coverage—create a rich setting for earnings
-  management research, but the methodological challenges are amplified by shorter
-  time series and noisier data.
+-   Vietnam's institutional features, such aSOE governance, VAS accounting rules, weak enforcement, and thin audit coverage—create a rich setting for earnings management research, but the methodological challenges are amplified by shorter time series and noisier data.
 
-Researchers working with Vietnamese data should: (i) use the Salkever correction
-for proper inference, (ii) implement performance matching, (iii) consider
-multiple models and triangulate results, and (iv) supplement accrual-based
-approaches with real earnings management and distributional tests.
+Researchers working with Vietnamese data should: (i) use the Salkever correction for proper inference, (ii) implement performance matching, (iii) consider multiple models and triangulate results, and (iv) supplement accrual-based approaches with real earnings management and distributional tests.
 
+<!-- ## Exercises
+
+1.  **Salkever equivalence.** Using the `demonstrate_salkever()` function, verify numerically that the two-stage Jones $DA$ estimate equals the Salkever coefficient on $PART$ for a randomly selected firm. Report both estimates to six decimal places.
+
+2.  **Modified Jones with Salkever.** Extend the Salkever approach to the Modified Jones model. In the one-stage regression, how should $\Delta Rev$ be specified—adjusted or unadjusted? Justify your choice.
+
+3.  **Performance matching.** Implement the @kothari2005performance performance-matching procedure: for each test firm-year, find a control firm in the same 2-digit industry with the closest ROA, and subtract its $DA$. Re-run the Type I error analysis with performance-matched $DA$. Does performance matching reduce over-rejection for extreme-performance samples?
+
+4.  **SOE vs. non-SOE detection.** Split the sample by SOE status and estimate discretionary accruals separately for each subsample. Are there systematic differences in estimated $DA$ that might reflect genuine differences in accrual quality, or could they be artifacts of the model specification?
+
+5.  **Earnings discontinuity test.** Using the synthetic earnings data (or actual Vietnamese data if available), formally test for a discontinuity at zero using the approach of @burgstahler1997earnings. Compute the standardized difference between the bin just above and just below zero: $$
+    z = \frac{n_{+} - n_{-}}{\sqrt{N \cdot p \cdot (1-p)}}
+    $$ where $n_{+}$ and $n_{-}$ are the counts in the two adjacent bins and $p$ is the expected proportion under smoothness.
+
+6.  **Real earnings management.** Implement the @roychowdhury2006earnings model for abnormal production costs (@eq-abnormal-prod) using the synthetic panel. Estimate the model cross-sectionally by year and 2-digit industry. What fraction of the cross-sectional variation in production costs is explained by the model?
+
+7.  **Power under Vietnamese conditions.** Re-run the power analysis with a shortened estimation window (7 years instead of 10) to simulate the typical data availability for Vietnamese firms listed after 2007. How does the reduction in estimation data affect detection power? What is the minimum manipulation level that can be detected with 50% power?
+
+8.  **Stub-period revenue manipulation.** @stubben2010discretionary proposes a revenue-based measure of earnings management that regresses changes in receivables on changes in revenue, arguing that revenue manipulation is easier to detect through its receivable footprint than through the broad accrual models. Implement this approach and compare its Type I error and power properties to the Jones model on Vietnamese data. -->
