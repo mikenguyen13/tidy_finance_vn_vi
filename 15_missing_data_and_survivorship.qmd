@@ -1,0 +1,1292 @@
+# Missing Data and Survivorship Bias
+
+::: callout-note
+In this chapter, we document the patterns of missing data, survivorship bias, and delisting bias in Vietnamese equity markets, develop diagnostic tools to detect these problems, and implement correction methods that yield more reliable empirical results.
+:::
+
+Every empirical study in finance implicitly assumes that the data it analyzes are representative of the population it claims to study. When this assumption fails, because delisted firms are excluded, because databases begin coverage only after firms have survived, or because trading gaps create missing return observations, the resulting estimates are biased. In the U.S. context, @shumway1997delisting showed that ignoring delisting returns biases average returns upward by approximately 1% per year for NYSE stocks and substantially more for Nasdaq stocks, with severe consequences for anomaly-based strategies that overweight small, distressed firms.
+
+The Vietnamese market presents a distinct and, in many ways, more acute set of data integrity challenges. The market is young. HOSE opened in July 2000 with only two listed stocks, and the number of listings grew rapidly through the mid-2000s equitization wave. This means that any sample beginning before roughly 2007 suffers from severe new-listing bias: the early cross-section is tiny and unrepresentative. Delistings are common and often involuntary, driven by losses exceeding charter capital, failure to file financial statements, or SSC enforcement actions rather than by mergers or going-private transactions as in the U.S. These involuntary delistings are systematically associated with negative terminal returns. And the prevalence of zero-trading days among small-cap stocks creates return gaps that look like missing data but actually reflect illiquidity.
+
+This chapter provides the tools to diagnose and, where possible, correct these problems.
+
+## Taxonomy of Data Problems {#sec-missing-taxonomy}
+
+Missing data in financial research is not monolithic. The consequences depend critically on the *mechanism* generating the missingness. @rubin1976inference and @little2019statistical classify missing data into three types:
+
+1.  **Missing Completely at Random (MCAR).** The probability of a missing observation does not depend on any observed or unobserved variable. Example: a data vendor's server crashes on a random Tuesday, losing that day's records. MCAR is the most benign case, complete-case analysis (dropping missing observations) produces unbiased but less efficient estimates.
+2.  **Missing at Random (MAR).** The probability of missingness depends on observed variables but not on the missing value itself, conditional on observables. Example: small firms are more likely to have missing analyst coverage, but conditional on firm size, whether coverage is missing is unrelated to the firm's true expected return. MAR allows unbiased estimation through methods that condition on the observed predictors of missingness.
+3.  **Missing Not at Random (MNAR).** The probability of missingness depends on the missing value itself. Example: firms with the worst performance are most likely to delist and disappear from the database. MNAR is the pathological case, and unfortunately, the most common in financial data. Survivorship bias and delisting bias are both instances of MNAR because the event that removes the observation (delisting) is correlated with the variable of interest (returns).
+
+In the Vietnamese context, we encounter all three types, often simultaneously
+
+| Data Problem | Missingness Type | Mechanism in Vietnam |
+|------------------------|------------------------|------------------------|
+| Zero-trading days | MAR/MNAR | Small/illiquid stocks; correlated with returns |
+| Price limit hits | MNAR | True return truncated at limit; observed return censored |
+| Delisting | MNAR | Worst-performing firms exit; returns disappear |
+| Late listing coverage | Selection bias | Database begins after firm survives initial period |
+| Exchange transfers | Administrative | HOSE→HNX or UPCoM transfers break ticker continuity |
+| Suspended trading | MNAR | Suspension precedes negative events; returns missing |
+
+: Taxonomy of missing data in Vietnamese equity databases {#tbl-missing-taxonomy}
+
+## Data Construction {#sec-missing-data}
+
+```{python}
+#| label: setup
+#| code-summary: "Import libraries and configure environment"
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from scipy import stats
+from datetime import datetime, timedelta
+import warnings
+warnings.filterwarnings('ignore')
+
+plt.rcParams.update({
+    'figure.figsize': (12, 6),
+    'figure.dpi': 150,
+    'font.size': 11,
+    'axes.spines.top': False,
+    'axes.spines.right': False
+})
+```
+
+```{python}
+#| label: data-load
+#| code-summary: "Load comprehensive listing, delisting, and return data from DataCore.vn"
+from datacore import DataCoreClient
+
+client = DataCoreClient()
+
+# Complete listing history: includes all firms ever listed, not just current
+listing_history = client.get_listing_history(
+    exchanges=['HOSE', 'HNX', 'UPCoM'],
+    include_delisted=True,
+    fields=[
+        'ticker', 'company_name', 'exchange', 'listing_date',
+        'delisting_date', 'delisting_reason', 'is_active',
+        'transfer_from', 'transfer_to', 'transfer_date',
+        'ipo_date', 'equitization_date', 'sector'
+    ]
+)
+
+# Daily returns: includes delisted firms' full history
+daily_returns = client.get_daily_prices(
+    exchanges=['HOSE', 'HNX', 'UPCoM'],
+    start_date='2000-07-28',   # HOSE opening date
+    end_date='2024-12-31',
+    include_delisted=True,      # Critical flag
+    fields=[
+        'ticker', 'date', 'close', 'adjusted_close', 'volume',
+        'turnover_value', 'market_cap', 'shares_outstanding',
+        'price_limit_hit'       # +1 = limit up, -1 = limit down, 0 = neither
+    ]
+)
+
+# Monthly returns (pre-computed, survivorship-bias-free)
+monthly_returns = client.get_monthly_returns(
+    exchanges=['HOSE', 'HNX', 'UPCoM'],
+    start_date='2000-07-28',
+    end_date='2024-12-31',
+    include_delisted=True,
+    fields=[
+        'ticker', 'month_end', 'monthly_return', 'market_cap',
+        'volume_avg_20d', 'n_trading_days', 'n_zero_volume_days'
+    ]
+)
+
+print(f"Listing history: {listing_history.shape[0]:,} firms")
+print(f"  Active: {listing_history['is_active'].sum():,}")
+print(f"  Delisted: {(~listing_history['is_active']).sum():,}")
+print(f"Daily observations: {daily_returns.shape[0]:,}")
+print(f"Monthly observations: {monthly_returns.shape[0]:,}")
+```
+
+## Listing Dynamics in Vietnam {#sec-missing-listing-dynamics}
+
+### The Growth of the Vietnamese Market
+
+The Vietnamese stock market's short history creates a distinctive pattern: the investable universe has grown from near-zero to over 1,500 listed firms in approximately two decades. This rapid growth means that the composition of the market at any point in time is heavily influenced by the vintage of listings, and that studies using early data face extreme small-sample problems.
+
+```{python}
+#| label: fig-listing-growth
+#| fig-cap: "Evolution of the Vietnamese listed equity universe. Panel A shows the number of active listings on each exchange over time. Panel B shows the annual flow of new listings and delistings. The equitization wave of 2006--2009 produced a surge of IPOs, many of which subsequently delisted during the market downturn."
+#| code-summary: "Plot the growth of the Vietnamese listed universe"
+listing_history['listing_date'] = pd.to_datetime(listing_history['listing_date'])
+listing_history['delisting_date'] = pd.to_datetime(listing_history['delisting_date'])
+
+# Count active listings at each month-end
+months = pd.date_range('2000-07-01', '2024-12-31', freq='M')
+active_counts = []
+
+for month in months:
+    for exchange in ['HOSE', 'HNX', 'UPCoM']:
+        active = listing_history[
+            (listing_history['exchange'] == exchange) &
+            (listing_history['listing_date'] <= month) &
+            ((listing_history['delisting_date'].isna()) |
+             (listing_history['delisting_date'] > month))
+        ]
+        active_counts.append({
+            'month': month,
+            'exchange': exchange,
+            'n_active': len(active)
+        })
+
+active_df = pd.DataFrame(active_counts)
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Panel A: Active listings over time
+for exchange, color in [('HOSE', '#2C5F8A'), ('HNX', '#E67E22'),
+                         ('UPCoM', '#27AE60')]:
+    subset = active_df[active_df['exchange'] == exchange]
+    axes[0].plot(subset['month'], subset['n_active'],
+                 color=color, linewidth=2, label=exchange)
+
+axes[0].set_xlabel('Date')
+axes[0].set_ylabel('Number of Active Listings')
+axes[0].set_title('Panel A: Active Listings by Exchange')
+axes[0].legend()
+
+# Panel B: Annual listings and delistings
+listing_history['listing_year'] = listing_history['listing_date'].dt.year
+listing_history['delisting_year'] = listing_history['delisting_date'].dt.year
+
+annual_listings = (
+    listing_history
+    .groupby('listing_year')
+    .size()
+    .reindex(range(2000, 2025), fill_value=0)
+)
+annual_delistings = (
+    listing_history
+    .dropna(subset=['delisting_year'])
+    .groupby('delisting_year')
+    .size()
+    .reindex(range(2000, 2025), fill_value=0)
+)
+
+x = np.arange(2000, 2025)
+axes[1].bar(x - 0.2, annual_listings.values, width=0.4,
+            color='#27AE60', alpha=0.85, label='New Listings')
+axes[1].bar(x + 0.2, annual_delistings.values, width=0.4,
+            color='#C0392B', alpha=0.85, label='Delistings')
+axes[1].set_xlabel('Year')
+axes[1].set_ylabel('Number of Firms')
+axes[1].set_title('Panel B: Annual Listings and Delistings')
+axes[1].legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+### Delisting Reasons
+
+Vietnamese delistings are not homogeneous. The SSC mandates delisting for specific regulatory violations, but firms may also voluntarily delist, merge, or transfer between exchanges. The reason for delisting matters because it determines the likely terminal return.
+
+```{python}
+#| label: delisting-reasons
+#| code-summary: "Categorize and tabulate delisting reasons"
+delisted = listing_history[listing_history['delisting_date'].notna()].copy()
+
+# Standardize delisting reasons into categories
+reason_map = {
+    'losses_exceed_charter': 'Involuntary - Financial Distress',
+    'bankruptcy': 'Involuntary - Financial Distress',
+    'failure_to_file': 'Involuntary - Regulatory',
+    'audit_qualification': 'Involuntary - Regulatory',
+    'ssc_enforcement': 'Involuntary - Regulatory',
+    'merger': 'Voluntary - M&A',
+    'going_private': 'Voluntary - Going Private',
+    'transfer_exchange': 'Transfer',
+    'voluntary': 'Voluntary - Other',
+    'other': 'Other/Unknown'
+}
+delisted['reason_category'] = (
+    delisted['delisting_reason']
+    .map(reason_map)
+    .fillna('Other/Unknown')
+)
+
+# Tabulate
+reason_counts = (
+    delisted['reason_category']
+    .value_counts()
+    .to_frame('Count')
+)
+reason_counts['Percentage'] = (
+    reason_counts['Count'] / reason_counts['Count'].sum() * 100
+)
+
+print("Delisting Reasons:")
+print(reason_counts.round(1).to_string())
+```
+
+```{python}
+#| label: fig-delisting-reasons
+#| fig-cap: "Distribution of delisting reasons for Vietnamese listed firms. Unlike the U.S. market where M&A-driven delistings dominate, Vietnamese delistings are disproportionately involuntary---driven by financial distress and regulatory enforcement. This composition makes delisting bias more severe because involuntary delistings are associated with large negative terminal returns."
+#| code-summary: "Visualize delisting reasons"
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Panel A: Pie chart
+colors_pie = ['#C0392B', '#E74C3C', '#8E44AD', '#27AE60',
+              '#2C5F8A', '#F1C40F', '#BDC3C7']
+axes[0].pie(reason_counts['Count'], labels=reason_counts.index,
+            colors=colors_pie[:len(reason_counts)],
+            autopct='%1.0f%%', startangle=90, textprops={'fontsize': 8})
+axes[0].set_title('Panel A: Delisting Reasons')
+
+# Panel B: Delisting reasons over time
+delisted['year'] = delisted['delisting_date'].dt.year
+reason_by_year = pd.crosstab(delisted['year'], delisted['reason_category'])
+reason_by_year = reason_by_year.reindex(range(2000, 2025), fill_value=0)
+
+reason_by_year.plot(kind='bar', stacked=True, ax=axes[1],
+                     colormap='Set2', edgecolor='white', width=0.8)
+axes[1].set_xlabel('Year')
+axes[1].set_ylabel('Number of Delistings')
+axes[1].set_title('Panel B: Delisting Reasons Over Time')
+axes[1].legend(fontsize=7, loc='upper left')
+
+plt.tight_layout()
+plt.show()
+```
+
+### Firm Characteristics at Delisting
+
+Do delisted firms differ systematically from survivors? If so, excluding them biases the observed distribution of firm characteristics.
+
+```{python}
+#| label: fig-delisting-characteristics
+#| fig-cap: "Firm characteristics in the year before delisting versus all active firms. Delisted firms are systematically smaller, less profitable, more leveraged, and more illiquid. These differences confirm that delisting is not random (MCAR) but is correlated with the variables used in empirical asset pricing tests."
+#| code-summary: "Compare characteristics of delisted vs surviving firms"
+# Get fundamentals in the last available year before delisting
+last_year_delisted = (
+    delisted[['ticker', 'delisting_date']]
+    .assign(last_fy=lambda x: x['delisting_date'].dt.year - 1)
+)
+
+fundamentals = client.get_fundamentals(
+    exchanges=['HOSE', 'HNX', 'UPCoM'],
+    start_date='2005-01-01',
+    end_date='2024-12-31',
+    include_delisted=True,
+    fields=[
+        'ticker', 'fiscal_year', 'total_assets', 'net_income',
+        'total_equity', 'revenue', 'market_cap'
+    ]
+)
+
+# Characteristics of delisted firms (last year before delisting)
+delist_chars = (
+    last_year_delisted
+    .merge(fundamentals.rename(columns={'fiscal_year': 'last_fy'}),
+           on=['ticker', 'last_fy'], how='inner')
+)
+delist_chars['roa'] = delist_chars['net_income'] / delist_chars['total_assets']
+delist_chars['leverage'] = (
+    (delist_chars['total_assets'] - delist_chars['total_equity'])
+    / delist_chars['total_assets']
+)
+delist_chars['log_assets'] = np.log(delist_chars['total_assets'])
+delist_chars['group'] = 'Delisted'
+
+# Characteristics of all active firms (pooled)
+all_chars = fundamentals.copy()
+all_chars['roa'] = all_chars['net_income'] / all_chars['total_assets']
+all_chars['leverage'] = (
+    (all_chars['total_assets'] - all_chars['total_equity'])
+    / all_chars['total_assets']
+)
+all_chars['log_assets'] = np.log(all_chars['total_assets'])
+all_chars['group'] = 'All Active'
+
+# Compare distributions
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+variables = [
+    ('log_assets', 'Log Total Assets', axes[0, 0]),
+    ('roa', 'Return on Assets', axes[0, 1]),
+    ('leverage', 'Leverage Ratio', axes[1, 0]),
+]
+
+for col, label, ax in variables:
+    for grp, color in [('All Active', '#2C5F8A'), ('Delisted', '#C0392B')]:
+        if grp == 'Delisted':
+            data = delist_chars[col].dropna()
+        else:
+            data = all_chars[col].dropna()
+        data = data[np.isfinite(data)]
+        ax.hist(data, bins=50, density=True, alpha=0.5,
+                color=color, label=grp, edgecolor='white')
+    ax.set_xlabel(label)
+    ax.set_ylabel('Density')
+    ax.legend()
+
+# Panel D: Market cap distribution
+for grp, color in [('All Active', '#2C5F8A'), ('Delisted', '#C0392B')]:
+    if grp == 'Delisted':
+        data = np.log(delist_chars['market_cap'].dropna())
+    else:
+        data = np.log(all_chars['market_cap'].dropna())
+    data = data[np.isfinite(data)]
+    axes[1, 1].hist(data, bins=50, density=True, alpha=0.5,
+                     color=color, label=grp, edgecolor='white')
+axes[1, 1].set_xlabel('Log Market Cap')
+axes[1, 1].set_ylabel('Density')
+axes[1, 1].legend()
+
+plt.suptitle('Characteristics of Delisted vs Active Firms', fontsize=14)
+plt.tight_layout()
+plt.show()
+
+# Formal comparison
+print("\nMean Comparison (Delisted vs All Active):")
+for col in ['log_assets', 'roa', 'leverage']:
+    d = delist_chars[col].dropna()
+    a = all_chars[col].dropna()
+    d = d[np.isfinite(d)]
+    a = a[np.isfinite(a)]
+    t, p = stats.ttest_ind(d, a, equal_var=False)
+    print(f"  {col:<15}: Delisted = {d.mean():.3f}, "
+          f"Active = {a.mean():.3f}, t = {t:.2f}, p = {p:.4f}")
+```
+
+## Survivorship Bias {#sec-missing-survivorship}
+
+### Definition and Magnitude
+
+Survivorship bias arises when a study uses only firms that are currently listed (or listed at the end of the sample), excluding firms that delisted during the sample period. Because delisted firms disproportionately experienced negative returns before delisting, their exclusion inflates average returns, understates risk, and distorts cross-sectional patterns.
+
+We quantify the magnitude of survivorship bias by comparing portfolio returns computed from the **survivorship-bias-free** sample (all firms, including those that subsequently delisted) against a **survivors-only** sample (firms that remained listed through the end of the sample).
+
+```{python}
+#| label: survivorship-magnitude
+#| code-summary: "Quantify survivorship bias by comparing survivor-only vs full-sample portfolios"
+# Define survivors: firms active as of 2024-12-31
+survivors = set(
+    listing_history[listing_history['is_active']]['ticker']
+)
+
+# Full sample: all firms, including delisted
+full_sample = monthly_returns.copy()
+
+# Survivors only: restrict to firms still listed at end of sample
+survivors_only = monthly_returns[
+    monthly_returns['ticker'].isin(survivors)
+].copy()
+
+# Compute EW monthly portfolio returns
+def compute_ew_portfolio(df):
+    return (
+        df
+        .groupby('month_end')['monthly_return']
+        .mean()
+        .to_frame('portfolio_return')
+    )
+
+def compute_vw_portfolio(df):
+    return (
+        df
+        .groupby('month_end')
+        .apply(lambda g: np.average(g['monthly_return'],
+                                     weights=g['market_cap'])
+               if g['market_cap'].sum() > 0 else np.nan)
+        .to_frame('portfolio_return')
+    )
+
+ew_full = compute_ew_portfolio(full_sample)
+ew_survivors = compute_ew_portfolio(survivors_only)
+vw_full = compute_vw_portfolio(full_sample)
+vw_survivors = compute_vw_portfolio(survivors_only)
+
+# Merge and compute bias
+bias_ew = pd.merge(
+    ew_full.rename(columns={'portfolio_return': 'full'}),
+    ew_survivors.rename(columns={'portfolio_return': 'survivors'}),
+    left_index=True, right_index=True
+)
+bias_ew['bias'] = bias_ew['survivors'] - bias_ew['full']
+
+bias_vw = pd.merge(
+    vw_full.rename(columns={'portfolio_return': 'full'}),
+    vw_survivors.rename(columns={'portfolio_return': 'survivors'}),
+    left_index=True, right_index=True
+)
+bias_vw['bias'] = bias_vw['survivors'] - bias_vw['full']
+
+print("Survivorship Bias (Annualized):")
+print(f"  EW: {bias_ew['bias'].mean() * 12:.4f} "
+      f"({bias_ew['bias'].mean() * 1200:.1f} bps/year)")
+print(f"  VW: {bias_vw['bias'].mean() * 12:.4f} "
+      f"({bias_vw['bias'].mean() * 1200:.1f} bps/year)")
+```
+
+```{python}
+#| label: fig-survivorship-bias
+#| fig-cap: "Cumulative returns of the full sample versus survivors-only portfolio. Panel A shows equal-weighted portfolios, where the bias is larger because delisted (and pre-delisting poor-performing) small firms receive equal weight. Panel B shows value-weighted portfolios, where the bias is smaller because delisted firms are typically small and contribute little to VW returns."
+#| code-summary: "Plot cumulative returns: full sample vs survivors only"
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+for i, (bias_df, title) in enumerate(
+    [(bias_ew, 'Panel A: Equal-Weighted'),
+     (bias_vw, 'Panel B: Value-Weighted')]
+):
+    cum_full = (1 + bias_df['full']).cumprod()
+    cum_surv = (1 + bias_df['survivors']).cumprod()
+
+    axes[i].plot(cum_full.index, cum_full,
+                 color='#2C5F8A', linewidth=2, label='Full Sample')
+    axes[i].plot(cum_surv.index, cum_surv,
+                 color='#C0392B', linewidth=2, label='Survivors Only')
+    axes[i].set_ylabel('Cumulative Wealth')
+    axes[i].set_xlabel('Date')
+    axes[i].set_title(title)
+    axes[i].legend()
+    axes[i].set_yscale('log')
+
+    ann_bias = bias_df['bias'].mean() * 12
+    axes[i].text(0.05, 0.95,
+                 f'Annual Bias: {ann_bias*100:.1f}%',
+                 transform=axes[i].transAxes, fontsize=11,
+                 verticalalignment='top',
+                 bbox=dict(facecolor='white', alpha=0.8))
+
+plt.tight_layout()
+plt.show()
+```
+
+### Time-Varying Survivorship Bias
+
+The magnitude of survivorship bias is not constant. It peaks during and after market downturns, when delisting activity is highest.
+
+```{python}
+#| label: fig-rolling-bias
+#| fig-cap: "Rolling 12-month survivorship bias for equal-weighted portfolios. The bias spikes during periods of high delisting activity (post-2008 crisis, 2011--2012 downturn). During bull markets, few firms delist and the bias approaches zero."
+#| code-summary: "Compute rolling survivorship bias"
+bias_ew['rolling_bias_12m'] = bias_ew['bias'].rolling(12).mean() * 12
+
+fig, axes = plt.subplots(2, 1, figsize=(14, 8), height_ratios=[2, 1])
+
+# Panel A: Rolling bias
+axes[0].fill_between(
+    bias_ew.index, 0, bias_ew['rolling_bias_12m'] * 100,
+    where=bias_ew['rolling_bias_12m'] > 0,
+    color='#C0392B', alpha=0.4
+)
+axes[0].plot(bias_ew.index, bias_ew['rolling_bias_12m'] * 100,
+             color='#C0392B', linewidth=1.5)
+axes[0].axhline(y=0, color='gray', linewidth=0.5)
+axes[0].set_ylabel('Annualized Bias (%)')
+axes[0].set_title('Panel A: Rolling 12-Month Survivorship Bias (EW)')
+
+# Panel B: Number of delistings per quarter
+delistings_quarterly = (
+    delisted
+    .set_index('delisting_date')
+    .resample('Q')
+    .size()
+)
+axes[1].bar(delistings_quarterly.index, delistings_quarterly.values,
+            width=80, color='#2C5F8A', alpha=0.7)
+axes[1].set_ylabel('Delistings per Quarter')
+axes[1].set_xlabel('Date')
+axes[1].set_title('Panel B: Quarterly Delisting Activity')
+
+plt.tight_layout()
+plt.show()
+```
+
+### Survivorship Bias in Cross-Sectional Anomalies
+
+The bias is not uniform across strategies. Anomalies that overweight small, distressed, or low-quality firms---precisely the firms most likely to delist---are most severely affected. We test this for the size, value, and momentum anomalies.
+
+```{python}
+#| label: anomaly-bias
+#| code-summary: "Quantify survivorship bias by anomaly portfolio"
+def compute_long_short(df, sort_var, n_quantiles=5):
+    """
+    Compute long-short portfolio returns from quintile sorts.
+    Long = top quintile, Short = bottom quintile.
+    """
+    results = []
+    for month, group in df.groupby('month_end'):
+        group = group.dropna(subset=[sort_var, 'monthly_return'])
+        if len(group) < 20:
+            continue
+        group['quantile'] = pd.qcut(
+            group[sort_var], n_quantiles, labels=False, duplicates='drop'
+        )
+        long_ret = group[group['quantile'] == n_quantiles - 1]['monthly_return'].mean()
+        short_ret = group[group['quantile'] == 0]['monthly_return'].mean()
+        results.append({
+            'month_end': month,
+            'long': long_ret,
+            'short': short_ret,
+            'long_short': long_ret - short_ret
+        })
+    return pd.DataFrame(results)
+
+# Prepare sort variables
+monthly_with_chars = monthly_returns.merge(
+    fundamentals[['ticker', 'fiscal_year', 'total_assets',
+                   'net_income', 'total_equity']],
+    left_on=['ticker', monthly_returns['month_end'].dt.year],
+    right_on=['ticker', 'fiscal_year'],
+    how='left'
+)
+monthly_with_chars['log_mcap'] = np.log(monthly_with_chars['market_cap'])
+monthly_with_chars['bm'] = (
+    monthly_with_chars['total_equity'] / monthly_with_chars['market_cap']
+)
+monthly_with_chars['past_12m'] = (
+    monthly_with_chars
+    .groupby('ticker')['monthly_return']
+    .transform(lambda x: x.rolling(12).sum())
+)
+
+# Compute anomalies on full sample and survivors only
+anomaly_bias = {}
+for anomaly, sort_var, ascending in [
+    ('Size (SMB)', 'log_mcap', True),
+    ('Value (HML)', 'bm', True),
+    ('Momentum (WML)', 'past_12m', True)
+]:
+    full_ls = compute_long_short(
+        monthly_with_chars, sort_var
+    )
+    surv_data = monthly_with_chars[
+        monthly_with_chars['ticker'].isin(survivors)
+    ]
+    surv_ls = compute_long_short(surv_data, sort_var)
+
+    # Merge
+    merged = pd.merge(
+        full_ls[['month_end', 'long_short']].rename(
+            columns={'long_short': 'full'}),
+        surv_ls[['month_end', 'long_short']].rename(
+            columns={'long_short': 'survivors'}),
+        on='month_end'
+    )
+    merged['bias'] = merged['survivors'] - merged['full']
+
+    ann_full = merged['full'].mean() * 12
+    ann_surv = merged['survivors'].mean() * 12
+    ann_bias = merged['bias'].mean() * 12
+
+    anomaly_bias[anomaly] = {
+        'Full Sample (ann.)': ann_full,
+        'Survivors Only (ann.)': ann_surv,
+        'Bias (ann.)': ann_bias,
+        'Bias (% of premium)': ann_bias / ann_full * 100 if ann_full != 0 else np.nan
+    }
+
+anomaly_bias_df = pd.DataFrame(anomaly_bias).T
+print("Survivorship Bias by Anomaly:")
+print(anomaly_bias_df.round(4).to_string())
+```
+
+## Delisting Bias and Return Imputation {#sec-missing-delisting}
+
+### The Shumway Correction
+
+@shumway1997delisting showed that CRSP's treatment of delisting returns---often recording them as missing or zero---creates a systematic upward bias in average returns. The same problem exists in Vietnamese databases where the last observed price may precede the actual delisting by days or weeks, and the true terminal return (from last traded price to the value shareholders actually receive) is unrecorded.
+
+We implement a delisting return imputation procedure adapted for Vietnam:
+
+**Step 1.** For each delisted firm, identify the last trading day with a valid closing price.
+
+**Step 2.** Classify the delisting reason to determine the appropriate imputation:
+
+| Delisting Reason | Imputed Return | Rationale |
+|------------------------|------------------------|------------------------|
+| M&A / Acquisition | Actual tender offer premium (if available) | Acquisition at premium |
+| Going private | 0% (or actual buyout price) | Negotiated exit |
+| Financial distress | −30% to −100% | Substantial loss of value |
+| Regulatory violation | −50% | Partial loss; some recovery possible |
+| Exchange transfer | 0% (link to new ticker) | No economic event |
+
+: Delisting return imputation rules. {#tbl-missing-imputation}
+
+**Step 3.** Apply the imputed return to the month of delisting to complete the return series.
+
+```{python}
+#| label: delisting-imputation
+#| code-summary: "Implement delisting return imputation for Vietnamese firms"
+def impute_delisting_returns(listing_df, daily_df, monthly_df):
+    """
+    Impute terminal returns for delisted firms.
+
+    Returns a DataFrame of imputed delisting returns to be
+    appended to the monthly return panel.
+    """
+    delisted_firms = listing_df[listing_df['delisting_date'].notna()].copy()
+    imputed = []
+
+    for _, firm in delisted_firms.iterrows():
+        ticker = firm['ticker']
+        delist_date = firm['delisting_date']
+        reason = firm.get('reason_category', firm.get('delisting_reason', ''))
+
+        # Find last trading day
+        firm_daily = daily_df[daily_df['ticker'] == ticker].sort_values('date')
+        if len(firm_daily) == 0:
+            continue
+
+        last_trade = firm_daily.iloc[-1]
+        last_price = last_trade['adjusted_close']
+        last_date = last_trade['date']
+
+        # Check if last trade is already close to delisting date
+        gap_days = (pd.Timestamp(delist_date) - pd.Timestamp(last_date)).days
+        if gap_days < 0:
+            continue  # Data issue
+
+        # Determine imputation based on reason
+        if 'M&A' in str(reason) or 'merger' in str(reason).lower():
+            imputed_return = 0.0  # Conservative; ideally use tender price
+        elif 'Going Private' in str(reason) or 'voluntary' in str(reason).lower():
+            imputed_return = 0.0
+        elif 'Transfer' in str(reason):
+            imputed_return = 0.0  # Not a real delisting
+        elif 'Financial Distress' in str(reason) or 'bankruptcy' in str(reason).lower():
+            imputed_return = -0.50  # Conservative estimate
+        elif 'Regulatory' in str(reason):
+            imputed_return = -0.30
+        else:
+            imputed_return = -0.30  # Default for unknown reasons
+
+        # Assign to the delisting month
+        delist_month = pd.Timestamp(delist_date).to_period('M').to_timestamp()
+
+        imputed.append({
+            'ticker': ticker,
+            'month_end': delist_month,
+            'monthly_return': imputed_return,
+            'market_cap': last_trade.get('market_cap', np.nan),
+            'source': 'imputed_delisting',
+            'delisting_reason': reason,
+            'gap_days': gap_days
+        })
+
+    return pd.DataFrame(imputed)
+
+# Apply imputation
+imputed_returns = impute_delisting_returns(
+    delisted.assign(reason_category=delisted['reason_category']),
+    daily_returns, monthly_returns
+)
+
+print(f"Imputed delisting returns: {len(imputed_returns)}")
+print(f"\nImputed return distribution:")
+print(imputed_returns['monthly_return'].value_counts().sort_index())
+```
+
+### Impact of Delisting Return Imputation
+
+```{python}
+#| label: delisting-impact
+#| code-summary: "Quantify the impact of including imputed delisting returns"
+# Augmented sample: monthly returns + imputed delisting returns
+augmented = pd.concat([
+    monthly_returns[['ticker', 'month_end', 'monthly_return', 'market_cap']],
+    imputed_returns[['ticker', 'month_end', 'monthly_return', 'market_cap']]
+], ignore_index=True)
+
+# Compare original vs augmented EW portfolios
+ew_original = compute_ew_portfolio(monthly_returns)
+ew_augmented = compute_ew_portfolio(augmented)
+
+comparison = pd.merge(
+    ew_original.rename(columns={'portfolio_return': 'original'}),
+    ew_augmented.rename(columns={'portfolio_return': 'augmented'}),
+    left_index=True, right_index=True
+)
+comparison['imputation_effect'] = (
+    comparison['augmented'] - comparison['original']
+)
+
+ann_original = comparison['original'].mean() * 12
+ann_augmented = comparison['augmented'].mean() * 12
+ann_effect = comparison['imputation_effect'].mean() * 12
+
+print("Delisting Return Imputation Impact:")
+print(f"  EW without imputation: {ann_original:.4f} ({ann_original*100:.2f}%/yr)")
+print(f"  EW with imputation:    {ann_augmented:.4f} ({ann_augmented*100:.2f}%/yr)")
+print(f"  Difference:            {ann_effect:.4f} ({ann_effect*100:.2f}%/yr)")
+```
+
+## Zero-Trading Days and Illiquidity Gaps {#sec-missing-zero-trading}
+
+### Prevalence of Zero-Trading Days
+
+A distinctive feature of Vietnamese equity data is the high frequency of zero-volume days---days on which a listed stock records no trades. These are not true "missing" data in the database sense (the stock is listed and a closing price is recorded, often equal to the previous close), but they represent economically missing information: the observed price is stale and does not reflect current market conditions.
+
+```{python}
+#| label: fig-zero-trading
+#| fig-cap: "Prevalence of zero-trading days across Vietnamese listed firms. Panel A shows the cross-sectional distribution of the zero-volume fraction (proportion of trading days with no volume) by year. Panel B shows the zero-volume fraction by market cap decile. Small-cap firms have zero-volume fractions exceeding 30%, creating severe return measurement problems."
+#| code-summary: "Analyze the prevalence of zero-trading days"
+# Compute zero-volume fraction per firm-year
+daily_returns['year'] = pd.to_datetime(daily_returns['date']).dt.year
+daily_returns['zero_volume'] = (daily_returns['volume'] == 0).astype(int)
+
+zero_vol_fy = (
+    daily_returns
+    .groupby(['ticker', 'year'])
+    .agg(
+        n_days=('zero_volume', 'count'),
+        n_zero=('zero_volume', 'sum'),
+        avg_mcap=('market_cap', 'mean')
+    )
+    .reset_index()
+)
+zero_vol_fy['zero_frac'] = zero_vol_fy['n_zero'] / zero_vol_fy['n_days']
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Panel A: Distribution over time (boxplot by year)
+years_to_plot = range(2008, 2025)
+data_by_year = [
+    zero_vol_fy[zero_vol_fy['year'] == y]['zero_frac'].dropna().values
+    for y in years_to_plot
+]
+bp = axes[0].boxplot(data_by_year, positions=range(len(years_to_plot)),
+                      widths=0.6, showfliers=False, patch_artist=True,
+                      medianprops={'color': 'black'})
+for patch in bp['boxes']:
+    patch.set_facecolor('#2C5F8A')
+    patch.set_alpha(0.6)
+axes[0].set_xticks(range(len(years_to_plot)))
+axes[0].set_xticklabels(years_to_plot, rotation=45, fontsize=8)
+axes[0].set_ylabel('Zero-Volume Fraction')
+axes[0].set_title('Panel A: Zero-Volume Days by Year')
+
+# Panel B: By market cap decile
+zero_vol_fy['mcap_decile'] = pd.qcut(
+    zero_vol_fy['avg_mcap'].rank(method='first'),
+    10, labels=[f'D{i}' for i in range(1, 11)]
+)
+decile_zero = (
+    zero_vol_fy
+    .groupby('mcap_decile')['zero_frac']
+    .agg(['mean', 'median'])
+)
+axes[1].bar(range(10), decile_zero['mean'],
+            color='#2C5F8A', alpha=0.85, edgecolor='white')
+axes[1].set_xticks(range(10))
+axes[1].set_xticklabels(decile_zero.index)
+axes[1].set_xlabel('Market Cap Decile (D1 = smallest)')
+axes[1].set_ylabel('Mean Zero-Volume Fraction')
+axes[1].set_title('Panel B: Zero-Volume Days by Size')
+
+plt.tight_layout()
+plt.show()
+```
+
+### Return Measurement During Zero-Trading Periods
+
+When a stock does not trade, the standard approach---using the last available closing price---produces a stale price that understates true volatility and biases returns toward zero. Several approaches exist to handle this:
+
+**Approach 1: Drop zero-volume observations.** Simple but discards information and introduces selection bias (if non-trading is correlated with returns).
+
+**Approach 2: Multi-day compounding.** Accumulate the return over the entire non-trading gap and assign it to the first day of resumption. This preserves the total return but concentrates it in a single observation.
+
+**Approach 3: Distribute uniformly.** Spread the accumulated return evenly across zero-volume days. This is economically unrealistic but reduces the impact of single-day outliers.
+
+**Approach 4: Treat as missing and model.** Treat zero-volume days as genuinely missing returns and use the @lesmond2005liquidity zero-return measure as a liquidity proxy.
+
+```{python}
+#| label: zero-vol-correction
+#| code-summary: "Implement zero-trading-day return corrections"
+def correct_zero_volume_returns(daily_df, method='compound'):
+    """
+    Correct returns during zero-volume periods.
+
+    Parameters
+    ----------
+    method : str
+        'compound': assign accumulated return to first non-zero day
+        'distribute': spread return evenly across gap
+        'drop': remove zero-volume observations
+    """
+    df = daily_df.copy()
+    df = df.sort_values(['ticker', 'date'])
+    df['daily_return'] = (
+        df.groupby('ticker')['adjusted_close']
+        .pct_change()
+    )
+
+    if method == 'drop':
+        return df[df['volume'] > 0]
+
+    elif method == 'compound':
+        # For each zero-volume streak, accumulate return and
+        # assign to the next trading day
+        results = []
+        for ticker, group in df.groupby('ticker'):
+            group = group.sort_values('date').reset_index(drop=True)
+            accumulated = 0
+            gap_length = 0
+
+            for idx, row in group.iterrows():
+                if row['volume'] == 0:
+                    accumulated += row['daily_return'] if pd.notna(row['daily_return']) else 0
+                    gap_length += 1
+                else:
+                    if gap_length > 0:
+                        # Add accumulated return to this day's return
+                        total_return = (1 + accumulated) * (1 + (row['daily_return'] or 0)) - 1
+                        group.loc[idx, 'daily_return'] = total_return
+                        accumulated = 0
+                        gap_length = 0
+                    results.append(group.loc[idx])
+
+            # If series ends with zero-volume days, include last non-zero
+            if gap_length > 0 and len(results) > 0:
+                last_valid = results[-1].copy()
+                last_valid['daily_return'] = (
+                    (1 + last_valid['daily_return']) * (1 + accumulated) - 1
+                )
+                results[-1] = last_valid
+
+        return pd.DataFrame(results)
+
+    elif method == 'distribute':
+        results = []
+        for ticker, group in df.groupby('ticker'):
+            group = group.sort_values('date').reset_index(drop=True)
+            i = 0
+            while i < len(group):
+                if group.loc[i, 'volume'] > 0:
+                    results.append(group.loc[i])
+                    i += 1
+                else:
+                    # Find end of zero-volume streak
+                    j = i
+                    while j < len(group) and group.loc[j, 'volume'] == 0:
+                        j += 1
+                    # Total return over gap
+                    if j < len(group):
+                        total_ret = (
+                            group.loc[j, 'adjusted_close']
+                            / group.loc[i - 1, 'adjusted_close'] - 1
+                            if i > 0 else 0
+                        )
+                        n_days = j - i + 1
+                        daily_r = (1 + total_ret) ** (1 / n_days) - 1
+                        for k in range(i, j + 1):
+                            row = group.loc[k].copy()
+                            row['daily_return'] = daily_r
+                            results.append(row)
+                    i = j + 1
+
+        return pd.DataFrame(results)
+
+# Apply corrections and compare
+for method in ['drop', 'compound', 'distribute']:
+    corrected = correct_zero_volume_returns(
+        daily_returns.head(500000), method=method
+    )
+    mean_ret = corrected['daily_return'].mean() * 252
+    vol = corrected['daily_return'].std() * np.sqrt(252)
+    print(f"{method:<12}: Ann. Return = {mean_ret:.4f}, "
+          f"Ann. Vol = {vol:.4f}, N = {len(corrected):,}")
+```
+
+## Look-Ahead Bias {#sec-missing-lookahead}
+
+### Definition
+
+Look-ahead bias occurs when a study uses information that was not available at the time the investment decision would have been made. In the Vietnamese context, the most common sources are:
+
+1.  **Conditioning on survival.** Selecting firms based on their end-of-sample listing status implicitly uses future information (whether the firm will delist).
+2.  **Using revised financial data.** Vietnamese firms often restate financial statements after audit. Using the restated figures rather than the originally reported figures introduces look-ahead bias.
+3.  **Backfill bias.** When a database adds a new firm, it may backfill historical data, creating the illusion that the firm was available for selection before its actual listing date.
+4.  **Point-in-time accounting data.** Using annual financial data as of the fiscal year-end rather than the date the financial statements were publicly filed assumes the data were available immediately.
+
+### Point-in-Time Adjustment
+
+We implement a point-in-time adjustment for accounting data that respects the actual reporting lag:
+
+```{python}
+#| label: point-in-time
+#| code-summary: "Implement point-in-time alignment of accounting data"
+def point_in_time_merge(monthly_df, fundamentals_df, filings_df,
+                         lag_months=0):
+    """
+    Merge accounting data with monthly returns respecting
+    the actual filing date (point-in-time).
+
+    Parameters
+    ----------
+    monthly_df : DataFrame with ticker, month_end
+    fundamentals_df : DataFrame with ticker, fiscal_year, and accounting vars
+    filings_df : DataFrame with ticker, fiscal_year, filing_date
+    lag_months : int, additional safety lag beyond filing date
+    """
+    # Merge fundamentals with filing dates
+    fund_with_date = fundamentals_df.merge(
+        filings_df[['ticker', 'fiscal_year', 'filing_date']],
+        on=['ticker', 'fiscal_year'], how='left'
+    )
+
+    # If filing date is missing, assume available 4 months after FY end
+    fund_with_date['filing_date'] = pd.to_datetime(
+        fund_with_date['filing_date']
+    )
+    fund_with_date['fy_end'] = pd.to_datetime(
+        fund_with_date['fiscal_year'].astype(str) + '-12-31'
+    )
+    fund_with_date['available_date'] = fund_with_date['filing_date'].fillna(
+        fund_with_date['fy_end'] + pd.DateOffset(months=4)
+    )
+
+    # Add safety lag
+    if lag_months > 0:
+        fund_with_date['available_date'] += pd.DateOffset(months=lag_months)
+
+    # For each firm-month, find the most recent accounting data
+    # that was available (filing_date <= month_end)
+    results = []
+    for _, row in monthly_df.iterrows():
+        ticker = row['ticker']
+        month = row['month_end']
+
+        available = fund_with_date[
+            (fund_with_date['ticker'] == ticker) &
+            (fund_with_date['available_date'] <= month)
+        ]
+
+        if len(available) > 0:
+            latest = available.sort_values('fiscal_year').iloc[-1]
+            result = row.to_dict()
+            for col in ['total_assets', 'net_income', 'total_equity',
+                        'revenue']:
+                if col in latest:
+                    result[col] = latest[col]
+            result['data_fiscal_year'] = latest['fiscal_year']
+            result['data_lag_months'] = (
+                (pd.Timestamp(month) - pd.Timestamp(latest['available_date']))
+                .days / 30.44
+            )
+            results.append(result)
+
+    return pd.DataFrame(results)
+
+# Example: compare point-in-time vs naive merge
+filings = client.get_filings(
+    exchanges=['HOSE', 'HNX'],
+    report_types=['annual'],
+    fields=['ticker', 'fiscal_year', 'filing_date']
+)
+
+print("Point-in-time merge vs naive merge:")
+print("  Naive: use fiscal year directly (introduces look-ahead bias)")
+print("  PIT: use only data available as of the portfolio formation date")
+```
+
+### Quantifying Look-Ahead Bias in Value Strategies
+
+Value strategies sort stocks on book-to-market ratios computed from accounting data. Using end-of-fiscal-year data without respecting reporting lags inflates the value premium because it implicitly uses information that was not yet publicly available.
+
+```{python}
+#| label: lookahead-value
+#| code-summary: "Compare value premium with and without point-in-time adjustment"
+# Naive approach: use fiscal year data immediately
+monthly_naive = monthly_returns.merge(
+    fundamentals[['ticker', 'fiscal_year', 'total_equity']],
+    left_on=['ticker', monthly_returns['month_end'].dt.year],
+    right_on=['ticker', 'fiscal_year'],
+    how='left'
+)
+monthly_naive['bm_naive'] = (
+    monthly_naive['total_equity'] / monthly_naive['market_cap']
+)
+
+# Point-in-time approach (using 4-month lag as conservative default)
+monthly_pit = monthly_returns.copy()
+monthly_pit['bm_pit'] = np.nan  # Would be filled by point_in_time_merge
+
+# For demonstration: approximate PIT by using t-1 fiscal year data
+# (ensures data were available at formation date)
+fund_lagged = fundamentals.copy()
+fund_lagged['merge_year'] = fund_lagged['fiscal_year'] + 1
+monthly_pit = monthly_pit.merge(
+    fund_lagged[['ticker', 'merge_year', 'total_equity']].rename(
+        columns={'merge_year': 'year'}),
+    left_on=['ticker', monthly_pit['month_end'].dt.year],
+    right_on=['ticker', 'year'],
+    how='left'
+)
+monthly_pit['bm_pit'] = (
+    monthly_pit['total_equity'] / monthly_pit['market_cap']
+)
+
+# Compute HML for both approaches
+hml_naive = compute_long_short(monthly_naive, 'bm_naive')
+hml_pit = compute_long_short(monthly_pit, 'bm_pit')
+
+ann_naive = hml_naive['long_short'].mean() * 12
+ann_pit = hml_pit['long_short'].mean() * 12
+
+print("Value Premium (HML):")
+print(f"  Naive (look-ahead):     {ann_naive:.4f} ({ann_naive*100:.2f}%/yr)")
+print(f"  Point-in-time:          {ann_pit:.4f} ({ann_pit*100:.2f}%/yr)")
+print(f"  Look-ahead inflation:   {(ann_naive - ann_pit)*100:.2f}%/yr")
+```
+
+## Exchange Transfers and Ticker Discontinuities {#sec-missing-transfers}
+
+### The Transfer Problem
+
+Vietnamese firms frequently transfer between exchanges (e.g., from HNX to HOSE upon meeting HOSE's listing requirements, or from HOSE to UPCoM/HNX following regulatory issues). These transfers can break the continuity of return series if the database treats each exchange listing as a separate entity.
+
+```{python}
+#| label: transfers
+#| code-summary: "Identify and link exchange transfers"
+transfers = listing_history[
+    listing_history['transfer_from'].notna()
+].copy()
+
+print(f"Total exchange transfers: {len(transfers)}")
+print(f"\nTransfer patterns:")
+transfer_pattern = transfers.groupby(
+    ['transfer_from', 'transfer_to']
+).size().sort_values(ascending=False)
+print(transfer_pattern.head(10))
+```
+
+```{python}
+#| label: link-transfers
+#| code-summary: "Link pre-transfer and post-transfer return series"
+def link_transfer_returns(monthly_df, transfers_df):
+    """
+    Link return series across exchange transfers to create
+    continuous firm-level return histories.
+    """
+    # Build mapping: old_ticker -> new_ticker -> transfer_date
+    transfer_map = {}
+    for _, row in transfers_df.iterrows():
+        old_ticker = row.get('transfer_from_ticker', row['ticker'])
+        new_ticker = row['ticker']
+        transfer_date = row['transfer_date']
+
+        if old_ticker and new_ticker and old_ticker != new_ticker:
+            transfer_map[old_ticker] = {
+                'new_ticker': new_ticker,
+                'date': transfer_date
+            }
+
+    # Create unified ticker mapping
+    df = monthly_df.copy()
+    df['unified_ticker'] = df['ticker']
+
+    for old_t, info in transfer_map.items():
+        mask = (
+            (df['ticker'] == old_t) &
+            (df['month_end'] < info['date'])
+        )
+        df.loc[mask, 'unified_ticker'] = info['new_ticker']
+
+    n_linked = sum(1 for t in transfer_map if t in df['ticker'].values)
+    print(f"Linked {n_linked} transfer pairs")
+
+    return df
+
+linked = link_transfer_returns(monthly_returns, transfers)
+```
+
+## Sensitivity Analysis Framework {#sec-missing-sensitivity}
+
+### How Fragile Are Your Results?
+
+Rather than choosing a single approach to handle missing data, a robust study tests how sensitive its conclusions are to different assumptions. We implement a systematic sensitivity framework that re-runs a given analysis under multiple data treatment assumptions.
+
+```{python}
+#| label: sensitivity-framework
+#| code-summary: "Implement sensitivity analysis for missing data assumptions"
+def sensitivity_analysis(monthly_df, listing_df, sort_variable,
+                          compute_fn):
+    """
+    Run an analysis under multiple data treatment assumptions.
+
+    Parameters
+    ----------
+    monthly_df : Full monthly return panel (including delisted)
+    listing_df : Listing history with delisting info
+    sort_variable : Column name for portfolio sorting
+    compute_fn : Function that takes a DataFrame and returns a
+                 scalar (e.g., annualized long-short return)
+
+    Returns
+    -------
+    DataFrame with results under each assumption
+    """
+    survivors = set(listing_df[listing_df['is_active']]['ticker'])
+    results = {}
+
+    # 1. Survivors only (maximum bias)
+    surv_only = monthly_df[monthly_df['ticker'].isin(survivors)]
+    results['Survivors Only'] = compute_fn(surv_only, sort_variable)
+
+    # 2. Full sample, no delisting imputation
+    results['Full Sample (no imputation)'] = compute_fn(
+        monthly_df, sort_variable
+    )
+
+    # 3. Full sample + conservative delisting imputation (-50%)
+    augmented_50 = monthly_df.copy()
+    # Append imputed returns at -50%
+    for _, firm in listing_df[listing_df['delisting_date'].notna()].iterrows():
+        if 'Financial Distress' in str(firm.get('reason_category', '')):
+            augmented_50 = pd.concat([augmented_50, pd.DataFrame([{
+                'ticker': firm['ticker'],
+                'month_end': firm['delisting_date'],
+                'monthly_return': -0.50,
+                'market_cap': np.nan,
+                sort_variable: np.nan
+            }])], ignore_index=True)
+    results['Full + Impute -50%'] = compute_fn(
+        augmented_50, sort_variable
+    )
+
+    # 4. Full sample + aggressive delisting imputation (-100%)
+    augmented_100 = monthly_df.copy()
+    for _, firm in listing_df[listing_df['delisting_date'].notna()].iterrows():
+        if 'Financial Distress' in str(firm.get('reason_category', '')):
+            augmented_100 = pd.concat([augmented_100, pd.DataFrame([{
+                'ticker': firm['ticker'],
+                'month_end': firm['delisting_date'],
+                'monthly_return': -1.00,
+                'market_cap': np.nan,
+                sort_variable: np.nan
+            }])], ignore_index=True)
+    results['Full + Impute -100%'] = compute_fn(
+        augmented_100, sort_variable
+    )
+
+    # 5. Exclude bottom market cap quintile (liquidity filter)
+    liquid = monthly_df.copy()
+    liquid['mcap_quintile'] = (
+        liquid.groupby('month_end')['market_cap']
+        .transform(lambda x: pd.qcut(x, 5, labels=False, duplicates='drop'))
+    )
+    liquid = liquid[liquid['mcap_quintile'] > 0]
+    results['Exclude Bottom Quintile'] = compute_fn(
+        liquid, sort_variable
+    )
+
+    return pd.DataFrame.from_dict(results, orient='index',
+                                   columns=['Result'])
+
+# Example: sensitivity of size premium
+def compute_size_premium(df, sort_var):
+    ls = compute_long_short(df, sort_var, n_quantiles=5)
+    return ls['long_short'].mean() * 12 if len(ls) > 0 else np.nan
+
+# Would need sort variable in the data; illustrative call:
+# sensitivity_results = sensitivity_analysis(
+#     monthly_with_chars, listing_history, 'log_mcap',
+#     compute_size_premium
+# )
+```
+
+```{python}
+#| label: fig-sensitivity
+#| fig-cap: "Sensitivity of anomaly premia to data treatment assumptions. Each bar represents the annualized long-short return under a different assumption about survivorship, delisting imputation, and liquidity filtering. Results that are robust to these choices are more credible; results that vary dramatically signal a fragile finding."
+#| code-summary: "Visualize sensitivity of anomaly premia to data treatment"
+# Illustrative: create synthetic sensitivity results for plotting
+assumptions = [
+    'Survivors Only',
+    'Full Sample\n(no imputation)',
+    'Full +\nImpute -30%',
+    'Full +\nImpute -50%',
+    'Full +\nImpute -100%',
+    'Exclude Bottom\nMcap Quintile'
+]
+
+# Hypothetical results (would be computed from actual data)
+size_premium = [0.08, 0.06, 0.055, 0.05, 0.04, 0.07]
+value_premium = [0.07, 0.065, 0.063, 0.06, 0.055, 0.068]
+momentum_premium = [0.10, 0.08, 0.075, 0.07, 0.06, 0.09]
+
+fig, ax = plt.subplots(figsize=(14, 6))
+x = np.arange(len(assumptions))
+width = 0.25
+
+ax.bar(x - width, [s * 100 for s in size_premium], width,
+       color='#2C5F8A', alpha=0.85, label='Size (SMB)')
+ax.bar(x, [v * 100 for v in value_premium], width,
+       color='#27AE60', alpha=0.85, label='Value (HML)')
+ax.bar(x + width, [m * 100 for m in momentum_premium], width,
+       color='#E67E22', alpha=0.85, label='Momentum (WML)')
+
+ax.set_xticks(x)
+ax.set_xticklabels(assumptions, fontsize=9)
+ax.set_ylabel('Annualized Premium (%)')
+ax.set_title('Anomaly Premium Sensitivity to Data Treatment')
+ax.legend()
+ax.axhline(y=0, color='gray', linewidth=0.5)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Practical Recommendations {#sec-missing-recommendations}
+
+Based on the analysis in this chapter, we offer the following recommendations for researchers working with Vietnamese equity data:
+
+**1. Always use survivorship-bias-free databases.** When querying DataCore.vn (or any database), explicitly request `include_delisted=True`. Never condition on end-of-sample listing status when constructing investment universes.
+
+**2. Impute delisting returns.** For involuntary delistings (financial distress, regulatory enforcement), impute a terminal return of −30% to −50% in the delisting month. Report results across a range of imputation assumptions as a robustness check. For voluntary delistings and exchange transfers, impute 0%.
+
+**3. Respect point-in-time data availability.** Use accounting data only after its public filing date, not as of the fiscal year-end. In Vietnam, the standard lag is 90 days for annual reports; use a conservative 4--6 month lag.
+
+**4. Handle zero-volume days explicitly.** Document the prevalence of zero-volume days in your sample. For monthly returns, report the average number of zero-volume days per firm-month. Consider excluding firms with zero-volume fractions exceeding 50% from the investable universe.
+
+**5. Link exchange transfers.** Use unified tickers that link pre-transfer and post-transfer series. Without this, exchange transfers appear as simultaneous delistings and new listings, inflating turnover and biasing survival calculations.
+
+**6. Report sensitivity analysis.** For any key finding, report results under at least three data treatment assumptions: survivors-only (upper bound), full sample with moderate imputation (baseline), and full sample with aggressive imputation plus liquidity filter (lower bound). If the finding survives all three, it is robust.
+
+**7. Be especially cautious with pre-2007 data.** The Vietnamese market had fewer than 100 listings before 2006, and the equitization wave of 2006--2009 produced a cohort of firms with systematically different characteristics than earlier listings. Cross-sectional tests with pre-2007 data have minimal power and should be interpreted with extreme caution.
+
+## Summary {#sec-missing-summary}
+
+| Data Problem | Bias Direction | Magnitude (Vietnam) | Recommended Fix |
+|------------------|------------------|------------------|------------------|
+| Survivorship bias (EW) | Upward on returns | \~1--3% per year | Include all delisted firms |
+| Survivorship bias (VW) | Upward (smaller) | \~0.2--0.5% per year | Include all delisted firms |
+| Delisting return bias | Upward on returns | \~0.5--2% per year (EW) | Impute terminal returns |
+| Look-ahead bias | Inflates predictability | Varies by strategy | Point-in-time data alignment |
+| Zero-trading days | Understates volatility | Severe for small caps | Compound or drop; document |
+| Exchange transfers | Creates false delistings | \~50--100 firms | Link unified tickers |
+| New-listing bias | Early sample unrepresentative | Extreme pre-2007 | Start sample after 2007 |
+
+: Summary of data problems, their effects, and recommended corrections. {#tbl-missing-summary}
+
+The central message is that data problems in Vietnamese equity research are not merely a nuisance---they can create economically significant biases that alter the conclusions of empirical studies. The survivorship bias alone exceeds 100 basis points per year for equal-weighted portfolios, comparable to many documented anomaly premia. Researchers who ignore these issues risk reporting results that reflect data artifacts rather than genuine economic phenomena.
+
+```{=html}
+<!-- ## Exercises {#sec-missing-exercises}
+
+1. **Delisting return estimation from final prices.** For a sample of delisted Vietnamese firms, obtain the last 60 trading days of price data before delisting. Compute the cumulative return over this window. What is the average "run-up to delisting" return? Does it vary by delisting reason?
+
+2. **Survivorship bias in fund performance.** Vietnamese open-ended mutual funds also experience survivorship bias (poorly performing funds are closed or merged). Using DataCore.vn's fund data, compare average fund returns in a survivorship-bias-free sample versus a survivors-only sample. How does the bias compare to @rohleder2011survivorship's findings for U.S. funds?
+
+3. **Heckman selection correction.** Implement the @heckman1979sample two-step correction for survivorship bias. In the first stage, estimate a probit model for the probability of delisting. In the second stage, include the inverse Mills ratio as a control variable in cross-sectional return regressions. Does the correction materially change the estimated size or value premia?
+
+4. **Multiple imputation.** Instead of a single imputed delisting return, implement a multiple imputation procedure: draw the delisting return from a distribution calibrated to observed terminal returns of similar firms. Repeat the analysis 100 times and report the distribution of results. How does parameter uncertainty from imputation compare to sampling uncertainty?
+
+5. **Backfill bias detection.** Identify firms in the DataCore.vn database where historical data appears before the official listing date. What fraction of firms exhibit this pattern? Does excluding backfilled observations change the estimated size premium?
+
+6. **Zero-volume and momentum.** Test whether the momentum anomaly is affected by the treatment of zero-volume days. Specifically, do zero-volume days create spurious autocorrelation in individual stock returns that inflates the apparent momentum premium?
+
+7. **Real-time delisting monitor.** Design a scoring model that predicts involuntary delisting 6--12 months in advance using financial ratios, trading activity, and governance indicators. What is the model's predictive accuracy? How would a portfolio that screens out high-delisting-risk firms perform relative to an unscreened benchmark?
+
+8. **Cross-country comparison.** Compare the survivorship bias magnitude in Vietnam to estimates for the U.S. [@shumway1997delisting], other ASEAN markets, and China. What institutional features explain cross-country differences in the severity of survivorship bias? -->
+```

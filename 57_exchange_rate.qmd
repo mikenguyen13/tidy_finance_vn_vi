@@ -1,20 +1,20 @@
 # Exchange Rate Dynamics
 
 ::: callout-note
-In this chapter, we construct a comprehensive exchange rate database for the Vietnamese Dong (VND) against major currencies, analyze the statistical properties of VND returns, test covered and uncovered interest rate parity, estimate the currency exposure of Vietnamese listed firms, model volatility regimes using GARCH, and evaluate hedging strategies for international investors. All data are sourced from [DataCore.vn](https://datacore.vn).
+In this chapter, we construct a comprehensive exchange rate database for the Vietnamese Dong (VND) against major currencies, analyze the statistical properties of VND returns, test covered and uncovered interest rate parity, estimate the currency exposure of Vietnamese listed firms, model volatility regimes using GARCH, and evaluate hedging strategies for international investors.
 :::
 
-Exchange rates sit at the intersection of macroeconomics and finance. For international investors considering Vietnamese equities, the VND/USD exchange rate is not a secondary concern, it is a first-order determinant of dollar-denominated returns. A Vietnamese stock portfolio that earns 15% in VND terms but coincides with a 5% VND depreciation delivers only about 10% in USD terms. Conversely, periods of VND stability or appreciation amplify returns for foreign investors. Understanding exchange rate dynamics is therefore essential for anyone working with Vietnamese financial data in an international context.
+Exchange rates sit at the intersection of macroeconomics and finance. For international investors considering Vietnamese equities, the VND/USD exchange rate is not a secondary concern; it is a first-order determinant of dollar-denominated returns. A Vietnamese stock portfolio that earns 15% in VND terms but coincides with a 5% VND depreciation delivers only about 10% in USD terms. Conversely, periods of VND stability or appreciation amplify returns for foreign investors. Understanding exchange rate dynamics is therefore essential for anyone working with Vietnamese financial data in an international context.
 
-Vietnam presents a distinctive exchange rate regime. Unlike freely floating currencies such as the USD/EUR or USD/JPY, the VND operates under a managed float, the State Bank of Vietnam (SBV) sets a daily reference rate and allows trading within a band (currently ±3% on the interbank market and ±5% against the official rate for commercial banks). This regime creates specific patterns in VND returns that differ fundamentally from those observed in freely floating pairs: clustered movements near band boundaries, discrete adjustments when the SBV shifts the reference rate, and periods of near-zero volatility punctuated by sharp moves during policy changes.
+Vietnam presents a distinctive exchange rate regime. Unlike freely floating currencies such as the USD/EUR or USD/JPY, the VND operates under a managed float. The State Bank of Vietnam (SBV) sets a daily reference rate and allows trading within a band (currently $\pm$ 3% on the interbank market and $\pm$ 5% against the official rate for commercial banks). This regime creates specific patterns in VND returns that differ fundamentally from those observed in freely floating pairs: clustered movements near band boundaries, discrete adjustments when the SBV shifts the reference rate, and periods of near-zero volatility punctuated by sharp moves during policy changes.
 
-This chapter develops the tools to work with these dynamics. We progress from data construction through statistical characterization to economic applications: interest rate parity tests, firm-level exposure estimation, GARCH volatility modeling, and hedging strategy evaluation.
+This chapter develops tools for working with these dynamics. We progress from data construction through statistical characterization to economic applications: interest rate parity tests, firm-level exposure estimation, GARCH volatility modeling, and hedging strategy evaluation.
 
-## Theoretical Foundations {#sec-theory}
+## Theoretical Foundations {#sec-fx-theory}
 
 ### Exchange Rate Determination
 
-The modern theory of exchange rate determination rests on several building blocks. @dornbusch1976expectations provides the canonical "overshooting" model: because goods prices are sticky while asset prices adjust instantly, a monetary shock causes the exchange rate to overshoot its long-run equilibrium. @frankel1979monetary extends this to a real interest differential model where the exchange rate depends on relative money supplies, income levels, and interest rates across countries.
+The modern theory of exchange rate determination rests on several building blocks. @dornbusch1976expectations provides the canonical "overshooting" model: because goods prices are sticky while asset prices adjust instantly, a monetary shock causes the exchange rate to overshoot its long-run equilibrium. @frankel1979mark extends this to a real interest differential model where the exchange rate depends on relative money supplies, income levels, and interest rates across countries.
 
 Despite elegant theory, @meese1983empirical delivered a devastating empirical result: no structural model of exchange rates consistently outperforms a random walk in out-of-sample forecasting. This finding, confirmed repeatedly over four decades and surveyed by @rossi2013exchange, means that exchange rate changes are, to a first approximation, unpredictable. For practical purposes, the best forecast of tomorrow's VND/USD rate is today's rate.
 
@@ -40,25 +40,27 @@ where $\Delta s_{t+k} = \ln(S_{t+k}/S_t)$. UIP is an equilibrium condition, not 
 
 ### The Carry Trade
 
-The carry trade exploits UIP violations by borrowing in low-interest-rate currencies and investing in high-interest-rate currencies. @lustig2007cross show that a portfolio of carry trade positions earns a significant risk premium, which they link to consumption growth risk. @menkhoff2012carry identify global FX volatility as the key risk factor: carry trades lose money precisely when global volatility spikes, a "crash risk" documented by @brunnermeier2009carry.
+The carry trade exploits UIP violations by borrowing in low-interest-rate currencies and investing in high-interest-rate currencies. @lustig2007cross show that a portfolio of carry trade positions earns a significant risk premium, which they link to consumption growth risk. @menkhoff2012carry identify global FX volatility as the key risk factor: carry trades lose money precisely when global volatility spikes, a "crash risk" documented by @brunnermeier2008carry.
 
-Vietnam, with interest rates typically 3--8 percentage points above U.S. rates, is a natural candidate for carry trade inflows. The managed exchange rate regime provides an additional attraction: the SBV's implicit defense of the band reduces short-term volatility, increasing the Sharpe ratio of the carry position, until a band adjustment or devaluation erases accumulated gains in a single move.
+Vietnam, with interest rates typically 3-8 percentage points above U.S. rates, is a natural candidate for carry trade inflows. The managed exchange rate regime provides an additional attraction: the SBV's implicit defense of the band reduces short-term volatility, increasing the Sharpe ratio of the carry position, until a band adjustment or devaluation erases accumulated gains in a single move.
 
 ### The Trilemma
 
-@obstfeld2005trilemma formalize the "impossible trinity": a country cannot simultaneously maintain (i) a fixed exchange rate, (ii) an independent monetary policy, and (iii) free capital mobility. Vietnam navigates this trilemma by maintaining partial capital controls alongside its managed float, allowing some degree of monetary policy independence. @trinh2021capital documents how the SBV has shifted along the trilemma dimensions over time, gradually liberalizing capital flows while widening the trading band.
+@obstfeld2005trilemma formalize the "impossible trinity": a country cannot simultaneously maintain (i) a fixed exchange rate, (ii) an independent monetary policy, and (iii) free capital mobility. Vietnam navigates this trilemma by maintaining partial capital controls alongside its managed float, allowing some degree of monetary policy independence. Understanding where Vietnam sits on the trilemma at any given time is essential for interpreting exchange rate data: periods of tighter capital controls produce artificially low exchange rate volatility that does not reflect true economic uncertainty.
 
-Understanding where Vietnam sits on the trilemma at any given time is essential for interpreting exchange rate data: periods of tighter capital controls produce artificially low exchange rate volatility that does not reflect true economic uncertainty.
-
-## The VND Exchange Rate Regime {#sec-regime}
+## The VND Exchange Rate Regime {#sec-fx-regime}
 
 ### Historical Evolution
 
 The VND/USD exchange rate has evolved through several distinct phases:
 
-| Period \| Regime \| Key Features \|
-
-\|, \|, \|, \| \| Pre-1999 \| Narrow band \| SBV set the rate with minimal flexibility \| \| 1999--2007 \| Gradual crawl \| Slow, controlled depreciation (\~1--2% per year) \| \| 2008--2011 \| Crisis adjustments \| Multiple discrete devaluations (2008, 2010, 2011) \| \| 2012--2015 \| Stabilization \| Tight band, rare adjustments, building reserves \| \| 2016--present \| Reference rate mechanism \| Daily reference rate based on a basket; ±3% band \|
+| Period | Regime | Key Features |
+|------------------------|------------------------|------------------------|
+| Pre-1999 | Narrow band | SBV set the rate with minimal flexibility |
+| 1999-2007 | Gradual crawl | Slow, controlled depreciation (\~1-2% per year) |
+| 2008-2011 | Crisis adjustments | Multiple discrete devaluations (2008, 2010, 2011) |
+| 2012-2015 | Stabilization | Tight band, rare adjustments, building reserves |
+| 2016-present | Reference rate mechanism | Daily reference rate based on a basket; $\pm$ 3% band |
 
 : Evolution of the VND/USD exchange rate regime. {#tbl-regime-history}
 
@@ -66,7 +68,7 @@ The 2016 reform, shifting from a fixed peg to a daily reference rate influenced 
 
 ### Band Mechanics
 
-The SBV announces a daily reference rate each morning. Commercial banks may quote rates within a band around this reference. The interbank market operates with a narrower ±3% band. When the spot rate approaches the band ceiling, the SBV may intervene by selling USD from reserves, widening the band, or adjusting the reference rate.
+The SBV announces a daily reference rate each morning. Commercial banks may quote rates within a band around this reference. The interbank market operates with a narrower $\pm$ 3% band. When the spot rate approaches the band ceiling, the SBV may intervene by selling USD from reserves, widening the band, or adjusting the reference rate.
 
 This regime creates distinctive statistical properties:
 
@@ -75,7 +77,7 @@ This regime creates distinctive statistical properties:
 3.  **Bounded volatility:** The band constrains daily moves, producing a return distribution with thinner tails than a freely floating currency.
 4.  **Asymmetric adjustment:** Depreciation pressure (VND weakening) is more common than appreciation, reflecting persistent inflation differentials.
 
-## Data Construction {#sec-data}
+## Data Construction {#sec-fx-data}
 
 ### Loading Libraries
 
@@ -109,7 +111,8 @@ We extract daily spot rates for the VND against all major currencies, along with
 
 ```{python}
 #| label: data-load
-#| code-summary: "Load exchange rate data from DataCore.vn"
+#| code-summary: "Load exchange rate data"
+#| eval: false
 from datacore import DataCoreClient
 
 client = DataCoreClient()
@@ -154,6 +157,7 @@ We focus primarily on the VND/USD pair, the dominant bilateral rate for Vietnam,
 
 ```{python}
 #| label: construct-vnd-usd
+#| eval: false
 #| code-summary: "Construct clean VND/USD spot rate series with log returns"
 # Filter VND/USD
 vnd_usd = fx_spot[
@@ -194,6 +198,7 @@ For cross-rate analysis and ASEAN comparisons, we construct a panel of log retur
 
 ```{python}
 #| label: multi-currency
+#| eval: false
 #| code-summary: "Construct multi-currency return panel"
 # Pivot to wide format: one column per currency pair
 fx_wide = fx_spot.pivot_table(
@@ -218,7 +223,7 @@ print("VND Cross-Rate Return Statistics (Daily):")
 print(fx_summary.round(4))
 ```
 
-## Statistical Properties of VND Returns {#sec-statistics}
+## Statistical Properties of VND Returns {#sec-fx-statistics}
 
 ### Return Distribution
 
@@ -227,6 +232,7 @@ The distribution of VND/USD log returns deviates sharply from normality. The man
 ```{python}
 #| label: fig-return-distribution
 #| fig-cap: "Distribution of daily VND/USD log returns compared to a fitted normal distribution. The empirical distribution shows excess kurtosis (fat tails) and a pronounced spike near zero, reflecting the managed float regime where the SBV constrains daily movements."
+#| eval: false
 #| code-summary: "Plot VND/USD return distribution with normal overlay"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -268,6 +274,7 @@ Freely floating exchange rate returns are approximately uncorrelated (consistent
 ```{python}
 #| label: fig-autocorrelation
 #| fig-cap: "Autocorrelation function of VND/USD daily log returns (top) and squared returns (bottom). Returns show mild positive autocorrelation at short lags, reflecting the SBV's smoothing behavior. Squared returns show strong persistence, confirming the presence of volatility clustering."
+#| eval: false
 #| code-summary: "Plot ACF of returns and squared returns"
 from statsmodels.graphics.tsaplots import plot_acf
 
@@ -306,6 +313,7 @@ The SBV periodically adjusts the reference rate or the trading band width, event
 
 ```{python}
 #| label: fig-structural-breaks
+#| eval: false
 #| fig-cap: "VND/USD spot rate with major SBV reference rate adjustments and band changes marked. These discrete policy events create structural breaks that standard time series models must accommodate."
 #| code-summary: "Identify and plot major exchange rate adjustments"
 # Detect large daily moves (proxy for policy adjustments)
@@ -366,6 +374,7 @@ Understanding how VND co-moves with other currencies is important for diversific
 
 ```{python}
 #| label: fig-cross-correlations
+#| eval: false
 #| fig-cap: "Correlation matrix of daily VND cross-rate returns. VND movements against the USD are positively correlated with other Asian currency depreciation, reflecting common exposure to USD strength and global risk sentiment."
 #| code-summary: "Compute and visualize cross-currency return correlations"
 # Correlation matrix of daily returns
@@ -384,7 +393,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Interest Rate Parity Tests {#sec-parity}
+## Interest Rate Parity Tests {#sec-fx-parity}
 
 ### Testing Covered Interest Rate Parity
 
@@ -399,6 +408,7 @@ where $f_{t,k} = \ln F_{t,t+k}$ and $s_t = \ln S_t$ are log forward and spot rat
 ```{python}
 #| label: cip-test
 #| code-summary: "Compute CIP deviations for VND/USD"
+#| eval: false
 # Merge spot, forward, and interest rate data
 vnd_usd_monthly = vnd_usd['rate'].resample('M').last().to_frame('spot')
 vnd_usd_monthly.index = vnd_usd_monthly.index.to_period('M').to_timestamp()
@@ -447,6 +457,7 @@ print(f"One-sample t-test: t = {t_stat:.2f}, p = {p_val:.4f}")
 
 ```{python}
 #| label: fig-cip-deviation
+#| eval: false
 #| fig-cap: "CIP deviations for VND/USD over time (annualized, basis points). Persistent positive deviations reflect capital controls and limited arbitrage capital in the Vietnamese forward market. Deviations widened during global stress episodes (2008--2009, 2011, 2020), consistent with the findings of @du2018deviations for major currencies."
 #| code-summary: "Plot CIP deviations over time"
 fig, axes = plt.subplots(2, 1, figsize=(14, 8), height_ratios=[2, 1])
@@ -494,6 +505,7 @@ Under UIP, $\alpha = 0$ and $\beta = 1$. The @fama1984forward anomaly correspond
 ```{python}
 #| label: uip-test
 #| code-summary: "Fama regression test of UIP for VND/USD"
+#| eval: false
 # Monthly exchange rate changes
 cip_data['delta_s'] = (
     np.log(cip_data['spot'].shift(-3) / cip_data['spot'])
@@ -537,6 +549,7 @@ A positive carry return means the interest rate differential more than compensat
 
 ```{python}
 #| label: carry-trade
+#| eval: false
 #| code-summary: "Compute and analyze VND carry trade returns"
 carry = cip_data.copy()
 carry['carry_return'] = carry['rate_diff'] / 4 - carry['delta_s']
@@ -559,7 +572,8 @@ print(f"Max quarterly gain: {carry['carry_return'].max():.4f}")
 
 ```{python}
 #| label: fig-carry-cumulative
-#| fig-cap: "Cumulative returns of the VND carry trade strategy. The strategy earns steady positive returns during stable periods, punctuated by sharp losses during VND devaluations. This pattern is characteristic of carry trades in managed exchange rate regimes, as documented by @brunnermeier2009carry."
+#| eval: false
+#| fig-cap: "Cumulative returns of the VND carry trade strategy. The strategy earns steady positive returns during stable periods, punctuated by sharp losses during VND devaluations. This pattern is characteristic of carry trades in managed exchange rate regimes, as documented by @brunnermeier2008carry."
 #| code-summary: "Plot cumulative carry trade returns"
 fig, axes = plt.subplots(2, 1, figsize=(14, 8), height_ratios=[2, 1])
 
@@ -588,7 +602,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Volatility Modeling {#sec-volatility}
+## Volatility Modeling {#sec-fx-volatility}
 
 ### GARCH Estimation
 
@@ -606,6 +620,7 @@ where $\alpha$ captures the ARCH effect (impact of yesterday's shock on today's 
 
 ```{python}
 #| label: garch-estimation
+#| eval: false
 #| code-summary: "Estimate GARCH(1,1) models with normal and Student-t innovations"
 returns_bps = vnd_usd['log_return'] * 10000  # Scale to basis points
 
@@ -654,6 +669,7 @@ for name, res in [('GARCH-Normal', res_norm),
 
 ```{python}
 #| label: fig-garch-volatility
+#| eval: false
 #| fig-cap: "Conditional volatility from the GARCH(1,1) model with Student-t innovations, alongside realized volatility (30-day rolling standard deviation, annualized). The GARCH model captures the clustering of high-volatility episodes around SBV policy adjustments and global stress events."
 #| code-summary: "Plot GARCH conditional volatility versus realized volatility"
 fig, ax = plt.subplots(figsize=(14, 6))
@@ -682,6 +698,7 @@ We classify the VND/USD market into volatility regimes using the GARCH condition
 
 ```{python}
 #| label: volatility-regimes
+#| eval: false
 #| code-summary: "Classify volatility regimes and analyze their properties"
 # Merge conditional volatility back to main DataFrame
 vol_series = pd.Series(
@@ -716,6 +733,7 @@ print(regime_stats)
 
 ```{python}
 #| label: fig-regime-scatter
+#| eval: false
 #| fig-cap: "Return-volatility scatter plot by volatility regime. High-volatility regimes are associated with larger (and more negative) returns, higher bid-ask spreads, and more negative skewness, consistent with the idea that VND depreciation episodes coincide with market stress."
 #| code-summary: "Scatter plot of returns vs conditional volatility by regime"
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -738,7 +756,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Exchange Rate Exposure of Vietnamese Firms {#sec-exposure}
+## Exchange Rate Exposure of Vietnamese Firms {#sec-fx-exposure}
 
 ### The Jorion Framework
 
@@ -754,6 +772,7 @@ A positive $\gamma_i$ means the firm benefits from VND depreciation (typical for
 
 ```{python}
 #| label: exposure-estimation
+#| eval: false
 #| code-summary: "Estimate firm-level exchange rate exposure using the Jorion model"
 # Load equity returns
 equity = client.get_monthly_returns(
@@ -827,7 +846,8 @@ print(f"\nSignificant at 5%: "
 
 ```{python}
 #| label: fig-exposure-distribution
-#| fig-cap: "Distribution of firm-level VND/USD exchange rate exposures from the Jorion model. The distribution is centered near zero with substantial cross-sectional dispersion. Approximately 15--25% of firms have statistically significant exposure at the 5% level, consistent with international evidence that many firms hedge or have naturally offsetting currency positions."
+#| eval: false
+#| fig-cap: "Distribution of firm-level VND/USD exchange rate exposures from the Jorion model. The distribution is centered near zero with substantial cross-sectional dispersion. Approximately 15-25% of firms have statistically significant exposure at the 5% level, consistent with international evidence that many firms hedge or have naturally offsetting currency positions."
 #| code-summary: "Plot distribution of exchange rate exposures"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -867,6 +887,7 @@ Exchange rate exposure varies systematically across industries. Export-oriented 
 
 ```{python}
 #| label: industry-exposure
+#| eval: false
 #| code-summary: "Compute and compare exposure by industry"
 # Get industry classification
 industry = client.get_firm_info(
@@ -898,6 +919,7 @@ print(industry_avg.to_string())
 
 ```{python}
 #| label: fig-industry-exposure
+#| eval: false
 #| fig-cap: "Average exchange rate exposure by industry sector. Export-oriented sectors (Basic Materials, Industrials) show positive exposure (benefit from VND depreciation), while import-dependent sectors (Energy, Consumer Staples) show negative exposure. The pattern is consistent with trade-channel effects documented by @vo2016exchange."
 #| code-summary: "Bar chart of industry-level FX exposure"
 fig, ax = plt.subplots(figsize=(12, 6))
@@ -927,6 +949,7 @@ Exchange rate exposure is not constant, firms adjust hedging strategies, trade p
 
 ```{python}
 #| label: rolling-exposure
+#| eval: false
 #| code-summary: "Estimate rolling 36-month exchange rate exposures"
 def rolling_exposure(group, window=36, min_obs=24):
     """Estimate rolling FX exposure with 36-month windows."""
@@ -971,6 +994,7 @@ print(f"Rolling exposures computed for {len(rolling_results)} firms")
 
 ```{python}
 #| label: fig-rolling-exposure
+#| eval: false
 #| fig-cap: "Time-varying exchange rate exposure for selected large-cap Vietnamese firms. Exposures evolve over time as firms adjust hedging strategies, trade patterns shift, and the exchange rate regime changes. The 2016 shift to the reference rate mechanism is associated with exposure changes for several firms."
 #| code-summary: "Plot rolling FX exposures for selected firms"
 fig, ax = plt.subplots(figsize=(14, 6))
@@ -996,7 +1020,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Currency Hedging for International Investors {#sec-hedging}
+## Currency Hedging for International Investors {#sec-fx-hedging}
 
 ### The Hedging Decision
 
@@ -1018,6 +1042,7 @@ where $f_t - s_t$ is the forward premium (which, by CIP, approximately equals $r
 
 ```{python}
 #| label: hedging-analysis
+#| eval: false
 #| code-summary: "Compare hedged vs unhedged portfolio returns for a foreign investor"
 # Construct VW equity index in VND
 equity_index = (
@@ -1083,6 +1108,7 @@ for strategy, col in [('VND (Local)', 'equity_vnd'),
 
 ```{python}
 #| label: fig-hedging-comparison
+#| eval: false
 #| fig-cap: "Cumulative wealth paths for a foreign investor in Vietnamese equities under different hedging strategies. Full hedging eliminates currency risk but incurs the cost of the negative forward premium. The optimal partial hedge depends on the investor's risk aversion and the equity-currency correlation."
 #| code-summary: "Plot cumulative returns for different hedging strategies"
 fig, ax = plt.subplots(figsize=(12, 6))
@@ -1120,6 +1146,7 @@ This is the OLS slope from regressing local equity returns on exchange rate chan
 
 ```{python}
 #| label: optimal-hedge
+#| eval: false
 #| code-summary: "Estimate optimal hedge ratio and rolling hedge ratio"
 # Full-sample optimal hedge ratio
 hedge_reg = sm.OLS(
@@ -1144,12 +1171,13 @@ print(f"\nRolling hedge ratio range: "
       f"{hedge_data['h_star_rolling'].max():.2f}]")
 ```
 
-## ASEAN Currency Comparison {#sec-asean}
+## ASEAN Currency Comparison {#sec-fx-asean}
 
 To put the VND in perspective, we compare its properties with other ASEAN currencies and the Chinese Yuan.
 
 ```{python}
 #| label: fig-asean-comparison
+#| eval: false
 #| fig-cap: "Annualized volatility and mean depreciation of ASEAN currencies against the USD (2012--2024). The VND stands out for its low volatility (reflecting the managed float) combined with gradual depreciation. Freely floating currencies (THB, SGD) show higher volatility but more variable depreciation patterns."
 #| code-summary: "Compare VND with ASEAN and Asian currency pairs"
 # Compute annual statistics for each currency
@@ -1192,12 +1220,13 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Exchange Rate and Equity Market Co-Movement {#sec-comovement}
+## Exchange Rate and Equity Market Co-Movement {#sec-fx-comovement}
 
 The relationship between VND/USD movements and the Vietnamese equity market is central to portfolio construction. We examine this at both the aggregate and conditional levels.
 
 ```{python}
 #| label: fig-equity-fx-comovement
+#| eval: false
 #| fig-cap: "Scatter plot of monthly VN-Index returns against VND/USD changes. The relationship is modestly negative (VND depreciation hurts equities), but with substantial noise. The correlation is stronger during crisis episodes when capital outflows simultaneously depress equities and the currency."
 #| code-summary: "Analyze equity-FX co-movement at the aggregate level"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
@@ -1249,20 +1278,28 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Summary {#sec-summary}
+## Summary {#sec-fx-summary}
 
-This chapter has developed a comprehensive toolkit for working with exchange rate data in the Vietnamese context. The key findings and methods are:
+This chapter has developed a comprehensive toolkit for working with exchange rate data in the Vietnamese context. The key findings and methods are in @tbl-fx-summary.
 
-| Topic \| Finding \| Implication \|
+| Topic | Finding | Implication |
+|-------------------|------------------------|------------------------|
+| VND regime | Managed float with +/-3% band, daily reference rate | Returns are non-normal; clustered near zero with discrete jumps |
+| Return distribution | Fat tails, excess kurtosis, positive skewness | Standard normal-based risk models underestimate tail risk |
+| CIP | Persistent positive deviations (\~50-200 bps) | Capital controls and limited arbitrage; hedging is expensive |
+| UIP | beta \< 1 in Fama regression | Carry trade is profitable on average; crash risk in devaluations |
+| Carry trade | Positive Sharpe but negative skewness | Steady gains punctuated by sharp losses during devaluations |
+| GARCH | Strong persistence (alpha + beta approx 0.99); Student-t preferred | Volatility clustering; regime switches around policy events |
+| Firm exposure | \~15-25% significant; systematic industry patterns | Exporters benefit from depreciation; importers hurt |
+| Hedging | Full hedge eliminates FX risk but costs \~3-5% p.a. | Optimal partial hedge depends on equity-FX correlation |
+| ASEAN comparison | VND has lowest volatility but steady depreciation | Managed float compresses vol; does not eliminate trend risk |
 
-\|, \|, \|, \| \| VND regime \| Managed float with +/-3% band, daily reference rate \| Returns are non-normal; clustered near zero with discrete jumps \| \| Return distribution \| Fat tails, excess kurtosis, positive skewness \| Standard normal-based risk models underestimate tail risk \| \| CIP \| Persistent positive deviations (\~50--200 bps) \| Capital controls and limited arbitrage; hedging is expensive \| \| UIP \| beta \< 1 in Fama regression \| Carry trade is profitable on average; crash risk in devaluations \| \| Carry trade \| Positive Sharpe but negative skewness \| Steady gains punctuated by sharp losses during devaluations \| \| GARCH \| Strong persistence (alpha + beta approx 0.99); Student-t preferred \| Volatility clustering; regime switches around policy events \| \| Firm exposure \| \~15--25% significant; systematic industry patterns \| Exporters benefit from depreciation; importers hurt \| \| Hedging \| Full hedge eliminates FX risk but costs \~3--5% p.a. \| Optimal partial hedge depends on equity-FX correlation \| \| ASEAN comparison \| VND has lowest volatility but steady depreciation \| Managed float compresses vol; does not eliminate trend risk \|
-
-: Summary of findings on VND exchange rate dynamics. {#tbl-summary}
+: Summary of findings on VND exchange rate dynamics. {#tbl-fx-summary}
 
 For researchers using Vietnamese equity data, the exchange rate dimension is not optional. Any study that converts VND returns to USD, uses international factor models, or examines firms with trade exposure must account for the distinctive properties of the VND regime. The tools developed in this chapter, from GARCH volatility modeling to rolling exposure estimation, provide the building blocks for incorporating exchange rate dynamics into broader empirical asset pricing work.
 
 ```{=html}
-<!-- ## Exercises {#sec-exercises}
+<!-- ## Exercises {#sec-fx-exercises}
 
 1. **Real effective exchange rate.** Construct a trade-weighted real exchange rate for Vietnam using bilateral rates against the top 10 trading partners, weighted by trade shares, and deflated by relative CPI. Does the REER predict future VND/USD movements?
 
