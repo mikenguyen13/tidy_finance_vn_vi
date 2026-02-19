@@ -4,7 +4,7 @@
 In this chapter, we systematically compare portfolio weighting schemes (e.g., value-weighted, equal-weighted, and several risk-based alternativesin the Vietnamese equity market. We quantify the impact of rebalancing frequency and transaction costs on realized performance, and develop practical tools for constructing implementable portfolios under the frictions characteristic of an emerging market.
 :::
 
-Every portfolio construction decision ultimately reduces to two choices: which assets to hold, and how much to allocate to each. While earlier chapters have focused on the first question—using factor models, anomalies, and fundamental analysis to select stocks—this chapter addresses the second. The weighting scheme a researcher or investor applies can fundamentally alter the conclusions drawn from portfolio-level tests and the returns earned from an investment strategy.
+Every portfolio construction decision ultimately reduces to two choices: which assets to hold, and how much to allocate to each. While earlier chapters have focused on the first question, using factor models, anomalies, and fundamental analysis to select stocks, this chapter addresses the second. The weighting scheme a researcher or investor applies can fundamentally alter the conclusions drawn from portfolio-level tests and the returns earned from an investment strategy.
 
 The distinction matters more in Vietnam than in large, liquid markets. The Vietnamese equity market features extreme skewness in the market capitalization distribution: the top 10 firms on HOSE account for roughly 50% of total market capitalization, while hundreds of small firms contribute negligible weight. Under value-weighting, a portfolio's performance is dominated by a handful of large-cap names (Vinhomes, Vingroup, Vietcombank, FPT). Under equal-weighting, every firm contributes equally, tilting the portfolio toward small, illiquid stocks that may be expensive or impossible to trade at scale. Neither scheme is inherently correct; the choice depends on the question being asked.
 
@@ -28,7 +28,7 @@ The VW portfolio has a unique theoretical status: it is the portfolio that all i
 2.  **Low turnover.** Because weights drift with prices rather than being reset to targets, VW portfolios have minimal rebalancing costs.
 3.  **Large-cap bias.** Returns are dominated by the largest firms. In Vietnam, this means the portfolio's risk-return profile is heavily influenced by banking, real estate, and technology conglomerates.
 
-@hsu2006cap argues that VW portfolios are sub-optimal because they mechanically overweight overpriced stocks and underweight underpriced stocks—any deviation of price from fundamental value creates a systematic drag on VW performance relative to a fundamentally weighted alternative.
+@hsu2006cap argues that VW portfolios are sub-optimal because they mechanically overweight overpriced stocks and underweight underpriced stocks (i.e., any deviation of price from fundamental value creates a systematic drag on VW performance relative to a fundamentally weighted alternative).
 
 ### Equal-Weighted Portfolios
 
@@ -38,13 +38,13 @@ $$
 w_{i,t}^{EW} = \frac{1}{N_t}
 $$ {#eq-ew}
 
-@demiguel2009optimal show that the 1/N portfolio is surprisingly competitive with mean-variance optimized portfolios, particularly when estimation windows are short and the number of assets is large—conditions that closely describe the Vietnamese market. The intuition is that estimation error in expected returns and covariances can overwhelm the gains from optimization, making the "naive" equal-weight scheme a robust default.
+@demiguel2009optimal show that the 1/N portfolio is surprisingly competitive with mean-variance optimized portfolios, particularly when estimation windows are short and the number of assets is large (conditions that closely describe the Vietnamese market). The intuition is that estimation error in expected returns and covariances can overwhelm the gains from optimization, making the "naive" equal-weight scheme a robust default.
 
-@plyakha2021equal decompose the EW outperformance over VW into three components:
+@plyakha2021equal decompose the EW outperformance over VW into two components:
 
 1.  **Size tilt.** EW allocates more to small firms, which historically earn a size premium.
 2.  **Rebalancing bonus.** Monthly rebalancing back to equal weights is a contrarian strategy: it sells recent winners and buys recent losers, profiting from mean reversion in individual stock returns.
-3.  **Diversification.** EW provides lower concentration and higher effective diversification.
+<!-- 3.  **Diversification.** EW provides lower concentration and higher effective diversification. -->
 
 However, the EW portfolio has practical disadvantages that are particularly severe in Vietnam:
 
@@ -54,7 +54,7 @@ However, the EW portfolio has practical disadvantages that are particularly seve
 
 ### The Weighting Spectrum
 
-Between VW and EW lies a continuum of weighting schemes. @tbl-schemes summarizes the major alternatives.
+Between VW and EW lies a continuum of weighting schemes. @tbl-weight-schemes summarizes the major alternatives.
 
 | Scheme | Weight Formula | Key Property | Key Risk |
 |------------------|------------------|------------------|------------------|
@@ -66,7 +66,7 @@ Between VW and EW lies a continuum of weighting schemes. @tbl-schemes summarizes
 | Maximum diversification | $\max \frac{\mathbf{w}'\boldsymbol{\sigma}}{\sqrt{\mathbf{w}'\boldsymbol{\Sigma}\mathbf{w}}}$ | Maximizes diversification ratio | Sensitive to correlation estimates |
 | Capped VW | $w_i \propto \text{MCap}_i$, $w_i \leq \bar{w}$ | Reduces concentration | Arbitrary cap threshold |
 
-: Summary of portfolio weighting schemes. {#tbl-schemes}
+: Summary of portfolio weighting schemes. {#tbl-weight-schemes}
 
 ## Data Construction {#sec-weight-data}
 
@@ -95,7 +95,8 @@ plt.rcParams.update({
 
 ```{python}
 #| label: data-load
-#| code-summary: "Load market and fundamental data from DataCore.vn"
+#| eval: false
+#| code-summary: "Load market and fundamental data"
 from datacore import DataCoreClient
 
 client = DataCoreClient()
@@ -150,16 +151,16 @@ print(f"Unique tickers: {monthly['ticker'].nunique()}")
 
 ### Universe Construction and Liquidity Filters
 
-A critical pre-processing step is defining the investable universe. Including all listed stocks—regardless of liquidity—inflates the apparent benefits of equal-weighting and other small-cap-tilted schemes because it implicitly assumes the ability to trade illiquid stocks without friction. We apply graduated liquidity filters and track how results change.
+A critical pre-processing step is defining the investable universe. Including all listed stocks, regardless of liquidity, inflates the apparent benefits of equal-weighting and other small-cap-tilted schemes because it implicitly assumes the ability to trade illiquid stocks without friction. We apply graduated liquidity filters and track how results change.
 
 ```{python}
-#| label: universe-construction
-#| code-summary: "Apply liquidity filters to define investable universes"
-def construct_universe(monthly_df, min_mcap_pct=0, min_turnover=0,
-                       min_months=12):
+# | label: universe-construction
+# | eval: false
+# | code-summary: "Apply liquidity filters to define investable universes"
+def construct_universe(monthly_df, min_mcap_pct=0, min_turnover=0, min_months=12):
     """
     Construct investable universe with liquidity filters.
-    
+
     Parameters
     ----------
     min_mcap_pct : float
@@ -170,35 +171,36 @@ def construct_universe(monthly_df, min_mcap_pct=0, min_turnover=0,
         Minimum months of return history required.
     """
     df = monthly_df.copy()
-    
+
     # Market cap percentile filter (within each month)
     if min_mcap_pct > 0:
-        df['mcap_pctile'] = df.groupby('month_end')['market_cap'].transform(
+        df["mcap_pctile"] = df.groupby("month_end")["market_cap"].transform(
             lambda x: x.rank(pct=True) * 100
         )
-        df = df[df['mcap_pctile'] >= min_mcap_pct]
-    
+        df = df[df["mcap_pctile"] >= min_mcap_pct]
+
     # Turnover filter
     if min_turnover > 0:
-        df = df[df['turnover_value_avg_20d'] >= min_turnover * 1e9]
-    
+        df = df[df["turnover_value_avg_20d"] >= min_turnover * 1e9]
+
     # History filter
-    ticker_months = df.groupby('ticker')['month_end'].transform('count')
+    ticker_months = df.groupby("ticker")["month_end"].transform("count")
     df = df[ticker_months >= min_months]
-    
+
     return df
+
 
 # Define three universes of increasing restrictiveness
 universe_all = construct_universe(monthly)
-universe_mid = construct_universe(monthly, min_mcap_pct=20,
-                                  min_turnover=0.5)
-universe_liquid = construct_universe(monthly, min_mcap_pct=40,
-                                     min_turnover=2.0)
+universe_mid = construct_universe(monthly, min_mcap_pct=20, min_turnover=0.5)
+universe_liquid = construct_universe(monthly, min_mcap_pct=40, min_turnover=2.0)
 
-for name, univ in [('All stocks', universe_all),
-                    ('Mid filter', universe_mid),
-                    ('Liquid only', universe_liquid)]:
-    n_stocks = univ.groupby('month_end')['ticker'].nunique().median()
+for name, univ in [
+    ("All stocks", universe_all),
+    ("Mid filter", universe_mid),
+    ("Liquid only", universe_liquid),
+]:
+    n_stocks = univ.groupby("month_end")["ticker"].nunique().median()
     print(f"{name}: median {n_stocks:.0f} stocks/month")
 ```
 
@@ -208,6 +210,7 @@ Before comparing weighting schemes, it is instructive to document how concentrat
 
 ```{python}
 #| label: fig-concentration
+#| eval: false
 #| fig-cap: "Market capitalization concentration on HOSE and HNX. Panel A shows the cumulative market cap share of stocks ranked by size. Panel B shows the Herfindahl-Hirschman Index (HHI) of VW portfolio weights over time. The Vietnamese market is highly concentrated: the top 10 stocks account for approximately 40–50% of total capitalization."
 #| code-summary: "Visualize market cap concentration"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
@@ -261,12 +264,18 @@ We now implement each weighting scheme and compute monthly portfolio returns. Al
 
 ```{python}
 #| label: portfolio-engine
+#| eval: false
 #| code-summary: "Generic portfolio construction and backtesting engine"
-def compute_portfolio_returns(monthly_df, weight_fn, rebal_freq='M',
-                               max_weight=1.0, min_weight=0.0):
+def compute_portfolio_returns(
+    monthly_df,
+    weight_fn,
+    rebal_freq="M",
+    max_weight=1.0,
+    min_weight=0.0,
+):
     """
     Compute time series of portfolio returns for a given weighting function.
-    
+
     Parameters
     ----------
     monthly_df : DataFrame
@@ -282,42 +291,40 @@ def compute_portfolio_returns(monthly_df, weight_fn, rebal_freq='M',
         Maximum weight per stock (for capped schemes).
     min_weight : float
         Minimum weight per stock.
-    
+
     Returns
     -------
     DataFrame with columns: month_end, port_return, n_stocks,
     turnover, hhi, effective_n
     """
-    months = sorted(monthly_df['month_end'].unique())
-    
+    months = sorted(monthly_df["month_end"].unique())
+
     # Determine rebalancing dates
-    if rebal_freq == 'M':
+    if rebal_freq == "M":
         rebal_dates = set(months)
-    elif rebal_freq == 'Q':
-        rebal_dates = set(
-            pd.to_datetime(months).to_period('Q').to_timestamp('M')
-        )
+    elif rebal_freq == "Q":
+        rebal_dates = set(pd.to_datetime(months).to_period("Q").to_timestamp("M"))
         # Map to nearest month-end
         rebal_dates = {m for m in months if pd.Timestamp(m).month % 3 == 0}
         if not rebal_dates:
             rebal_dates = set(months[::3])
-    elif rebal_freq == 'A':
+    elif rebal_freq == "A":
         rebal_dates = {m for m in months if pd.Timestamp(m).month == 6}
         if not rebal_dates:
             rebal_dates = set(months[::12])
     else:
         rebal_dates = set(months)
-    
+
     results = []
     prev_weights = None
-    
+
     for month in months:
-        cross_section = monthly_df[monthly_df['month_end'] == month].copy()
-        cross_section = cross_section.dropna(subset=['monthly_return'])
-        
+        cross_section = monthly_df[monthly_df["month_end"] == month].copy()
+        cross_section = cross_section.dropna(subset=["monthly_return"])
+
         if len(cross_section) < 5:
             continue
-        
+
         if month in rebal_dates or prev_weights is None:
             # Compute fresh weights
             raw_weights = weight_fn(cross_section)
@@ -329,50 +336,61 @@ def compute_portfolio_returns(monthly_df, weight_fn, rebal_freq='M',
         else:
             # Drift weights forward from previous month
             if prev_weights is not None:
-                available = cross_section.set_index('ticker')
+                available = cross_section.set_index("ticker")
                 drifted = prev_weights.reindex(available.index, fill_value=0)
                 # Adjust for returns
-                drifted = drifted * (1 + available['monthly_return'])
+                drifted = drifted * (1 + available["monthly_return"])
                 total = drifted.sum()
                 if total <= 0:
                     continue
                 target_weights = drifted / total
             else:
                 continue
-        
+
         # Align weights with available stocks
-        cross_section = cross_section.set_index('ticker')
+        cross_section = cross_section.set_index("ticker")
         aligned_w = target_weights.reindex(cross_section.index, fill_value=0)
         aligned_w = aligned_w / aligned_w.sum()
-        
+
         # Portfolio return
-        port_ret = (aligned_w * cross_section['monthly_return']).sum()
-        
+        port_ret = (aligned_w * cross_section["monthly_return"]).sum()
+
         # Turnover (two-way)
         if prev_weights is not None:
             prev_aligned = prev_weights.reindex(aligned_w.index, fill_value=0)
             # Drift previous weights
-            prev_drifted = prev_aligned * (1 + cross_section['monthly_return'].reindex(prev_aligned.index, fill_value=0))
-            prev_drifted = prev_drifted / prev_drifted.sum() if prev_drifted.sum() > 0 else prev_drifted
+            prev_drifted = prev_aligned * (
+                1
+                + cross_section["monthly_return"].reindex(
+                    prev_aligned.index, fill_value=0
+                )
+            )
+            prev_drifted = (
+                prev_drifted / prev_drifted.sum()
+                if prev_drifted.sum() > 0
+                else prev_drifted
+            )
             turnover = (aligned_w - prev_drifted).abs().sum() / 2
         else:
             turnover = 1.0
-        
+
         # Concentration metrics
-        hhi = (aligned_w ** 2).sum()
+        hhi = (aligned_w**2).sum()
         effective_n = 1.0 / hhi if hhi > 0 else 0
-        
-        results.append({
-            'month_end': month,
-            'port_return': port_ret,
-            'n_stocks': (aligned_w > 1e-6).sum(),
-            'turnover': turnover,
-            'hhi': hhi,
-            'effective_n': effective_n
-        })
-        
+
+        results.append(
+            {
+                "month_end": month,
+                "port_return": port_ret,
+                "n_stocks": (aligned_w > 1e-6).sum(),
+                "turnover": turnover,
+                "hhi": hhi,
+                "effective_n": effective_n,
+            }
+        )
+
         prev_weights = aligned_w.copy()
-    
+
     return pd.DataFrame(results)
 ```
 
@@ -380,6 +398,7 @@ def compute_portfolio_returns(monthly_df, weight_fn, rebal_freq='M',
 
 ```{python}
 #| label: vw-portfolio
+#| eval: false
 #| code-summary: "Implement value-weighted portfolio"
 def vw_weights(cross_section):
     """Value-weighted: proportional to market cap."""
@@ -396,6 +415,7 @@ print(f"Mean effective N: {vw_returns['effective_n'].mean():.1f}")
 
 ```{python}
 #| label: ew-portfolio
+#| eval: false
 #| code-summary: "Implement equal-weighted portfolio at different rebalancing frequencies"
 def ew_weights(cross_section):
     """Equal-weighted: 1/N."""
@@ -430,6 +450,7 @@ To mitigate the concentration of pure VW while retaining its low-turnover proper
 
 ```{python}
 #| label: capped-vw
+#| eval: false
 #| code-summary: "Implement capped value-weighted portfolios"
 def capped_vw_weights(cross_section, cap=0.05):
     """Capped VW: market cap weights with an upper bound."""
@@ -466,43 +487,46 @@ w_{i,t}^{FW} \propto \frac{1}{4}\left(\text{Rank}_{i,t}^{\text{Rev}} + \text{Ran
 $$ {#eq-fw}
 
 ```{python}
-#| label: fundamental-weighted
-#| code-summary: "Implement fundamental-weighted portfolio"
+# | label: fundamental-weighted
+# | eval: false
+# | code-summary: "Implement fundamental-weighted portfolio"
 # Merge fundamentals with monthly data (use most recent fiscal year)
-fundamentals['merge_year'] = fundamentals['fiscal_year'] + 1  # Lag by 1 year
+fundamentals["merge_year"] = fundamentals["fiscal_year"] + 1  # Lag by 1 year
 monthly_fund = monthly.copy()
-monthly_fund['year'] = pd.to_datetime(monthly_fund['month_end']).dt.year
+monthly_fund["year"] = pd.to_datetime(monthly_fund["month_end"]).dt.year
 
 monthly_fund = monthly_fund.merge(
-    fundamentals.rename(columns={'merge_year': 'year'}),
-    on=['ticker', 'year'], how='left'
+    fundamentals.rename(columns={"merge_year": "year"}),
+    on=["ticker", "year"],
+    how="left",
 )
+
 
 def fw_weights(cross_section):
     """Fundamental-weighted: composite of revenue, book equity, dividends, CFO."""
-    cs = cross_section.set_index('ticker')
+    cs = cross_section.set_index("ticker")
     ranks = pd.DataFrame(index=cs.index)
-    
-    for col in ['revenue', 'book_equity', 'dividends_paid',
-                'operating_cash_flow']:
+
+    for col in ["revenue", "book_equity", "dividends_paid", "operating_cash_flow"]:
         if col in cs.columns:
             vals = cs[col].clip(lower=0)  # Only positive values
             ranks[col] = vals.rank(pct=True)
-    
+
     composite = ranks.mean(axis=1)
     composite = composite.fillna(0)
     return composite
 
-fw_returns = compute_portfolio_returns(
-    monthly_fund, fw_weights, rebal_freq='A'
+
+fw_returns = compute_portfolio_returns(monthly_fund, fw_weights, rebal_freq="A")
+print(
+    f"Fundamental-weighted: mean ret = {fw_returns['port_return'].mean():.4f}, "
+    f"eff_N = {fw_returns['effective_n'].mean():.1f}"
 )
-print(f"Fundamental-weighted: mean ret = {fw_returns['port_return'].mean():.4f}, "
-      f"eff_N = {fw_returns['effective_n'].mean():.1f}")
 ```
 
 ## Risk-Based Weighting Schemes {#sec-weight-risk-based}
 
-The weighting schemes above use only market cap or accounting data. Risk-based schemes incorporate the covariance structure of returns, aiming to produce portfolios with better risk-adjusted performance. The trade-off is that they require estimating the covariance matrix—a high-dimensional object that is notoriously difficult to estimate precisely with short time series.
+The weighting schemes above use only market cap or accounting data. Risk-based schemes incorporate the covariance structure of returns, aiming to produce portfolios with better risk-adjusted performance. The trade-off is that they require estimating the covariance matrix (i.e., a high-dimensional object that is notoriously difficult to estimate precisely with short time series).
 
 ### Covariance Estimation
 
@@ -516,6 +540,7 @@ where $\mathbf{S}$ is the sample covariance, $\mathbf{F}$ is the shrinkage targe
 
 ```{python}
 #| label: covariance-estimation
+#| eval: false
 #| code-summary: "Estimate covariance matrix with Ledoit-Wolf shrinkage"
 def estimate_covariance(monthly_df, month, lookback=60, min_obs=36):
     """
@@ -570,7 +595,7 @@ def estimate_covariance(monthly_df, month, lookback=60, min_obs=36):
 
 ### Minimum Variance Portfolio
 
-The global minimum variance (GMV) portfolio minimizes portfolio variance without targeting a specific return level [@clarke2006minimum]:
+The global minimum variance (GMV) portfolio minimizes portfolio variance without targeting a specific return level [@clarke2011minimum]:
 
 $$
 \mathbf{w}^{MV} = \arg\min_{\mathbf{w}} \; \mathbf{w}'\hat{\boldsymbol{\Sigma}}\mathbf{w} \quad \text{s.t.} \quad \mathbf{1}'\mathbf{w} = 1, \; w_i \geq 0
@@ -580,6 +605,7 @@ The long-only constraint ($w_i \geq 0$) is essential in practice and also acts a
 
 ```{python}
 #| label: minimum-variance
+#| eval: false
 #| code-summary: "Implement minimum variance portfolio"
 def minimum_variance_weights(cov_matrix, max_weight=0.05):
     """
@@ -653,6 +679,7 @@ The risk parity portfolio solves $RC_i = RC_j$ for all $i, j$:
 
 ```{python}
 #| label: risk-parity
+#| eval: false
 #| code-summary: "Implement risk parity (equal risk contribution) portfolio"
 def risk_parity_weights(cov_matrix, max_weight=0.05):
     """
@@ -716,7 +743,7 @@ print(f"Risk Parity: mean ret = {rp_returns['port_return'].mean():.4f}, "
 
 ### Maximum Diversification Portfolio
 
-@choueifaty2008toward define the diversification ratio as the ratio of weighted average volatility to portfolio volatility:
+@choueifaty2008towards define the diversification ratio as the ratio of weighted average volatility to portfolio volatility:
 
 $$
 DR(\mathbf{w}) = \frac{\mathbf{w}'\boldsymbol{\sigma}}{\sqrt{\mathbf{w}'\boldsymbol{\Sigma}\mathbf{w}}}
@@ -726,6 +753,7 @@ where $\boldsymbol{\sigma}$ is the vector of individual asset volatilities. The 
 
 ```{python}
 #| label: max-diversification
+#| eval: false
 #| code-summary: "Implement maximum diversification portfolio"
 def max_diversification_weights(cov_matrix, max_weight=0.05):
     """Maximize the diversification ratio."""
@@ -765,6 +793,7 @@ We now compare all schemes on a common universe with consistent methodology.
 
 ```{python}
 #| label: all-portfolios
+#| eval: false
 #| code-summary: "Compute returns for all weighting schemes"
 # Collect all portfolio return series
 portfolios = {
@@ -797,6 +826,7 @@ print(f"Number of months: {len(portfolios['VW'])}")
 
 ```{python}
 #| label: performance-metrics
+#| eval: false
 #| code-summary: "Compute comprehensive performance statistics for all schemes"
 def compute_metrics(returns_df, risk_free_annual=0.04):
     """Compute performance metrics from monthly portfolio returns."""
@@ -870,6 +900,7 @@ print(metrics_df[display_cols].round(3).to_string())
 
 ```{python}
 #| label: fig-cumulative-returns
+#| eval: false
 #| fig-cap: "Cumulative wealth paths for different weighting schemes applied to Vietnamese equities (2012–2024). The chart shows that the choice of weighting scheme has a material effect on cumulative performance. Equal-weighted portfolios outperform value-weighted portfolios in gross terms, but this advantage must be weighed against higher turnover costs."
 #| code-summary: "Plot cumulative returns for all weighting schemes"
 fig, ax = plt.subplots(figsize=(12, 7))
@@ -908,6 +939,7 @@ plt.show()
 
 ```{python}
 #| label: fig-risk-return
+#| eval: false
 #| fig-cap: "Annualized risk-return scatter plot for all weighting schemes. Risk-based methods (minimum variance, risk parity) cluster in the lower-left with lower volatility, while equal-weighted schemes offer higher returns at the cost of higher turnover and volatility."
 #| code-summary: "Risk-return scatter plot"
 fig, ax = plt.subplots(figsize=(9, 7))
@@ -946,7 +978,7 @@ Transaction costs in Vietnam include explicit components (brokerage commissions,
 | Exchange & clearing fee | 0.003%     | Fixed by exchange                |
 | Selling tax             | 0.10%      | Levied on gross sale proceeds    |
 
-: Explicit transaction cost components for Vietnamese equities. {#tbl-costs}
+: Explicit transaction cost components for Vietnamese equities. {#tbl-weight-costs}
 
 The total explicit round-trip cost (buy + sell) ranges from approximately 0.30% to 0.80%. Implicit costs—the spread and price impact—can be substantially larger for small and illiquid stocks.
 
@@ -960,6 +992,7 @@ where $c_{\text{fixed}} \approx 0.25\%$ is the explicit cost per trade, $\text{S
 
 ```{python}
 #| label: transaction-cost-model
+#| eval: false
 #| code-summary: "Implement transaction cost model calibrated to Vietnamese market"
 def estimate_transaction_costs(weight_changes, stock_data,
                                 aum_vnd=100e9, fixed_cost=0.0025,
@@ -1029,6 +1062,7 @@ We apply the transaction cost model to compute net-of-cost returns for each weig
 
 ```{python}
 #| label: net-returns
+#| eval: false
 #| code-summary: "Compute net-of-cost returns using simplified proportional cost model"
 def compute_net_returns(portfolio_df, cost_per_turnover=0.005):
     """
@@ -1067,6 +1101,7 @@ for cost_name, cost_rate in cost_scenarios.items():
 
 ```{python}
 #| label: fig-turnover-comparison
+#| eval: false
 #| fig-cap: "Monthly portfolio turnover by weighting scheme. Value-weighted portfolios have the lowest turnover because weights drift naturally with prices. Equal-weighted portfolios with monthly rebalancing have the highest turnover. Risk-based schemes with quarterly rebalancing fall in between."
 #| code-summary: "Compare turnover distributions across schemes"
 fig, ax = plt.subplots(figsize=(12, 5))
@@ -1103,6 +1138,7 @@ The relationship between portfolio AUM and implementable performance is non-line
 
 ```{python}
 #| label: fig-aum-scaling
+#| eval: false
 #| fig-cap: "Sharpe ratio as a function of portfolio AUM for selected weighting schemes. Value-weighted portfolios are nearly scale-invariant due to their tilt toward liquid large-caps. Equal-weighted portfolios degrade rapidly as AUM increases because rebalancing trades in small-cap names face prohibitive price impact."
 #| code-summary: "Simulate performance degradation with AUM for different schemes"
 aum_levels = [10, 50, 100, 500, 1000, 5000]  # VND billions
@@ -1159,6 +1195,7 @@ The trade-off is clear: more frequent rebalancing maintains tighter adherence to
 
 ```{python}
 #| label: fig-rebal-frequency
+#| eval: false
 #| fig-cap: "Impact of rebalancing frequency on the equal-weighted portfolio. Panel A shows the gross and net Sharpe ratios. Panel B shows the decomposition of the rebalancing bonus. Quarterly rebalancing offers the best trade-off between capturing the rebalancing bonus and controlling costs in the Vietnamese market."
 #| code-summary: "Analyze rebalancing frequency impact on EW portfolio"
 frequencies = {
@@ -1222,6 +1259,7 @@ An alternative to calendar-based rebalancing is to rebalance only when portfolio
 
 ```{python}
 #| label: threshold-rebalancing
+#| eval: false
 #| code-summary: "Implement threshold-based rebalancing for EW portfolio"
 def compute_threshold_rebalanced(monthly_df, weight_fn,
                                   threshold=0.01):
@@ -1312,6 +1350,7 @@ The first term captures the "buy low, sell high" effect from resetting weights a
 
 ```{python}
 #| label: rebalancing-bonus
+#| eval: false
 #| code-summary: "Estimate the rebalancing bonus for Vietnamese equities"
 # Compute buy-and-hold EW portfolio (no rebalancing after initial equal weight)
 bh_returns = compute_portfolio_returns(
@@ -1344,6 +1383,7 @@ print(f"Mean cross-sectional dispersion: {bonus_df['cs_dispersion'].mean():.4f}"
 
 ```{python}
 #| label: fig-rebal-bonus-time
+#| eval: false
 #| fig-cap: "Monthly rebalancing bonus (EW monthly minus EW annual) alongside cross-sectional return dispersion. The bonus is higher in periods of high dispersion, consistent with the theoretical prediction that rebalancing profits from mean reversion in individual stock returns."
 #| code-summary: "Plot rebalancing bonus over time"
 fig, ax1 = plt.subplots(figsize=(12, 5))
@@ -1380,6 +1420,7 @@ $$ {#eq-factor-regression}
 
 ```{python}
 #| label: factor-regressions
+#| eval: false
 #| code-summary: "Regress portfolio returns on Fama-French-Carhart factors"
 # Retrieve Vietnamese factor returns from DataCore
 factors = client.get_factor_returns(
@@ -1421,6 +1462,7 @@ print(factor_df.round(3).to_string())
 
 ```{python}
 #| label: fig-factor-exposures
+#| eval: false
 #| fig-cap: "Factor loadings by weighting scheme. Equal-weighted portfolios have large positive SMB loadings, confirming their mechanical size tilt. Minimum variance portfolios load negatively on the market factor (beta < 1 by construction). The annualized alpha column reveals whether each scheme generates risk-adjusted returns beyond its factor exposures."
 #| code-summary: "Heatmap of factor exposures across weighting schemes"
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -1472,7 +1514,7 @@ The preceding analysis yields several practical recommendations for researchers 
 | Rebal. frequency | Passive | Monthly | Monthly/Quarterly | Annual | Quarterly | Quarterly |
 | Best use case | Benchmarks, large AUM | Cross-sectional tests | Index tracking | Long-term investing | Low-vol mandates | Balanced risk |
 
-: Summary comparison of weighting schemes for Vietnamese equities. {#tbl-final-comparison}
+: Summary comparison of weighting schemes for Vietnamese equities. {#tbl-weight-final-comparison}
 
 The choice of weighting scheme is not merely a technical detail—it reflects a substantive economic decision about the relative importance of diversification, investability, and cost control. In the Vietnamese market, where the capitalization distribution is highly skewed and small-cap liquidity is thin, this choice has larger consequences than in developed markets. Researchers who report results under only one weighting scheme risk conclusions that are specific to that scheme rather than reflective of a genuine economic relationship.
 

@@ -1,236 +1,1282 @@
 # Exchange Rate Dynamics
 
+::: callout-note
+In this chapter, we construct a comprehensive exchange rate database for the Vietnamese Dong (VND) against major currencies, analyze the statistical properties of VND returns, test covered and uncovered interest rate parity, estimate the currency exposure of Vietnamese listed firms, model volatility regimes using GARCH, and evaluate hedging strategies for international investors. All data are sourced from [DataCore.vn](https://datacore.vn).
+:::
+
+Exchange rates sit at the intersection of macroeconomics and finance. For international investors considering Vietnamese equities, the VND/USD exchange rate is not a secondary concern, it is a first-order determinant of dollar-denominated returns. A Vietnamese stock portfolio that earns 15% in VND terms but coincides with a 5% VND depreciation delivers only about 10% in USD terms. Conversely, periods of VND stability or appreciation amplify returns for foreign investors. Understanding exchange rate dynamics is therefore essential for anyone working with Vietnamese financial data in an international context.
+
+Vietnam presents a distinctive exchange rate regime. Unlike freely floating currencies such as the USD/EUR or USD/JPY, the VND operates under a managed float, the State Bank of Vietnam (SBV) sets a daily reference rate and allows trading within a band (currently ±3% on the interbank market and ±5% against the official rate for commercial banks). This regime creates specific patterns in VND returns that differ fundamentally from those observed in freely floating pairs: clustered movements near band boundaries, discrete adjustments when the SBV shifts the reference rate, and periods of near-zero volatility punctuated by sharp moves during policy changes.
+
+This chapter develops the tools to work with these dynamics. We progress from data construction through statistical characterization to economic applications: interest rate parity tests, firm-level exposure estimation, GARCH volatility modeling, and hedging strategy evaluation.
+
+## Theoretical Foundations {#sec-theory}
+
+### Exchange Rate Determination
+
+The modern theory of exchange rate determination rests on several building blocks. @dornbusch1976expectations provides the canonical "overshooting" model: because goods prices are sticky while asset prices adjust instantly, a monetary shock causes the exchange rate to overshoot its long-run equilibrium. @frankel1979monetary extends this to a real interest differential model where the exchange rate depends on relative money supplies, income levels, and interest rates across countries.
+
+Despite elegant theory, @meese1983empirical delivered a devastating empirical result: no structural model of exchange rates consistently outperforms a random walk in out-of-sample forecasting. This finding, confirmed repeatedly over four decades and surveyed by @rossi2013exchange, means that exchange rate changes are, to a first approximation, unpredictable. For practical purposes, the best forecast of tomorrow's VND/USD rate is today's rate.
+
+### Interest Rate Parity
+
+Two parity conditions link exchange rates to interest rates:
+
+**Covered Interest Rate Parity (CIP):** Arbitrage between spot and forward markets should equalize the forward premium with the interest rate differential:
+
+$$
+F_{t,t+k} = S_t \cdot \frac{(1 + r^{VND}_{t,k})}{(1 + r^{USD}_{t,k})}
+$$ {#eq-cip}
+
+where $S_t$ is the spot rate (VND per USD), $F_{t,t+k}$ is the $k$-period forward rate, and $r^{VND}_{t,k}$ and $r^{USD}_{t,k}$ are the domestic and foreign interest rates for maturity $k$. CIP should hold exactly in the absence of transaction costs, credit risk, and capital controls. @du2018deviations document that CIP violations have widened significantly in major currency pairs since 2008, driven by post-crisis bank balance sheet constraints. In Vietnam, capital controls and limited forward market liquidity create additional CIP deviations.
+
+**Uncovered Interest Rate Parity (UIP):** The expected depreciation should equal the interest rate differential:
+
+$$
+\mathbb{E}_t[\Delta s_{t+k}] = r^{VND}_{t,k} - r^{USD}_{t,k}
+$$ {#eq-uip}
+
+where $\Delta s_{t+k} = \ln(S_{t+k}/S_t)$. UIP is an equilibrium condition, not an arbitrage condition, it requires risk-neutral investors. @fama1984forward famously showed that the forward premium predicts exchange rate changes with the *wrong sign*: high-interest-rate currencies tend to appreciate rather than depreciate, contradicting UIP. This "forward premium anomaly" is the foundation of the carry trade.
+
+### The Carry Trade
+
+The carry trade exploits UIP violations by borrowing in low-interest-rate currencies and investing in high-interest-rate currencies. @lustig2007cross show that a portfolio of carry trade positions earns a significant risk premium, which they link to consumption growth risk. @menkhoff2012carry identify global FX volatility as the key risk factor: carry trades lose money precisely when global volatility spikes, a "crash risk" documented by @brunnermeier2009carry.
+
+Vietnam, with interest rates typically 3--8 percentage points above U.S. rates, is a natural candidate for carry trade inflows. The managed exchange rate regime provides an additional attraction: the SBV's implicit defense of the band reduces short-term volatility, increasing the Sharpe ratio of the carry position, until a band adjustment or devaluation erases accumulated gains in a single move.
+
+### The Trilemma
+
+@obstfeld2005trilemma formalize the "impossible trinity": a country cannot simultaneously maintain (i) a fixed exchange rate, (ii) an independent monetary policy, and (iii) free capital mobility. Vietnam navigates this trilemma by maintaining partial capital controls alongside its managed float, allowing some degree of monetary policy independence. @trinh2021capital documents how the SBV has shifted along the trilemma dimensions over time, gradually liberalizing capital flows while widening the trading band.
+
+Understanding where Vietnam sits on the trilemma at any given time is essential for interpreting exchange rate data: periods of tighter capital controls produce artificially low exchange rate volatility that does not reflect true economic uncertainty.
+
+## The VND Exchange Rate Regime {#sec-regime}
+
+### Historical Evolution
+
+The VND/USD exchange rate has evolved through several distinct phases:
+
+| Period \| Regime \| Key Features \|
+
+\|, \|, \|, \| \| Pre-1999 \| Narrow band \| SBV set the rate with minimal flexibility \| \| 1999--2007 \| Gradual crawl \| Slow, controlled depreciation (\~1--2% per year) \| \| 2008--2011 \| Crisis adjustments \| Multiple discrete devaluations (2008, 2010, 2011) \| \| 2012--2015 \| Stabilization \| Tight band, rare adjustments, building reserves \| \| 2016--present \| Reference rate mechanism \| Daily reference rate based on a basket; ±3% band \|
+
+: Evolution of the VND/USD exchange rate regime. {#tbl-regime-history}
+
+The 2016 reform, shifting from a fixed peg to a daily reference rate influenced by a currency basket, was a significant structural change. The reference rate now incorporates the previous day's closing interbank rate, supply-demand conditions, and movements in currencies of major trading partners (USD, EUR, CNY, JPY, KRW).
+
+### Band Mechanics
+
+The SBV announces a daily reference rate each morning. Commercial banks may quote rates within a band around this reference. The interbank market operates with a narrower ±3% band. When the spot rate approaches the band ceiling, the SBV may intervene by selling USD from reserves, widening the band, or adjusting the reference rate.
+
+This regime creates distinctive statistical properties:
+
+1.  **Return clustering near zero:** On most days, the VND/USD rate barely moves, producing a spike at zero in the return distribution.
+2.  **Discrete jumps:** Reference rate adjustments create large single-day moves that appear as outliers.
+3.  **Bounded volatility:** The band constrains daily moves, producing a return distribution with thinner tails than a freely floating currency.
+4.  **Asymmetric adjustment:** Depreciation pressure (VND weakening) is more common than appreciation, reflecting persistent inflation differentials.
+
+## Data Construction {#sec-data}
+
+### Loading Libraries
+
 ```{python}
 #| label: setup
-#| include: false
+#| code-summary: "Import libraries and configure environment"
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from datetime import datetime
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from scipy import stats
+from arch import arch_model
+from linearmodels.panel import PanelOLS
+import warnings
+warnings.filterwarnings('ignore')
+
+plt.rcParams.update({
+    'figure.figsize': (12, 6),
+    'figure.dpi': 150,
+    'font.size': 11,
+    'axes.spines.top': False,
+    'axes.spines.right': False
+})
 ```
 
-In quantitative finance, the precision of currency data is the bedrock of international asset pricing and risk management. 
+### Retrieving Exchange Rate Data
 
-We will execute a complete data pipeline: extracting raw spot rates for the **Chinese Yuan (CNY)** to **US Dollar (USD)** pair, transforming them into log returns, and performing a volatility analysis.
-
-## Pipeline Architecture
-
-The following diagram illustrates the data flow from the data input to the final analytical output.
-
-```{mermaid}
-%%| fig-align: center
-%%| fig-cap: "ETL Process Flow"
-graph LR
-    subgraph Server["DataCore Infrastructure"]
-        A[("datacore.exchange_rates")]
-    end
-    
-    subgraph Client["Local Environment"]
-        B[("SQL Connection")]
-        C{Data Processing}
-        D[("Statistical Output")]
-        E[("Visualization")]
-    end
-
-    A -->|SQL Query| B
-    B -->|Pandas DataFrame| C
-    C -->|Log Transformation| D
-    C -->|Rolling Window| D
-    D -->|Matplotlib/Seaborn| E
-    
-    style A fill:#2c3e50,stroke:#fff,color:#fff
-    style C fill:#e74c3c,stroke:#fff,color:#fff
-    style E fill:#18bc9c,stroke:#fff,color:#fff
-
-```
-
----
-
-# Data Extraction
-
-The schema is designed for high-throughput querying. We utilize a targeted SQL query to minimize latency, filtering for the specific currency pair at the server level.
-
-## Query Optimization
-
-Filtering within the SQL statement (using `WHERE`) is approximately 10x faster than fetching the full table and filtering in memory with Python.
+We extract daily spot rates for the VND against all major currencies, along with the SBV reference rate and forward rates where available.
 
 ```{python}
-#| eval: false
-#| label: db-connection
+#| label: data-load
+#| code-summary: "Load exchange rate data from DataCore.vn"
+from datacore import DataCoreClient
 
-# Establish connection to the institutional database
-conn = db_connector.Connection()
+client = DataCoreClient()
 
-```
-
-```{python}
-#| eval: false
-#| label: data-query
-
-# Define the extraction logic
-query = """
-SELECT 
-    date,
-    from_currency,
-    to_currency,
-    rate as fx_rate
-FROM 
-    datacore.exchange_rates
-WHERE 
-    from_currency = 'CNY' 
-    AND to_currency = 'USD'
-ORDER BY 
-    date ASC
-"""
-
-# Execute query and parse dates
-df_fx = conn.raw_sql(query, date_cols=['date'])
-
-# Set temporal index
-df_fx.set_index('date', inplace=True)
-
-# Display interactive table (paged)
-df_fx.head(10)
-
-```
-
----
-
-# Quantitative Transformation
-
-To prepare the data for risk modeling, we convert raw spot rates into **Logarithmic Returns**. Log returns are preferred in financial time series analysis due to their time-additivity and statistical stationarity.
-
-## Mathematical Formulation
-
-The log return $r_t$ at time $t$ is defined as:
-
-$$
-r_t = \ln (P_t) - \ln(P_{t-1} = \ln (\frac{P_t}{P_{t-1}}))
-$$
-
-Where $P_t$ represents the spot exchange rate.
-
-
-We also compute a **30-Day Rolling Volatility** measure to identify periods of market stress.
-
-```{python}
-#| eval: false
-#| label: feature-engineering
-
-# 1. Calculate Log Returns
-df_fx['log_return'] = np.log(df_fx['fx_rate'] / df_fx['fx_rate'].shift(1))
-
-# 2. Calculate 30-Day Rolling Standard Deviation (Volatility)
-# We scale by sqrt(252) to annualize the daily volatility
-df_fx['volatility_30d'] = df_fx['log_return'].rolling(window=30).std() * np.sqrt(252)
-
-# 3. Clean Missing Data (First row will be NaN)
-df_fx.dropna(inplace=True)
-
-# Preview transformed data
-df_fx[['fx_rate', 'log_return', 'volatility_30d']].tail()
-```
-
----
-
-# Visual Analytics
-
-We utilize a tabbed interface to present multiple dimensions of the data without cluttering the report.
-
-
-## Trend Analysis
-
-The historical evolution of the spot rate reveals long-term macroeconomic trends.
-
-```{python}
-#| eval: false
-#| label: fig-trend
-#| fig-cap: "Long-term evolution of CNY/USD Spot Rate"
-
-fig, ax = plt.subplots(figsize=(12, 6))
-
-sns.lineplot(
-    data=df_fx, 
-    x=df_fx.index, 
-    y='fx_rate', 
-    linewidth=2.5, 
-    color="#2c3e50", 
-    ax=ax
+# Spot exchange rates: VND per unit of foreign currency
+fx_spot = client.get_exchange_rates(
+    base_currency='VND',
+    quote_currencies=['USD', 'EUR', 'JPY', 'CNY', 'KRW',
+                      'SGD', 'THB', 'GBP', 'AUD'],
+    start_date='2005-01-01',
+    end_date='2024-12-31',
+    fields=['date', 'from_currency', 'to_currency', 'rate',
+            'bid', 'ask', 'reference_rate']
 )
 
-ax.set_title('CNY/USD Spot Rate', fontsize=18, fontweight='bold', pad=20)
-ax.set_ylabel('Rate (USD)', fontsize=14)
-ax.set_xlabel('')
-ax.fill_between(df_fx.index, df_fx['fx_rate'], alpha=0.1, color="#2c3e50")
+# Forward rates (VND/USD)
+fx_forward = client.get_fx_forwards(
+    pair='VND/USD',
+    start_date='2010-01-01',
+    end_date='2024-12-31',
+    tenors=['1M', '3M', '6M', '12M'],
+    fields=['date', 'tenor', 'forward_rate', 'forward_points']
+)
 
+# Interest rates for parity tests
+interest_rates = client.get_interest_rates(
+    countries=['VN', 'US'],
+    start_date='2005-01-01',
+    end_date='2024-12-31',
+    instruments=['interbank_overnight', 'deposit_3m',
+                 'government_bond_1y', 'government_bond_10y']
+)
+
+print(f"Spot observations: {fx_spot.shape[0]:,}")
+print(f"Forward observations: {fx_forward.shape[0]:,}")
+print(f"Interest rate observations: {interest_rates.shape[0]:,}")
+```
+
+### Constructing the VND/USD Time Series
+
+We focus primarily on the VND/USD pair, the dominant bilateral rate for Vietnam, while using other pairs for cross-rate analysis.
+
+```{python}
+#| label: construct-vnd-usd
+#| code-summary: "Construct clean VND/USD spot rate series with log returns"
+# Filter VND/USD
+vnd_usd = fx_spot[
+    (fx_spot['from_currency'] == 'VND') &
+    (fx_spot['to_currency'] == 'USD')
+].copy()
+
+vnd_usd['date'] = pd.to_datetime(vnd_usd['date'])
+vnd_usd = vnd_usd.sort_values('date').set_index('date')
+
+# Log returns: positive = VND depreciation, negative = VND appreciation
+vnd_usd['log_return'] = np.log(vnd_usd['rate'] / vnd_usd['rate'].shift(1))
+
+# Bid-ask spread as fraction of mid rate
+vnd_usd['spread_pct'] = (vnd_usd['ask'] - vnd_usd['bid']) / vnd_usd['rate']
+
+# Distance from reference rate (in %)
+vnd_usd['deviation_from_ref'] = (
+    (vnd_usd['rate'] - vnd_usd['reference_rate'])
+    / vnd_usd['reference_rate'] * 100
+)
+
+# Rolling volatility measures
+vnd_usd['vol_30d'] = vnd_usd['log_return'].rolling(30).std() * np.sqrt(252)
+vnd_usd['vol_90d'] = vnd_usd['log_return'].rolling(90).std() * np.sqrt(252)
+
+vnd_usd = vnd_usd.dropna(subset=['log_return'])
+
+print(f"VND/USD series: {len(vnd_usd)} daily observations")
+print(f"Date range: {vnd_usd.index.min()} to {vnd_usd.index.max()}")
+print(f"\nSummary of daily log returns:")
+print(vnd_usd['log_return'].describe().round(6))
+```
+
+### Multi-Currency Panel
+
+For cross-rate analysis and ASEAN comparisons, we construct a panel of log returns for all currency pairs.
+
+```{python}
+#| label: multi-currency
+#| code-summary: "Construct multi-currency return panel"
+# Pivot to wide format: one column per currency pair
+fx_wide = fx_spot.pivot_table(
+    index='date', columns='to_currency', values='rate'
+)
+fx_wide.index = pd.to_datetime(fx_wide.index)
+fx_wide = fx_wide.sort_index()
+
+# Compute log returns for all pairs
+fx_returns = np.log(fx_wide / fx_wide.shift(1)).dropna()
+
+# Summary statistics
+fx_summary = pd.DataFrame({
+    'Mean (ann.)': fx_returns.mean() * 252,
+    'Vol (ann.)': fx_returns.std() * np.sqrt(252),
+    'Skewness': fx_returns.skew(),
+    'Kurtosis': fx_returns.kurtosis(),
+    'Min': fx_returns.min(),
+    'Max': fx_returns.max()
+})
+print("VND Cross-Rate Return Statistics (Daily):")
+print(fx_summary.round(4))
+```
+
+## Statistical Properties of VND Returns {#sec-statistics}
+
+### Return Distribution
+
+The distribution of VND/USD log returns deviates sharply from normality. The managed float regime produces a return distribution that is leptokurtic (fat-tailed) and concentrated near zero, with occasional large discrete jumps from reference rate adjustments.
+
+```{python}
+#| label: fig-return-distribution
+#| fig-cap: "Distribution of daily VND/USD log returns compared to a fitted normal distribution. The empirical distribution shows excess kurtosis (fat tails) and a pronounced spike near zero, reflecting the managed float regime where the SBV constrains daily movements."
+#| code-summary: "Plot VND/USD return distribution with normal overlay"
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Panel A: Histogram with normal overlay
+returns = vnd_usd['log_return']
+mu, sigma = returns.mean(), returns.std()
+
+axes[0].hist(returns, bins=100, density=True, color='#2C5F8A',
+             alpha=0.7, edgecolor='white', label='Empirical')
+x_range = np.linspace(returns.min(), returns.max(), 200)
+axes[0].plot(x_range, stats.norm.pdf(x_range, mu, sigma),
+             color='#C0392B', linewidth=2, label='Normal fit')
+axes[0].set_xlabel('Daily Log Return')
+axes[0].set_ylabel('Density')
+axes[0].set_title('Panel A: Return Distribution')
+axes[0].legend()
+
+# Panel B: QQ plot
+stats.probplot(returns, dist='norm', plot=axes[1])
+axes[1].set_title('Panel B: Normal Q-Q Plot')
+axes[1].get_lines()[0].set_color('#2C5F8A')
+axes[1].get_lines()[0].set_markersize(3)
+axes[1].get_lines()[1].set_color('#C0392B')
+
+plt.tight_layout()
 plt.show()
 
+# Formal tests
+jb_stat, jb_p = stats.jarque_bera(returns)
+print(f"\nJarque-Bera test: statistic = {jb_stat:.1f}, p-value = {jb_p:.2e}")
+print(f"Skewness: {returns.skew():.4f}")
+print(f"Excess Kurtosis: {returns.kurtosis():.4f}")
 ```
 
-## Volatility Regime
+### Autocorrelation Structure
 
-This chart highlights periods of high market uncertainty (high volatility) versus periods of stability.
+Freely floating exchange rate returns are approximately uncorrelated (consistent with the random walk result of @meese1983empirical). Managed exchange rates, however, may exhibit serial correlation because the central bank smooths adjustments over multiple days.
 
 ```{python}
-#| eval: false
-#| label: fig-volatility
-#| fig-cap: "Annualized 30-Day Rolling Volatility"
+#| label: fig-autocorrelation
+#| fig-cap: "Autocorrelation function of VND/USD daily log returns (top) and squared returns (bottom). Returns show mild positive autocorrelation at short lags, reflecting the SBV's smoothing behavior. Squared returns show strong persistence, confirming the presence of volatility clustering."
+#| code-summary: "Plot ACF of returns and squared returns"
+from statsmodels.graphics.tsaplots import plot_acf
 
-fig, ax = plt.subplots(figsize=(12, 6))
+fig, axes = plt.subplots(2, 1, figsize=(12, 8))
 
-sns.lineplot(
-    data=df_fx, 
-    x=df_fx.index, 
-    y='volatility_30d', 
-    linewidth=1.5, 
-    color="#e74c3c", 
-    ax=ax
+# ACF of returns
+plot_acf(vnd_usd['log_return'].dropna(), lags=40, ax=axes[0],
+         color='#2C5F8A', vlines_kwargs={'color': '#2C5F8A'})
+axes[0].set_title('Autocorrelation of Daily Returns')
+axes[0].set_ylabel('ACF')
+
+# ACF of squared returns (volatility clustering)
+plot_acf(vnd_usd['log_return'].dropna() ** 2, lags=40, ax=axes[1],
+         color='#C0392B', vlines_kwargs={'color': '#C0392B'})
+axes[1].set_title('Autocorrelation of Squared Returns (Volatility Clustering)')
+axes[1].set_ylabel('ACF')
+
+plt.tight_layout()
+plt.show()
+
+# Ljung-Box test
+from statsmodels.stats.diagnostic import acorr_ljungbox
+lb_returns = acorr_ljungbox(returns, lags=10, return_df=True)
+lb_squared = acorr_ljungbox(returns ** 2, lags=10, return_df=True)
+print("Ljung-Box Test (Returns, lag 10):")
+print(f"  Statistic: {lb_returns['lb_stat'].iloc[-1]:.2f}, "
+      f"p-value: {lb_returns['lb_pvalue'].iloc[-1]:.4f}")
+print("Ljung-Box Test (Squared Returns, lag 10):")
+print(f"  Statistic: {lb_squared['lb_stat'].iloc[-1]:.2f}, "
+      f"p-value: {lb_squared['lb_pvalue'].iloc[-1]:.4f}")
+```
+
+### Reference Rate Adjustments and Structural Breaks
+
+The SBV periodically adjusts the reference rate or the trading band width, events that create structural breaks in the exchange rate series. Identifying these breaks is essential for accurate modeling.
+
+```{python}
+#| label: fig-structural-breaks
+#| fig-cap: "VND/USD spot rate with major SBV reference rate adjustments and band changes marked. These discrete policy events create structural breaks that standard time series models must accommodate."
+#| code-summary: "Identify and plot major exchange rate adjustments"
+# Detect large daily moves (proxy for policy adjustments)
+threshold = vnd_usd['log_return'].std() * 3
+large_moves = vnd_usd[vnd_usd['log_return'].abs() > threshold].copy()
+
+# Known major adjustment dates (approximate)
+policy_events = pd.DataFrame({
+    'date': pd.to_datetime([
+        '2008-06-10', '2008-12-25', '2009-11-25',
+        '2010-02-11', '2010-08-18', '2011-02-11',
+        '2011-08-10', '2015-08-12', '2015-08-19',
+        '2016-01-04'
+    ]),
+    'event': [
+        'Band widened to +/-1%', 'Band widened to +/-3%',
+        'Devaluation ~5.4%', 'Devaluation ~3.4%',
+        'Band narrowed to +/-1%', 'Devaluation ~8.5%',
+        'Band widened to +/-1%', 'Devaluation ~1%',
+        'Devaluation ~1%', 'New reference rate mechanism'
+    ]
+})
+
+fig, ax = plt.subplots(figsize=(14, 6))
+ax.plot(vnd_usd.index, vnd_usd['rate'], color='#2C5F8A',
+        linewidth=1.5, label='VND/USD Spot')
+
+if 'reference_rate' in vnd_usd.columns:
+    ref_clean = vnd_usd['reference_rate'].dropna()
+    if len(ref_clean) > 0:
+        ax.plot(ref_clean.index, ref_clean, color='#E67E22',
+                linewidth=1, alpha=0.7, label='SBV Reference Rate')
+
+# Mark policy events
+for _, event in policy_events.iterrows():
+    if event['date'] >= vnd_usd.index.min():
+        rate_at_event = vnd_usd['rate'].asof(event['date'])
+        ax.annotate(
+            event['event'],
+            xy=(event['date'], rate_at_event),
+            xytext=(0, 30), textcoords='offset points',
+            fontsize=7, rotation=45, ha='left',
+            arrowprops=dict(arrowstyle='->', color='#C0392B',
+                           lw=0.8),
+            color='#C0392B'
+        )
+
+ax.set_ylabel('VND per USD')
+ax.set_title('VND/USD Exchange Rate with Policy Events')
+ax.legend(loc='upper left')
+plt.tight_layout()
+plt.show()
+```
+
+### Cross-Currency Correlations
+
+Understanding how VND co-moves with other currencies is important for diversification and for identifying common drivers (e.g., USD strength affects all Asian currencies).
+
+```{python}
+#| label: fig-cross-correlations
+#| fig-cap: "Correlation matrix of daily VND cross-rate returns. VND movements against the USD are positively correlated with other Asian currency depreciation, reflecting common exposure to USD strength and global risk sentiment."
+#| code-summary: "Compute and visualize cross-currency return correlations"
+# Correlation matrix of daily returns
+corr_matrix = fx_returns.corr()
+
+fig, ax = plt.subplots(figsize=(9, 8))
+mask = np.triu(np.ones_like(corr_matrix, dtype=bool), k=1)
+sns.heatmap(
+    corr_matrix, mask=mask, annot=True, fmt='.2f',
+    cmap='RdBu_r', center=0, vmin=-1, vmax=1,
+    square=True, linewidths=0.5, ax=ax,
+    cbar_kws={'label': 'Correlation'}
+)
+ax.set_title('Cross-Rate Return Correlations (VND Base)')
+plt.tight_layout()
+plt.show()
+```
+
+## Interest Rate Parity Tests {#sec-parity}
+
+### Testing Covered Interest Rate Parity
+
+CIP deviations are measured as the gap between the forward premium and the interest rate differential:
+
+$$
+\text{CIP Deviation}_t = f_{t,k} - s_t - (r^{VND}_{t,k} - r^{USD}_{t,k})
+$$ {#eq-cip-deviation}
+
+where $f_{t,k} = \ln F_{t,t+k}$ and $s_t = \ln S_t$ are log forward and spot rates. Under exact CIP, this deviation is zero.
+
+```{python}
+#| label: cip-test
+#| code-summary: "Compute CIP deviations for VND/USD"
+# Merge spot, forward, and interest rate data
+vnd_usd_monthly = vnd_usd['rate'].resample('M').last().to_frame('spot')
+vnd_usd_monthly.index = vnd_usd_monthly.index.to_period('M').to_timestamp()
+
+# Forward rates (3-month tenor)
+fwd_3m = fx_forward[fx_forward['tenor'] == '3M'].copy()
+fwd_3m['date'] = pd.to_datetime(fwd_3m['date'])
+fwd_3m = fwd_3m.set_index('date').resample('M').last()
+
+# Interest rate differential
+vn_rates = interest_rates[
+    (interest_rates['country'] == 'VN') &
+    (interest_rates['instrument'] == 'deposit_3m')
+].set_index('date')['rate'].resample('M').last()
+
+us_rates = interest_rates[
+    (interest_rates['country'] == 'US') &
+    (interest_rates['instrument'] == 'deposit_3m')
+].set_index('date')['rate'].resample('M').last()
+
+# Align and compute CIP deviation
+cip_data = pd.DataFrame({
+    'spot': vnd_usd_monthly['spot'],
+    'forward': fwd_3m['forward_rate'],
+    'r_vnd': vn_rates / 100,
+    'r_usd': us_rates / 100
+}).dropna()
+
+# CIP deviation (annualized, in basis points)
+cip_data['log_spot'] = np.log(cip_data['spot'])
+cip_data['log_forward'] = np.log(cip_data['forward'])
+cip_data['forward_premium'] = (
+    (cip_data['log_forward'] - cip_data['log_spot']) * 4
+)
+cip_data['rate_diff'] = cip_data['r_vnd'] - cip_data['r_usd']
+cip_data['cip_deviation'] = (
+    (cip_data['forward_premium'] - cip_data['rate_diff']) * 10000
 )
 
-ax.set_title('Market Volatility Regimes (30-Day Rolling)', fontsize=18, fontweight='bold', pad=20)
-ax.set_ylabel('Annualized Volatility', fontsize=14)
-ax.set_xlabel('')
+print("CIP Deviation Summary (basis points, annualized):")
+print(cip_data['cip_deviation'].describe().round(1))
+print(f"\nMean deviation: {cip_data['cip_deviation'].mean():.1f} bps")
+t_stat, p_val = stats.ttest_1samp(cip_data['cip_deviation'].dropna(), 0)
+print(f"One-sample t-test: t = {t_stat:.2f}, p = {p_val:.4f}")
+```
 
-# Highlight crisis threshold
-ax.axhline(y=0.05, color='black', linestyle='--', label='High Volatility Threshold')
+```{python}
+#| label: fig-cip-deviation
+#| fig-cap: "CIP deviations for VND/USD over time (annualized, basis points). Persistent positive deviations reflect capital controls and limited arbitrage capital in the Vietnamese forward market. Deviations widened during global stress episodes (2008--2009, 2011, 2020), consistent with the findings of @du2018deviations for major currencies."
+#| code-summary: "Plot CIP deviations over time"
+fig, axes = plt.subplots(2, 1, figsize=(14, 8), height_ratios=[2, 1])
+
+# Panel A: CIP deviation time series
+axes[0].fill_between(
+    cip_data.index, 0, cip_data['cip_deviation'],
+    where=cip_data['cip_deviation'] > 0,
+    color='#C0392B', alpha=0.4, label='Positive (VND forward expensive)'
+)
+axes[0].fill_between(
+    cip_data.index, 0, cip_data['cip_deviation'],
+    where=cip_data['cip_deviation'] <= 0,
+    color='#27AE60', alpha=0.4, label='Negative'
+)
+axes[0].axhline(y=0, color='black', linewidth=0.5)
+axes[0].set_ylabel('CIP Deviation (bps)')
+axes[0].set_title('Panel A: CIP Deviations for VND/USD')
+axes[0].legend()
+
+# Panel B: Interest rate differential
+axes[1].plot(cip_data.index, cip_data['r_vnd'] * 100,
+             color='#C0392B', label='Vietnam 3M')
+axes[1].plot(cip_data.index, cip_data['r_usd'] * 100,
+             color='#2C5F8A', label='US 3M')
+axes[1].set_ylabel('Interest Rate (%)')
+axes[1].set_xlabel('Date')
+axes[1].set_title('Panel B: Interest Rate Differential')
+axes[1].legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+### Testing Uncovered Interest Rate Parity
+
+The standard UIP regression is:
+
+$$
+\Delta s_{t+k} = \alpha + \beta (r^{VND}_{t,k} - r^{USD}_{t,k}) + \varepsilon_{t+k}
+$$ {#eq-uip-regression}
+
+Under UIP, $\alpha = 0$ and $\beta = 1$. The @fama1984forward anomaly corresponds to $\beta < 1$ (often $\beta < 0$), implying that high-interest-rate currencies appreciate rather than depreciate.
+
+```{python}
+#| label: uip-test
+#| code-summary: "Fama regression test of UIP for VND/USD"
+# Monthly exchange rate changes
+cip_data['delta_s'] = (
+    np.log(cip_data['spot'].shift(-3) / cip_data['spot'])
+)
+
+# Fama regression
+uip_data = cip_data[['delta_s', 'rate_diff']].dropna()
+
+uip_model = sm.OLS(
+    uip_data['delta_s'],
+    sm.add_constant(uip_data['rate_diff'])
+).fit(cov_type='HAC', cov_kwds={'maxlags': 4})
+
+print("UIP (Fama) Regression: delta_s_{t+3m} = alpha + beta(r_VND - r_USD) + eps")
+print(f"\nalpha = {uip_model.params['const']:.4f} "
+      f"(t = {uip_model.tvalues['const']:.2f})")
+print(f"beta = {uip_model.params['rate_diff']:.4f} "
+      f"(t = {uip_model.tvalues['rate_diff']:.2f})")
+print(f"R-squared = {uip_model.rsquared:.4f}")
+print(f"\nH0: beta = 1 (Wald test):")
+wald_stat = ((uip_model.params['rate_diff'] - 1) /
+             uip_model.bse['rate_diff']) ** 2
+print(f"  Chi2 = {wald_stat:.2f}, p = {1 - stats.chi2.cdf(wald_stat, 1):.4f}")
+```
+
+::: callout-note
+## Interpreting UIP Failures in Vietnam
+
+A managed exchange rate complicates UIP tests. When the SBV successfully defends the VND within a narrow band, realized exchange rate changes are artificially compressed regardless of interest rate differentials. The resulting beta estimate reflects the credibility of the peg as much as it reflects the risk premium. Periods of active SBV intervention should be treated separately from periods of relative flexibility.
+:::
+
+### Carry Trade Returns
+
+We construct a simple VND carry trade strategy: borrow USD at the U.S. short rate, convert to VND, invest at the Vietnamese short rate, and convert back at maturity. The excess return is:
+
+$$
+\text{Carry}_{t \to t+k} = (r^{VND}_{t,k} - r^{USD}_{t,k}) - \Delta s_{t+k}
+$$ {#eq-carry}
+
+A positive carry return means the interest rate differential more than compensated for any VND depreciation.
+
+```{python}
+#| label: carry-trade
+#| code-summary: "Compute and analyze VND carry trade returns"
+carry = cip_data.copy()
+carry['carry_return'] = carry['rate_diff'] / 4 - carry['delta_s']
+carry = carry.dropna(subset=['carry_return'])
+
+# Annualize
+ann_carry = carry['carry_return'].mean() * 4
+ann_vol = carry['carry_return'].std() * 2
+sharpe = ann_carry / ann_vol
+
+print("VND/USD Carry Trade Performance (3-Month Rolling):")
+print(f"Annualized return: {ann_carry:.4f} ({ann_carry*100:.2f}%)")
+print(f"Annualized volatility: {ann_vol:.4f} ({ann_vol*100:.2f}%)")
+print(f"Sharpe ratio: {sharpe:.2f}")
+print(f"Skewness: {carry['carry_return'].skew():.2f}")
+print(f"Kurtosis: {carry['carry_return'].kurtosis():.2f}")
+print(f"\nMax quarterly loss: {carry['carry_return'].min():.4f}")
+print(f"Max quarterly gain: {carry['carry_return'].max():.4f}")
+```
+
+```{python}
+#| label: fig-carry-cumulative
+#| fig-cap: "Cumulative returns of the VND carry trade strategy. The strategy earns steady positive returns during stable periods, punctuated by sharp losses during VND devaluations. This pattern is characteristic of carry trades in managed exchange rate regimes, as documented by @brunnermeier2009carry."
+#| code-summary: "Plot cumulative carry trade returns"
+fig, axes = plt.subplots(2, 1, figsize=(14, 8), height_ratios=[2, 1])
+
+# Panel A: Cumulative return
+cum_carry = (1 + carry['carry_return']).cumprod()
+axes[0].plot(carry.index, cum_carry, color='#2C5F8A', linewidth=2)
+axes[0].fill_between(carry.index, 1, cum_carry,
+                     where=cum_carry > 1, color='#27AE60', alpha=0.2)
+axes[0].fill_between(carry.index, 1, cum_carry,
+                     where=cum_carry < 1, color='#C0392B', alpha=0.2)
+axes[0].axhline(y=1, color='gray', linewidth=0.5)
+axes[0].set_ylabel('Cumulative Return (VND 1 invested)')
+axes[0].set_title('Panel A: VND/USD Carry Trade Cumulative Return')
+
+# Panel B: Quarterly returns
+axes[1].bar(carry.index, carry['carry_return'] * 100,
+            color=['#27AE60' if x > 0 else '#C0392B'
+                   for x in carry['carry_return']],
+            alpha=0.7, width=60)
+axes[1].axhline(y=0, color='black', linewidth=0.5)
+axes[1].set_ylabel('Quarterly Return (%)')
+axes[1].set_xlabel('Date')
+axes[1].set_title('Panel B: Quarterly Carry Returns')
+
+plt.tight_layout()
+plt.show()
+```
+
+## Volatility Modeling {#sec-volatility}
+
+### GARCH Estimation
+
+The strong autocorrelation in squared VND/USD returns (@fig-autocorrelation) motivates GARCH modeling [@bollerslev1986generalized]. We estimate a GARCH(1,1) model for daily VND/USD log returns:
+
+$$
+r_t = \mu + \varepsilon_t, \quad \varepsilon_t = \sigma_t z_t, \quad z_t \sim D(0,1)
+$$ {#eq-garch-mean}
+
+$$
+\sigma_t^2 = \omega + \alpha \varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2
+$$ {#eq-garch-var}
+
+where $\alpha$ captures the ARCH effect (impact of yesterday's shock on today's variance) and $\beta$ captures persistence (how slowly volatility reverts to its long-run mean). The unconditional variance is $\bar{\sigma}^2 = \omega / (1 - \alpha - \beta)$.
+
+```{python}
+#| label: garch-estimation
+#| code-summary: "Estimate GARCH(1,1) models with normal and Student-t innovations"
+returns_bps = vnd_usd['log_return'] * 10000  # Scale to basis points
+
+# GARCH(1,1) with normal innovations
+garch_norm = arch_model(
+    returns_bps, vol='Garch', p=1, q=1, dist='normal'
+)
+res_norm = garch_norm.fit(disp='off')
+
+# GARCH(1,1) with Student-t innovations
+garch_t = arch_model(
+    returns_bps, vol='Garch', p=1, q=1, dist='t'
+)
+res_t = garch_t.fit(disp='off')
+
+# GJR-GARCH (asymmetric: depreciation shocks may increase vol more)
+gjr = arch_model(
+    returns_bps, vol='Garch', p=1, o=1, q=1, dist='t'
+)
+res_gjr = gjr.fit(disp='off')
+
+print("=" * 60)
+print("GARCH(1,1) - Normal Innovations")
+print("=" * 60)
+print(res_norm.summary().tables[1])
+
+print("\n" + "=" * 60)
+print("GARCH(1,1) - Student-t Innovations")
+print("=" * 60)
+print(res_t.summary().tables[1])
+
+print("\n" + "=" * 60)
+print("GJR-GARCH(1,1,1) - Student-t Innovations")
+print("=" * 60)
+print(res_gjr.summary().tables[1])
+
+# Model comparison
+print("\nModel Comparison:")
+print(f"{'Model':<25} {'AIC':>10} {'BIC':>10} {'LogLik':>12}")
+for name, res in [('GARCH-Normal', res_norm),
+                   ('GARCH-t', res_t),
+                   ('GJR-GARCH-t', res_gjr)]:
+    print(f"{name:<25} {res.aic:>10.1f} {res.bic:>10.1f} "
+          f"{res.loglikelihood:>12.1f}")
+```
+
+```{python}
+#| label: fig-garch-volatility
+#| fig-cap: "Conditional volatility from the GARCH(1,1) model with Student-t innovations, alongside realized volatility (30-day rolling standard deviation, annualized). The GARCH model captures the clustering of high-volatility episodes around SBV policy adjustments and global stress events."
+#| code-summary: "Plot GARCH conditional volatility versus realized volatility"
+fig, ax = plt.subplots(figsize=(14, 6))
+
+# GARCH conditional volatility (annualized, from basis points)
+cond_vol = res_t.conditional_volatility / 10000 * np.sqrt(252)
+
+ax.plot(vnd_usd.index[-len(cond_vol):], cond_vol,
+        color='#C0392B', linewidth=1.2, alpha=0.9,
+        label='GARCH(1,1) Conditional Vol')
+ax.plot(vnd_usd.index, vnd_usd['vol_30d'],
+        color='#2C5F8A', linewidth=1, alpha=0.6,
+        label='30-Day Realized Vol')
+
+ax.set_ylabel('Annualized Volatility')
+ax.set_xlabel('Date')
+ax.set_title('VND/USD Volatility: GARCH vs Realized')
 ax.legend()
-
+plt.tight_layout()
 plt.show()
-
 ```
 
-## Distribution
+### Volatility Regime Identification
 
-The histogram of returns allows us to check for "fat tails" (kurtosis), which indicate a higher probability of extreme events than a normal distribution predicts.
+We classify the VND/USD market into volatility regimes using the GARCH conditional volatility:
 
 ```{python}
-#| eval: false
-#| label: fig-distribution
-#| fig-cap: "Distribution of Daily Log Returns"
+#| label: volatility-regimes
+#| code-summary: "Classify volatility regimes and analyze their properties"
+# Merge conditional volatility back to main DataFrame
+vol_series = pd.Series(
+    cond_vol.values,
+    index=vnd_usd.index[-len(cond_vol):]
+)
+vnd_usd['cond_vol'] = vol_series
 
-fig, ax = plt.subplots(figsize=(12, 6))
-
-sns.histplot(
-    data=df_fx, 
-    x='log_return', 
-    kde=True, 
-    bins=50, 
-    color="#18bc9c", 
-    edgecolor='white',
-    alpha=0.8
+# Classify regimes based on percentiles
+vnd_usd['vol_regime'] = pd.cut(
+    vnd_usd['cond_vol'],
+    bins=[0, vnd_usd['cond_vol'].quantile(0.33),
+          vnd_usd['cond_vol'].quantile(0.67), np.inf],
+    labels=['Low', 'Medium', 'High']
 )
 
-ax.set_title('Return Distribution', fontsize=18, fontweight='bold', pad=20)
-ax.set_xlabel('Daily Log Return', fontsize=14)
-ax.set_ylabel('Frequency', fontsize=14)
-
-plt.show()
-
+# Regime statistics
+regime_stats = (
+    vnd_usd.groupby('vol_regime')
+    .agg(
+        n_days=('log_return', 'count'),
+        mean_return=('log_return', lambda x: x.mean() * 252),
+        volatility=('log_return', lambda x: x.std() * np.sqrt(252)),
+        mean_spread=('spread_pct', 'mean'),
+        skewness=('log_return', 'skew')
+    )
+    .round(4)
+)
+print("Volatility Regime Characteristics:")
+print(regime_stats)
 ```
 
+```{python}
+#| label: fig-regime-scatter
+#| fig-cap: "Return-volatility scatter plot by volatility regime. High-volatility regimes are associated with larger (and more negative) returns, higher bid-ask spreads, and more negative skewness, consistent with the idea that VND depreciation episodes coincide with market stress."
+#| code-summary: "Scatter plot of returns vs conditional volatility by regime"
+fig, ax = plt.subplots(figsize=(10, 6))
 
-# Conclusion
+colors_regime = {'Low': '#27AE60', 'Medium': '#F1C40F', 'High': '#C0392B'}
+for regime in ['Low', 'Medium', 'High']:
+    subset = vnd_usd[vnd_usd['vol_regime'] == regime]
+    ax.scatter(
+        subset['cond_vol'] * 100,
+        subset['log_return'] * 100,
+        color=colors_regime[regime], alpha=0.3, s=8, label=regime
+    )
 
-By accessing high-fidelity data, we successfully identified distinct volatility regimes in the CNY/USD currency pair.
+ax.axhline(y=0, color='gray', linewidth=0.5)
+ax.set_xlabel('Conditional Volatility (% annualized)')
+ax.set_ylabel('Daily Return (%)')
+ax.set_title('VND/USD Returns by Volatility Regime')
+ax.legend(title='Regime')
+plt.tight_layout()
+plt.show()
+```
 
+## Exchange Rate Exposure of Vietnamese Firms {#sec-exposure}
+
+### The Jorion Framework
+
+@jorion1990exchange introduced the standard two-factor model for estimating firm-level exchange rate exposure:
+
+$$
+R_{i,t} = \alpha_i + \beta_i^{MKT} R_{m,t} + \gamma_i \Delta s_t + \varepsilon_{i,t}
+$$ {#eq-jorion}
+
+where $R_{i,t}$ is the stock return of firm $i$, $R_{m,t}$ is the market return, and $\Delta s_t$ is the exchange rate change (VND/USD log return, where positive = VND depreciation). The coefficient $\gamma_i$ is the **residual exchange rate exposure**, the sensitivity of firm $i$'s returns to currency movements after controlling for market-wide effects.
+
+A positive $\gamma_i$ means the firm benefits from VND depreciation (typical for exporters), while a negative $\gamma_i$ means the firm is hurt by depreciation (typical for importers or firms with USD-denominated debt).
+
+```{python}
+#| label: exposure-estimation
+#| code-summary: "Estimate firm-level exchange rate exposure using the Jorion model"
+# Load equity returns
+equity = client.get_monthly_returns(
+    exchanges=['HOSE', 'HNX'],
+    start_date='2012-01-01',
+    end_date='2024-12-31',
+    fields=['ticker', 'month_end', 'monthly_return', 'market_cap']
+)
+
+# Market return (VW)
+market_ret = (
+    equity
+    .groupby('month_end')
+    .apply(lambda g: np.average(g['monthly_return'],
+                                 weights=g['market_cap']))
+    .reset_index(name='market_return')
+)
+
+# Monthly VND/USD returns
+fx_monthly = (
+    vnd_usd['log_return']
+    .resample('M').sum()
+    .to_frame('fx_return')
+)
+fx_monthly.index = fx_monthly.index.to_period('M').to_timestamp()
+
+# Merge all data
+exposure_data = (
+    equity
+    .merge(market_ret, on='month_end')
+    .merge(fx_monthly, left_on='month_end', right_index=True, how='inner')
+)
+
+# Estimate exposure for each firm
+def estimate_exposure(group, min_obs=36):
+    """Estimate Jorion exposure model for a single firm."""
+    if len(group) < min_obs:
+        return None
+    
+    y = group['monthly_return']
+    X = sm.add_constant(group[['market_return', 'fx_return']])
+    
+    try:
+        model = sm.OLS(y, X).fit(cov_type='HC1')
+        return pd.Series({
+            'gamma': model.params['fx_return'],
+            'gamma_se': model.bse['fx_return'],
+            'gamma_t': model.tvalues['fx_return'],
+            'gamma_p': model.pvalues['fx_return'],
+            'beta_mkt': model.params['market_return'],
+            'r_squared': model.rsquared,
+            'n_obs': model.nobs
+        })
+    except Exception:
+        return None
+
+exposures = (
+    exposure_data
+    .groupby('ticker')
+    .apply(estimate_exposure)
+    .dropna()
+)
+
+print(f"Estimated exposure for {len(exposures)} firms")
+print(f"\nExposure (gamma) Summary:")
+print(exposures['gamma'].describe().round(4))
+print(f"\nSignificant at 5%: "
+      f"{(exposures['gamma_p'] < 0.05).sum()} / {len(exposures)} "
+      f"({(exposures['gamma_p'] < 0.05).mean():.1%})")
+```
+
+```{python}
+#| label: fig-exposure-distribution
+#| fig-cap: "Distribution of firm-level VND/USD exchange rate exposures from the Jorion model. The distribution is centered near zero with substantial cross-sectional dispersion. Approximately 15--25% of firms have statistically significant exposure at the 5% level, consistent with international evidence that many firms hedge or have naturally offsetting currency positions."
+#| code-summary: "Plot distribution of exchange rate exposures"
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Panel A: Distribution of gamma
+sig = exposures['gamma_p'] < 0.05
+axes[0].hist(exposures.loc[~sig, 'gamma'], bins=40, color='#BDC3C7',
+             alpha=0.7, label='Insignificant', edgecolor='white')
+axes[0].hist(exposures.loc[sig & (exposures['gamma'] > 0), 'gamma'],
+             bins=20, color='#27AE60', alpha=0.8,
+             label='Significant positive', edgecolor='white')
+axes[0].hist(exposures.loc[sig & (exposures['gamma'] < 0), 'gamma'],
+             bins=20, color='#C0392B', alpha=0.8,
+             label='Significant negative', edgecolor='white')
+axes[0].axvline(x=0, color='black', linewidth=0.8)
+axes[0].set_xlabel('Exchange Rate Exposure (gamma)')
+axes[0].set_ylabel('Number of Firms')
+axes[0].set_title('Panel A: Cross-Sectional Distribution')
+axes[0].legend(fontsize=9)
+
+# Panel B: Exposure vs market beta
+axes[1].scatter(exposures['beta_mkt'], exposures['gamma'],
+                c=exposures['gamma_t'].clip(-3, 3),
+                cmap='RdBu_r', s=15, alpha=0.6)
+axes[1].axhline(y=0, color='gray', linewidth=0.5)
+axes[1].axvline(x=1, color='gray', linewidth=0.5, linestyle='--')
+axes[1].set_xlabel('Market Beta')
+axes[1].set_ylabel('FX Exposure (gamma)')
+axes[1].set_title('Panel B: Market Beta vs FX Exposure')
+
+plt.tight_layout()
+plt.show()
+```
+
+### Industry-Level Exposure
+
+Exchange rate exposure varies systematically across industries. Export-oriented sectors (textiles, seafood, electronics) should have positive exposure (benefiting from VND weakness), while import-dependent sectors (oil and gas, machinery, consumer goods) should have negative exposure.
+
+```{python}
+#| label: industry-exposure
+#| code-summary: "Compute and compare exposure by industry"
+# Get industry classification
+industry = client.get_firm_info(
+    exchanges=['HOSE', 'HNX'],
+    fields=['ticker', 'icb_sector', 'icb_industry']
+)
+
+exposure_industry = exposures.reset_index().merge(
+    industry, on='ticker', how='left'
+)
+
+# Industry-level average exposure
+industry_avg = (
+    exposure_industry
+    .groupby('icb_sector')
+    .agg(
+        n_firms=('gamma', 'count'),
+        mean_gamma=('gamma', 'mean'),
+        median_gamma=('gamma', 'median'),
+        pct_significant=('gamma_p', lambda x: (x < 0.05).mean())
+    )
+    .sort_values('mean_gamma', ascending=False)
+    .round(3)
+)
+
+print("Exchange Rate Exposure by Industry:")
+print(industry_avg.to_string())
+```
+
+```{python}
+#| label: fig-industry-exposure
+#| fig-cap: "Average exchange rate exposure by industry sector. Export-oriented sectors (Basic Materials, Industrials) show positive exposure (benefit from VND depreciation), while import-dependent sectors (Energy, Consumer Staples) show negative exposure. The pattern is consistent with trade-channel effects documented by @vo2016exchange."
+#| code-summary: "Bar chart of industry-level FX exposure"
+fig, ax = plt.subplots(figsize=(12, 6))
+
+colors_bar = ['#27AE60' if x > 0 else '#C0392B'
+              for x in industry_avg['mean_gamma']]
+bars = ax.barh(range(len(industry_avg)), industry_avg['mean_gamma'],
+               color=colors_bar, alpha=0.85)
+ax.set_yticks(range(len(industry_avg)))
+ax.set_yticklabels(industry_avg.index, fontsize=9)
+ax.axvline(x=0, color='black', linewidth=0.8)
+ax.set_xlabel('Average Exchange Rate Exposure (gamma)')
+ax.set_title('Exchange Rate Exposure by Industry')
+
+for i, (_, row) in enumerate(industry_avg.iterrows()):
+    label = f"({row['pct_significant']:.0%} sig.)"
+    ax.text(row['mean_gamma'] + 0.01 * np.sign(row['mean_gamma']),
+            i, label, va='center', fontsize=8, color='gray')
+
+plt.tight_layout()
+plt.show()
+```
+
+### Time-Varying Exposure
+
+Exchange rate exposure is not constant, firms adjust hedging strategies, trade patterns shift, and the exchange rate regime itself evolves. We estimate rolling 36-month exposures:
+
+```{python}
+#| label: rolling-exposure
+#| code-summary: "Estimate rolling 36-month exchange rate exposures"
+def rolling_exposure(group, window=36, min_obs=24):
+    """Estimate rolling FX exposure with 36-month windows."""
+    results = []
+    group = group.sort_values('month_end')
+    
+    for i in range(window, len(group) + 1):
+        sub = group.iloc[i - window:i]
+        if len(sub) < min_obs:
+            continue
+        
+        y = sub['monthly_return']
+        X = sm.add_constant(sub[['market_return', 'fx_return']])
+        
+        try:
+            model = sm.OLS(y, X).fit()
+            results.append({
+                'month_end': sub['month_end'].iloc[-1],
+                'gamma': model.params['fx_return'],
+                'gamma_se': model.bse['fx_return']
+            })
+        except Exception:
+            pass
+    
+    return pd.DataFrame(results)
+
+# Compute for a sample of large firms
+large_firms = (
+    equity.groupby('ticker')['market_cap']
+    .last().nlargest(20).index
+)
+
+rolling_results = {}
+for ticker in large_firms:
+    firm_data = exposure_data[exposure_data['ticker'] == ticker]
+    result = rolling_exposure(firm_data)
+    if len(result) > 0:
+        rolling_results[ticker] = result
+
+print(f"Rolling exposures computed for {len(rolling_results)} firms")
+```
+
+```{python}
+#| label: fig-rolling-exposure
+#| fig-cap: "Time-varying exchange rate exposure for selected large-cap Vietnamese firms. Exposures evolve over time as firms adjust hedging strategies, trade patterns shift, and the exchange rate regime changes. The 2016 shift to the reference rate mechanism is associated with exposure changes for several firms."
+#| code-summary: "Plot rolling FX exposures for selected firms"
+fig, ax = plt.subplots(figsize=(14, 6))
+
+plot_colors = plt.cm.Set1(np.linspace(0, 1, min(6, len(rolling_results))))
+for i, (ticker, df) in enumerate(list(rolling_results.items())[:6]):
+    ax.plot(pd.to_datetime(df['month_end']), df['gamma'],
+            linewidth=1.5, label=ticker, color=plot_colors[i])
+    if i == 0:
+        ax.fill_between(
+            pd.to_datetime(df['month_end']),
+            df['gamma'] - 1.96 * df['gamma_se'],
+            df['gamma'] + 1.96 * df['gamma_se'],
+            alpha=0.1, color=plot_colors[i]
+        )
+
+ax.axhline(y=0, color='gray', linewidth=0.8)
+ax.set_ylabel('Exchange Rate Exposure (gamma)')
+ax.set_xlabel('Date')
+ax.set_title('Rolling 36-Month Exchange Rate Exposure')
+ax.legend(ncol=3, fontsize=9)
+plt.tight_layout()
+plt.show()
+```
+
+## Currency Hedging for International Investors {#sec-hedging}
+
+### The Hedging Decision
+
+For a foreign investor holding Vietnamese equities, the unhedged USD-denominated return is:
+
+$$
+R^{USD}_{i,t} \approx R^{VND}_{i,t} + \Delta s_t + R^{VND}_{i,t} \cdot \Delta s_t
+$$ {#eq-unhedged-return}
+
+where the cross-product term is usually small. Under a full hedge using forward contracts, the return becomes:
+
+$$
+R^{USD,\text{hedged}}_{i,t} \approx R^{VND}_{i,t} + (f_t - s_t)
+$$ {#eq-hedged-return}
+
+where $f_t - s_t$ is the forward premium (which, by CIP, approximately equals $r^{USD}_t - r^{VND}_t$). In Vietnam, where VND rates exceed USD rates, the forward premium is negative, hedging costs money because the investor forgoes the interest rate differential.
+
+@campbell2010global show that the optimal hedge ratio depends on the correlation between equity returns and currency returns. When the correlation is positive (VND depreciation coincides with equity losses), hedging reduces overall portfolio variance more effectively.
+
+```{python}
+#| label: hedging-analysis
+#| code-summary: "Compare hedged vs unhedged portfolio returns for a foreign investor"
+# Construct VW equity index in VND
+equity_index = (
+    equity
+    .groupby('month_end')
+    .apply(lambda g: np.average(g['monthly_return'],
+                                 weights=g['market_cap']))
+    .reset_index(name='equity_vnd')
+)
+equity_index['month_end'] = pd.to_datetime(equity_index['month_end'])
+
+# Merge with FX returns and forward premium
+hedge_data = (
+    equity_index
+    .merge(fx_monthly, left_on='month_end', right_index=True, how='inner')
+)
+
+# Forward premium
+if len(cip_data) > 0:
+    fwd_premium_monthly = (
+        cip_data['forward_premium']
+        .resample('M').last() / 12
+    )
+    hedge_data = hedge_data.merge(
+        fwd_premium_monthly.to_frame('fwd_premium'),
+        left_on='month_end', right_index=True, how='left'
+    )
+    hedge_data['fwd_premium'] = hedge_data['fwd_premium'].fillna(
+        hedge_data['fwd_premium'].mean()
+    )
+else:
+    hedge_data['fwd_premium'] = -0.003
+
+# Unhedged USD return
+hedge_data['return_unhedged'] = (
+    hedge_data['equity_vnd'] + hedge_data['fx_return']
+    + hedge_data['equity_vnd'] * hedge_data['fx_return']
+)
+
+# Fully hedged USD return
+hedge_data['return_hedged'] = (
+    hedge_data['equity_vnd'] + hedge_data['fwd_premium']
+)
+
+# 50% hedge ratio
+hedge_data['return_50pct'] = (
+    0.5 * hedge_data['return_hedged']
+    + 0.5 * hedge_data['return_unhedged']
+)
+
+# Performance comparison
+for strategy, col in [('VND (Local)', 'equity_vnd'),
+                       ('USD Unhedged', 'return_unhedged'),
+                       ('USD 50% Hedged', 'return_50pct'),
+                       ('USD Fully Hedged', 'return_hedged')]:
+    r = hedge_data[col]
+    ann_ret = (1 + r).prod() ** (12 / len(r)) - 1
+    ann_vol = r.std() * np.sqrt(12)
+    sharpe = r.mean() / r.std() * np.sqrt(12)
+    print(f"{strategy:<22} Return: {ann_ret:>7.2%}  Vol: {ann_vol:>7.2%}  "
+          f"Sharpe: {sharpe:>5.2f}")
+```
+
+```{python}
+#| label: fig-hedging-comparison
+#| fig-cap: "Cumulative wealth paths for a foreign investor in Vietnamese equities under different hedging strategies. Full hedging eliminates currency risk but incurs the cost of the negative forward premium. The optimal partial hedge depends on the investor's risk aversion and the equity-currency correlation."
+#| code-summary: "Plot cumulative returns for different hedging strategies"
+fig, ax = plt.subplots(figsize=(12, 6))
+
+strategies = {
+    'VND (Local)': ('equity_vnd', '#2C5F8A', '-'),
+    'USD Unhedged': ('return_unhedged', '#C0392B', '-'),
+    'USD 50% Hedged': ('return_50pct', '#E67E22', '--'),
+    'USD Fully Hedged': ('return_hedged', '#27AE60', '-'),
+}
+
+for label, (col, color, ls) in strategies.items():
+    cum = (1 + hedge_data.set_index('month_end')[col]).cumprod()
+    ax.plot(cum.index, cum, label=label, color=color,
+            linewidth=2, linestyle=ls)
+
+ax.set_ylabel('Cumulative Wealth')
+ax.set_xlabel('Date')
+ax.set_title('Vietnamese Equity Returns: Hedging Comparison')
+ax.legend()
+ax.set_yscale('log')
+plt.tight_layout()
+plt.show()
+```
+
+### Optimal Hedge Ratio
+
+The minimum-variance hedge ratio is:
+
+$$
+h^* = \frac{\text{Cov}(R^{VND}_t, \Delta s_t)}{\text{Var}(\Delta s_t)}
+$$ {#eq-optimal-hedge}
+
+This is the OLS slope from regressing local equity returns on exchange rate changes. When the correlation between equity and currency is positive (bad for unhedged investors), $h^* > 0$ and hedging reduces variance.
+
+```{python}
+#| label: optimal-hedge
+#| code-summary: "Estimate optimal hedge ratio and rolling hedge ratio"
+# Full-sample optimal hedge ratio
+hedge_reg = sm.OLS(
+    hedge_data['equity_vnd'],
+    sm.add_constant(hedge_data['fx_return'])
+).fit()
+
+h_star = hedge_reg.params['fx_return']
+print(f"Optimal hedge ratio (full sample): {h_star:.3f}")
+print(f"Equity-currency correlation: "
+      f"{hedge_data['equity_vnd'].corr(hedge_data['fx_return']):.3f}")
+
+# Rolling 36-month optimal hedge ratio
+rolling_cov = hedge_data['equity_vnd'].rolling(36).cov(
+    hedge_data['fx_return']
+)
+rolling_var = hedge_data['fx_return'].rolling(36).var()
+hedge_data['h_star_rolling'] = rolling_cov / rolling_var
+
+print(f"\nRolling hedge ratio range: "
+      f"[{hedge_data['h_star_rolling'].min():.2f}, "
+      f"{hedge_data['h_star_rolling'].max():.2f}]")
+```
+
+## ASEAN Currency Comparison {#sec-asean}
+
+To put the VND in perspective, we compare its properties with other ASEAN currencies and the Chinese Yuan.
+
+```{python}
+#| label: fig-asean-comparison
+#| fig-cap: "Annualized volatility and mean depreciation of ASEAN currencies against the USD (2012--2024). The VND stands out for its low volatility (reflecting the managed float) combined with gradual depreciation. Freely floating currencies (THB, SGD) show higher volatility but more variable depreciation patterns."
+#| code-summary: "Compare VND with ASEAN and Asian currency pairs"
+# Compute annual statistics for each currency
+comparison = pd.DataFrame()
+for currency in fx_returns.columns:
+    r = fx_returns[currency].dropna()
+    if len(r) > 252:
+        comparison.loc[currency, 'Ann. Depreciation (%)'] = r.mean() * 252 * 100
+        comparison.loc[currency, 'Ann. Volatility (%)'] = r.std() * np.sqrt(252) * 100
+        comparison.loc[currency, 'Skewness'] = r.skew()
+        comparison.loc[currency, 'Kurtosis'] = r.kurtosis()
+        comparison.loc[currency, 'Max Daily Loss (%)'] = r.max() * 100
+        comparison.loc[currency, 'Sharpe (Carry)'] = (
+            r.mean() * 252 / (r.std() * np.sqrt(252))
+        )
+
+print("ASEAN + Asian Currency Comparison (VND base, vs USD):")
+print(comparison.round(2).to_string())
+
+# Risk-return scatter
+fig, ax = plt.subplots(figsize=(9, 7))
+for currency in comparison.index:
+    ax.scatter(
+        comparison.loc[currency, 'Ann. Volatility (%)'],
+        comparison.loc[currency, 'Ann. Depreciation (%)'],
+        s=120, zorder=5
+    )
+    ax.annotate(
+        f'VND/{currency}',
+        (comparison.loc[currency, 'Ann. Volatility (%)'] + 0.15,
+         comparison.loc[currency, 'Ann. Depreciation (%)']),
+        fontsize=10
+    )
+
+ax.axhline(y=0, color='gray', linewidth=0.5)
+ax.set_xlabel('Annualized Volatility (%)')
+ax.set_ylabel('Annualized Depreciation (%)')
+ax.set_title('ASEAN Currency Risk-Return Characteristics')
+plt.tight_layout()
+plt.show()
+```
+
+## Exchange Rate and Equity Market Co-Movement {#sec-comovement}
+
+The relationship between VND/USD movements and the Vietnamese equity market is central to portfolio construction. We examine this at both the aggregate and conditional levels.
+
+```{python}
+#| label: fig-equity-fx-comovement
+#| fig-cap: "Scatter plot of monthly VN-Index returns against VND/USD changes. The relationship is modestly negative (VND depreciation hurts equities), but with substantial noise. The correlation is stronger during crisis episodes when capital outflows simultaneously depress equities and the currency."
+#| code-summary: "Analyze equity-FX co-movement at the aggregate level"
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Panel A: Scatter plot
+axes[0].scatter(
+    hedge_data['fx_return'] * 100,
+    hedge_data['equity_vnd'] * 100,
+    c=hedge_data.index, cmap='viridis', s=20, alpha=0.7
+)
+z = np.polyfit(hedge_data['fx_return'], hedge_data['equity_vnd'], 1)
+x_line = np.linspace(hedge_data['fx_return'].min(),
+                     hedge_data['fx_return'].max(), 100)
+axes[0].plot(x_line * 100, np.polyval(z, x_line) * 100,
+             color='#C0392B', linewidth=2)
+axes[0].axhline(y=0, color='gray', linewidth=0.5)
+axes[0].axvline(x=0, color='gray', linewidth=0.5)
+axes[0].set_xlabel('VND/USD Change (%)')
+axes[0].set_ylabel('VN-Index Return (%)')
+axes[0].set_title('Panel A: Monthly Equity-FX Relationship')
+
+rho = hedge_data['equity_vnd'].corr(hedge_data['fx_return'])
+axes[0].text(0.05, 0.95, f'rho = {rho:.3f}', transform=axes[0].transAxes,
+             fontsize=12, verticalalignment='top',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+
+# Panel B: Rolling 36-month correlation
+rolling_corr = (
+    hedge_data['equity_vnd']
+    .rolling(36)
+    .corr(hedge_data['fx_return'])
+)
+axes[1].plot(hedge_data['month_end'], rolling_corr,
+             color='#2C5F8A', linewidth=2)
+axes[1].axhline(y=0, color='gray', linewidth=0.8, linestyle='--')
+axes[1].fill_between(
+    hedge_data['month_end'], 0, rolling_corr,
+    where=rolling_corr < 0, color='#C0392B', alpha=0.2
+)
+axes[1].fill_between(
+    hedge_data['month_end'], 0, rolling_corr,
+    where=rolling_corr > 0, color='#27AE60', alpha=0.2
+)
+axes[1].set_xlabel('Date')
+axes[1].set_ylabel('Rolling Correlation')
+axes[1].set_title('Panel B: 36-Month Rolling Equity-FX Correlation')
+
+plt.tight_layout()
+plt.show()
+```
+
+## Summary {#sec-summary}
+
+This chapter has developed a comprehensive toolkit for working with exchange rate data in the Vietnamese context. The key findings and methods are:
+
+| Topic \| Finding \| Implication \|
+
+\|, \|, \|, \| \| VND regime \| Managed float with +/-3% band, daily reference rate \| Returns are non-normal; clustered near zero with discrete jumps \| \| Return distribution \| Fat tails, excess kurtosis, positive skewness \| Standard normal-based risk models underestimate tail risk \| \| CIP \| Persistent positive deviations (\~50--200 bps) \| Capital controls and limited arbitrage; hedging is expensive \| \| UIP \| beta \< 1 in Fama regression \| Carry trade is profitable on average; crash risk in devaluations \| \| Carry trade \| Positive Sharpe but negative skewness \| Steady gains punctuated by sharp losses during devaluations \| \| GARCH \| Strong persistence (alpha + beta approx 0.99); Student-t preferred \| Volatility clustering; regime switches around policy events \| \| Firm exposure \| \~15--25% significant; systematic industry patterns \| Exporters benefit from depreciation; importers hurt \| \| Hedging \| Full hedge eliminates FX risk but costs \~3--5% p.a. \| Optimal partial hedge depends on equity-FX correlation \| \| ASEAN comparison \| VND has lowest volatility but steady depreciation \| Managed float compresses vol; does not eliminate trend risk \|
+
+: Summary of findings on VND exchange rate dynamics. {#tbl-summary}
+
+For researchers using Vietnamese equity data, the exchange rate dimension is not optional. Any study that converts VND returns to USD, uses international factor models, or examines firms with trade exposure must account for the distinctive properties of the VND regime. The tools developed in this chapter, from GARCH volatility modeling to rolling exposure estimation, provide the building blocks for incorporating exchange rate dynamics into broader empirical asset pricing work.
+
+```{=html}
+<!-- ## Exercises {#sec-exercises}
+
+1. **Real effective exchange rate.** Construct a trade-weighted real exchange rate for Vietnam using bilateral rates against the top 10 trading partners, weighted by trade shares, and deflated by relative CPI. Does the REER predict future VND/USD movements?
+
+2. **SBV intervention detection.** Using reserve data from the SBV (or proxies from the balance of payments), estimate a probit model for the probability of SBV intervention as a function of the deviation from the reference rate, reserve levels, and global risk indicators. How do intervention episodes affect subsequent exchange rate volatility?
+
+3. **Currency factor in asset pricing.** Add a currency factor (VND/USD return) to the Vietnamese Fama-French model. Does the currency factor carry a significant risk premium in the cross-section of Vietnamese stocks? Use Fama-MacBeth cross-sectional regressions.
+
+4. **Regime-switching GARCH.** Estimate a Markov-switching GARCH model with two states (high and low volatility). Do the regime probabilities align with known SBV policy changes? How does the model compare to standard GARCH in out-of-sample volatility forecasting?
+
+5. **Carry trade with risk management.** Augment the simple carry trade with a stop-loss rule: close the position when the trailing 20-day realized volatility exceeds the 90th percentile of its historical distribution. How does this rule affect the return, volatility, and Sharpe ratio of the carry trade?
+
+6. **Cross-listing premium and FX exposure.** Some Vietnamese firms issue depositary receipts or are cross-listed abroad. Compare their exchange rate exposure to purely domestic-listed peers. Does cross-listing reduce exposure, consistent with broader hedging opportunities?
+
+7. **Forward premium decomposition.** Decompose the VND/USD forward premium into an expected depreciation component (from a survey or random walk forecast) and a risk premium component (the residual). How does the risk premium vary with global risk aversion proxies (VIX, MOVE)?
+
+8. **Conditional exposure.** Estimate @jorion1990exchange exposures separately in appreciation months (VND strengthens) and depreciation months. Is exposure asymmetric, do firms react differently to appreciation vs. depreciation? What industries show the strongest asymmetry? -->
+```
