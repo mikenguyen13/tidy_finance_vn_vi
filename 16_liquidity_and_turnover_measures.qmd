@@ -1,0 +1,1470 @@
+# Liquidity and Turnover Measures
+
+::: callout-note
+In this chapter, we construct a comprehensive suite of liquidity measures for the Vietnamese equity market, validate them against each other and against known benchmarks, test whether liquidity is priced in the cross-section of stock returns, examine commonality in liquidity, and analyze how liquidity conditions vary over time and across market regimes.
+:::
+
+Liquidity (i.e., the ability to trade quickly at low cost without moving the price) is arguably the single most important practical consideration for anyone working with Vietnamese equity data. A factor premium that looks attractive in a frictionless backtest may be completely unimplementable if the long and short legs load on illiquid stocks whose prices move against you when you trade. Conversely, a genuine liquidity premium (i.e., compensation for bearing the risk that a stock will be hard to sell when you need to) is one of the most robust and theoretically grounded anomalies in asset pricing.
+
+The challenge is that liquidity is inherently multidimensional and difficult to measure. In developed markets with continuous limit order books and sub-second trade reporting, researchers can observe bid-ask spreads, market depth, and price impact directly. In Vietnam, microstructure data at this granularity are limited: HOSE operates a periodic call auction at open and close with continuous matching in between, the tick size is coarse relative to price levels, and many stocks trade so infrequently that the concept of a "quoted spread" is meaningful only on days when the stock actually trades. This forces researchers to rely on low-frequency proxies computed from daily price and volume data.
+
+This chapter constructs the major liquidity proxies used in the academic literature, validates them in the Vietnamese context, and demonstrates their use in asset pricing and portfolio construction.
+
+## Theoretical Foundations {#sec-theory}
+
+### Why Liquidity Matters
+
+Liquidity affects asset prices through at least three channels:
+
+1.  **Level effect.** Investors demand compensation for the expected cost of trading. @amihud1986asset show that stocks with higher bid-ask spreads earn higher expected returns, with the premium being an increasing function of the investor's holding period. In equilibrium, illiquid stocks must offer higher expected returns to compensate for higher round-trip trading costs.
+2.  **Risk effect.** Liquidity is time-varying and co-moves across stocks. @pastor2003liquidity show that stocks whose returns are more sensitive to aggregate liquidity shocks earn higher expected returns. @acharya2005asset formalize this in a liquidity-adjusted CAPM where the required return includes a premium for bearing liquidity risk—the risk that the stock becomes illiquid precisely when the investor needs to sell.
+3.  **Commonality effect.** @chordia2000commonality document that individual stock liquidity co-moves strongly with market-wide liquidity. @brunnermeier2009market explain this through a "liquidity spiral": when asset values fall, margin constraints tighten, forcing leveraged investors to sell, which reduces market liquidity, which depresses prices further. This mechanism is particularly relevant in Vietnam, where retail investors with margin accounts are the dominant trading population.
+
+### Liquidity Dimensions
+
+@kyle1985continuous identifies three dimensions of liquidity:
+
+1.  **Tightness.** The cost of turning around a position quickly—measured by the bid-ask spread.
+2.  **Depth.** The volume that can be traded without moving the price—related to price impact.
+3.  **Resiliency.** The speed at which prices recover from uninformative order flow shocks.
+
+No single measure captures all three dimensions. @goyenko2009liquidity and @fong2017best systematically evaluate which low-frequency proxies best capture each dimension by benchmarking against high-frequency measures. Their key finding: the @amihud2002illiquidity measure best captures the price impact dimension, the @roll1984simple estimator and @corwin2012simple spread best capture tightness, and the @lesmond1999new zero-return measure captures a blend of transaction costs and information asymmetry. For emerging markets specifically, @fong2017best recommend the Amihud measure and the Closing Percent Quoted Spread as the most reliable proxies.
+
+## Data Construction {#sec-data}
+
+```{python}
+#| label: setup
+#| code-summary: "Import libraries and configure environment"
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import statsmodels.api as sm
+from scipy import stats
+from linearmodels.panel import PanelOLS
+from linearmodels.asset_pricing import LinearFactorModel
+import warnings
+warnings.filterwarnings('ignore')
+
+plt.rcParams.update({
+    'figure.figsize': (12, 6),
+    'figure.dpi': 150,
+    'font.size': 11,
+    'axes.spines.top': False,
+    'axes.spines.right': False
+})
+```
+
+```{python}
+#| label: data-load
+#| code-summary: "Load daily and monthly data"
+#| eval: false
+from datacore import DataCoreClient
+
+client = DataCoreClient()
+
+# Daily trading data
+daily = client.get_daily_prices(
+    exchanges=['HOSE', 'HNX'],
+    start_date='2008-01-01',
+    end_date='2024-12-31',
+    include_delisted=True,
+    fields=[
+        'ticker', 'date', 'open', 'high', 'low', 'close',
+        'adjusted_close', 'volume', 'turnover_value',
+        'market_cap', 'shares_outstanding', 'free_float_pct',
+        'bid', 'ask', 'foreign_buy_volume', 'foreign_sell_volume'
+    ]
+)
+
+# Monthly aggregates
+monthly = client.get_monthly_returns(
+    exchanges=['HOSE', 'HNX'],
+    start_date='2008-01-01',
+    end_date='2024-12-31',
+    include_delisted=True,
+    fields=[
+        'ticker', 'month_end', 'monthly_return', 'market_cap',
+        'volume_avg_20d', 'turnover_value_avg_20d',
+        'n_trading_days', 'n_zero_volume_days'
+    ]
+)
+
+# Firm characteristics for cross-sectional tests
+fundamentals = client.get_fundamentals(
+    exchanges=['HOSE', 'HNX'],
+    start_date='2008-01-01',
+    end_date='2024-12-31',
+    include_delisted=True,
+    frequency='annual',
+    fields=[
+        'ticker', 'fiscal_year', 'total_assets', 'total_equity',
+        'net_income', 'revenue', 'book_equity'
+    ]
+)
+
+# Factor returns for asset pricing tests
+factors = client.get_factor_returns(
+    market='vietnam',
+    start_date='2008-01-01',
+    end_date='2024-12-31',
+    factors=['mkt_excess', 'smb', 'hml', 'wml']
+)
+
+daily['date'] = pd.to_datetime(daily['date'])
+daily = daily.sort_values(['ticker', 'date'])
+
+print(f"Daily observations: {daily.shape[0]:,}")
+print(f"Monthly observations: {monthly.shape[0]:,}")
+print(f"Unique tickers: {daily['ticker'].nunique()}")
+```
+
+```{python}
+#| label: daily-returns
+#| code-summary: "Compute daily returns and basic trading statistics"
+#| eval: false
+# Daily returns
+daily['daily_return'] = (
+    daily.groupby('ticker')['adjusted_close'].pct_change()
+)
+daily['abs_return'] = daily['daily_return'].abs()
+daily['log_return'] = np.log(
+    daily['adjusted_close'] / daily.groupby('ticker')['adjusted_close'].shift(1)
+)
+
+# Turnover ratio (shares traded / shares outstanding)
+daily['turnover_ratio'] = daily['volume'] / daily['shares_outstanding']
+
+# Zero indicators
+daily['zero_return'] = (daily['daily_return'] == 0).astype(int)
+daily['zero_volume'] = (daily['volume'] == 0).astype(int)
+
+# VND turnover (in billions)
+daily['turnover_vnd_bn'] = daily['turnover_value'] / 1e9
+
+print("Daily Return Summary:")
+print(daily['daily_return'].describe().round(6))
+print(f"\nZero-return days: {daily['zero_return'].mean():.1%}")
+print(f"Zero-volume days: {daily['zero_volume'].mean():.1%}")
+```
+
+## Constructing Liquidity Measures {#sec-measures}
+
+We construct seven liquidity proxies that span the dimensions of tightness, depth, and resiliency. Each is computed at the firm-month level, producing a panel that can be merged with monthly return data for cross-sectional tests.
+
+### Amihud Illiquidity Ratio
+
+The @amihud2002illiquidity illiquidity measure is the ratio of absolute daily return to daily volume (in VND):
+
+$$
+\text{ILLIQ}_{i,m} = \frac{1}{D_{i,m}} \sum_{d=1}^{D_{i,m}} \frac{|R_{i,d}|}{\text{DVOL}_{i,d}}
+$$ {#eq-amihud}
+
+where $|R_{i,d}|$ is the absolute daily return, $\text{DVOL}_{i,d}$ is VND trading volume on day $d$, and $D_{i,m}$ is the number of trading days with positive volume in month $m$. Higher values indicate greater illiquidity—a given amount of volume moves the price more.
+
+The Amihud measure captures the price impact dimension of liquidity. It is grounded in the @kyle1985continuous model where the parameter $\lambda$ (Kyle's lambda) measures the price impact of order flow: $\Delta p = \lambda \cdot Q$. The Amihud ratio is a daily-frequency analog of $\lambda$.
+
+```{python}
+#| label: amihud
+#| code-summary: "Compute monthly Amihud illiquidity ratio"
+#| eval: false
+def compute_amihud(daily_df, min_days=10):
+    """
+    Compute the Amihud (2002) illiquidity ratio at the firm-month level.
+    
+    Excludes zero-volume days. Requires at least min_days observations
+    with positive volume per firm-month.
+    """
+    df = daily_df[daily_df['volume'] > 0].copy()
+    df['month'] = df['date'].dt.to_period('M')
+    
+    # |Return| / VND Volume
+    df['illiq_daily'] = df['abs_return'] / df['turnover_value']
+    
+    # Remove extreme outliers (top 0.1% within each month)
+    df['illiq_daily'] = df.groupby('month')['illiq_daily'].transform(
+        lambda x: x.clip(upper=x.quantile(0.999))
+    )
+    
+    # Aggregate to firm-month
+    amihud = (
+        df.groupby(['ticker', 'month'])
+        .agg(
+            amihud_raw=('illiq_daily', 'mean'),
+            n_positive_vol_days=('illiq_daily', 'count')
+        )
+        .reset_index()
+    )
+    
+    # Filter: require minimum trading days
+    amihud = amihud[amihud['n_positive_vol_days'] >= min_days]
+    
+    # Log transform (raw Amihud is heavily right-skewed)
+    amihud['amihud'] = np.log(1 + amihud['amihud_raw'] * 1e6)
+    
+    # Convert period to timestamp for merging
+    amihud['month_end'] = amihud['month'].dt.to_timestamp('M')
+    
+    return amihud[['ticker', 'month_end', 'amihud', 'amihud_raw',
+                    'n_positive_vol_days']]
+
+amihud_monthly = compute_amihud(daily)
+print(f"Amihud observations: {len(amihud_monthly):,}")
+print(f"\nLog Amihud distribution:")
+print(amihud_monthly['amihud'].describe().round(3))
+```
+
+### Zero-Return Days (Lesmond Measure)
+
+@lesmond1999new propose using the proportion of zero-return days as a measure of transaction costs. The intuition is that if the true value change on a given day is smaller than the round-trip transaction cost, a rational marginal investor will not trade, and the observed return will be zero. Thus, the zero-return proportion is an increasing function of effective transaction costs.
+
+@lesmond2005liquidity validates this measure for emerging markets and finds it strongly correlated with explicit cost measures. In Vietnam, where zero-return days are common (as documented in the previous chapter), this measure has particular relevance.
+
+$$
+\text{ZeroRet}_{i,m} = \frac{\text{Number of days with } R_{i,d} = 0}{D_{i,m}}
+$$ {#eq-zero-return}
+
+```{python}
+#| label: zero-return
+#| eval: false
+#| code-summary: "Compute monthly zero-return proportion"
+def compute_zero_return(daily_df):
+    """
+    Compute the Lesmond et al. (1999) zero-return measure
+    at the firm-month level.
+    """
+    df = daily_df.copy()
+    df['month'] = df['date'].dt.to_period('M')
+    
+    zero_ret = (
+        df.groupby(['ticker', 'month'])
+        .agg(
+            n_days=('daily_return', 'count'),
+            n_zero_return=('zero_return', 'sum'),
+            n_zero_volume=('zero_volume', 'sum')
+        )
+        .reset_index()
+    )
+    
+    zero_ret['zero_return_pct'] = (
+        zero_ret['n_zero_return'] / zero_ret['n_days']
+    )
+    zero_ret['zero_volume_pct'] = (
+        zero_ret['n_zero_volume'] / zero_ret['n_days']
+    )
+    
+    zero_ret['month_end'] = zero_ret['month'].dt.to_timestamp('M')
+    
+    return zero_ret[['ticker', 'month_end', 'zero_return_pct',
+                      'zero_volume_pct', 'n_days']]
+
+zero_monthly = compute_zero_return(daily)
+print(f"Zero-return observations: {len(zero_monthly):,}")
+print(f"\nZero-return proportion distribution:")
+print(zero_monthly['zero_return_pct'].describe().round(3))
+```
+
+### Turnover Ratio
+
+Share turnover—daily volume divided by shares outstanding—measures trading activity rather than trading cost. @datar1998liquidity use turnover as a liquidity proxy and document a negative cross-sectional relationship between turnover and expected returns, consistent with the liquidity premium hypothesis.
+
+$$
+\text{Turn}_{i,m} = \frac{1}{D_{i,m}} \sum_{d=1}^{D_{i,m}} \frac{\text{Volume}_{i,d}}{\text{SharesOut}_{i,d}}
+$$ {#eq-turnover}
+
+```{python}
+#| label: turnover
+#| code-summary: "Compute monthly average turnover ratio"
+#| eval: false
+def compute_turnover(daily_df):
+    """Compute average daily turnover ratio at the firm-month level."""
+    df = daily_df.copy()
+    df['month'] = df['date'].dt.to_period('M')
+    
+    turnover = (
+        df.groupby(['ticker', 'month'])
+        .agg(
+            turnover_mean=('turnover_ratio', 'mean'),
+            turnover_sum=('turnover_ratio', 'sum'),
+            volume_mean=('volume', 'mean'),
+            dvol_mean=('turnover_value', 'mean')
+        )
+        .reset_index()
+    )
+    
+    # Log transform for cross-sectional normality
+    turnover['log_turnover'] = np.log(
+        turnover['turnover_mean'].clip(lower=1e-8)
+    )
+    turnover['log_dvol'] = np.log(
+        turnover['dvol_mean'].clip(lower=1)
+    )
+    
+    turnover['month_end'] = turnover['month'].dt.to_timestamp('M')
+    
+    return turnover[['ticker', 'month_end', 'turnover_mean',
+                      'log_turnover', 'log_dvol']]
+
+turnover_monthly = compute_turnover(daily)
+print(f"Turnover observations: {len(turnover_monthly):,}")
+print(f"\nLog turnover distribution:")
+print(turnover_monthly['log_turnover'].describe().round(3))
+```
+
+### Roll Spread Estimator
+
+@roll1984simple derives an implicit bid-ask spread from the serial covariance of price changes. Under the assumptions that the true value follows a random walk and that observed prices bounce between the bid and ask:
+
+$$
+\text{Roll}_{i,m} = \begin{cases}
+2\sqrt{-\text{Cov}(\Delta P_{i,d}, \Delta P_{i,d-1})} & \text{if } \text{Cov} < 0 \\
+0 & \text{if } \text{Cov} \geq 0
+\end{cases}
+$$ {#eq-roll}
+
+where $\Delta P_{i,d} = P_{i,d} - P_{i,d-1}$. The measure is intuitive: the bid-ask bounce creates negative serial correlation in transaction prices, and the magnitude of this negative correlation reflects the spread.
+
+```{python}
+#| label: roll-spread
+#| eval: false
+#| code-summary: "Compute monthly Roll (1984) effective spread estimator"
+def compute_roll_spread(daily_df, min_days=15):
+    """
+    Compute the Roll (1984) effective spread from serial
+    covariance of daily price changes.
+    """
+    df = daily_df.copy()
+    df['month'] = df['date'].dt.to_period('M')
+    df['price_change'] = df.groupby('ticker')['adjusted_close'].diff()
+    df['price_change_lag'] = df.groupby('ticker')['price_change'].shift(1)
+    
+    def roll_estimate(group):
+        if len(group) < min_days:
+            return np.nan
+        cov = group['price_change'].cov(group['price_change_lag'])
+        if cov < 0:
+            spread = 2 * np.sqrt(-cov)
+            # Normalize by average price
+            avg_price = group['adjusted_close'].mean()
+            return spread / avg_price if avg_price > 0 else np.nan
+        else:
+            return 0.0
+    
+    roll = (
+        df.dropna(subset=['price_change', 'price_change_lag'])
+        .groupby(['ticker', 'month'])
+        .apply(roll_estimate)
+        .reset_index(name='roll_spread')
+    )
+    
+    roll['month_end'] = roll['month'].dt.to_timestamp('M')
+    
+    return roll[['ticker', 'month_end', 'roll_spread']]
+
+roll_monthly = compute_roll_spread(daily)
+print(f"Roll spread observations: {len(roll_monthly):,}")
+print(f"\nRoll spread distribution:")
+print(roll_monthly['roll_spread'].describe().round(4))
+```
+
+### Corwin-Schultz High-Low Spread
+
+@corwin2012simple estimate the effective spread from daily high and low prices. The key insight is that daily high and low prices contain information about both volatility and the spread—the high is typically a buy and the low a sell, so the high-low range reflects both true volatility and the bid-ask spread. By comparing one-day and two-day high-low ranges, the method separates the two components:
+
+$$
+\hat{S}_{i,m} = \frac{2(e^{\hat{\alpha}} - 1)}{1 + e^{\hat{\alpha}}}
+$$ {#eq-corwin-schultz}
+
+where:
+
+$$
+\hat{\alpha} = \frac{\sqrt{2\hat{\beta}} - \sqrt{\hat{\beta}}}{3 - 2\sqrt{2}} - \sqrt{\frac{\hat{\gamma}}{3 - 2\sqrt{2}}}
+$$ {#eq-cs-alpha}
+
+with $\hat{\beta}$ and $\hat{\gamma}$ computed from one-day and two-day log high-low ratios.
+
+```{python}
+#| label: corwin-schultz
+#| eval: false
+#| code-summary: "Compute the Corwin-Schultz (2012) high-low spread estimator"
+def compute_corwin_schultz(daily_df, min_days=15):
+    """
+    Compute the Corwin and Schultz (2012) bid-ask spread
+    estimator from daily high and low prices.
+    """
+    df = daily_df.copy()
+    df['month'] = df['date'].dt.to_period('M')
+    
+    # Log high-low ratio
+    df['log_hl'] = np.log(df['high'] / df['low'])
+    df['log_hl_sq'] = df['log_hl'] ** 2
+    
+    # Two-day high and low
+    df['high_2d'] = df.groupby('ticker')['high'].transform(
+        lambda x: x.rolling(2).max()
+    )
+    df['low_2d'] = df.groupby('ticker')['low'].transform(
+        lambda x: x.rolling(2).min()
+    )
+    df['log_hl_2d'] = np.log(df['high_2d'] / df['low_2d'])
+    df['log_hl_2d_sq'] = df['log_hl_2d'] ** 2
+    
+    def cs_estimate(group):
+        if len(group) < min_days:
+            return np.nan
+        
+        beta = group['log_hl_sq'].mean() + group['log_hl_sq'].shift(1).mean()
+        beta = group[['log_hl_sq']].rolling(2).sum().mean().values[0]
+        gamma = group['log_hl_2d_sq'].mean()
+        
+        k = np.sqrt(2) - 1
+        denom = 3 - 2 * np.sqrt(2)
+        
+        term1 = np.sqrt(max(beta, 0)) / denom
+        if beta > 0:
+            alpha_est = (np.sqrt(2 * beta) - np.sqrt(beta)) / denom
+            alpha_est -= np.sqrt(max(gamma / denom, 0))
+        else:
+            alpha_est = 0
+        
+        # Spread estimate
+        if alpha_est > 0:
+            spread = 2 * (np.exp(alpha_est) - 1) / (1 + np.exp(alpha_est))
+        else:
+            spread = 0
+        
+        return min(spread, 0.20)  # Cap at 20% (sanity check)
+    
+    cs = (
+        df.dropna(subset=['log_hl', 'log_hl_2d'])
+        .groupby(['ticker', 'month'])
+        .apply(cs_estimate)
+        .reset_index(name='cs_spread')
+    )
+    
+    cs['month_end'] = cs['month'].dt.to_timestamp('M')
+    
+    return cs[['ticker', 'month_end', 'cs_spread']]
+
+cs_monthly = compute_corwin_schultz(daily)
+print(f"Corwin-Schultz observations: {len(cs_monthly):,}")
+print(f"\nCS spread distribution:")
+print(cs_monthly['cs_spread'].describe().round(4))
+```
+
+### Quoted Bid-Ask Spread
+
+When bid and ask quotes are available, the quoted percentage spread provides a direct measure of tightness:
+
+$$
+\text{PQSPR}_{i,m} = \frac{1}{D_{i,m}} \sum_{d=1}^{D_{i,m}} \frac{\text{Ask}_{i,d} - \text{Bid}_{i,d}}{(\text{Ask}_{i,d} + \text{Bid}_{i,d})/2}
+$$ {#eq-quoted-spread}
+
+```{python}
+#| label: quoted-spread
+#| eval: false
+#| code-summary: "Compute monthly average quoted percentage spread"
+def compute_quoted_spread(daily_df):
+    """Compute average quoted percentage spread at the firm-month level."""
+    df = daily_df[
+        (daily_df['bid'] > 0) & (daily_df['ask'] > 0) &
+        (daily_df['ask'] >= daily_df['bid'])
+    ].copy()
+    
+    df['month'] = df['date'].dt.to_period('M')
+    df['pqspr'] = (
+        (df['ask'] - df['bid']) / ((df['ask'] + df['bid']) / 2)
+    )
+    
+    # Winsorize extreme values
+    df['pqspr'] = df['pqspr'].clip(upper=df['pqspr'].quantile(0.999))
+    
+    spread = (
+        df.groupby(['ticker', 'month'])
+        .agg(
+            quoted_spread=('pqspr', 'mean'),
+            n_quotes=('pqspr', 'count')
+        )
+        .reset_index()
+    )
+    
+    spread['month_end'] = spread['month'].dt.to_timestamp('M')
+    
+    return spread[['ticker', 'month_end', 'quoted_spread', 'n_quotes']]
+
+quoted_monthly = compute_quoted_spread(daily)
+print(f"Quoted spread observations: {len(quoted_monthly):,}")
+print(f"\nQuoted spread distribution:")
+print(quoted_monthly['quoted_spread'].describe().round(4))
+```
+
+### Kyle's Lambda (Price Impact Regression)
+
+We estimate Kyle's lambda—the price impact per unit of signed order flow—using a daily regression:
+
+$$
+R_{i,d} = \alpha_i + \lambda_i \cdot \text{Sign}(R_{i,d}) \cdot \sqrt{\text{Volume}_{i,d}} + \varepsilon_{i,d}
+$$ {#eq-kyle-lambda}
+
+This is an adaptation of the @hasbrouck2009trading effective cost measure. The coefficient $\lambda_i$ measures how much prices move per unit of (unsigned, square-rooted) volume.
+
+```{python}
+#| label: kyle-lambda
+#| eval: false
+#| code-summary: "Estimate Kyle's lambda from daily price-volume regressions"
+def compute_kyle_lambda(daily_df, min_days=15):
+    """
+    Estimate Kyle's lambda (price impact per unit order flow)
+    from daily return-on-signed-volume regressions.
+    """
+    df = daily_df[daily_df['volume'] > 0].copy()
+    df['month'] = df['date'].dt.to_period('M')
+    
+    # Signed square-root volume (sign inferred from return)
+    df['signed_sqrt_vol'] = (
+        np.sign(df['daily_return']) * np.sqrt(df['volume'])
+    )
+    
+    def estimate_lambda(group):
+        if len(group) < min_days:
+            return np.nan
+        y = group['daily_return'].values
+        x = group['signed_sqrt_vol'].values
+        x = sm.add_constant(x)
+        try:
+            model = sm.OLS(y, x).fit()
+            lam = model.params[1]
+            return max(lam, 0)  # Lambda should be non-negative
+        except Exception:
+            return np.nan
+    
+    kyle = (
+        df.groupby(['ticker', 'month'])
+        .apply(estimate_lambda)
+        .reset_index(name='kyle_lambda')
+    )
+    
+    kyle['log_kyle'] = np.log(kyle['kyle_lambda'].clip(lower=1e-10))
+    kyle['month_end'] = kyle['month'].dt.to_timestamp('M')
+    
+    return kyle[['ticker', 'month_end', 'kyle_lambda', 'log_kyle']]
+
+kyle_monthly = compute_kyle_lambda(daily)
+print(f"Kyle lambda observations: {len(kyle_monthly):,}")
+print(f"\nLog Kyle lambda distribution:")
+print(kyle_monthly['log_kyle'].describe().round(3))
+```
+
+## Assembling the Liquidity Panel {#sec-panel}
+
+We merge all seven measures into a single firm-month panel for comparative analysis.
+
+```{python}
+#| label: merge-panel
+#| eval: false
+#| code-summary: "Merge all liquidity measures into a unified panel"
+# Start with monthly returns as the base
+panel = monthly[['ticker', 'month_end', 'monthly_return',
+                  'market_cap']].copy()
+
+# Merge each liquidity measure
+for name, df, key_col in [
+    ('Amihud', amihud_monthly, 'amihud'),
+    ('Zero Return', zero_monthly, 'zero_return_pct'),
+    ('Turnover', turnover_monthly, 'log_turnover'),
+    ('Roll', roll_monthly, 'roll_spread'),
+    ('Corwin-Schultz', cs_monthly, 'cs_spread'),
+    ('Quoted Spread', quoted_monthly, 'quoted_spread'),
+    ('Kyle Lambda', kyle_monthly, 'log_kyle'),
+]:
+    panel = panel.merge(
+        df[['ticker', 'month_end', key_col]],
+        on=['ticker', 'month_end'],
+        how='left'
+    )
+
+# Add log market cap
+panel['log_mcap'] = np.log(panel['market_cap'].clip(lower=1))
+
+# Add fundamentals (lagged)
+fund_lagged = fundamentals.copy()
+fund_lagged['merge_year'] = fund_lagged['fiscal_year'] + 1
+panel = panel.merge(
+    fund_lagged[['ticker', 'merge_year', 'book_equity']].rename(
+        columns={'merge_year': 'year'}),
+    left_on=['ticker', panel['month_end'].dt.year],
+    right_on=['ticker', 'year'],
+    how='left'
+)
+panel['bm'] = panel['book_equity'] / panel['market_cap']
+
+print(f"Unified panel: {len(panel):,} firm-months")
+print(f"\nCoverage by measure:")
+liquidity_cols = ['amihud', 'zero_return_pct', 'log_turnover',
+                   'roll_spread', 'cs_spread', 'quoted_spread', 'log_kyle']
+for col in liquidity_cols:
+    pct = panel[col].notna().mean()
+    print(f"  {col:<20}: {pct:.1%}")
+```
+
+## Cross-Sectional Properties of Liquidity {#sec-cross-section}
+
+### Summary Statistics by Size Quintile
+
+Liquidity varies enormously across the size distribution. Small-cap Vietnamese stocks can be orders of magnitude less liquid than large-caps.
+
+```{python}
+#| label: liquidity-by-size
+#| eval: false
+#| code-summary: "Compute liquidity statistics by market cap quintile"
+# Assign size quintiles within each month
+panel['size_quintile'] = (
+    panel.groupby('month_end')['market_cap']
+    .transform(lambda x: pd.qcut(x, 5, labels=['Q1 (Small)', 'Q2',
+                                                  'Q3', 'Q4',
+                                                  'Q5 (Large)'],
+                                   duplicates='drop'))
+)
+
+# Average liquidity by quintile
+liq_by_size = (
+    panel.groupby('size_quintile')[liquidity_cols]
+    .mean()
+    .round(4)
+)
+
+print("Average Liquidity by Market Cap Quintile:")
+print(liq_by_size.to_string())
+```
+
+```{python}
+#| label: fig-liquidity-by-size
+#| eval: false
+#| fig-cap: "Liquidity measures by market capitalization quintile. All measures confirm the strong negative relationship between size and illiquidity: the smallest quintile is 10--50x more illiquid than the largest by any metric. This gradient is steeper in Vietnam than in developed markets, reflecting the extreme heterogeneity of the listed universe."
+#| code-summary: "Bar charts of liquidity measures by size quintile"
+fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+axes = axes.flatten()
+
+measures_to_plot = [
+    ('amihud', 'Amihud (log)', '#2C5F8A'),
+    ('zero_return_pct', 'Zero-Return %', '#C0392B'),
+    ('log_turnover', 'Log Turnover', '#27AE60'),
+    ('roll_spread', 'Roll Spread', '#E67E22'),
+    ('cs_spread', 'Corwin-Schultz Spread', '#8E44AD'),
+    ('quoted_spread', 'Quoted Spread', '#1ABC9C')
+]
+
+for i, (col, label, color) in enumerate(measures_to_plot):
+    data = panel.groupby('size_quintile')[col].mean()
+    axes[i].bar(range(len(data)), data.values,
+                color=color, alpha=0.85, edgecolor='white')
+    axes[i].set_xticks(range(len(data)))
+    axes[i].set_xticklabels(data.index, fontsize=8)
+    axes[i].set_ylabel(label)
+    axes[i].set_title(label)
+
+plt.suptitle('Liquidity Measures by Market Cap Quintile', fontsize=14)
+plt.tight_layout()
+plt.show()
+```
+
+### Correlation Structure
+
+How strongly do the different liquidity measures correlate? If they capture the same underlying dimension, we expect high correlations. If they capture different dimensions (tightness vs. depth vs. activity), correlations will be moderate.
+
+```{python}
+#| label: fig-liquidity-correlations
+#| eval: false
+#| fig-cap: "Pairwise rank correlations among liquidity measures. The measures are positively correlated (all point in the same direction—higher values indicate lower liquidity, except turnover where higher means more liquid), but correlations are far from perfect. This confirms that liquidity is multidimensional: each measure captures a different aspect of trading friction."
+#| code-summary: "Compute and plot cross-sectional rank correlations"
+# Rank correlations (Spearman) among liquidity measures
+# Reverse turnover sign so higher = less liquid (consistent direction)
+panel_corr = panel[liquidity_cols].copy()
+panel_corr['neg_log_turnover'] = -panel_corr['log_turnover']
+corr_cols = ['amihud', 'zero_return_pct', 'neg_log_turnover',
+              'roll_spread', 'cs_spread', 'quoted_spread', 'log_kyle']
+corr_labels = ['Amihud', 'Zero-Return', 'Neg. Turnover', 'Roll',
+                'Corwin-Schultz', 'Quoted Spread', 'Kyle λ']
+
+rank_corr = panel_corr[corr_cols].corr(method='spearman')
+rank_corr.index = corr_labels
+rank_corr.columns = corr_labels
+
+fig, ax = plt.subplots(figsize=(9, 8))
+mask = np.triu(np.ones_like(rank_corr, dtype=bool), k=1)
+sns.heatmap(
+    rank_corr, mask=mask, annot=True, fmt='.2f',
+    cmap='YlOrRd', vmin=0, vmax=1, square=True,
+    linewidths=0.5, ax=ax,
+    cbar_kws={'label': 'Spearman Rank Correlation'}
+)
+ax.set_title('Cross-Sectional Rank Correlations Among Liquidity Measures')
+plt.tight_layout()
+plt.show()
+```
+
+### Principal Component Analysis of Liquidity
+
+Given the multidimensionality of liquidity, we extract a composite liquidity factor using PCA:
+
+```{python}
+#| label: pca-liquidity
+#| eval: false
+#| code-summary: "Extract principal components from standardized liquidity measures"
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+# Standardize each measure within each month (cross-sectional)
+liq_data = panel[liquidity_cols].copy()
+liq_data['neg_log_turnover'] = -liq_data['log_turnover']
+
+pca_cols = ['amihud', 'zero_return_pct', 'neg_log_turnover',
+             'roll_spread', 'cs_spread', 'log_kyle']
+
+# Drop rows with any missing liquidity measure
+liq_complete = panel.dropna(subset=pca_cols).copy()
+
+# Cross-sectional standardization by month
+def standardize_within_month(df, cols):
+    for col in cols:
+        df[col + '_z'] = (
+            df.groupby('month_end')[col]
+            .transform(lambda x: (x - x.mean()) / x.std())
+        )
+    return df
+
+liq_complete = standardize_within_month(liq_complete, pca_cols)
+z_cols = [c + '_z' for c in pca_cols]
+
+# Pool all months for PCA
+pca_input = liq_complete[z_cols].dropna()
+pca = PCA(n_components=3)
+pca.fit(pca_input)
+
+print("PCA Explained Variance Ratios:")
+for i, (var, cumvar) in enumerate(zip(
+    pca.explained_variance_ratio_,
+    np.cumsum(pca.explained_variance_ratio_)
+)):
+    print(f"  PC{i+1}: {var:.3f} (cumulative: {cumvar:.3f})")
+
+print("\nPC1 Loadings:")
+for col, loading in zip(pca_cols, pca.components_[0]):
+    print(f"  {col:<20}: {loading:.3f}")
+
+# Assign PC1 as composite illiquidity
+liq_complete['illiq_pc1'] = pca.transform(
+    liq_complete[z_cols].values
+)[:, 0]
+```
+
+## Aggregate Liquidity and Market Conditions {#sec-aggregate}
+
+### Time Series of Market Liquidity
+
+Aggregate liquidity—the average illiquidity across all stocks—varies substantially over time. @chordia2001market document that market-wide liquidity declines during periods of high volatility and negative market returns.
+
+```{python}
+#| label: fig-aggregate-liquidity
+#| eval: false
+#| fig-cap: "Aggregate liquidity conditions in the Vietnamese equity market. Panel A shows the cross-sectional median of three illiquidity measures over time (standardized). Panel B shows the VN-Index return for context. Liquidity deteriorated sharply during the 2008--2009 global financial crisis, the 2011 domestic tightening cycle, and the March 2020 COVID crash. Each episode is marked by simultaneous spikes in all illiquidity measures."
+#| code-summary: "Plot aggregate liquidity time series"
+# Compute monthly cross-sectional aggregates
+agg_liquidity = (
+    panel.groupby('month_end')
+    .agg(
+        amihud_median=('amihud', 'median'),
+        zero_ret_median=('zero_return_pct', 'median'),
+        turnover_median=('log_turnover', 'median'),
+        roll_median=('roll_spread', 'median'),
+        cs_median=('cs_spread', 'median'),
+        n_stocks=('ticker', 'nunique')
+    )
+    .reset_index()
+)
+
+# Standardize for plotting
+for col in ['amihud_median', 'zero_ret_median', 'roll_median']:
+    agg_liquidity[col + '_z'] = (
+        (agg_liquidity[col] - agg_liquidity[col].mean())
+        / agg_liquidity[col].std()
+    )
+
+fig, axes = plt.subplots(2, 1, figsize=(14, 9), height_ratios=[2, 1])
+
+# Panel A: Aggregate illiquidity
+axes[0].plot(agg_liquidity['month_end'], agg_liquidity['amihud_median_z'],
+             color='#2C5F8A', linewidth=1.5, label='Amihud')
+axes[0].plot(agg_liquidity['month_end'], agg_liquidity['zero_ret_median_z'],
+             color='#C0392B', linewidth=1.5, label='Zero-Return')
+axes[0].plot(agg_liquidity['month_end'], agg_liquidity['roll_median_z'],
+             color='#27AE60', linewidth=1.5, label='Roll Spread')
+axes[0].axhline(y=0, color='gray', linewidth=0.5)
+axes[0].set_ylabel('Standardized Illiquidity')
+axes[0].set_title('Panel A: Aggregate Illiquidity Over Time')
+axes[0].legend(fontsize=9)
+
+# Shade crisis periods
+crisis_periods = [
+    ('2008-06-01', '2009-03-31', 'GFC'),
+    ('2011-01-01', '2011-12-31', 'Tightening'),
+    ('2020-02-01', '2020-05-31', 'COVID')
+]
+for start, end, label in crisis_periods:
+    axes[0].axvspan(pd.Timestamp(start), pd.Timestamp(end),
+                     alpha=0.15, color='gray')
+    mid = pd.Timestamp(start) + (pd.Timestamp(end) - pd.Timestamp(start)) / 2
+    axes[0].text(mid, axes[0].get_ylim()[1] * 0.9, label,
+                 ha='center', fontsize=8, color='gray')
+
+# Panel B: Market return
+market_monthly = factors[['month_end', 'mkt_excess']].copy()
+market_monthly['month_end'] = pd.to_datetime(market_monthly['month_end'])
+axes[1].bar(market_monthly['month_end'],
+            market_monthly['mkt_excess'] * 100,
+            width=25,
+            color=['#27AE60' if r > 0 else '#C0392B'
+                   for r in market_monthly['mkt_excess']],
+            alpha=0.6)
+axes[1].set_ylabel('Market Excess Return (%)')
+axes[1].set_xlabel('Date')
+axes[1].set_title('Panel B: VN-Index Monthly Excess Return')
+
+plt.tight_layout()
+plt.show()
+```
+
+### Commonality in Liquidity
+
+@chordia2000commonality find that individual stock liquidity co-moves with market liquidity, even after controlling for firm-specific factors. We test for commonality in Vietnam by regressing changes in firm-level liquidity on changes in market-level liquidity:
+
+$$
+\Delta L_{i,m} = \alpha_i + \beta_i \Delta L_{M,m} + \gamma_i \Delta L_{M,m-1} + \delta_i \Delta L_{M,m+1} + \varepsilon_{i,m}
+$$ {#eq-commonality}
+
+where $\Delta L_{i,m}$ is the change in firm $i$'s illiquidity, $\Delta L_{M,m}$ is the change in market-average illiquidity (excluding firm $i$), and the lead/lag terms capture non-synchronous adjustment. The coefficient $\beta_i$ measures the sensitivity of firm $i$'s liquidity to market-wide liquidity shocks.
+
+```{python}
+#| label: commonality
+#| eval: false
+#| code-summary: "Test for commonality in liquidity across Vietnamese stocks"
+# Compute monthly changes in Amihud for each firm and the market
+panel_common = panel[['ticker', 'month_end', 'amihud']].dropna().copy()
+panel_common = panel_common.sort_values(['ticker', 'month_end'])
+panel_common['d_amihud'] = (
+    panel_common.groupby('ticker')['amihud'].diff()
+)
+
+# Market-level illiquidity change (equal-weighted, excluding firm i)
+mkt_liq = (
+    panel_common.groupby('month_end')['amihud']
+    .mean()
+    .diff()
+    .to_frame('d_amihud_mkt')
+)
+mkt_liq['d_amihud_mkt_lag'] = mkt_liq['d_amihud_mkt'].shift(1)
+mkt_liq['d_amihud_mkt_lead'] = mkt_liq['d_amihud_mkt'].shift(-1)
+
+panel_common = panel_common.merge(mkt_liq, on='month_end', how='left')
+
+# Estimate commonality for each firm
+def estimate_commonality(group, min_obs=24):
+    g = group.dropna(subset=['d_amihud', 'd_amihud_mkt'])
+    if len(g) < min_obs:
+        return None
+    y = g['d_amihud']
+    X = sm.add_constant(g[['d_amihud_mkt', 'd_amihud_mkt_lag',
+                            'd_amihud_mkt_lead']])
+    try:
+        model = sm.OLS(y, X).fit()
+        return pd.Series({
+            'beta_mkt': model.params['d_amihud_mkt'],
+            'beta_t': model.tvalues['d_amihud_mkt'],
+            'r_squared': model.rsquared
+        })
+    except Exception:
+        return None
+
+commonality = (
+    panel_common
+    .groupby('ticker')
+    .apply(estimate_commonality)
+    .dropna()
+)
+
+print("Commonality in Liquidity (Amihud):")
+print(f"  Mean beta_mkt: {commonality['beta_mkt'].mean():.3f}")
+print(f"  Median beta_mkt: {commonality['beta_mkt'].median():.3f}")
+print(f"  % significant at 5%: "
+      f"{(commonality['beta_t'].abs() > 1.96).mean():.1%}")
+print(f"  Mean R-squared: {commonality['r_squared'].mean():.3f}")
+```
+
+## Is Liquidity Priced? {#sec-pricing}
+
+### Portfolio Sorts
+
+We test whether illiquidity predicts future returns by sorting stocks into quintile portfolios based on lagged liquidity measures and comparing average returns across quintiles.
+
+```{python}
+#| label: portfolio-sorts
+#| eval: false
+#| code-summary: "Sort stocks into quintiles by lagged illiquidity and compute returns"
+def liquidity_portfolio_sort(panel_df, liq_col, n_groups=5):
+    """
+    Compute quintile portfolio returns sorted on lagged liquidity.
+    Lag the sorting variable by one month to avoid look-ahead bias.
+    """
+    df = panel_df[['ticker', 'month_end', 'monthly_return',
+                    'market_cap', liq_col]].dropna().copy()
+    df = df.sort_values(['ticker', 'month_end'])
+    
+    # Lag the sorting variable
+    df['liq_lag'] = df.groupby('ticker')[liq_col].shift(1)
+    df = df.dropna(subset=['liq_lag', 'monthly_return'])
+    
+    # Assign quintiles within each month
+    df['quintile'] = (
+        df.groupby('month_end')['liq_lag']
+        .transform(lambda x: pd.qcut(x, n_groups, labels=False,
+                                       duplicates='drop'))
+    )
+    
+    # EW portfolio returns by quintile-month
+    port_returns = (
+        df.groupby(['month_end', 'quintile'])['monthly_return']
+        .mean()
+        .unstack()
+    )
+    
+    # Long-short (Q5 - Q1)
+    if n_groups - 1 in port_returns.columns and 0 in port_returns.columns:
+        port_returns['long_short'] = (
+            port_returns[n_groups - 1] - port_returns[0]
+        )
+    
+    return port_returns
+
+# Run sorts for each illiquidity measure
+sort_measures = {
+    'Amihud': 'amihud',
+    'Zero-Return': 'zero_return_pct',
+    'Neg. Turnover': 'log_turnover',  # Will reverse below
+    'Roll Spread': 'roll_spread',
+    'Corwin-Schultz': 'cs_spread',
+}
+
+# For turnover, negate so higher = less liquid
+panel_sorts = panel.copy()
+panel_sorts['neg_turnover'] = -panel_sorts['log_turnover']
+sort_measures_actual = {
+    'Amihud': 'amihud',
+    'Zero-Return': 'zero_return_pct',
+    'Neg. Turnover': 'neg_turnover',
+    'Roll Spread': 'roll_spread',
+    'Corwin-Schultz': 'cs_spread',
+}
+
+print("Liquidity Premium (EW, Quintile Sorts):")
+print(f"{'Measure':<18} {'Q1 (Liquid)':>12} {'Q5 (Illiquid)':>14} "
+      f"{'Q5-Q1':>10} {'t-stat':>8}")
+print("-" * 62)
+
+sort_results = {}
+for name, col in sort_measures_actual.items():
+    ports = liquidity_portfolio_sort(panel_sorts, col)
+    sort_results[name] = ports
+    
+    q1 = ports[0].mean() * 12
+    q5 = ports[4].mean() * 12 if 4 in ports.columns else np.nan
+    ls = ports['long_short'].mean() * 12 if 'long_short' in ports else np.nan
+    ls_se = ports['long_short'].std() / np.sqrt(len(ports)) * np.sqrt(12) if 'long_short' in ports else np.nan
+    t = ls / ls_se if ls_se and ls_se > 0 else np.nan
+    
+    print(f"{name:<18} {q1:>12.4f} {q5:>14.4f} {ls:>10.4f} {t:>8.2f}")
+```
+
+```{python}
+#| label: fig-liquidity-premium
+#| eval: false
+#| fig-cap: "Annualized average returns by illiquidity quintile for each liquidity measure. A monotonically increasing pattern from Q1 (most liquid) to Q5 (most illiquid) indicates a liquidity premium—compensation for holding harder-to-trade stocks."
+#| code-summary: "Bar chart of quintile returns by liquidity measure"
+fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+axes = axes.flatten()
+
+colors_quintile = ['#27AE60', '#2ECC71', '#F1C40F', '#E67E22', '#C0392B']
+
+for i, (name, ports) in enumerate(sort_results.items()):
+    if i >= 5:
+        break
+    quintile_means = [ports[q].mean() * 12 * 100 for q in range(5)
+                       if q in ports.columns]
+    axes[i].bar(range(len(quintile_means)), quintile_means,
+                color=colors_quintile[:len(quintile_means)],
+                alpha=0.85, edgecolor='white')
+    axes[i].set_xticks(range(len(quintile_means)))
+    axes[i].set_xticklabels([f'Q{q+1}' for q in range(len(quintile_means))])
+    axes[i].set_ylabel('Annualized Return (%)')
+    axes[i].set_title(name)
+    axes[i].axhline(y=0, color='gray', linewidth=0.5)
+
+# Hide unused subplot
+if len(sort_results) < 6:
+    axes[5].set_visible(False)
+
+plt.suptitle('Average Returns by Illiquidity Quintile', fontsize=14)
+plt.tight_layout()
+plt.show()
+```
+
+### Fama-MacBeth Cross-Sectional Regressions
+
+Portfolio sorts are informative but cannot control for multiple characteristics simultaneously. We use @fama1993common-style cross-sectional regressions to test whether liquidity predicts returns after controlling for size, value, and momentum:
+
+$$
+R_{i,m+1} = \gamma_{0,m} + \gamma_{1,m} \text{ILLIQ}_{i,m} + \gamma_{2,m} \ln(\text{MCap}_{i,m}) + \gamma_{3,m} \text{BM}_{i,m} + \gamma_{4,m} R_{i,m-12:m-1} + \varepsilon_{i,m+1}
+$$ {#eq-fama-macbeth}
+
+The time-series average of the monthly coefficient $\bar{\gamma}_1$ estimates the illiquidity premium, and its t-statistic uses the @fama1993common standard error.
+
+```{python}
+#| label: fama-macbeth
+#| eval: false
+#| code-summary: "Fama-MacBeth regressions of returns on lagged liquidity and controls"
+def fama_macbeth(panel_df, illiq_col, controls=['log_mcap', 'bm'],
+                  min_stocks=50):
+    """
+    Run Fama-MacBeth cross-sectional regressions of
+    next-month returns on lagged illiquidity and controls.
+    """
+    df = panel_df.copy()
+    df = df.sort_values(['ticker', 'month_end'])
+    
+    # Lag the illiquidity measure
+    df['illiq_lag'] = df.groupby('ticker')[illiq_col].shift(1)
+    
+    # Lag controls
+    for c in controls:
+        df[c + '_lag'] = df.groupby('ticker')[c].shift(1)
+    
+    regressors = ['illiq_lag'] + [c + '_lag' for c in controls]
+    df = df.dropna(subset=['monthly_return'] + regressors)
+    
+    # Month-by-month cross-sectional regressions
+    months = sorted(df['month_end'].unique())
+    gamma_list = []
+    
+    for month in months:
+        cross = df[df['month_end'] == month]
+        if len(cross) < min_stocks:
+            continue
+        
+        y = cross['monthly_return'].values
+        X = sm.add_constant(cross[regressors].values)
+        
+        try:
+            model = sm.OLS(y, X).fit()
+            gammas = {'month_end': month, 'intercept': model.params[0]}
+            for j, reg in enumerate(regressors):
+                gammas[reg] = model.params[j + 1]
+            gamma_list.append(gammas)
+        except Exception:
+            pass
+    
+    gamma_df = pd.DataFrame(gamma_list)
+    
+    # Time-series averages and t-statistics
+    results = {}
+    for col in ['intercept'] + regressors:
+        mean = gamma_df[col].mean()
+        se = gamma_df[col].std() / np.sqrt(len(gamma_df))
+        t = mean / se if se > 0 else np.nan
+        results[col] = {'Coefficient': mean, 'SE': se, 't-stat': t}
+    
+    return pd.DataFrame(results).T, gamma_df
+
+# Run for each illiquidity measure
+print("Fama-MacBeth Regressions: R_{i,m+1} on ILLIQ_{i,m} + controls")
+print("=" * 70)
+
+for name, col in [('Amihud', 'amihud'),
+                    ('Zero-Return', 'zero_return_pct'),
+                    ('Roll Spread', 'roll_spread'),
+                    ('Corwin-Schultz', 'cs_spread')]:
+    results, gammas = fama_macbeth(panel, col)
+    print(f"\n{name}:")
+    print(results[['Coefficient', 't-stat']].round(4).to_string())
+```
+
+### Factor-Adjusted Liquidity Premium
+
+The liquidity premium may be partially or fully explained by existing risk factors (size, value, momentum). We test this by regressing the long-short liquidity portfolio returns on the Fama-French-Carhart factors:
+
+```{python}
+#| label: factor-adjusted
+#| eval: false
+#| code-summary: "Regress liquidity long-short returns on FF+Carhart factors"
+print("Factor-Adjusted Liquidity Premium:")
+print(f"{'Measure':<18} {'Alpha (ann.)':>12} {'Alpha t':>10} "
+      f"{'MKT':>8} {'SMB':>8} {'HML':>8} {'R2':>6}")
+print("-" * 72)
+
+for name, ports in sort_results.items():
+    if 'long_short' not in ports.columns:
+        continue
+    
+    ls_series = ports['long_short'].to_frame('ls')
+    ls_series.index = pd.to_datetime(ls_series.index)
+    
+    merged = ls_series.merge(factors, left_index=True,
+                              right_on='month_end', how='inner')
+    
+    if len(merged) < 24:
+        continue
+    
+    y = merged['ls']
+    X = sm.add_constant(merged[['mkt_excess', 'smb', 'hml', 'wml']])
+    
+    model = sm.OLS(y, X).fit(cov_type='HAC', cov_kwds={'maxlags': 6})
+    
+    alpha_ann = model.params['const'] * 12
+    alpha_t = model.tvalues['const']
+    mkt_b = model.params['mkt_excess']
+    smb_b = model.params['smb']
+    hml_b = model.params['hml']
+    r2 = model.rsquared
+    
+    print(f"{name:<18} {alpha_ann:>12.4f} {alpha_t:>10.2f} "
+          f"{mkt_b:>8.3f} {smb_b:>8.3f} {hml_b:>8.3f} {r2:>6.3f}")
+```
+
+## Liquidity and Transaction Cost Estimation {#sec-implementation}
+
+### Translating Measures to Trading Costs
+
+For practitioners, the key question is: what does a given Amihud or spread value *mean* in terms of actual VND cost per trade? We calibrate the relationship between our low-frequency proxies and explicit trading costs.
+
+```{python}
+#| label: cost-calibration
+#| eval: false
+#| code-summary: "Calibrate liquidity proxies to estimated round-trip trading costs"
+def estimate_round_trip_cost(row):
+    """
+    Estimate total round-trip trading cost (in %) from
+    multiple liquidity proxies.
+    
+    Components:
+    1. Explicit: commission + tax (~0.35% round-trip)
+    2. Spread cost: half-spread each way
+    3. Price impact: function of trade size
+    """
+    explicit = 0.0035  # 35 bps round-trip
+    
+    # Use Corwin-Schultz or quoted spread as spread estimate
+    spread = row.get('cs_spread', row.get('quoted_spread', 0.005))
+    spread_cost = spread  # Full spread = round-trip cost
+    
+    # Price impact (approximate from Amihud)
+    # For a trade of 1% of daily volume
+    amihud_raw = row.get('amihud_raw', 0)
+    impact = amihud_raw * 0.01  # Rough approximation
+    
+    return explicit + spread_cost + impact
+
+panel['estimated_rtc'] = panel.apply(estimate_round_trip_cost, axis=1)
+
+# Distribution by size quintile
+rtc_by_size = (
+    panel.groupby('size_quintile')['estimated_rtc']
+    .agg(['mean', 'median', 'std'])
+    .round(4)
+)
+print("Estimated Round-Trip Cost by Size Quintile (%):")
+print((rtc_by_size * 100).round(2).to_string())
+```
+
+```{python}
+#| label: fig-cost-distribution
+#| eval: false
+#| fig-cap: "Estimated round-trip trading costs by market cap quintile. Small-cap Vietnamese stocks have estimated costs of 3--8%, making high-frequency rebalancing strategies uneconomical. Even large-cap stocks carry costs of 0.5--1.5%, substantially higher than in developed markets."
+#| code-summary: "Plot estimated trading costs by size quintile"
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Panel A: Distribution
+for q, color in zip(['Q1 (Small)', 'Q3', 'Q5 (Large)'],
+                     ['#C0392B', '#F1C40F', '#27AE60']):
+    subset = panel[panel['size_quintile'] == q]['estimated_rtc'].dropna()
+    subset = subset[subset < 0.15]  # Trim extreme
+    axes[0].hist(subset * 100, bins=50, density=True, alpha=0.5,
+                  color=color, label=q, edgecolor='white')
+axes[0].set_xlabel('Estimated Round-Trip Cost (%)')
+axes[0].set_ylabel('Density')
+axes[0].set_title('Panel A: Cost Distribution by Size')
+axes[0].legend()
+
+# Panel B: Time series of median cost
+cost_ts = (
+    panel.groupby('month_end')['estimated_rtc']
+    .median()
+    .reset_index()
+)
+axes[1].plot(pd.to_datetime(cost_ts['month_end']),
+             cost_ts['estimated_rtc'] * 100,
+             color='#2C5F8A', linewidth=1.5)
+axes[1].set_xlabel('Date')
+axes[1].set_ylabel('Median Round-Trip Cost (%)')
+axes[1].set_title('Panel B: Aggregate Trading Costs Over Time')
+
+plt.tight_layout()
+plt.show()
+```
+
+### Strategy Implementability
+
+A critical application of liquidity measurement is testing whether a given anomaly strategy remains profitable after accounting for realistic trading costs. We compute net-of-cost returns for the liquidity-sorted portfolios themselves—an inherently conservative test because the illiquid long leg carries the highest costs.
+
+```{python}
+#| label: net-of-cost
+#| eval: false
+#| code-summary: "Compute net-of-cost returns for illiquidity-sorted portfolios"
+# For each quintile, estimate average monthly turnover and cost
+# and subtract from gross returns
+for name, ports in sort_results.items():
+    if 'long_short' not in ports.columns:
+        continue
+    
+    gross_ann = ports['long_short'].mean() * 12
+    
+    # Estimate costs: illiquid quintile has higher costs
+    # Assume monthly turnover of ~15% for long-short with monthly rebalancing
+    turnover = 0.15
+    cost_q1 = 0.003  # 30 bps per trade for liquid stocks
+    cost_q5 = 0.015  # 150 bps for illiquid stocks
+    avg_cost = (cost_q1 + cost_q5) / 2  # Average across long and short
+    monthly_tc = turnover * avg_cost
+    
+    net_ann = gross_ann - monthly_tc * 12
+    
+    print(f"{name:<18}: Gross = {gross_ann*100:>6.2f}%, "
+          f"TC = {monthly_tc*1200:>6.1f} bps/mo, "
+          f"Net = {net_ann*100:>6.2f}%")
+```
+
+## Liquidity During Market Stress {#sec-stress}
+
+### Flight to Liquidity
+
+During market stress, investors sell illiquid assets and buy liquid ones—a "flight to liquidity" that widens the return differential between liquid and illiquid stocks. @hameed2010stock show that this pattern is strongest when market returns are most negative.
+
+```{python}
+#| label: flight-to-liquidity
+#| eval: false
+#| code-summary: "Test for flight-to-liquidity during market stress"
+# Merge Amihud-sorted portfolio returns with market returns
+amihud_ports = sort_results.get('Amihud')
+if amihud_ports is not None and 'long_short' in amihud_ports.columns:
+    ftl_data = pd.merge(
+        amihud_ports['long_short'].to_frame('illiq_premium'),
+        factors[['month_end', 'mkt_excess']].set_index('month_end'),
+        left_index=True, right_index=True, how='inner'
+    )
+    
+    # Classify market states
+    ftl_data['mkt_state'] = pd.cut(
+        ftl_data['mkt_excess'],
+        bins=[-np.inf,
+              ftl_data['mkt_excess'].quantile(0.20),
+              ftl_data['mkt_excess'].quantile(0.80),
+              np.inf],
+        labels=['Bear (bottom 20%)', 'Normal', 'Bull (top 20%)']
+    )
+    
+    # Illiquidity premium by market state
+    state_premium = (
+        ftl_data.groupby('mkt_state')['illiq_premium']
+        .agg(['mean', 'std', 'count'])
+    )
+    state_premium['ann_premium'] = state_premium['mean'] * 12
+    state_premium['t_stat'] = (
+        state_premium['mean']
+        / (state_premium['std'] / np.sqrt(state_premium['count']))
+    )
+    
+    print("Illiquidity Premium by Market State:")
+    print(state_premium[['ann_premium', 't_stat', 'count']].round(3))
+```
+
+```{python}
+#| label: fig-flight-to-liquidity
+#| eval: false
+#| fig-cap: "Illiquidity premium (Q5 minus Q1 Amihud) conditional on market returns. In bear markets, illiquid stocks underperform liquid stocks---the illiquidity premium reverses. In normal and bull markets, the premium is positive. This asymmetry reflects flight-to-liquidity behavior: investors flee illiquid stocks during stress, depressing their prices and generating negative contemporaneous returns."
+#| code-summary: "Bar chart of conditional illiquidity premium"
+fig, ax = plt.subplots(figsize=(8, 5))
+
+if 'state_premium' in dir():
+    colors_state = ['#C0392B', '#F1C40F', '#27AE60']
+    bars = ax.bar(range(len(state_premium)),
+                   state_premium['ann_premium'] * 100,
+                   color=colors_state, alpha=0.85, edgecolor='white')
+    ax.set_xticks(range(len(state_premium)))
+    ax.set_xticklabels(state_premium.index)
+    ax.set_ylabel('Annualized Q5-Q1 Return (%)')
+    ax.set_title('Illiquidity Premium by Market State')
+    ax.axhline(y=0, color='gray', linewidth=0.8)
+    
+    for i, (_, row) in enumerate(state_premium.iterrows()):
+        ax.text(i, row['ann_premium'] * 100 + 0.3,
+                f"t={row['t_stat']:.1f}",
+                ha='center', fontsize=10)
+
+plt.tight_layout()
+plt.show()
+```
+
+### Liquidity Co-Movement with Global Risk
+
+Vietnamese market liquidity may be driven by global risk factors, particularly for stocks held by foreign investors. We test whether global risk measures (VIX, USD strength) predict Vietnamese aggregate liquidity:
+
+```{python}
+#| label: global-risk
+#| eval: false
+#| code-summary: "Regress Vietnamese aggregate liquidity on global risk proxies"
+# Merge aggregate liquidity with global variables
+global_vars = client.get_macro_data(
+    variables=['vix_close', 'dxy_index'],
+    start_date='2008-01-01',
+    end_date='2024-12-31',
+    frequency='monthly'
+)
+
+agg_liq_global = agg_liquidity.merge(
+    global_vars, on='month_end', how='inner'
+)
+
+# Changes in all variables
+for col in ['amihud_median', 'vix_close', 'dxy_index']:
+    agg_liq_global[f'd_{col}'] = agg_liq_global[col].diff()
+
+# Regression
+y = agg_liq_global['d_amihud_median'].dropna()
+X = sm.add_constant(
+    agg_liq_global.loc[y.index, ['d_vix_close', 'd_dxy_index']]
+)
+
+model = sm.OLS(y, X).fit(cov_type='HAC', cov_kwds={'maxlags': 3})
+print("Aggregate Illiquidity ~ Global Risk:")
+print(model.summary().tables[1])
+```
+
+## Constructing a Tradeable Liquidity Factor {#sec-factor}
+
+Following @pastor2003liquidity, we construct an aggregate liquidity factor that can be used in asset pricing tests. The factor captures innovations in aggregate liquidity—unexpected changes in market-wide trading conditions.
+
+```{python}
+#| label: liquidity-factor
+#| eval: false
+#| code-summary: "Construct an aggregate liquidity innovation factor"
+# Step 1: Compute market-level Amihud as EW average
+mkt_amihud = (
+    panel.groupby('month_end')['amihud']
+    .mean()
+    .to_frame('mkt_amihud')
+)
+
+# Step 2: Estimate AR(2) model for aggregate illiquidity
+mkt_amihud['mkt_amihud_lag1'] = mkt_amihud['mkt_amihud'].shift(1)
+mkt_amihud['mkt_amihud_lag2'] = mkt_amihud['mkt_amihud'].shift(2)
+mkt_amihud = mkt_amihud.dropna()
+
+ar_model = sm.OLS(
+    mkt_amihud['mkt_amihud'],
+    sm.add_constant(mkt_amihud[['mkt_amihud_lag1', 'mkt_amihud_lag2']])
+).fit()
+
+# Step 3: Residuals = liquidity innovations
+# Negative innovation = liquidity improved (good)
+# Positive innovation = liquidity deteriorated (bad)
+mkt_amihud['liq_innovation'] = ar_model.resid
+
+# Step 4: Test whether liquidity innovations predict returns
+# Higher sensitivity to negative innovations = higher expected return
+print("AR(2) Model for Aggregate Amihud:")
+print(f"  R-squared: {ar_model.rsquared:.3f}")
+print(f"  AR(1) coef: {ar_model.params['mkt_amihud_lag1']:.3f} "
+      f"(t={ar_model.tvalues['mkt_amihud_lag1']:.2f})")
+
+# Step 5: Estimate liquidity betas for each firm
+panel_liq_beta = panel.merge(
+    mkt_amihud[['liq_innovation']],
+    left_on='month_end', right_index=True, how='inner'
+)
+
+def estimate_liq_beta(group, min_obs=36):
+    g = group.dropna(subset=['monthly_return', 'liq_innovation'])
+    if len(g) < min_obs:
+        return None
+    y = g['monthly_return']
+    X = sm.add_constant(g['liq_innovation'])
+    try:
+        model = sm.OLS(y, X).fit()
+        return model.params['liq_innovation']
+    except Exception:
+        return None
+
+liq_betas = (
+    panel_liq_beta
+    .groupby('ticker')
+    .apply(estimate_liq_beta)
+    .dropna()
+    .to_frame('liq_beta')
+)
+
+print(f"\nLiquidity Beta Distribution:")
+print(liq_betas['liq_beta'].describe().round(4))
+```
+
+## Practical Guidance for Vietnam {#sec-practical}
+
+The analysis in this chapter yields the following recommendations:
+
+**For researchers:** The Amihud illiquidity ratio is the single best all-purpose liquidity proxy for Vietnamese equities. It has the highest coverage, the strongest cross-sectional return predictability, and the most robust relationship with firm size. When a second measure is needed for robustness, the zero-return proportion is the natural complement—it captures a different dimension (transaction cost threshold) and has near-complete coverage.
+
+**For portfolio construction:** Any backtest of a Vietnamese equity strategy should compute and report estimated round-trip costs by quintile. Strategies that load on the bottom two size quintiles face costs of 2--5% per round trip, making monthly rebalancing uneconomical. Quarterly or annual rebalancing with a turnover constraint is more realistic.
+
+**For risk management:** Monitor aggregate liquidity conditions using the cross-sectional median Amihud or the market-wide zero-return fraction. Liquidity deterioration predicts negative market returns and wider spreads in subsequent months. Tighten risk limits when aggregate illiquidity exceeds its 90th historical percentile.
+
+**For international comparisons:** When comparing Vietnamese factor premia to U.S. or other developed market evidence, always report results on a "liquid universe" subset (top 60% by market cap) alongside the full sample. Many anomalies that appear large in the full sample shrink substantially when restricted to stocks that can actually be traded at scale.
+
+## Summary {#sec-summary}
+
+| Measure | Dimension | Coverage | Size Gradient | Return Predictive | Recommended Use |
+|------------|------------|------------|------------|------------|------------|
+| Amihud | Price impact | High | Very steep | Strong | Primary proxy; portfolio sorts; Fama-MacBeth |
+| Zero-Return | Transaction cost | Complete | Steep | Strong | Robustness check; emerging market studies |
+| Turnover | Trading activity | High | Moderate | Moderate | Volume-based filters; flow analysis |
+| Roll Spread | Tightness | Moderate | Moderate | Moderate | Spread estimation without bid-ask data |
+| Corwin-Schultz | Tightness | Moderate | Moderate | Moderate | High-low based spread; calibration |
+| Quoted Spread | Tightness | Variable | Steep | Strong | Direct measure when available |
+| Kyle Lambda | Price impact | Moderate | Steep | Strong | Market microstructure research |
+
+: Summary of liquidity measure properties in the Vietnamese market. {#tbl-summary}Liquidity is not a secondary consideration for Vietnamese equity research—it is a first-order determinant of which strategies are implementable, which anomalies are real, and which results are artifacts of trading in stocks that cannot actually be traded. Every empirical finding in this book should be evaluated through the lens of the liquidity analysis developed in this chapter.
+
+```{=html}
+<!-- ## Exercises {#sec-exercises}
+
+1. **Closing percent quoted spread.** @fong2017best recommend the closing percent quoted spread as the best global liquidity proxy. Compute this as the closing bid-ask spread divided by the midpoint, averaged over the month. Compare its correlation with the Amihud measure and the Corwin-Schultz spread. Does the recommendation hold for Vietnam?
+
+2. **Liquidity-adjusted momentum.** Compute momentum portfolio returns (12-1 month) separately within each Amihud illiquidity tercile. Is the momentum premium concentrated in illiquid stocks? What does this imply about the implementability of momentum strategies in Vietnam? Connect your findings to @novy2016taxonomy.
+
+3. **Foreign investor liquidity demand.** Using foreign buy and sell volume data, compute a net foreign flow measure for each stock. Test whether foreign net buying predicts next-month liquidity improvements (lower Amihud, lower spreads). Does foreign ownership create a liquidity externality?
+
+4. **Intraday liquidity patterns.** If intraday data are available, compute the Amihud ratio separately for the opening call auction, the morning continuous session, and the afternoon continuous session. How does intraday liquidity variation compare to cross-sectional variation?
+
+5. **Liquidity and earnings announcements.** Test whether liquidity deteriorates before and improves after quarterly earnings announcements. Use an event study framework with the Amihud ratio as the dependent variable. Is the pre-announcement illiquidity increase consistent with the @glosten1985bid adverse selection model?
+
+6. **Market-making profitability.** Using the Roll spread as a proxy for the bid-ask bounce, estimate the gross profit a hypothetical market maker would earn from providing liquidity in Vietnamese stocks. How does this compare to the explicit cost of capital for market making?
+
+7. **Liquidity factor mimicking portfolio.** Construct a tradeable liquidity factor by sorting stocks into deciles based on their liquidity beta (sensitivity to aggregate liquidity innovations). The long-short return of this factor should be correlated with aggregate liquidity changes. Test whether this factor earns a significant premium and whether it explains returns beyond the Fama-French factors.
+
+8. **COVID-19 liquidity shock.** Analyze the liquidity dynamics around the March 2020 COVID-19 market crash. How quickly did aggregate liquidity deteriorate? Which firms experienced the largest liquidity drops? Did the SBV's policy responses (rate cuts, reserve requirement reductions) improve liquidity, and with what lag? -->
+```
