@@ -16,9 +16,9 @@ Missing data in financial research is not monolithic. The consequences depend cr
 
 1.  **Missing Completely at Random (MCAR).** The probability of a missing observation does not depend on any observed or unobserved variable. Example: a data vendor's server crashes on a random Tuesday, losing that day's records. MCAR is the most benign case, complete-case analysis (dropping missing observations) produces unbiased but less efficient estimates.
 2.  **Missing at Random (MAR).** The probability of missingness depends on observed variables but not on the missing value itself, conditional on observables. Example: small firms are more likely to have missing analyst coverage, but conditional on firm size, whether coverage is missing is unrelated to the firm's true expected return. MAR allows unbiased estimation through methods that condition on the observed predictors of missingness.
-3.  **Missing Not at Random (MNAR).** The probability of missingness depends on the missing value itself. Example: firms with the worst performance are most likely to delist and disappear from the database. MNAR is the pathological case, and unfortunately, the most common in financial data. Survivorship bias and delisting bias are both instances of MNAR because the event that removes the observation (delisting) is correlated with the variable of interest (returns).
+3.  **Missing Not at Random (MNAR).** The probability of missingness depends on the missing value itself. Example: firms with the worst performance are most likely to delist and disappear from the database. MNAR is a pathological case and, unfortunately, the most common in financial data. Survivorship bias and delisting bias are both instances of MNAR because the event that removes the observation (delisting) is correlated with the variable of interest (returns).
 
-In the Vietnamese context, we encounter all three types, often simultaneously
+In the Vietnamese context, we encounter all three types, often simultaneously (@tbl-missing-taxonomy).
 
 | Data Problem | Missingness Type | Mechanism in Vietnam |
 |------------------------|------------------------|------------------------|
@@ -58,7 +58,8 @@ plt.rcParams.update({
 
 ```{python}
 #| label: data-load
-#| code-summary: "Load comprehensive listing, delisting, and return data from DataCore.vn"
+#| eval: false
+#| code-summary: "Load comprehensive listing, delisting, and return data"
 from datacore import DataCoreClient
 
 client = DataCoreClient()
@@ -115,6 +116,7 @@ The Vietnamese stock market's short history creates a distinctive pattern: the i
 
 ```{python}
 #| label: fig-listing-growth
+#| eval: false
 #| fig-cap: "Evolution of the Vietnamese listed equity universe. Panel A shows the number of active listings on each exchange over time. Panel B shows the annual flow of new listings and delistings. The equitization wave of 2006--2009 produced a surge of IPOs, many of which subsequently delisted during the market downturn."
 #| code-summary: "Plot the growth of the Vietnamese listed universe"
 listing_history['listing_date'] = pd.to_datetime(listing_history['listing_date'])
@@ -192,6 +194,7 @@ Vietnamese delistings are not homogeneous. The SSC mandates delisting for specif
 
 ```{python}
 #| label: delisting-reasons
+#| eval: false
 #| code-summary: "Categorize and tabulate delisting reasons"
 delisted = listing_history[listing_history['delisting_date'].notna()].copy()
 
@@ -230,7 +233,8 @@ print(reason_counts.round(1).to_string())
 
 ```{python}
 #| label: fig-delisting-reasons
-#| fig-cap: "Distribution of delisting reasons for Vietnamese listed firms. Unlike the U.S. market where M&A-driven delistings dominate, Vietnamese delistings are disproportionately involuntary---driven by financial distress and regulatory enforcement. This composition makes delisting bias more severe because involuntary delistings are associated with large negative terminal returns."
+#| eval: false
+#| fig-cap: "Distribution of delisting reasons for Vietnamese listed firms. Unlike the U.S. market where M&A-driven delistings dominate, Vietnamese delistings are disproportionately involuntary, driven by financial distress and regulatory enforcement. This composition makes delisting bias more severe because involuntary delistings are associated with large negative terminal returns."
 #| code-summary: "Visualize delisting reasons"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -264,6 +268,7 @@ Do delisted firms differ systematically from survivors? If so, excluding them bi
 
 ```{python}
 #| label: fig-delisting-characteristics
+#| eval: false
 #| fig-cap: "Firm characteristics in the year before delisting versus all active firms. Delisted firms are systematically smaller, less profitable, more leveraged, and more illiquid. These differences confirm that delisting is not random (MCAR) but is correlated with the variables used in empirical asset pricing tests."
 #| code-summary: "Compare characteristics of delisted vs surviving firms"
 # Get fundamentals in the last available year before delisting
@@ -367,6 +372,7 @@ We quantify the magnitude of survivorship bias by comparing portfolio returns co
 
 ```{python}
 #| label: survivorship-magnitude
+#| eval: false
 #| code-summary: "Quantify survivorship bias by comparing survivor-only vs full-sample portfolios"
 # Define survivors: firms active as of 2024-12-31
 survivors = set(
@@ -429,6 +435,7 @@ print(f"  VW: {bias_vw['bias'].mean() * 12:.4f} "
 
 ```{python}
 #| label: fig-survivorship-bias
+#| eval: false
 #| fig-cap: "Cumulative returns of the full sample versus survivors-only portfolio. Panel A shows equal-weighted portfolios, where the bias is larger because delisted (and pre-delisting poor-performing) small firms receive equal weight. Panel B shows value-weighted portfolios, where the bias is smaller because delisted firms are typically small and contribute little to VW returns."
 #| code-summary: "Plot cumulative returns: full sample vs survivors only"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
@@ -467,6 +474,7 @@ The magnitude of survivorship bias is not constant. It peaks during and after ma
 
 ```{python}
 #| label: fig-rolling-bias
+#| eval: false
 #| fig-cap: "Rolling 12-month survivorship bias for equal-weighted portfolios. The bias spikes during periods of high delisting activity (post-2008 crisis, 2011--2012 downturn). During bull markets, few firms delist and the bias approaches zero."
 #| code-summary: "Compute rolling survivorship bias"
 bias_ew['rolling_bias_12m'] = bias_ew['bias'].rolling(12).mean() * 12
@@ -504,10 +512,11 @@ plt.show()
 
 ### Survivorship Bias in Cross-Sectional Anomalies
 
-The bias is not uniform across strategies. Anomalies that overweight small, distressed, or low-quality firms---precisely the firms most likely to delist---are most severely affected. We test this for the size, value, and momentum anomalies.
+The bias is not uniform across strategies. Anomalies that overweight small, distressed, or low-quality firms, precisely the firms most likely to delist, are most severely affected. We test this for the size, value, and momentum anomalies.
 
 ```{python}
 #| label: anomaly-bias
+#| eval: false
 #| code-summary: "Quantify survivorship bias by anomaly portfolio"
 def compute_long_short(df, sort_var, n_quantiles=5):
     """
@@ -595,13 +604,13 @@ print(anomaly_bias_df.round(4).to_string())
 
 ### The Shumway Correction
 
-@shumway1997delisting showed that CRSP's treatment of delisting returns---often recording them as missing or zero---creates a systematic upward bias in average returns. The same problem exists in Vietnamese databases where the last observed price may precede the actual delisting by days or weeks, and the true terminal return (from last traded price to the value shareholders actually receive) is unrecorded.
+@shumway1997delisting showed that CRSP's treatment of delisting returns, often recording them as missing or zero, creates a systematic upward bias in average returns. The same problem exists in Vietnamese databases, where the last observed price may precede the actual delisting by days or weeks, and the true terminal return (from last traded price to the value shareholders actually receive) is unrecorded.
 
 We implement a delisting return imputation procedure adapted for Vietnam:
 
 **Step 1.** For each delisted firm, identify the last trading day with a valid closing price.
 
-**Step 2.** Classify the delisting reason to determine the appropriate imputation:
+**Step 2.** Classify the delisting reason to determine the appropriate imputation (@tbl-missing-imputation).
 
 | Delisting Reason | Imputed Return | Rationale |
 |------------------------|------------------------|------------------------|
@@ -617,6 +626,7 @@ We implement a delisting return imputation procedure adapted for Vietnam:
 
 ```{python}
 #| label: delisting-imputation
+#| eval: false
 #| code-summary: "Implement delisting return imputation for Vietnamese firms"
 def impute_delisting_returns(listing_df, daily_df, monthly_df):
     """
@@ -691,6 +701,7 @@ print(imputed_returns['monthly_return'].value_counts().sort_index())
 
 ```{python}
 #| label: delisting-impact
+#| eval: false
 #| code-summary: "Quantify the impact of including imputed delisting returns"
 # Augmented sample: monthly returns + imputed delisting returns
 augmented = pd.concat([
@@ -725,10 +736,11 @@ print(f"  Difference:            {ann_effect:.4f} ({ann_effect*100:.2f}%/yr)")
 
 ### Prevalence of Zero-Trading Days
 
-A distinctive feature of Vietnamese equity data is the high frequency of zero-volume days---days on which a listed stock records no trades. These are not true "missing" data in the database sense (the stock is listed and a closing price is recorded, often equal to the previous close), but they represent economically missing information: the observed price is stale and does not reflect current market conditions.
+A distinctive feature of Vietnamese equity data is the high frequency of zero-volume days (i.e., days on which a listed stock records no trades). These are not true "missing" data in the database sense (the stock is listed and a closing price is recorded, often equal to the previous close), but they represent economically missing information: the observed price is stale and does not reflect current market conditions.
 
 ```{python}
 #| label: fig-zero-trading
+#| eval: false
 #| fig-cap: "Prevalence of zero-trading days across Vietnamese listed firms. Panel A shows the cross-sectional distribution of the zero-volume fraction (proportion of trading days with no volume) by year. Panel B shows the zero-volume fraction by market cap decile. Small-cap firms have zero-volume fractions exceeding 30%, creating severe return measurement problems."
 #| code-summary: "Analyze the prevalence of zero-trading days"
 # Compute zero-volume fraction per firm-year
@@ -790,18 +802,19 @@ plt.show()
 
 ### Return Measurement During Zero-Trading Periods
 
-When a stock does not trade, the standard approach---using the last available closing price---produces a stale price that understates true volatility and biases returns toward zero. Several approaches exist to handle this:
+When a stock does not trade, the standard approach, using the last available closing price, produces a stale price that understates true volatility and biases returns toward zero. Several approaches exist to handle this:
 
 **Approach 1: Drop zero-volume observations.** Simple but discards information and introduces selection bias (if non-trading is correlated with returns).
 
 **Approach 2: Multi-day compounding.** Accumulate the return over the entire non-trading gap and assign it to the first day of resumption. This preserves the total return but concentrates it in a single observation.
 
-**Approach 3: Distribute uniformly.** Spread the accumulated return evenly across zero-volume days. This is economically unrealistic but reduces the impact of single-day outliers.
+**Approach 3: Distribute uniformly.** Spread the accumulated return evenly across zero-volume days. This is economically unrealistic, but it reduces the impact of single-day outliers.
 
 **Approach 4: Treat as missing and model.** Treat zero-volume days as genuinely missing returns and use the @lesmond2005liquidity zero-return measure as a liquidity proxy.
 
 ```{python}
 #| label: zero-vol-correction
+#| eval: false
 #| code-summary: "Implement zero-trading-day return corrections"
 def correct_zero_volume_returns(daily_df, method='compound'):
     """
@@ -915,6 +928,7 @@ We implement a point-in-time adjustment for accounting data that respects the ac
 
 ```{python}
 #| label: point-in-time
+#| eval: false
 #| code-summary: "Implement point-in-time alignment of accounting data"
 def point_in_time_merge(monthly_df, fundamentals_df, filings_df,
                          lag_months=0):
@@ -996,6 +1010,7 @@ Value strategies sort stocks on book-to-market ratios computed from accounting d
 
 ```{python}
 #| label: lookahead-value
+#| eval: false
 #| code-summary: "Compare value premium with and without point-in-time adjustment"
 # Naive approach: use fiscal year data immediately
 monthly_naive = monthly_returns.merge(
@@ -1048,6 +1063,7 @@ Vietnamese firms frequently transfer between exchanges (e.g., from HNX to HOSE u
 
 ```{python}
 #| label: transfers
+#| eval: false
 #| code-summary: "Identify and link exchange transfers"
 transfers = listing_history[
     listing_history['transfer_from'].notna()
@@ -1063,6 +1079,7 @@ print(transfer_pattern.head(10))
 
 ```{python}
 #| label: link-transfers
+#| eval: false
 #| code-summary: "Link pre-transfer and post-transfer return series"
 def link_transfer_returns(monthly_df, transfers_df):
     """
@@ -1109,6 +1126,7 @@ Rather than choosing a single approach to handle missing data, a robust study te
 
 ```{python}
 #| label: sensitivity-framework
+#| eval: false
 #| code-summary: "Implement sensitivity analysis for missing data assumptions"
 def sensitivity_analysis(monthly_df, listing_df, sort_variable,
                           compute_fn):
@@ -1198,6 +1216,7 @@ def compute_size_premium(df, sort_var):
 
 ```{python}
 #| label: fig-sensitivity
+#| eval: false
 #| fig-cap: "Sensitivity of anomaly premia to data treatment assumptions. Each bar represents the annualized long-short return under a different assumption about survivorship, delisting imputation, and liquidity filtering. Results that are robust to these choices are more credible; results that vary dramatically signal a fragile finding."
 #| code-summary: "Visualize sensitivity of anomaly premia to data treatment"
 # Illustrative: create synthetic sensitivity results for plotting
@@ -1245,7 +1264,7 @@ Based on the analysis in this chapter, we offer the following recommendations fo
 
 **2. Impute delisting returns.** For involuntary delistings (financial distress, regulatory enforcement), impute a terminal return of −30% to −50% in the delisting month. Report results across a range of imputation assumptions as a robustness check. For voluntary delistings and exchange transfers, impute 0%.
 
-**3. Respect point-in-time data availability.** Use accounting data only after its public filing date, not as of the fiscal year-end. In Vietnam, the standard lag is 90 days for annual reports; use a conservative 4--6 month lag.
+**3. Respect point-in-time data availability.** Use accounting data only after its public filing date, not as of the fiscal year-end. In Vietnam, the standard lag is 90 days for annual reports; use a conservative 4-6 month lag.
 
 **4. Handle zero-volume days explicitly.** Document the prevalence of zero-volume days in your sample. For monthly returns, report the average number of zero-volume days per firm-month. Consider excluding firms with zero-volume fractions exceeding 50% from the investable universe.
 
@@ -1253,23 +1272,23 @@ Based on the analysis in this chapter, we offer the following recommendations fo
 
 **6. Report sensitivity analysis.** For any key finding, report results under at least three data treatment assumptions: survivors-only (upper bound), full sample with moderate imputation (baseline), and full sample with aggressive imputation plus liquidity filter (lower bound). If the finding survives all three, it is robust.
 
-**7. Be especially cautious with pre-2007 data.** The Vietnamese market had fewer than 100 listings before 2006, and the equitization wave of 2006--2009 produced a cohort of firms with systematically different characteristics than earlier listings. Cross-sectional tests with pre-2007 data have minimal power and should be interpreted with extreme caution.
+**7. Be especially cautious with pre-2007 data.** The Vietnamese market had fewer than 100 listings before 2006, and the equitization wave of 2006-2009 produced a cohort of firms with systematically different characteristics than earlier listings. Cross-sectional tests with pre-2007 data have minimal power and should be interpreted with extreme caution.
 
 ## Summary {#sec-missing-summary}
 
 | Data Problem | Bias Direction | Magnitude (Vietnam) | Recommended Fix |
 |------------------|------------------|------------------|------------------|
-| Survivorship bias (EW) | Upward on returns | \~1--3% per year | Include all delisted firms |
-| Survivorship bias (VW) | Upward (smaller) | \~0.2--0.5% per year | Include all delisted firms |
+| Survivorship bias (EW) | Upward on returns | \~1-3% per year | Include all delisted firms |
+| Survivorship bias (VW) | Upward (smaller) | \~0.2-0.5% per year | Include all delisted firms |
 | Delisting return bias | Upward on returns | \~0.5--2% per year (EW) | Impute terminal returns |
 | Look-ahead bias | Inflates predictability | Varies by strategy | Point-in-time data alignment |
 | Zero-trading days | Understates volatility | Severe for small caps | Compound or drop; document |
-| Exchange transfers | Creates false delistings | \~50--100 firms | Link unified tickers |
+| Exchange transfers | Creates false delistings | \~50-100 firms | Link unified tickers |
 | New-listing bias | Early sample unrepresentative | Extreme pre-2007 | Start sample after 2007 |
 
 : Summary of data problems, their effects, and recommended corrections. {#tbl-missing-summary}
 
-The central message is that data problems in Vietnamese equity research are not merely a nuisance---they can create economically significant biases that alter the conclusions of empirical studies. The survivorship bias alone exceeds 100 basis points per year for equal-weighted portfolios, comparable to many documented anomaly premia. Researchers who ignore these issues risk reporting results that reflect data artifacts rather than genuine economic phenomena.
+The central message is that data problems in Vietnamese equity research are not merely a nuisance--they can create economically significant biases that alter the conclusions of empirical studies. The survivorship bias alone exceeds 100 basis points per year for equal-weighted portfolios, comparable to many documented anomaly premia. Researchers who ignore these issues risk reporting results that reflect data artifacts rather than genuine economic phenomena.
 
 ```{=html}
 <!-- ## Exercises {#sec-missing-exercises}
