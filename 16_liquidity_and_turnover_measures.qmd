@@ -10,27 +10,27 @@ The challenge is that liquidity is inherently multidimensional and difficult to 
 
 This chapter constructs the major liquidity proxies used in the academic literature, validates them in the Vietnamese context, and demonstrates their use in asset pricing and portfolio construction.
 
-## Theoretical Foundations {#sec-theory}
+## Theoretical Foundations {#sec-liquidity-theory}
 
 ### Why Liquidity Matters
 
 Liquidity affects asset prices through at least three channels:
 
 1.  **Level effect.** Investors demand compensation for the expected cost of trading. @amihud1986asset show that stocks with higher bid-ask spreads earn higher expected returns, with the premium being an increasing function of the investor's holding period. In equilibrium, illiquid stocks must offer higher expected returns to compensate for higher round-trip trading costs.
-2.  **Risk effect.** Liquidity is time-varying and co-moves across stocks. @pastor2003liquidity show that stocks whose returns are more sensitive to aggregate liquidity shocks earn higher expected returns. @acharya2005asset formalize this in a liquidity-adjusted CAPM where the required return includes a premium for bearing liquidity risk—the risk that the stock becomes illiquid precisely when the investor needs to sell.
+2.  **Risk effect.** Liquidity is time-varying and co-moves across stocks. @pastor2003liquidity show that stocks whose returns are more sensitive to aggregate liquidity shocks earn higher expected returns. @acharya2005asset formalize this in a liquidity-adjusted CAPM where the required return includes a premium for bearing liquidity risk (i.e., the risk that the stock becomes illiquid precisely when the investor needs to sell).
 3.  **Commonality effect.** @chordia2000commonality document that individual stock liquidity co-moves strongly with market-wide liquidity. @brunnermeier2009market explain this through a "liquidity spiral": when asset values fall, margin constraints tighten, forcing leveraged investors to sell, which reduces market liquidity, which depresses prices further. This mechanism is particularly relevant in Vietnam, where retail investors with margin accounts are the dominant trading population.
 
 ### Liquidity Dimensions
 
 @kyle1985continuous identifies three dimensions of liquidity:
 
-1.  **Tightness.** The cost of turning around a position quickly—measured by the bid-ask spread.
-2.  **Depth.** The volume that can be traded without moving the price—related to price impact.
+1.  **Tightness.** The cost of turning around a position quickly, which is measured by the bid-ask spread.
+2.  **Depth.** The volume that can be traded without moving the price, which is related to price impact.
 3.  **Resiliency.** The speed at which prices recover from uninformative order flow shocks.
 
 No single measure captures all three dimensions. @goyenko2009liquidity and @fong2017best systematically evaluate which low-frequency proxies best capture each dimension by benchmarking against high-frequency measures. Their key finding: the @amihud2002illiquidity measure best captures the price impact dimension, the @roll1984simple estimator and @corwin2012simple spread best capture tightness, and the @lesmond1999new zero-return measure captures a blend of transaction costs and information asymmetry. For emerging markets specifically, @fong2017best recommend the Amihud measure and the Closing Percent Quoted Spread as the most reliable proxies.
 
-## Data Construction {#sec-data}
+## Data Construction {#sec-liquidity-data}
 
 ```{python}
 #| label: setup
@@ -148,7 +148,7 @@ print(f"\nZero-return days: {daily['zero_return'].mean():.1%}")
 print(f"Zero-volume days: {daily['zero_volume'].mean():.1%}")
 ```
 
-## Constructing Liquidity Measures {#sec-measures}
+## Constructing Liquidity Measures {#sec-liquidity-measures}
 
 We construct seven liquidity proxies that span the dimensions of tightness, depth, and resiliency. Each is computed at the firm-month level, producing a panel that can be merged with monthly return data for cross-sectional tests.
 
@@ -160,7 +160,7 @@ $$
 \text{ILLIQ}_{i,m} = \frac{1}{D_{i,m}} \sum_{d=1}^{D_{i,m}} \frac{|R_{i,d}|}{\text{DVOL}_{i,d}}
 $$ {#eq-amihud}
 
-where $|R_{i,d}|$ is the absolute daily return, $\text{DVOL}_{i,d}$ is VND trading volume on day $d$, and $D_{i,m}$ is the number of trading days with positive volume in month $m$. Higher values indicate greater illiquidity—a given amount of volume moves the price more.
+where $|R_{i,d}|$ is the absolute daily return, $\text{DVOL}_{i,d}$ is VND trading volume on day $d$, and $D_{i,m}$ is the number of trading days with positive volume in month $m$. Higher values indicate greater illiquidity.
 
 The Amihud measure captures the price impact dimension of liquidity. It is grounded in the @kyle1985continuous model where the parameter $\lambda$ (Kyle's lambda) measures the price impact of order flow: $\Delta p = \lambda \cdot Q$. The Amihud ratio is a daily-frequency analog of $\lambda$.
 
@@ -266,7 +266,7 @@ print(zero_monthly['zero_return_pct'].describe().round(3))
 
 ### Turnover Ratio
 
-Share turnover—daily volume divided by shares outstanding—measures trading activity rather than trading cost. @datar1998liquidity use turnover as a liquidity proxy and document a negative cross-sectional relationship between turnover and expected returns, consistent with the liquidity premium hypothesis.
+Share turnover (i.e., daily volume divided by shares outstanding) measures trading activity rather than trading cost. @datar1998liquidity use turnover as a liquidity proxy and document a negative cross-sectional relationship between turnover and expected returns, consistent with the liquidity premium hypothesis.
 
 $$
 \text{Turn}_{i,m} = \frac{1}{D_{i,m}} \sum_{d=1}^{D_{i,m}} \frac{\text{Volume}_{i,d}}{\text{SharesOut}_{i,d}}
@@ -500,7 +500,7 @@ print(quoted_monthly['quoted_spread'].describe().round(4))
 
 ### Kyle's Lambda (Price Impact Regression)
 
-We estimate Kyle's lambda—the price impact per unit of signed order flow—using a daily regression:
+We estimate Kyle's lambda (i.e., the price impact per unit of signed order flow) using a daily regression:
 
 $$
 R_{i,d} = \alpha_i + \lambda_i \cdot \text{Sign}(R_{i,d}) \cdot \sqrt{\text{Volume}_{i,d}} + \varepsilon_{i,d}
@@ -555,7 +555,7 @@ print(f"\nLog Kyle lambda distribution:")
 print(kyle_monthly['log_kyle'].describe().round(3))
 ```
 
-## Assembling the Liquidity Panel {#sec-panel}
+## Assembling the Liquidity Panel {#sec-liquidity-panel}
 
 We merge all seven measures into a single firm-month panel for comparative analysis.
 
@@ -607,7 +607,7 @@ for col in liquidity_cols:
     print(f"  {col:<20}: {pct:.1%}")
 ```
 
-## Cross-Sectional Properties of Liquidity {#sec-cross-section}
+## Cross-Sectional Properties of Liquidity {#sec-liquidity-cross-section}
 
 ### Summary Statistics by Size Quintile
 
@@ -758,11 +758,11 @@ liq_complete['illiq_pc1'] = pca.transform(
 )[:, 0]
 ```
 
-## Aggregate Liquidity and Market Conditions {#sec-aggregate}
+## Aggregate Liquidity and Market Conditions {#sec-liquidity-aggregate}
 
 ### Time Series of Market Liquidity
 
-Aggregate liquidity—the average illiquidity across all stocks—varies substantially over time. @chordia2001market document that market-wide liquidity declines during periods of high volatility and negative market returns.
+Aggregate liquidity (i.e., the average illiquidity across all stocks) varies substantially over time. @chordia2001market document that market-wide liquidity declines during periods of high volatility and negative market returns.
 
 ```{python}
 #| label: fig-aggregate-liquidity
@@ -900,7 +900,7 @@ print(f"  % significant at 5%: "
 print(f"  Mean R-squared: {commonality['r_squared'].mean():.3f}")
 ```
 
-## Is Liquidity Priced? {#sec-pricing}
+## Is Liquidity Priced? {#sec-liquidity-pricing}
 
 ### Portfolio Sorts
 
@@ -1019,7 +1019,7 @@ plt.show()
 
 ### Fama-MacBeth Cross-Sectional Regressions
 
-Portfolio sorts are informative but cannot control for multiple characteristics simultaneously. We use @fama1993common-style cross-sectional regressions to test whether liquidity predicts returns after controlling for size, value, and momentum:
+Portfolio sorts are informative but cannot control for multiple characteristics simultaneously. We use @fama1993common -style cross-sectional regressions to test whether liquidity predicts returns after controlling for size, value, and momentum:
 
 $$
 R_{i,m+1} = \gamma_{0,m} + \gamma_{1,m} \text{ILLIQ}_{i,m} + \gamma_{2,m} \ln(\text{MCap}_{i,m}) + \gamma_{3,m} \text{BM}_{i,m} + \gamma_{4,m} R_{i,m-12:m-1} + \varepsilon_{i,m+1}
@@ -1138,7 +1138,7 @@ for name, ports in sort_results.items():
           f"{mkt_b:>8.3f} {smb_b:>8.3f} {hml_b:>8.3f} {r2:>6.3f}")
 ```
 
-## Liquidity and Transaction Cost Estimation {#sec-implementation}
+## Liquidity and Transaction Cost Estimation {#sec-liquidity-implementation}
 
 ### Translating Measures to Trading Costs
 
@@ -1221,7 +1221,7 @@ plt.show()
 
 ### Strategy Implementability
 
-A critical application of liquidity measurement is testing whether a given anomaly strategy remains profitable after accounting for realistic trading costs. We compute net-of-cost returns for the liquidity-sorted portfolios themselves—an inherently conservative test because the illiquid long leg carries the highest costs.
+A critical application of liquidity measurement is testing whether a given anomaly strategy remains profitable after accounting for realistic trading costs. We compute net-of-cost returns for the liquidity-sorted portfolios themselves. This is an inherently conservative test because the illiquid long leg carries the highest costs.
 
 ```{python}
 #| label: net-of-cost
@@ -1250,11 +1250,11 @@ for name, ports in sort_results.items():
           f"Net = {net_ann*100:>6.2f}%")
 ```
 
-## Liquidity During Market Stress {#sec-stress}
+## Liquidity During Market Stress {#sec-liquidity-stress}
 
 ### Flight to Liquidity
 
-During market stress, investors sell illiquid assets and buy liquid ones—a "flight to liquidity" that widens the return differential between liquid and illiquid stocks. @hameed2010stock show that this pattern is strongest when market returns are most negative.
+During market stress, investors sell illiquid assets and buy liquid ones, which is a "flight to liquidity" that widens the return differential between liquid and illiquid stocks. @hameed2010stock show that this pattern is strongest when market returns are most negative.
 
 ```{python}
 #| label: flight-to-liquidity
@@ -1356,9 +1356,9 @@ print("Aggregate Illiquidity ~ Global Risk:")
 print(model.summary().tables[1])
 ```
 
-## Constructing a Tradeable Liquidity Factor {#sec-factor}
+## Constructing a Tradeable Liquidity Factor {#sec-liquidity-factor}
 
-Following @pastor2003liquidity, we construct an aggregate liquidity factor that can be used in asset pricing tests. The factor captures innovations in aggregate liquidity—unexpected changes in market-wide trading conditions.
+Following @pastor2003liquidity, we construct an aggregate liquidity factor that can be used in asset pricing tests. The factor captures innovations in aggregate liquidity (unexpected changes in market-wide trading conditions).
 
 ```{python}
 #| label: liquidity-factor
@@ -1423,7 +1423,7 @@ print(f"\nLiquidity Beta Distribution:")
 print(liq_betas['liq_beta'].describe().round(4))
 ```
 
-## Practical Guidance for Vietnam {#sec-practical}
+## Practical Guidance for Vietnam {#sec-liquidity-practical}
 
 The analysis in this chapter yields the following recommendations:
 
@@ -1435,7 +1435,9 @@ The analysis in this chapter yields the following recommendations:
 
 **For international comparisons:** When comparing Vietnamese factor premia to U.S. or other developed market evidence, always report results on a "liquid universe" subset (top 60% by market cap) alongside the full sample. Many anomalies that appear large in the full sample shrink substantially when restricted to stocks that can actually be traded at scale.
 
-## Summary {#sec-summary}
+## Summary {#sec-liquidity-summary}
+
+Table @tbl-liquidity-summary shows different measures of liquidity.
 
 | Measure | Dimension | Coverage | Size Gradient | Return Predictive | Recommended Use |
 |------------|------------|------------|------------|------------|------------|
@@ -1447,10 +1449,12 @@ The analysis in this chapter yields the following recommendations:
 | Quoted Spread | Tightness | Variable | Steep | Strong | Direct measure when available |
 | Kyle Lambda | Price impact | Moderate | Steep | Strong | Market microstructure research |
 
-: Summary of liquidity measure properties in the Vietnamese market. {#tbl-summary}Liquidity is not a secondary consideration for Vietnamese equity research—it is a first-order determinant of which strategies are implementable, which anomalies are real, and which results are artifacts of trading in stocks that cannot actually be traded. Every empirical finding in this book should be evaluated through the lens of the liquidity analysis developed in this chapter.
+: Summary of liquidity measure properties in the Vietnamese market. {#tbl-liquidity-summary}
 
-```{=html}
-<!-- ## Exercises {#sec-exercises}
+Liquidity is not a secondary consideration for Vietnamese equity research; it is a first-order determinant of which strategies are implementable, which anomalies are real, and which results are artifacts of trading in stocks that cannot actually be traded. Every empirical finding in this book should be evaluated through the lens of the liquidity analysis developed in this chapter.
+
+
+<!-- ## Exercises {#sec-liquidity-exercises}
 
 1. **Closing percent quoted spread.** @fong2017best recommend the closing percent quoted spread as the best global liquidity proxy. Compute this as the closing bid-ask spread divided by the midpoint, averaged over the month. Compare its correlation with the Amihud measure and the Corwin-Schultz spread. Does the recommendation hold for Vietnam?
 
@@ -1467,4 +1471,3 @@ The analysis in this chapter yields the following recommendations:
 7. **Liquidity factor mimicking portfolio.** Construct a tradeable liquidity factor by sorting stocks into deciles based on their liquidity beta (sensitivity to aggregate liquidity innovations). The long-short return of this factor should be correlated with aggregate liquidity changes. Test whether this factor earns a significant premium and whether it explains returns beyond the Fama-French factors.
 
 8. **COVID-19 liquidity shock.** Analyze the liquidity dynamics around the March 2020 COVID-19 market crash. How quickly did aggregate liquidity deteriorate? Which firms experienced the largest liquidity drops? Did the SBV's policy responses (rate cuts, reserve requirement reductions) improve liquidity, and with what lag? -->
-```

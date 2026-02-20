@@ -1,0 +1,1347 @@
+# Factor Zoo and Multiple Testing
+
+::: callout-note
+In this chapter, we confront the multiple testing problem in empirical asset pricing. We replicate a broad set of published anomalies in the Vietnamese market, apply formal corrections for the number of tests conducted, estimate the proportion of false discoveries, and develop a framework for deciding which factors deserve credence.
+:::
+
+By 2016, academic finance had documented over 300 variables that purportedly predict the cross-section of stock returns. @cochrane2011presidential memorably called this proliferation a "zoo of factors." @harvey2016and cataloged over 300 published factors and argued that the standard significance threshold of $t > 2.0$ was far too low given the sheer number of hypotheses tested, either explicitly or implicitly, across decades of research. Their proposed threshold of $t > 3.0$ (and in some cases $t > 3.78$) would eliminate the majority of published anomalies.
+
+The problem is not merely academic. Every researcher who sorts stocks on a new variable and finds $t > 2$ is implicitly testing a hypothesis that has already been tested hundreds of times with different variables. The probability that *at least one* of 300 independent tests produces $t > 2$ by chance (even when no true effect exists) is essentially 1.0. This is the multiple testing problem, and failing to account for it means that a substantial fraction of the "factor zoo" consists of false discoveries.
+
+For Vietnamese equity research, the problem is arguably worse. The cross-section is smaller (600-800 stocks vs. 4,000+ in the U.S.), the time series is shorter (2008- vs. 1963-), and the data are noisier (illiquidity, zero-trading days, accounting irregularities). All of these amplify the risk of both Type I errors (finding something that isn't there) and Type II errors (missing something that is). This chapter provides the statistical tools to navigate this landscape rigorously.
+
+## The Scale of the Problem {#sec-factor-zoo-scale}
+
+### How Many Factors Exist?
+
+@harvey2016and counted over 300 factors published in top journals through 2012. @chen2022open constructed and made publicly available over 300 "clearly significant" anomalies from the U.S. literature. @hou2020replicating attempted to replicate 452 anomalies and found that 64% (with VW returns) failed to achieve $t > 1.96$ in their sample. @jensen2023there took a more optimistic view, finding that most factors replicate in direction if not always in magnitude.
+
+The key insight is that the number of factors *tested* far exceeds the number *published*. For every published factor with $t > 2$, there may be dozens of unpublished tests with $t < 2$ that never saw print, which is the classic file drawer problem. The true number of tests conducted collectively by the profession is unknowable, but certainly in the thousands.
+
+```{python}
+#| label: setup
+#| code-summary: "Import libraries and configure environment"
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import statsmodels.api as sm
+from scipy import stats
+from statsmodels.stats.multitest import multipletests
+from itertools import product
+import warnings
+warnings.filterwarnings('ignore')
+
+plt.rcParams.update({
+    'figure.figsize': (12, 6),
+    'figure.dpi': 150,
+    'font.size': 11,
+    'axes.spines.top': False,
+    'axes.spines.right': False
+})
+```
+
+```{python}
+#| label: data-load
+#| eval: false
+#| code-summary: "Load returns and characteristics panel"
+from datacore import DataCoreClient
+
+client = DataCoreClient()
+
+# Monthly returns (survivorship-bias-free)
+monthly = client.get_monthly_returns(
+    exchanges=['HOSE', 'HNX'],
+    start_date='2008-01-01',
+    end_date='2024-12-31',
+    include_delisted=True,
+    fields=[
+        'ticker', 'month_end', 'monthly_return', 'market_cap',
+        'exchange', 'volume_avg_20d', 'turnover_value_avg_20d',
+        'n_zero_volume_days'
+    ]
+)
+
+# Pre-computed characteristic panel (from factor construction chapter)
+characteristics = client.get_characteristics_panel(
+    exchanges=['HOSE', 'HNX'],
+    start_date='2008-01-01',
+    end_date='2024-12-31',
+    include_delisted=True
+)
+
+# Factor returns for spanning tests
+factors_ff = client.get_factor_returns(
+    market='vietnam',
+    start_date='2008-01-01',
+    end_date='2024-12-31',
+    factors=['mkt_excess', 'smb', 'hml', 'rmw', 'cma', 'wml']
+)
+
+monthly['month_end'] = pd.to_datetime(monthly['month_end'])
+
+print(f"Monthly returns: {len(monthly):,}")
+print(f"Characteristics: {characteristics.shape}")
+print(f"Available signals: {[c for c in characteristics.columns if c not in ['ticker', 'month_end']]}")
+```
+
+## Building the Anomaly Zoo {#sec-factor-zoo-zoo}
+
+### Signal Definitions
+
+We construct a comprehensive set of anomaly variables spanning the major categories from the literature. Each signal is lagged appropriately to avoid look-ahead bias (accounting signals use point-in-time alignment; price signals use the prior month's value).
+
+```{python}
+#| label: signal-construction
+#| eval: false
+#| code-summary: "Construct the full set of anomaly signals"
+# Merge returns with characteristics
+panel = monthly.merge(characteristics, on=['ticker', 'month_end'], how='left')
+panel = panel.sort_values(['ticker', 'month_end'])
+
+# ============================================================
+# Category 1: VALUE (8 signals)
+# ============================================================
+# Already in characteristics panel from PIT merge:
+# bm, ep, cfp, sp, dp, ev_ebitda
+# Add earnings yield variants
+value_signals = ['bm', 'ep', 'cfp', 'sp', 'dp']
+
+# ============================================================
+# Category 2: SIZE (3 signals)
+# ============================================================
+panel['log_mcap'] = np.log(panel['market_cap'].clip(lower=1))
+panel['log_assets'] = np.log(panel['total_assets'].clip(lower=1))
+panel['log_revenue'] = np.log(panel['revenue'].clip(lower=1))
+size_signals = ['log_mcap', 'log_assets', 'log_revenue']
+
+# ============================================================
+# Category 3: PROFITABILITY (8 signals)
+# ============================================================
+# GP/A (Novy-Marx 2013), OP (FF 2015), ROE, ROA, etc.
+prof_signals = ['gp_at', 'op', 'roe', 'roa', 'profit_margin',
+                 'asset_turnover', 'gross_margin', 'oper_margin']
+
+# ============================================================
+# Category 4: INVESTMENT / GROWTH (6 signals)
+# ============================================================
+inv_signals = ['asset_growth', 'capex_at', 'investment',
+                'sales_growth', 'equity_issuance', 'debt_issuance']
+
+# ============================================================
+# Category 5: MOMENTUM / REVERSAL (6 signals)
+# ============================================================
+# Compute from returns
+for lag_start, lag_end, name in [
+    (2, 12, 'ret_12_2'), (2, 6, 'ret_6_2'), (7, 12, 'ret_12_7'),
+    (1, 1, 'ret_1'), (1, 3, 'ret_3_1')
+]:
+    if name not in panel.columns:
+        panel[name] = (
+            panel.groupby('ticker')['monthly_return']
+            .transform(lambda x: x.shift(lag_start).rolling(lag_end - lag_start + 1)
+                       .apply(lambda r: (1 + r).prod() - 1, raw=True))
+        )
+# Earnings momentum (SUE) should already be in characteristics
+mom_signals = ['ret_12_2', 'ret_6_2', 'ret_12_7', 'ret_1', 'ret_3_1', 'sue']
+
+# ============================================================
+# Category 6: RISK (5 signals)
+# ============================================================
+risk_signals = ['beta', 'ivol', 'tvol', 'max_ret', 'skewness']
+
+# ============================================================
+# Category 7: LIQUIDITY / TRADING (6 signals)
+# ============================================================
+liq_signals = ['amihud', 'zero_return_pct', 'log_turnover',
+                'roll_spread', 'cs_spread', 'volume_cv']
+
+# ============================================================
+# Category 8: QUALITY / FINANCIAL HEALTH (5 signals)
+# ============================================================
+qual_signals = ['leverage', 'current_ratio', 'accruals',
+                 'earnings_variability', 'piotroski_f']
+
+# ============================================================
+# Category 9: DIVIDEND / PAYOUT (3 signals)
+# ============================================================
+div_signals = ['div_yield', 'payout_ratio', 'net_repurchase']
+
+# Combine all
+all_signals = (value_signals + size_signals + prof_signals +
+               inv_signals + mom_signals + risk_signals +
+               liq_signals + qual_signals + div_signals)
+
+# Remove signals with too little coverage
+signal_coverage = {}
+for sig in all_signals:
+    if sig in panel.columns:
+        cov = panel[sig].notna().mean()
+        signal_coverage[sig] = cov
+
+signal_coverage = pd.Series(signal_coverage).sort_values(ascending=False)
+valid_signals = signal_coverage[signal_coverage > 0.30].index.tolist()
+
+print(f"Total signals defined: {len(all_signals)}")
+print(f"Signals with >30% coverage: {len(valid_signals)}")
+print(f"\nSignal categories:")
+for cat_name, sigs in [
+    ('Value', value_signals), ('Size', size_signals),
+    ('Profitability', prof_signals), ('Investment', inv_signals),
+    ('Momentum', mom_signals), ('Risk', risk_signals),
+    ('Liquidity', liq_signals), ('Quality', qual_signals),
+    ('Dividend', div_signals)
+]:
+    n_valid = sum(1 for s in sigs if s in valid_signals)
+    print(f"  {cat_name:<15}: {n_valid}/{len(sigs)}")
+```
+
+### Mass Factor Construction
+
+We run the factor construction engine (from the previous chapter) across all valid signals to produce a "zoo" of factor returns:
+
+```{python}
+#| label: mass-construction
+#| eval: false
+#| code-summary: "Construct long-short portfolios for every valid signal"
+# Import the factor engine from previous chapter
+# (In practice, this would be imported from a shared module)
+
+def construct_factor_simple(panel_df, signal_col, long_high=True,
+                              n_groups=5, weighting='value',
+                              min_stocks=20):
+    """
+    Simplified factor construction: quintile sort on signal,
+    long-short = Q5 - Q1 (or reversed if long_high=False).
+    Returns a Series of monthly long-short returns.
+    """
+    df = panel_df[['ticker', 'month_end', 'monthly_return',
+                    'market_cap', signal_col]].dropna().copy()
+    df = df.sort_values(['ticker', 'month_end'])
+    
+    # Lag the signal by one month
+    df['signal_lag'] = df.groupby('ticker')[signal_col].shift(1)
+    df = df.dropna(subset=['signal_lag', 'monthly_return'])
+    
+    results = []
+    for month, group in df.groupby('month_end'):
+        if len(group) < min_stocks:
+            continue
+        
+        group['quintile'] = pd.qcut(
+            group['signal_lag'].rank(method='first'),
+            n_groups, labels=False, duplicates='drop'
+        )
+        
+        if weighting == 'value':
+            def wret(g):
+                if g['market_cap'].sum() > 0:
+                    return np.average(g['monthly_return'],
+                                       weights=g['market_cap'])
+                return g['monthly_return'].mean()
+            port_ret = group.groupby('quintile').apply(wret)
+        else:
+            port_ret = group.groupby('quintile')['monthly_return'].mean()
+        
+        if 0 in port_ret.index and (n_groups - 1) in port_ret.index:
+            if long_high:
+                ls = port_ret[n_groups - 1] - port_ret[0]
+            else:
+                ls = port_ret[0] - port_ret[n_groups - 1]
+            results.append({'month_end': month, 'ls_return': ls})
+    
+    if not results:
+        return None
+    return pd.DataFrame(results).set_index('month_end')['ls_return']
+
+# Determine expected sign for each signal
+# (positive = high signal predicts high returns)
+signal_directions = {
+    # Value: high = higher returns
+    'bm': True, 'ep': True, 'cfp': True, 'sp': True, 'dp': True,
+    # Size: small = higher returns (low signal = high returns)
+    'log_mcap': False, 'log_assets': False, 'log_revenue': False,
+    # Profitability: high = higher returns
+    'gp_at': True, 'op': True, 'roe': True, 'roa': True,
+    'profit_margin': True, 'asset_turnover': True,
+    'gross_margin': True, 'oper_margin': True,
+    # Investment: low growth = higher returns
+    'asset_growth': False, 'capex_at': False, 'investment': False,
+    'sales_growth': False, 'equity_issuance': False,
+    'debt_issuance': False,
+    # Momentum: high = higher returns (except reversal)
+    'ret_12_2': True, 'ret_6_2': True, 'ret_12_7': True,
+    'ret_1': False, 'ret_3_1': False, 'sue': True,
+    # Risk: low risk = higher returns (anomaly direction)
+    'beta': False, 'ivol': False, 'tvol': False,
+    'max_ret': False, 'skewness': False,
+    # Liquidity: illiquid = higher returns
+    'amihud': True, 'zero_return_pct': True,
+    'log_turnover': False, 'roll_spread': True,
+    'cs_spread': True, 'volume_cv': True,
+    # Quality: high quality = higher returns
+    'leverage': False, 'current_ratio': True, 'accruals': False,
+    'earnings_variability': False, 'piotroski_f': True,
+    # Dividend: high = higher returns
+    'div_yield': True, 'payout_ratio': True, 'net_repurchase': False,
+}
+
+# Construct all factors
+zoo_results = {}
+for sig in valid_signals:
+    long_high = signal_directions.get(sig, True)
+    ls = construct_factor_simple(
+        panel, sig, long_high=long_high,
+        n_groups=5, weighting='value'
+    )
+    if ls is not None and len(ls) >= 60:
+        mean_ret = ls.mean()
+        se = ls.std() / np.sqrt(len(ls))
+        t = mean_ret / se if se > 0 else 0
+        
+        zoo_results[sig] = {
+            'mean_monthly': mean_ret,
+            'ann_return': mean_ret * 12,
+            'ann_vol': ls.std() * np.sqrt(12),
+            'sharpe': mean_ret / ls.std() * np.sqrt(12) if ls.std() > 0 else 0,
+            't_stat': t,
+            'abs_t': abs(t),
+            'p_value': 2 * (1 - stats.t.cdf(abs(t), df=len(ls) - 1)),
+            'n_months': len(ls),
+            'direction': 'Long High' if long_high else 'Long Low',
+            'category': next(
+                (cat for cat, sigs in [
+                    ('Value', value_signals), ('Size', size_signals),
+                    ('Profitability', prof_signals),
+                    ('Investment', inv_signals),
+                    ('Momentum', mom_signals), ('Risk', risk_signals),
+                    ('Liquidity', liq_signals),
+                    ('Quality', qual_signals),
+                    ('Dividend', div_signals)
+                ] if sig in sigs), 'Other'
+            ),
+            'returns': ls  # Store for later use
+        }
+
+zoo_df = pd.DataFrame({k: {kk: vv for kk, vv in v.items() if kk != 'returns'}
+                         for k, v in zoo_results.items()}).T
+zoo_df = zoo_df.sort_values('abs_t', ascending=False)
+
+print(f"Factors successfully constructed: {len(zoo_df)}")
+print(f"Factors with |t| > 2.0: {(zoo_df['abs_t'] > 2.0).sum()} "
+      f"({(zoo_df['abs_t'] > 2.0).mean():.1%})")
+print(f"Factors with |t| > 3.0: {(zoo_df['abs_t'] > 3.0).sum()} "
+      f"({(zoo_df['abs_t'] > 3.0).mean():.1%})")
+```
+
+```{python}
+#| label: fig-t-stat-distribution
+#| eval: false
+#| fig-cap: "Distribution of t-statistics across all tested anomalies in the Vietnamese market. Panel A shows the histogram with conventional (|t| > 1.96) and Harvey-Liu-Zhu (|t| > 3.0) thresholds. Panel B ranks anomalies by absolute t-statistic with color-coding by category. A substantial fraction of anomalies with |t| > 2 may be false discoveries given the number of simultaneous tests."
+#| code-summary: "Visualize the distribution of t-statistics across all anomalies"
+fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+
+# Panel A: Histogram
+t_vals = zoo_df['t_stat'].values
+axes[0].hist(t_vals, bins=30, color='#2C5F8A', alpha=0.7,
+             edgecolor='white', density=True)
+
+# Overlay normal distribution under null
+x_range = np.linspace(-5, 5, 200)
+axes[0].plot(x_range, stats.norm.pdf(x_range), 'k--', linewidth=1.5,
+             label='N(0,1) null')
+
+# Threshold lines
+axes[0].axvline(x=1.96, color='#E67E22', linestyle='--', linewidth=1.5,
+                label='|t| = 1.96')
+axes[0].axvline(x=-1.96, color='#E67E22', linestyle='--', linewidth=1.5)
+axes[0].axvline(x=3.0, color='#C0392B', linestyle='--', linewidth=1.5,
+                label='|t| = 3.0 (HLZ)')
+axes[0].axvline(x=-3.0, color='#C0392B', linestyle='--', linewidth=1.5)
+axes[0].set_xlabel('t-statistic')
+axes[0].set_ylabel('Density')
+axes[0].set_title('Panel A: t-Statistic Distribution')
+axes[0].legend(fontsize=9)
+
+# Panel B: Ranked bar chart
+top_n = min(40, len(zoo_df))
+top = zoo_df.head(top_n).copy()
+
+category_colors = {
+    'Value': '#2C5F8A', 'Size': '#1ABC9C', 'Profitability': '#27AE60',
+    'Investment': '#E67E22', 'Momentum': '#C0392B', 'Risk': '#8E44AD',
+    'Liquidity': '#3498DB', 'Quality': '#F1C40F', 'Dividend': '#95A5A6'
+}
+bar_colors = [category_colors.get(top.iloc[i]['category'], '#BDC3C7')
+              for i in range(len(top))]
+
+axes[1].barh(range(top_n), top['abs_t'].values,
+             color=bar_colors, alpha=0.85, edgecolor='white')
+axes[1].set_yticks(range(top_n))
+axes[1].set_yticklabels(top.index, fontsize=7)
+axes[1].axvline(x=1.96, color='#E67E22', linestyle='--', linewidth=1)
+axes[1].axvline(x=3.0, color='#C0392B', linestyle='--', linewidth=1)
+axes[1].set_xlabel('|t-statistic|')
+axes[1].set_title('Panel B: Anomalies Ranked by |t|')
+axes[1].invert_yaxis()
+
+# Legend for categories
+from matplotlib.patches import Patch
+legend_elements = [Patch(facecolor=c, label=cat)
+                    for cat, c in category_colors.items()]
+axes[1].legend(handles=legend_elements, fontsize=7,
+                loc='lower right', ncol=2)
+
+plt.tight_layout()
+plt.show()
+```
+
+## The Multiple Testing Problem {#sec-factor-zoo-multiple-testing}
+
+### Why Single-Test p-Values Are Misleading
+
+Suppose you test $M$ independent hypotheses, each at significance level $\alpha = 0.05$. Under the global null (no true effects), the expected number of false rejections is $M \times \alpha$. For $M = 50$ anomalies, you expect 2.5 "significant" results by pure chance.
+
+The probability of *at least one* false rejection is:
+
+$$
+P(\text{at least one false discovery}) = 1 - (1 - \alpha)^M
+$$ {#eq-family-error}
+
+For $M = 50$ and $\alpha = 0.05$, this is $1 - 0.95^{50} = 0.923$. For $M = 300$, it is essentially 1. The single-test p-value is useless for deciding which of many tested factors are genuine.
+
+### Two Error Rate Concepts
+
+Multiple testing corrections control one of two error rates:
+
+**Family-Wise Error Rate (FWER).** The probability of making *at least one* Type I error across all tests. This is the most conservative criterion. If FWER = 0.05, you can be 95% confident that *every* rejected null is a true discovery. Methods: @bonferroni1936teoria correction, Holm step-down, @romano2005exact.
+
+**False Discovery Rate (FDR).** The expected *proportion* of rejected hypotheses that are false. This is less conservative. If FDR = 0.05, you expect that 5% of your discoveries are false, but the other 95% are real. Methods: @benjamini1995controlling (BH), @storey2003positive.
+
+In asset pricing, FDR control is generally more appropriate than FWER because we are not trying to guarantee zero false discoveries, we are trying to identify a set of factors where *most* are genuine. A researcher who controls FDR at 5% and discovers 10 factors expects approximately 0.5 of them to be false, which is acceptable for building a factor model.
+
+```{python}
+#| label: fig-error-rates
+#| eval: false
+#| fig-cap: "Illustration of FWER and FDR concepts. As the number of tests grows, the probability of at least one false discovery (FWER) approaches 1 rapidly unless the per-test threshold is adjusted. The FDR—the expected proportion of false discoveries among rejections—is a less stringent but more practical criterion for factor selection."
+#| code-summary: "Visualize how error rates scale with number of tests"
+M_range = np.arange(1, 301)
+alpha = 0.05
+
+fwer_unadj = 1 - (1 - alpha) ** M_range
+fwer_bonf = np.minimum(1, M_range * alpha)  # Not actual FWER, just threshold
+
+# Expected false discoveries at alpha = 0.05
+expected_false = M_range * alpha
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+axes[0].plot(M_range, fwer_unadj, color='#C0392B', linewidth=2,
+             label='Unadjusted FWER')
+axes[0].axhline(y=0.05, color='gray', linestyle='--', linewidth=1,
+                label='α = 0.05 target')
+axes[0].set_xlabel('Number of Tests (M)')
+axes[0].set_ylabel('P(≥1 False Discovery)')
+axes[0].set_title('Panel A: Family-Wise Error Rate')
+axes[0].legend()
+
+axes[1].plot(M_range, expected_false, color='#2C5F8A', linewidth=2)
+axes[1].set_xlabel('Number of Tests (M)')
+axes[1].set_ylabel('Expected False Discoveries')
+axes[1].set_title('Panel B: Expected False Discoveries at α = 0.05')
+axes[1].axhline(y=1, color='gray', linestyle='--', linewidth=0.8)
+axes[1].text(250, 1.5, '1 false discovery', color='gray', fontsize=9)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Correction Methods {#sec-factor-zoo-corrections}
+
+### Bonferroni Correction (FWER Control)
+
+The simplest and most conservative correction: reject hypothesis $i$ only if its p-value is below $\alpha / M$, where $M$ is the total number of tests:
+
+$$
+\text{Reject } H_{0,i} \text{ if } p_i < \frac{\alpha}{M}
+$$ {#eq-bonferroni}
+
+This controls FWER at $\alpha$ regardless of the dependence structure among tests. The cost is severe loss of power: for $M = 50$ tests at $\alpha = 0.05$, the per-test threshold becomes $0.001$, requiring $|t| > 3.29$.
+
+```{python}
+#| label: bonferroni
+#| eval: false
+#| code-summary: "Apply Bonferroni correction to the anomaly zoo"
+M = len(zoo_df)
+alpha = 0.05
+
+# Bonferroni threshold
+bonf_threshold = alpha / M
+bonf_t_threshold = stats.norm.ppf(1 - bonf_threshold / 2)
+
+zoo_df['bonf_reject'] = zoo_df['p_value'] < bonf_threshold
+
+print(f"Number of tests: {M}")
+print(f"Bonferroni p-value threshold: {bonf_threshold:.6f}")
+print(f"Equivalent t-statistic threshold: {bonf_t_threshold:.2f}")
+print(f"Rejections: {zoo_df['bonf_reject'].sum()} / {M}")
+print(f"\nSurviving anomalies:")
+survivors = zoo_df[zoo_df['bonf_reject']]
+if len(survivors) > 0:
+    print(survivors[['ann_return', 't_stat', 'category']].to_string())
+else:
+    print("  None survive Bonferroni correction")
+```
+
+### Holm Step-Down Procedure (FWER Control)
+
+The Holm procedure is uniformly more powerful than Bonferroni while still controlling FWER. It ranks p-values from smallest to largest and applies progressively less stringent thresholds:
+
+1.  Sort p-values: $p_{(1)} \leq p_{(2)} \leq \ldots \leq p_{(M)}$
+2.  For $i = 1, 2, \ldots$, reject $H_{0,(i)}$ if $p_{(i)} < \alpha / (M - i + 1)$
+3.  Stop at the first $i$ where $H_{0,(i)}$ is not rejected
+
+```{python}
+#| label: holm
+#| eval: false
+#| code-summary: "Apply the Holm step-down procedure"
+p_values = zoo_df['p_value'].values
+signal_names = zoo_df.index.values
+
+# Using statsmodels implementation
+reject_holm, pvals_corrected_holm, _, _ = multipletests(
+    p_values, alpha=0.05, method='holm'
+)
+
+zoo_df['holm_reject'] = reject_holm
+zoo_df['holm_p_corrected'] = pvals_corrected_holm
+
+print(f"Holm rejections: {reject_holm.sum()} / {M}")
+holm_survivors = zoo_df[zoo_df['holm_reject']]
+if len(holm_survivors) > 0:
+    print("\nSurviving anomalies (Holm):")
+    print(holm_survivors[['ann_return', 't_stat', 'holm_p_corrected',
+                           'category']].to_string())
+```
+
+### Benjamini-Hochberg Procedure (FDR Control)
+
+The @benjamini1995controlling (BH) procedure controls the False Discovery Rate (i.e., the expected proportion of rejections that are false) at level $q$:
+
+1.  Sort p-values: $p_{(1)} \leq p_{(2)} \leq \ldots \leq p_{(M)}$
+2.  Find the largest $k$ such that $p_{(k)} \leq \frac{k}{M} q$
+3.  Reject all $H_{0,(i)}$ for $i = 1, \ldots, k$
+
+The BH procedure is valid under independence or positive dependence (PRDS), a condition that is generally satisfied for financial factor tests where factors tend to be positively correlated under the null.
+
+```{python}
+#| label: bh-fdr
+#| eval: false
+#| code-summary: "Apply the Benjamini-Hochberg FDR procedure"
+# BH procedure at q = 0.05 (expect 5% false discoveries)
+reject_bh, pvals_corrected_bh, _, _ = multipletests(
+    p_values, alpha=0.05, method='fdr_bh'
+)
+
+zoo_df['bh_reject'] = reject_bh
+zoo_df['bh_p_corrected'] = pvals_corrected_bh
+
+# Also at q = 0.10 (more liberal)
+reject_bh10, _, _, _ = multipletests(
+    p_values, alpha=0.10, method='fdr_bh'
+)
+zoo_df['bh10_reject'] = reject_bh10
+
+print(f"BH rejections (q=0.05): {reject_bh.sum()} / {M}")
+print(f"BH rejections (q=0.10): {reject_bh10.sum()} / {M}")
+
+bh_survivors = zoo_df[zoo_df['bh_reject']].sort_values('abs_t', ascending=False)
+if len(bh_survivors) > 0:
+    print(f"\nSurviving anomalies (BH, q=0.05):")
+    print(bh_survivors[['ann_return', 't_stat', 'bh_p_corrected',
+                          'category']].head(20).to_string())
+```
+
+```{python}
+#| label: fig-bh-procedure
+#| eval: false
+#| fig-cap: "Visual representation of the Benjamini-Hochberg procedure. Sorted p-values are compared to the BH threshold line (slope = q/M). All p-values below the line up to the largest crossing point are rejected. The procedure is less conservative than Bonferroni because later thresholds are progressively more lenient."
+#| code-summary: "Plot the BH procedure graphically"
+sorted_pvals = np.sort(p_values)
+k = np.arange(1, M + 1)
+bh_line_05 = k / M * 0.05
+bh_line_10 = k / M * 0.10
+
+fig, ax = plt.subplots(figsize=(12, 6))
+
+ax.scatter(k, sorted_pvals, s=15, color='#2C5F8A', alpha=0.7,
+           label='Sorted p-values', zorder=3)
+ax.plot(k, bh_line_05, color='#C0392B', linewidth=2,
+        label='BH line (q=0.05)')
+ax.plot(k, bh_line_10, color='#E67E22', linewidth=2,
+        linestyle='--', label='BH line (q=0.10)')
+
+# Highlight rejections
+n_reject_05 = reject_bh.sum()
+if n_reject_05 > 0:
+    ax.scatter(k[:n_reject_05], sorted_pvals[:n_reject_05],
+               s=40, color='#C0392B', zorder=4, label=f'Rejected (q=0.05)')
+
+ax.set_xlabel('Rank (k)')
+ax.set_ylabel('p-value')
+ax.set_title('Benjamini-Hochberg Procedure')
+ax.legend()
+ax.set_ylim([-0.01, 0.15])
+ax.set_xlim([0, min(M, 60)])
+
+plt.tight_layout()
+plt.show()
+```
+
+### The Harvey-Liu-Zhu Threshold
+
+@harvey2016and take a different approach: rather than applying a formal multiple-testing correction to a specific set of tests, they estimate the hurdle t-statistic that accounts for the *cumulative* number of factors tested by the entire profession. Using a Bayesian framework calibrated to the 316 published factors, they derive:
+
+-   For a single new factor tested in isolation: $|t| > 2.0$ (conventional)
+-   Accounting for 100 prior tests: $|t| > 2.8$
+-   Accounting for 316 prior tests: $|t| > 3.0$
+-   Accounting for all conceivable tests: $|t| > 3.78$
+
+The logic is that even if *your* study tests only one factor, the fact that hundreds of researchers have tested hundreds of signals before you means the prior probability that your specific signal is a true predictor is low.
+
+```{python}
+#| label: hlz-threshold
+#| eval: false
+#| code-summary: "Apply the Harvey-Liu-Zhu t-statistic thresholds"
+hlz_thresholds = {
+    'Conventional (|t| > 2.0)': 2.0,
+    'HLZ 100 tests (|t| > 2.8)': 2.8,
+    'HLZ 316 tests (|t| > 3.0)': 3.0,
+    'HLZ conservative (|t| > 3.78)': 3.78
+}
+
+print("Anomalies Surviving Different t-Thresholds:")
+print(f"{'Threshold':<35} {'Surviving':>10} {'% of Zoo':>10}")
+print("-" * 55)
+
+for name, thresh in hlz_thresholds.items():
+    n_survive = (zoo_df['abs_t'] > thresh).sum()
+    pct = n_survive / len(zoo_df) * 100
+    print(f"{name:<35} {n_survive:>10} {pct:>10.1f}%")
+```
+
+## Comparison of Methods {#sec-factor-zoo-comparison}
+
+```{python}
+#| label: fig-correction-comparison
+#| eval: false
+#| fig-cap: "Number of anomalies surviving each multiple testing correction. Bonferroni and Holm (FWER control) are the most conservative, while BH (FDR control) retains more discoveries. The HLZ threshold of |t| > 3.0 falls between the two. The gap between BH and Bonferroni represents anomalies that are likely real (low FDR) but cannot be guaranteed individually (FWER not controlled)."
+#| code-summary: "Compare all correction methods side by side"
+comparison = {
+    'Unadjusted (|t| > 2)': (zoo_df['abs_t'] > 2.0).sum(),
+    'Bonferroni': zoo_df['bonf_reject'].sum(),
+    'Holm': zoo_df['holm_reject'].sum(),
+    'BH (q=0.05)': zoo_df['bh_reject'].sum(),
+    'BH (q=0.10)': zoo_df['bh10_reject'].sum(),
+    'HLZ (|t| > 3.0)': (zoo_df['abs_t'] > 3.0).sum(),
+    'HLZ (|t| > 3.78)': (zoo_df['abs_t'] > 3.78).sum(),
+}
+
+fig, ax = plt.subplots(figsize=(10, 5))
+
+names = list(comparison.keys())
+counts = list(comparison.values())
+colors = ['#BDC3C7', '#C0392B', '#E74C3C', '#27AE60', '#2ECC71',
+          '#2C5F8A', '#1A3C5A']
+
+bars = ax.barh(range(len(names)), counts, color=colors,
+               alpha=0.85, edgecolor='white')
+ax.set_yticks(range(len(names)))
+ax.set_yticklabels(names)
+ax.set_xlabel('Number of Surviving Anomalies')
+ax.set_title('Anomalies Surviving Multiple Testing Corrections')
+
+for i, (name, count) in enumerate(zip(names, counts)):
+    ax.text(count + 0.3, i, str(count), va='center', fontsize=10)
+
+ax.invert_yaxis()
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: fig-survival-by-category
+#| eval: false
+#| fig-cap: "Anomaly survival rates by category under the BH procedure (q=0.05). Categories with high survival rates (e.g., momentum, profitability) contain more robust signals. Categories with low survival rates may contain predominantly spurious associations. The total height of each bar shows the number of anomalies tested in that category."
+#| code-summary: "Plot survival rates by anomaly category"
+cat_survival = (
+    zoo_df.groupby('category')
+    .agg(
+        n_total=('abs_t', 'count'),
+        n_survive_bh=('bh_reject', 'sum'),
+        n_survive_hlz=('abs_t', lambda x: (x > 3.0).sum()),
+        mean_abs_t=('abs_t', 'mean')
+    )
+    .sort_values('mean_abs_t', ascending=False)
+)
+cat_survival['survival_rate_bh'] = (
+    cat_survival['n_survive_bh'] / cat_survival['n_total']
+)
+
+fig, ax = plt.subplots(figsize=(12, 5))
+
+x = np.arange(len(cat_survival))
+ax.bar(x, cat_survival['n_total'], color='#BDC3C7', alpha=0.5,
+       label='Total tested', edgecolor='white')
+ax.bar(x, cat_survival['n_survive_bh'], color='#27AE60', alpha=0.85,
+       label='Survive BH (q=0.05)', edgecolor='white')
+
+ax.set_xticks(x)
+ax.set_xticklabels(cat_survival.index, rotation=30, fontsize=9)
+ax.set_ylabel('Number of Anomalies')
+ax.set_title('Anomaly Survival by Category')
+ax.legend()
+
+# Add survival rate text
+for i, (_, row) in enumerate(cat_survival.iterrows()):
+    if row['n_total'] > 0:
+        ax.text(i, row['n_total'] + 0.2,
+                f"{row['survival_rate_bh']:.0%}",
+                ha='center', fontsize=9, color='#27AE60')
+
+plt.tight_layout()
+plt.show()
+```
+
+## Estimating the False Discovery Proportion {#sec-factor-zoo-fdp}
+
+### The Storey Approach
+
+Rather than controlling FDR at a pre-specified level, we can *estimate* the proportion of tested hypotheses that are truly null ($\pi_0$) and the implied false discovery proportion (FDP) at any given threshold. @storey2003positive proposes estimating $\pi_0$ from the distribution of p-values: under the null, p-values are uniformly distributed on $[0, 1]$, so the density of p-values in the "flat" region (away from zero) reveals $\pi_0$.
+
+$$
+\hat{\pi}_0(\lambda) = \frac{\#\{p_i > \lambda\}}{M(1 - \lambda)}
+$$ {#eq-pi0}
+
+for a tuning parameter $\lambda$. The estimated false discovery proportion at threshold $t^*$ is then:
+
+$$
+\widehat{\text{FDP}}(t^*) = \frac{\hat{\pi}_0 \cdot M \cdot P(|t| > t^* | H_0)}{\#\{|t_i| > t^*\}}
+$$ {#eq-fdp}
+
+```{python}
+#| label: storey-pi0
+#| eval: false
+#| code-summary: "Estimate the proportion of true nulls using Storey's method"
+def estimate_pi0(p_values, lambdas=np.arange(0.05, 0.95, 0.05)):
+    """
+    Estimate pi_0 (proportion of true nulls) using Storey (2003).
+    Uses bootstrap to select optimal lambda.
+    """
+    M = len(p_values)
+    pi0_estimates = []
+    
+    for lam in lambdas:
+        n_above = (p_values > lam).sum()
+        pi0 = n_above / (M * (1 - lam))
+        pi0_estimates.append({'lambda': lam, 'pi0': min(pi0, 1.0)})
+    
+    pi0_df = pd.DataFrame(pi0_estimates)
+    
+    # Use the median of estimates for robustness
+    # (alternatives: bootstrap, spline smoothing)
+    pi0_hat = pi0_df['pi0'].median()
+    
+    return pi0_hat, pi0_df
+
+pi0_hat, pi0_df = estimate_pi0(zoo_df['p_value'].values)
+
+print(f"Estimated π₀ (proportion of true nulls): {pi0_hat:.3f}")
+print(f"Implied proportion of true factors: {1 - pi0_hat:.3f}")
+print(f"Estimated number of true factors: {(1 - pi0_hat) * len(zoo_df):.0f} "
+      f"out of {len(zoo_df)}")
+```
+
+```{python}
+#| label: fig-pvalue-distribution
+#| eval: false
+#| fig-cap: "Distribution of p-values across the anomaly zoo. Panel A shows the histogram with the estimated null proportion (π₀ = horizontal line). The excess density near zero represents true discoveries. Panel B shows the estimated π₀ as a function of the tuning parameter λ. The relatively flat region at higher λ values provides the most stable estimate."
+#| code-summary: "Plot p-value distribution and pi_0 estimation"
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Panel A: p-value histogram
+axes[0].hist(zoo_df['p_value'], bins=20, density=True,
+             color='#2C5F8A', alpha=0.7, edgecolor='white')
+axes[0].axhline(y=pi0_hat, color='#C0392B', linewidth=2, linestyle='--',
+                label=f'π₀ = {pi0_hat:.2f} (null density)')
+axes[0].axhline(y=1, color='gray', linewidth=1, linestyle=':',
+                label='Uniform (all null)')
+axes[0].set_xlabel('p-value')
+axes[0].set_ylabel('Density')
+axes[0].set_title('Panel A: p-Value Distribution')
+axes[0].legend()
+
+# Panel B: pi_0 estimates across lambda
+axes[1].plot(pi0_df['lambda'], pi0_df['pi0'],
+             color='#2C5F8A', linewidth=2, marker='o', markersize=4)
+axes[1].axhline(y=pi0_hat, color='#C0392B', linestyle='--',
+                linewidth=1.5, label=f'Median π₀ = {pi0_hat:.2f}')
+axes[1].set_xlabel('λ')
+axes[1].set_ylabel('π₀(λ)')
+axes[1].set_title('Panel B: π₀ Estimates by λ')
+axes[1].legend()
+axes[1].set_ylim([0, 1.05])
+
+plt.tight_layout()
+plt.show()
+```
+
+### FDP Curve
+
+Using $\hat{\pi}_0$, we compute the estimated FDP at every possible t-threshold:
+
+```{python}
+#| label: fig-fdp-curve
+#| eval: false
+#| fig-cap: "Estimated false discovery proportion as a function of the t-statistic threshold. At the conventional |t| > 2.0, a substantial fraction of discoveries may be false. The FDP drops below 5% around |t| > 3.0, roughly consistent with the Harvey-Liu-Zhu recommendation."
+#| code-summary: "Compute and plot the FDP curve"
+t_thresholds = np.arange(1.0, 5.01, 0.1)
+fdp_curve = []
+
+for t_thresh in t_thresholds:
+    n_rejected = (zoo_df['abs_t'] > t_thresh).sum()
+    if n_rejected == 0:
+        fdp_curve.append({'t_threshold': t_thresh, 'n_rejected': 0,
+                           'fdp': 0})
+        continue
+    
+    # Expected false discoveries under null
+    p_null_reject = 2 * (1 - stats.norm.cdf(t_thresh))
+    expected_false = pi0_hat * len(zoo_df) * p_null_reject
+    
+    fdp = min(expected_false / n_rejected, 1.0)
+    fdp_curve.append({'t_threshold': t_thresh, 'n_rejected': n_rejected,
+                       'fdp': fdp})
+
+fdp_df = pd.DataFrame(fdp_curve)
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Panel A: FDP curve
+axes[0].plot(fdp_df['t_threshold'], fdp_df['fdp'] * 100,
+             color='#C0392B', linewidth=2)
+axes[0].axhline(y=5, color='gray', linestyle='--', linewidth=1,
+                label='5% FDP')
+axes[0].axhline(y=10, color='gray', linestyle=':', linewidth=1,
+                label='10% FDP')
+axes[0].axvline(x=2.0, color='#E67E22', linestyle='--',
+                linewidth=1, label='|t| = 2.0')
+axes[0].axvline(x=3.0, color='#2C5F8A', linestyle='--',
+                linewidth=1, label='|t| = 3.0')
+axes[0].set_xlabel('|t| Threshold')
+axes[0].set_ylabel('Estimated FDP (%)')
+axes[0].set_title('Panel A: False Discovery Proportion')
+axes[0].legend(fontsize=8)
+axes[0].set_ylim([-2, 80])
+
+# Panel B: Number of rejections
+axes[1].plot(fdp_df['t_threshold'], fdp_df['n_rejected'],
+             color='#2C5F8A', linewidth=2)
+axes[1].set_xlabel('|t| Threshold')
+axes[1].set_ylabel('Number of Discoveries')
+axes[1].set_title('Panel B: Discoveries vs Threshold')
+
+plt.tight_layout()
+plt.show()
+```
+
+## Bootstrap-Based Multiple Testing {#sec-factor-zoo-bootstrap}
+
+### The White Reality Check
+
+Analytical corrections assume known distributions. When return distributions are non-normal (heavy tails, skewness, serial correlation), as they are in Vietnam, bootstrap methods provide more reliable inference.
+
+@white2000reality proposes a bootstrap reality check that accounts for data snooping across multiple strategies. The null hypothesis is that the best strategy has zero expected return. The procedure:
+
+1.  Generate $B$ bootstrap samples of the time series (block bootstrap to preserve serial dependence).
+2.  For each bootstrap sample, compute the t-statistic for every factor.
+3.  The p-value for factor $i$ is the proportion of bootstrap samples in which the maximum t-statistic across all factors exceeds the observed t-statistic of factor $i$.
+
+```{python}
+#| label: bootstrap-rc
+#| eval: false
+#| code-summary: "Implement White's Reality Check via block bootstrap"
+def white_reality_check(factor_returns_dict, n_bootstrap=1000,
+                          block_size=6, seed=42):
+    """
+    White (2000) Reality Check for data snooping.
+    
+    Parameters
+    ----------
+    factor_returns_dict : dict
+        {factor_name: pd.Series of monthly returns}
+    n_bootstrap : int
+        Number of bootstrap replications
+    block_size : int
+        Block length for circular block bootstrap
+    
+    Returns
+    -------
+    DataFrame with original t-stats and bootstrap p-values
+    """
+    rng = np.random.default_rng(seed)
+    
+    # Align all factor returns to common dates
+    all_names = list(factor_returns_dict.keys())
+    common_dates = None
+    for name in all_names:
+        dates = set(factor_returns_dict[name].index)
+        common_dates = dates if common_dates is None else common_dates & dates
+    common_dates = sorted(common_dates)
+    T = len(common_dates)
+    
+    # Build return matrix (T x M)
+    M = len(all_names)
+    return_matrix = np.column_stack([
+        factor_returns_dict[name].reindex(common_dates).values
+        for name in all_names
+    ])
+    
+    # Observed t-statistics
+    means = np.nanmean(return_matrix, axis=0)
+    ses = np.nanstd(return_matrix, axis=0) / np.sqrt(T)
+    t_obs = means / np.where(ses > 0, ses, np.nan)
+    
+    # Block bootstrap
+    n_blocks = int(np.ceil(T / block_size))
+    max_t_bootstrap = np.zeros(n_bootstrap)
+    
+    for b in range(n_bootstrap):
+        # Circular block bootstrap
+        block_starts = rng.integers(0, T, size=n_blocks)
+        indices = np.concatenate([
+            np.arange(start, start + block_size) % T
+            for start in block_starts
+        ])[:T]
+        
+        boot_returns = return_matrix[indices, :]
+        
+        # Center under null (subtract original mean)
+        boot_centered = boot_returns - means[np.newaxis, :]
+        
+        # Compute t-stats under null
+        boot_means = np.nanmean(boot_centered, axis=0)
+        boot_ses = np.nanstd(boot_centered, axis=0) / np.sqrt(T)
+        boot_t = boot_means / np.where(boot_ses > 0, boot_ses, np.nan)
+        
+        max_t_bootstrap[b] = np.nanmax(np.abs(boot_t))
+    
+    # Bootstrap p-values (one-sided: is obs_t extreme relative to max?)
+    boot_pvals = np.array([
+        np.mean(max_t_bootstrap >= abs(t)) if np.isfinite(t) else 1.0
+        for t in t_obs
+    ])
+    
+    results = pd.DataFrame({
+        'factor': all_names,
+        't_stat_obs': t_obs,
+        'boot_pval': boot_pvals
+    }).set_index('factor')
+    
+    return results, max_t_bootstrap
+
+# Collect factor return series
+factor_returns_dict = {
+    name: zoo_results[name]['returns']
+    for name in zoo_results
+    if 'returns' in zoo_results[name]
+}
+
+boot_results, max_t_dist = white_reality_check(
+    factor_returns_dict, n_bootstrap=1000, block_size=6
+)
+
+boot_results = boot_results.sort_values('t_stat_obs', ascending=False)
+
+print("White Reality Check Results (top 20):")
+print(boot_results.head(20).round(4).to_string())
+print(f"\nFactors surviving (boot p < 0.05): "
+      f"{(boot_results['boot_pval'] < 0.05).sum()}")
+```
+
+```{python}
+#| label: fig-bootstrap-distribution
+#| eval: false
+#| fig-cap: "Bootstrap distribution of the maximum t-statistic across all factors under the null hypothesis of no true effects. The vertical lines mark the observed t-statistics of the top anomalies. Only anomalies whose observed t exceeds the 95th percentile of this distribution survive the data-snooping correction."
+#| code-summary: "Plot the bootstrap null distribution"
+fig, ax = plt.subplots(figsize=(12, 5))
+
+ax.hist(max_t_dist, bins=40, density=True, color='#BDC3C7',
+        alpha=0.7, edgecolor='white', label='Bootstrap null\n(max |t| across all factors)')
+
+# 95th percentile
+p95 = np.percentile(max_t_dist, 95)
+ax.axvline(x=p95, color='#C0392B', linewidth=2, linestyle='--',
+           label=f'95th percentile = {p95:.2f}')
+
+# Observed top factor t-statistics
+top_5 = boot_results.head(5)
+for i, (name, row) in enumerate(top_5.iterrows()):
+    ax.axvline(x=abs(row['t_stat_obs']),
+               color=plt.cm.Set1(i), linewidth=1.5, linestyle=':',
+               label=f'{name}: |t| = {abs(row["t_stat_obs"]):.2f}')
+
+ax.set_xlabel('Maximum |t-statistic|')
+ax.set_ylabel('Density')
+ax.set_title("White's Reality Check: Bootstrap Null Distribution")
+ax.legend(fontsize=8, loc='upper right')
+plt.tight_layout()
+plt.show()
+```
+
+### Romano-Wolf Step-Down Bootstrap
+
+The @romano2005exact step-down procedure improves on the White Reality Check by iteratively removing rejected hypotheses and re-testing the remaining ones, gaining power at each step:
+
+```{python}
+#| label: romano-wolf
+#| eval: false
+#| code-summary: "Implement the Romano-Wolf step-down bootstrap procedure"
+def romano_wolf_stepdown(factor_returns_dict, n_bootstrap=1000,
+                           block_size=6, alpha=0.05, seed=42):
+    """
+    Romano-Wolf (2005) step-down procedure for FWER control.
+    More powerful than single-step methods because rejected
+    hypotheses are removed before re-testing.
+    """
+    rng = np.random.default_rng(seed)
+    
+    all_names = list(factor_returns_dict.keys())
+    common_dates = None
+    for name in all_names:
+        dates = set(factor_returns_dict[name].index)
+        common_dates = dates if common_dates is None else common_dates & dates
+    common_dates = sorted(common_dates)
+    T = len(common_dates)
+    M = len(all_names)
+    
+    return_matrix = np.column_stack([
+        factor_returns_dict[name].reindex(common_dates).values
+        for name in all_names
+    ])
+    
+    means = np.nanmean(return_matrix, axis=0)
+    ses = np.nanstd(return_matrix, axis=0) / np.sqrt(T)
+    t_obs = np.abs(means / np.where(ses > 0, ses, np.nan))
+    
+    # Sort by observed t-stat (descending)
+    order = np.argsort(-t_obs)
+    t_sorted = t_obs[order]
+    names_sorted = [all_names[i] for i in order]
+    
+    # Step-down procedure
+    rejected = set()
+    remaining = set(range(M))
+    
+    for step in range(M):
+        if not remaining:
+            break
+        
+        remaining_idx = sorted(remaining)
+        
+        # Bootstrap max t-stat among remaining
+        n_blocks = int(np.ceil(T / block_size))
+        max_t_boot = np.zeros(n_bootstrap)
+        
+        for b in range(n_bootstrap):
+            block_starts = rng.integers(0, T, size=n_blocks)
+            indices = np.concatenate([
+                np.arange(start, start + block_size) % T
+                for start in block_starts
+            ])[:T]
+            
+            boot_returns = return_matrix[indices][:, remaining_idx]
+            boot_centered = boot_returns - means[remaining_idx]
+            
+            boot_means = np.nanmean(boot_centered, axis=0)
+            boot_ses = np.nanstd(boot_centered, axis=0) / np.sqrt(T)
+            boot_t = np.abs(boot_means / np.where(boot_ses > 0, boot_ses, np.nan))
+            
+            max_t_boot[b] = np.nanmax(boot_t)
+        
+        # Critical value
+        cv = np.percentile(max_t_boot, (1 - alpha) * 100)
+        
+        # Test the most significant remaining factor
+        # Find the factor with highest t among remaining
+        best_remaining = max(remaining, key=lambda j: t_obs[j])
+        
+        if t_obs[best_remaining] > cv:
+            rejected.add(best_remaining)
+            remaining.remove(best_remaining)
+        else:
+            break  # Cannot reject any more
+    
+    results = pd.DataFrame({
+        'factor': all_names,
+        't_stat': t_obs,
+        'rejected': [i in rejected for i in range(M)]
+    }).sort_values('t_stat', ascending=False)
+    
+    return results
+
+rw_results = romano_wolf_stepdown(
+    factor_returns_dict, n_bootstrap=500, block_size=6
+)
+
+print(f"Romano-Wolf rejections: {rw_results['rejected'].sum()} / {len(rw_results)}")
+print("\nRejected factors:")
+print(rw_results[rw_results['rejected']][['factor', 't_stat']].to_string())
+```
+
+## Out-of-Sample Validation {#sec-factor-zoo-oos}
+
+### Pre-Publication vs. Post-Publication Decay
+
+@mclean2016does find that anomaly returns decline by 32% after publication in the U.S. market, suggesting that roughly one-third of the premium was due to mispricing that was corrected by informed trading. For Vietnam, we use a time-series split as a proxy for out-of-sample testing:
+
+```{python}
+#| label: oos-split
+#| eval: false
+#| code-summary: "Compare factor premia in-sample vs out-of-sample"
+# Split at midpoint of available data
+all_dates = sorted(panel['month_end'].unique())
+mid_date = all_dates[len(all_dates) // 2]
+
+oos_comparison = []
+
+for name in zoo_results:
+    ls = zoo_results[name]['returns']
+    
+    in_sample = ls[ls.index <= mid_date]
+    out_sample = ls[ls.index > mid_date]
+    
+    if len(in_sample) < 36 or len(out_sample) < 36:
+        continue
+    
+    is_mean = in_sample.mean() * 12
+    is_t = in_sample.mean() / (in_sample.std() / np.sqrt(len(in_sample)))
+    
+    oos_mean = out_sample.mean() * 12
+    oos_t = out_sample.mean() / (out_sample.std() / np.sqrt(len(out_sample)))
+    
+    oos_comparison.append({
+        'signal': name,
+        'is_return': is_mean,
+        'is_t': is_t,
+        'oos_return': oos_mean,
+        'oos_t': oos_t,
+        'decay_pct': (1 - oos_mean / is_mean) * 100 if is_mean != 0 else np.nan,
+        'same_sign': np.sign(is_mean) == np.sign(oos_mean),
+        'category': zoo_results[name].get('category', 'Other')
+    })
+
+oos_df = pd.DataFrame(oos_comparison)
+
+print(f"Split date: {mid_date.strftime('%Y-%m')}")
+print(f"Factors with same sign IS and OOS: "
+      f"{oos_df['same_sign'].mean():.1%}")
+print(f"Average OOS decay: {oos_df['decay_pct'].median():.1f}%")
+```
+
+```{python}
+#| label: fig-is-oos
+#| eval: false
+#| fig-cap: "In-sample vs out-of-sample factor returns. Panel A is a scatter plot where each point is an anomaly; points above the 45-degree line strengthened out-of-sample, while points below weakened. Panel B shows the average decay rate by category. Factors that replicate out-of-sample with similar magnitude are most credible. A general decay pattern consistent with McLean-Pontiff (2016) is evidence of past mispricing being corrected."
+#| code-summary: "Scatter in-sample vs out-of-sample returns"
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Panel A: Scatter
+category_colors = {
+    'Value': '#2C5F8A', 'Size': '#1ABC9C', 'Profitability': '#27AE60',
+    'Investment': '#E67E22', 'Momentum': '#C0392B', 'Risk': '#8E44AD',
+    'Liquidity': '#3498DB', 'Quality': '#F1C40F', 'Dividend': '#95A5A6'
+}
+
+for cat in oos_df['category'].unique():
+    subset = oos_df[oos_df['category'] == cat]
+    axes[0].scatter(subset['is_return'] * 100, subset['oos_return'] * 100,
+                     color=category_colors.get(cat, '#BDC3C7'),
+                     s=50, alpha=0.7, label=cat, edgecolors='white')
+
+lim = max(abs(oos_df['is_return'].max()), abs(oos_df['oos_return'].max())) * 100 + 2
+axes[0].plot([-lim, lim], [-lim, lim], 'k--', linewidth=1, alpha=0.5)
+axes[0].plot([-lim, lim], [0, 0], color='gray', linewidth=0.5)
+axes[0].plot([0, 0], [-lim, lim], color='gray', linewidth=0.5)
+axes[0].set_xlabel('In-Sample Return (% ann.)')
+axes[0].set_ylabel('Out-of-Sample Return (% ann.)')
+axes[0].set_title('Panel A: IS vs OOS Factor Returns')
+axes[0].legend(fontsize=7, ncol=2)
+
+# Panel B: Decay by category
+cat_decay = (
+    oos_df.groupby('category')
+    .agg(
+        median_decay=('decay_pct', 'median'),
+        pct_same_sign=('same_sign', 'mean'),
+        n=('signal', 'count')
+    )
+    .sort_values('median_decay')
+)
+
+colors_bar = [category_colors.get(cat, '#BDC3C7') for cat in cat_decay.index]
+axes[1].barh(range(len(cat_decay)), cat_decay['median_decay'],
+             color=colors_bar, alpha=0.85, edgecolor='white')
+axes[1].set_yticks(range(len(cat_decay)))
+axes[1].set_yticklabels(cat_decay.index)
+axes[1].set_xlabel('Median OOS Decay (%)')
+axes[1].set_title('Panel B: OOS Decay by Category')
+axes[1].axvline(x=0, color='gray', linewidth=0.8)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Which Factors Survive? {#sec-factor-zoo-survivors}
+
+### A Multi-Hurdle Filter
+
+We now combine all the evidence, including multiple testing corrections, out-of-sample performance, and economic plausibility, to identify the factors that deserve credence in the Vietnamese market.
+
+```{python}
+#| label: multi-hurdle
+#| eval: false
+#| code-summary: "Apply a multi-hurdle filter to identify robust factors"
+# Merge all test results
+final = zoo_df.copy()
+
+# Add OOS results
+oos_lookup = oos_df.set_index('signal')
+for col in ['oos_return', 'oos_t', 'same_sign']:
+    final[col] = final.index.map(lambda x: oos_lookup.loc[x, col]
+                                  if x in oos_lookup.index else np.nan)
+
+# Add bootstrap results
+boot_lookup = boot_results
+final['boot_pval'] = final.index.map(
+    lambda x: boot_lookup.loc[x, 'boot_pval']
+    if x in boot_lookup.index else np.nan
+)
+
+# Multi-hurdle criteria
+final['pass_t2'] = final['abs_t'] > 2.0
+final['pass_t3'] = final['abs_t'] > 3.0
+final['pass_bh'] = final['bh_reject']
+final['pass_boot'] = final['boot_pval'] < 0.05
+final['pass_oos_sign'] = final['same_sign'] == True
+final['pass_oos_t'] = final['oos_t'].abs() > 1.5  # Relaxed OOS threshold
+
+# Count hurdles passed
+hurdle_cols = ['pass_t2', 'pass_t3', 'pass_bh', 'pass_boot',
+                'pass_oos_sign', 'pass_oos_t']
+final['n_hurdles'] = final[hurdle_cols].sum(axis=1)
+
+# "Robust" = passes at least 5 of 6 hurdles
+final['robust'] = final['n_hurdles'] >= 5
+
+robust_factors = final[final['robust']].sort_values('abs_t', ascending=False)
+
+print(f"Multi-Hurdle Filter Results:")
+print(f"  Pass |t| > 2.0:        {final['pass_t2'].sum()}")
+print(f"  Pass |t| > 3.0:        {final['pass_t3'].sum()}")
+print(f"  Pass BH (q=0.05):      {final['pass_bh'].sum()}")
+print(f"  Pass bootstrap:        {final['pass_boot'].sum()}")
+print(f"  Pass OOS sign:         {final['pass_oos_sign'].sum()}")
+print(f"  Pass OOS |t| > 1.5:    {final['pass_oos_t'].sum()}")
+print(f"\n  ROBUST (≥5/6 hurdles): {final['robust'].sum()}")
+
+if len(robust_factors) > 0:
+    print(f"\nRobust Factors:")
+    display_cols = ['ann_return', 't_stat', 'bh_p_corrected',
+                     'oos_return', 'oos_t', 'n_hurdles', 'category']
+    available_cols = [c for c in display_cols if c in robust_factors.columns]
+    print(robust_factors[available_cols].round(3).to_string())
+```
+
+```{python}
+#| label: fig-hurdle-heatmap
+#| eval: false
+#| fig-cap: "Multi-hurdle test results for the top 25 anomalies ranked by in-sample t-statistic. Each column represents a statistical hurdle; green cells indicate passage, red cells indicate failure. Only anomalies that survive multiple independent tests deserve serious consideration. The rightmost column tallies hurdles passed."
+#| code-summary: "Heatmap of multi-hurdle results"
+top25 = final.sort_values('abs_t', ascending=False).head(25)
+
+fig, ax = plt.subplots(figsize=(10, 10))
+
+hurdle_matrix = top25[hurdle_cols].astype(float).values
+
+sns.heatmap(hurdle_matrix, ax=ax,
+            xticklabels=['|t|>2', '|t|>3', 'BH', 'Boot', 'OOS sign', 'OOS |t|'],
+            yticklabels=top25.index,
+            cmap=['#E74C3C', '#27AE60'],
+            cbar=False, linewidths=0.5, linecolor='white',
+            annot=np.where(hurdle_matrix == 1, '✓', '✗'),
+            fmt='')
+
+# Add hurdle count column
+for i, (_, row) in enumerate(top25.iterrows()):
+    ax.text(len(hurdle_cols) + 0.3, i + 0.5,
+            f"{int(row['n_hurdles'])}/6",
+            va='center', fontsize=9,
+            fontweight='bold' if row['n_hurdles'] >= 5 else 'normal',
+            color='#27AE60' if row['n_hurdles'] >= 5 else '#C0392B')
+
+ax.set_title('Multi-Hurdle Test Results (Top 25 Anomalies)')
+plt.tight_layout()
+plt.show()
+```
+
+## Implications for Vietnamese Factor Research {#sec-factor-zoo-implications}
+
+The analysis in this chapter yields several practical implications:
+
+**The conventional threshold is insufficient.** With $M \approx 50$ anomalies tested simultaneously, requiring only $|t| > 2.0$ virtually guarantees false discoveries. Vietnamese researchers should adopt a minimum threshold of $|t| > 3.0$ for individual factors, consistent with @harvey2016and, and should report BH-adjusted p-values for any study testing multiple signals.
+
+**The small cross-section amplifies noise.** With 600-800 stocks, quintile portfolios contain only 120-160 stocks each. This creates noisier portfolio returns and wider confidence intervals than in U.S. studies with 4,000+ stocks. Strategies that appear significant in the U.S. at $|t| = 2.5$ may have $|t| < 1.5$ in Vietnam simply due to the smaller sample. This is not evidence that the factor doesn't exist in Vietnam, it is evidence that the Vietnamese data lack power to detect it.
+
+**Out-of-sample validation is essential.** The time-series split reveals substantial decay for many anomalies, consistent with @mclean2016does. Factors that survive both in-sample and out-of-sample with consistent sign and magnitude are rare and valuable.
+
+**Category matters.** Momentum and profitability signals tend to have the highest replication rates across markets [@fama2012size; @jacobs2020anomalies]. Value and investment signals are more country-specific [@griffin2002fama]. Liquidity signals are likely to be strongest in emerging markets like Vietnam, where trading frictions are largest.
+
+**Report the full battery.** Any study that presents a new factor for the Vietnamese market should report: (i) the raw t-statistic, (ii) the BH-adjusted p-value given the number of tests in the study, (iii) out-of-sample performance in a held-out period, and (iv) sensitivity to construction choices (from the previous chapter). This reporting standard would dramatically improve the credibility of Vietnamese factor research.
+
+## Summary {#sec-factor-zoo-summary}
+
+| Method | Controls | Threshold (approx.) | Surviving | Philosophy |
+|---------------|---------------|---------------|---------------|---------------|
+| Unadjusted | Single test | \|t\| \> 2.0 | Many | No correction |
+| Bonferroni | FWER | \|t\| \> 3.3--4.0 | Few | Zero false positives |
+| Holm | FWER | Stepwise | Few | Slightly less conservative |
+| BH | FDR at q | Adaptive | Moderate | Tolerates some false positives |
+| HLZ | Profession-wide | \|t\| \> 3.0--3.78 | Moderate | Prior over all tested factors |
+| White/RW Bootstrap | FWER (data-driven) | Bootstrap CV | Few | Accounts for non-normality |
+| Storey FDP | FDP estimate | Continuous | Diagnostic | Estimates true null proportion |
+| Multi-hurdle | Combined | Multiple tests | Most robust | Requires convergent evidence |
+
+: Summary of multiple testing methods and their properties. {#tbl-summary}
+
+The factor zoo is not a uniquely American phenomenon. The temptation to test many signals and report the best-performing ones exists in every market. In Vietnam, where the data are shorter, noisier, and the academic community is growing rapidly, the risk of false discovery is high. The tools developed in this chapter, including BH adjustment, bootstrap reality checks, Storey's $\pi_0$ estimation, out-of-sample splits, and the multi-hurdle filter, provide a principled framework for separating genuine factors from statistical noise.
+
+The honest conclusion is likely to be humbling: of the dozens of anomalies documented in developed markets, only a handful survive rigorous multiple testing in Vietnamese data. Those survivors (probably concentrated in momentum, profitability, and liquidity) form the foundation for credible asset pricing research in this market.
+
+<!-- ## Exercises {#sec-factor-zoo-exercises}
+
+1.  **Bayesian approach.** Implement the @harvey2021lucky Bayesian framework for distinguishing lucky factors from genuine ones. Assign a prior probability $\pi$ that any given factor is a true predictor, and compute the posterior probability of being genuine given its t-statistic and the number of tests. How does varying $\pi$ affect which factors survive?
+
+2.  **Dependence-adjusted BH.** The standard BH procedure assumes independent (or PRDS) test statistics. Estimate the correlation structure of factor returns and implement the Benjamini-Yekutieli (BY) procedure, which controls FDR under arbitrary dependence. How many fewer factors survive compared to BH?
+
+3.  **Publication bias simulation.** Simulate a researcher who tests 100 random signals on Vietnamese data, publishes only those with $|t| > 2$, and reports the average published t-statistic. Repeat 1,000 times. What is the distribution of the "published" t-statistic? How does it compare to the true effect size (which is zero by construction)?
+
+4.  **Replication across exchanges.** Test whether factors that are significant on HOSE also replicate on HNX. If the same factor is significant on both exchanges independently, the probability of a false discovery is substantially lower (because the two samples are partially independent).
+
+5.  **Transaction cost hurdle.** For each factor that survives the multi-hurdle filter, compute the minimum round-trip trading cost that would eliminate the net-of-cost premium. Factors whose breakeven costs are below realistic Vietnamese transaction costs are not implementable, regardless of their statistical significance.
+
+6.  **Machine learning feature importance.** Use a random forest or gradient-boosted tree model to predict next-month returns from all available signals simultaneously. Extract feature importance measures. Compare the machine learning ranking of signals to the univariate t-statistic ranking. Do they agree?
+
+7.  **International replication.** Select the top 10 factors from the Vietnamese zoo. Test whether the same factors are significant in Thailand (SET), Indonesia (IDX), or the Philippines (PSE) using equivalent data. Factors that replicate across multiple ASEAN markets are less likely to be country-specific data artifacts.
+
+8.  **Rolling FDP monitoring.** Implement a rolling-window version of the Storey $\pi_0$ estimator. Compute $\hat{\pi}_0$ for each 60-month window. Does the proportion of true factors change over time? An increasing $\pi_0$ (more true nulls) might indicate that anomalies are being arbitraged away as the Vietnamese market matures. -->
