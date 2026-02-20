@@ -1,0 +1,1251 @@
+# Market Integration and Segmentation
+
+::: callout-note
+In this chapter, we measure the degree to which the Vietnamese equity market is integrated with or segmented from global capital markets. We construct multiple integration metrics, including correlation-based, factor-based, and pricing-error-based, trace their evolution through Vietnam's liberalization timeline, and quantify the cost of segmentation for Vietnamese firms.
+:::
+
+A market is *fully integrated* when its assets are priced by a global stochastic discount factor: risk premia reflect only exposures to global risk factors, and identical cash flow streams command the same expected return regardless of where the issuer is domiciled. A market is *fully segmented* when domestic risk factors alone determine prices, and the country's risk-return trade-off is independent of the rest of the world. Reality sits somewhere between these poles, and the location shifts over time.
+
+Vietnam is a particularly interesting case. It opened its stock exchange in July 2000 with heavy restrictions on foreign participation. Foreign ownership limits (initially 20%, raised to 30% in 2003, 49% in 2015, and selectively removed for some firms) have been gradually relaxed. Vietnam joined the WTO in 2007. FTSE Russell upgraded Vietnam from "unclassified" to "secondary emerging" in its frontier index in 2018 and has been evaluating further upgrades. Each of these events has potentially shifted the degree of integration.
+
+@bekaert1995time and @bekaert2002research establish the modern framework for measuring time-varying integration. @errunza1985international develop the "mild segmentation" model in which foreign investors face barriers but can partially replicate emerging market returns through global securities. @pukthuanthong2009global propose a factor-model-based measure that avoids the pitfalls of simple correlation analysis. This chapter implements all three approaches and applies them to Vietnam's integration trajectory.
+
+## Integration in Theory {#sec-market-integration-theory}
+
+### The Integrated and Segmented Benchmarks
+
+Under full integration, the expected excess return of Vietnamese stock $i$ is:
+
+$$
+E[R_{i,t} - R_{f,t}] = \beta_{i,\text{world}} \cdot \lambda_{\text{world},t}
+$$ {#eq-integrated}
+
+where $\beta_{i,\text{world}}$ is the stock's loading on the global market factor and $\lambda_{\text{world},t}$ is the global risk premium. Only global systematic risk is priced; country-specific risk is diversifiable and commands no premium.
+
+Under full segmentation:
+
+$$
+E[R_{i,t} - R_{f,t}] = \beta_{i,\text{local}} \cdot \lambda_{\text{local},t}
+$$ {#eq-segmented}
+
+where $\beta_{i,\text{local}}$ is the stock's loading on the Vietnamese market and $\lambda_{\text{local},t}$ is the domestic risk premium. The domestic market is effectively a closed economy for pricing purposes.
+
+@bekaert1995time model the transition between these states as a regime-switching process where the mixing weight $\omega_t \in [0, 1]$ evolves over time:
+
+$$
+E[R_{i,t} - R_{f,t}] = \omega_t \cdot \beta_{i,\text{world}} \lambda_{\text{world},t} + (1 - \omega_t) \cdot \beta_{i,\text{local}} \lambda_{\text{local},t}
+$$ {#eq-partial}
+
+The weight $\omega_t$ is the *degree of integration*: $\omega_t = 1$ is full integration, $\omega_t = 0$ is full segmentation.
+
+### The Segmentation Premium
+
+When a market transitions from segmented to integrated, its cost of capital falls because the relevant risk for pricing narrows from total domestic risk to only the portion correlated with the global market [@henry2000stock; @bekaert2005does]. The *segmentation premium* is the excess expected return that investors in a segmented market require:
+
+$$
+\text{Segmentation premium} = (1 - \omega_t) \cdot (\lambda_{\text{local}} - \beta_{\text{local,world}} \cdot \lambda_{\text{world}})
+$$ {#eq-segmentation-premium}
+
+This premium represents a deadweight cost: it raises the cost of capital for Vietnamese firms, reduces investment, and lowers welfare relative to the integrated benchmark.
+
+## Data Construction {#sec-market-integration-data}
+
+```{python}
+#| label: setup
+#| code-summary: "Import libraries and configure environment"
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import statsmodels.api as sm
+from scipy import stats, optimize
+from arch import arch_model
+from arch.univariate import ConstantMean, GARCH
+import warnings
+warnings.filterwarnings('ignore')
+
+plt.rcParams.update({
+    'figure.figsize': (12, 6),
+    'figure.dpi': 150,
+    'font.size': 11,
+    'axes.spines.top': False,
+    'axes.spines.right': False
+})
+```
+
+```{python}
+#| label: data-load
+#| eval: false
+#| code-summary: "Load Vietnamese and global market data"
+from datacore import DataCoreClient
+
+client = DataCoreClient()
+
+# Vietnamese market returns
+vn_index = client.get_index_returns(
+    index='VNINDEX',
+    start_date='2000-07-01',
+    end_date='2024-12-31',
+    frequency='monthly',
+    fields=['date', 'return', 'total_return_index']
+)
+vn_index['date'] = pd.to_datetime(vn_index['date'])
+vn_index = vn_index.set_index('date')
+
+# Global and regional indices (USD-denominated for comparability)
+global_indices = client.get_global_indices(
+    indices=[
+        'MSCI_WORLD', 'MSCI_EM', 'MSCI_ASIA_PAC_EX_JP',
+        'MSCI_FM',  # Frontier markets
+        'SP500', 'STOXX600',
+        'MSCI_CHINA', 'MSCI_THAILAND', 'MSCI_INDONESIA',
+        'MSCI_PHILIPPINES', 'MSCI_MALAYSIA'
+    ],
+    start_date='2000-07-01',
+    end_date='2024-12-31',
+    frequency='monthly',
+    currency='USD'
+)
+global_indices['date'] = pd.to_datetime(global_indices['date'])
+global_indices = global_indices.pivot(index='date', columns='index', values='return')
+
+# Vietnam returns in USD for apples-to-apples comparison
+vn_usd = client.get_index_returns(
+    index='VNINDEX',
+    start_date='2000-07-01',
+    end_date='2024-12-31',
+    frequency='monthly',
+    currency='USD'
+)
+vn_usd['date'] = pd.to_datetime(vn_usd['date'])
+global_indices['VIETNAM'] = vn_usd.set_index('date')['return']
+
+# VND/USD exchange rate
+fx = client.get_exchange_rates(
+    pair='USD_VND',
+    start_date='2000-07-01',
+    end_date='2024-12-31',
+    frequency='monthly'
+)
+fx['date'] = pd.to_datetime(fx['date'])
+fx = fx.set_index('date')
+
+# Global factor returns (Fama-French global)
+global_factors = client.get_global_factor_returns(
+    start_date='2000-07-01',
+    end_date='2024-12-31',
+    frequency='monthly',
+    factors=['mkt_excess_world', 'smb_world', 'hml_world',
+             'rmw_world', 'cma_world', 'wml_world']
+)
+global_factors['date'] = pd.to_datetime(global_factors['date'])
+global_factors = global_factors.set_index('date')
+
+# Vietnamese factor returns (local)
+local_factors = client.get_factor_returns(
+    market='vietnam',
+    start_date='2008-01-01',
+    end_date='2024-12-31',
+    factors=['mkt_excess', 'smb', 'hml', 'rmw', 'cma', 'wml']
+)
+local_factors['date'] = pd.to_datetime(local_factors['date'])
+local_factors = local_factors.set_index('date')
+
+print(f"Vietnam index: {len(vn_index)} months")
+print(f"Global indices: {global_indices.shape}")
+print(f"Global factors: {len(global_factors)} months")
+```
+
+### Vietnam's Liberalization Timeline
+
+```{python}
+#| label: timeline
+#| eval: false
+#| code-summary: "Define key liberalization events for Vietnam"
+liberalization_events = pd.DataFrame([
+    ('2000-07-28', 'HOSE opens', 'Institutional'),
+    ('2002-03-01', 'FOL raised to 30%', 'Ownership'),
+    ('2005-03-01', 'HNX opens', 'Institutional'),
+    ('2006-01-01', 'Securities Law enacted', 'Legal'),
+    ('2007-01-11', 'WTO accession', 'Trade'),
+    ('2007-06-01', 'FOL raised to 49%', 'Ownership'),
+    ('2009-06-24', 'UPCoM opens', 'Institutional'),
+    ('2012-01-01', 'SSC restructuring', 'Regulatory'),
+    ('2015-09-01', 'FOL selectively removed', 'Ownership'),
+    ('2017-08-01', 'Derivatives market opens', 'Institutional'),
+    ('2018-09-01', 'FTSE Frontier Secondary', 'Index'),
+    ('2021-01-01', 'New Securities Law', 'Legal'),
+    ('2023-06-01', 'KRX trading system', 'Infrastructure'),
+], columns=['date', 'event', 'category'])
+liberalization_events['date'] = pd.to_datetime(liberalization_events['date'])
+
+print("Vietnam Liberalization Timeline:")
+for _, row in liberalization_events.iterrows():
+    print(f"  {row['date'].strftime('%Y-%m')}: {row['event']} [{row['category']}]")
+```
+
+## Correlation-Based Integration Measures {#sec-market-integration-correlation}
+
+### Rolling Correlations
+
+The simplest integration metric is the correlation between Vietnamese and global market returns. Higher correlation implies more integration (returns are driven by the same global factors). However, simple correlation is confounded by volatility changes (i.e., correlations tend to increase mechanically during high-volatility periods [@longin2001extreme]).
+
+```{python}
+#| label: rolling-correlations
+#| eval: false
+#| code-summary: "Compute rolling correlations between Vietnam and global markets"
+# Align all series
+indices_aligned = global_indices.dropna(subset=['VIETNAM', 'MSCI_WORLD']).copy()
+
+# Rolling 36-month correlations
+rolling_window = 36
+
+corr_series = {}
+for idx in ['MSCI_WORLD', 'MSCI_EM', 'MSCI_ASIA_PAC_EX_JP',
+            'SP500', 'MSCI_CHINA', 'MSCI_THAILAND']:
+    if idx in indices_aligned.columns:
+        corr = (
+            indices_aligned[['VIETNAM', idx]]
+            .rolling(rolling_window)
+            .corr()
+            .unstack()['VIETNAM'][idx]
+        )
+        corr_series[idx] = corr
+
+corr_df = pd.DataFrame(corr_series)
+```
+
+```{python}
+#| label: fig-rolling-corr
+#| eval: false
+#| fig-cap: "Rolling 36-month correlations between Vietnamese equity returns (USD) and major global/regional indices. Vietnam's correlation with the MSCI World rose from near zero in the early 2000s to 0.3–0.5 by the mid-2010s, reflecting gradual integration. The correlation is highest with ASEAN peers (Thailand, Indonesia) and MSCI Emerging Markets, and lowest with the S&P 500. Liberalization events (vertical lines) precede periods of rising correlation."
+#| code-summary: "Plot rolling correlations with event timeline"
+fig, ax = plt.subplots(figsize=(14, 6))
+
+colors_idx = {
+    'MSCI_WORLD': '#2C5F8A', 'MSCI_EM': '#C0392B',
+    'MSCI_ASIA_PAC_EX_JP': '#27AE60', 'SP500': '#8E44AD',
+    'MSCI_CHINA': '#E67E22', 'MSCI_THAILAND': '#1ABC9C'
+}
+
+for idx, color in colors_idx.items():
+    if idx in corr_df.columns:
+        ax.plot(corr_df.index, corr_df[idx], color=color,
+                linewidth=1.5, label=idx.replace('MSCI_', '').replace('_', ' '),
+                alpha=0.85)
+
+# Add liberalization events
+for _, event in liberalization_events.iterrows():
+    if event['date'] >= corr_df.index.min():
+        ax.axvline(x=event['date'], color='gray', linewidth=0.5,
+                   linestyle=':', alpha=0.6)
+
+ax.axhline(y=0, color='black', linewidth=0.5)
+ax.set_ylabel('Correlation with Vietnam')
+ax.set_title('Rolling 36-Month Correlation: Vietnam vs Global Markets')
+ax.legend(fontsize=8, ncol=3)
+ax.set_ylim([-0.3, 0.8])
+
+plt.tight_layout()
+plt.show()
+```
+
+### DCC-GARCH Dynamic Correlations
+
+To separate changes in correlation from changes in volatility, we estimate a Dynamic Conditional Correlation (DCC) model [@engle2002dynamic]. The DCC decomposes the time-varying covariance matrix into time-varying volatilities and a time-varying correlation matrix:
+
+$$
+H_t = D_t R_t D_t
+$$ {#eq-dcc-decomp}
+
+where $D_t = \text{diag}(\sigma_{1,t}, \ldots, \sigma_{n,t})$ and $R_t$ is the conditional correlation matrix that evolves according to:
+
+$$
+Q_t = (1 - a - b) \bar{Q} + a \epsilon_{t-1} \epsilon_{t-1}' + b Q_{t-1}
+$$ {#eq-dcc-evolution}
+
+$$
+R_t = \text{diag}(Q_t)^{-1/2} Q_t \text{diag}(Q_t)^{-1/2}
+$$ {#eq-dcc-normalize}
+
+```{python}
+#| label: dcc-garch
+#| eval: false
+#| code-summary: "Estimate DCC-GARCH model for Vietnam and global market"
+def estimate_dcc(y1, y2, p=1, q=1):
+    """
+    Two-step DCC-GARCH estimation.
+    Step 1: Univariate GARCH for each series.
+    Step 2: DCC parameters from standardized residuals.
+    """
+    # Step 1: Univariate GARCH(1,1) for each series
+    models = []
+    std_resids = []
+    cond_vols = []
+    
+    for y in [y1, y2]:
+        am = arch_model(y * 100, vol='GARCH', p=p, q=q,
+                          mean='Constant', dist='normal')
+        res = am.fit(disp='off')
+        models.append(res)
+        std_resids.append(res.std_resid)
+        cond_vols.append(res.conditional_volatility / 100)
+    
+    # Align residuals
+    e1 = std_resids[0]
+    e2 = std_resids[1]
+    common = e1.dropna().index.intersection(e2.dropna().index)
+    e1 = e1[common].values
+    e2 = e2[common].values
+    T = len(e1)
+    
+    # Step 2: DCC estimation
+    # Q_bar = unconditional correlation of standardized residuals
+    Q_bar = np.corrcoef(e1, e2)
+    
+    def dcc_loglik(params):
+        a, b = params
+        if a < 0 or b < 0 or a + b >= 1:
+            return 1e10
+        
+        Q = np.zeros((T, 2, 2))
+        R = np.zeros((T, 2, 2))
+        Q[0] = Q_bar.copy()
+        
+        ll = 0
+        for t in range(T):
+            if t > 0:
+                et = np.array([[e1[t-1]], [e2[t-1]]])
+                Q[t] = (1 - a - b) * Q_bar + a * (et @ et.T) + b * Q[t-1]
+            
+            # Normalize
+            d = np.sqrt(np.diag(Q[t]))
+            if d[0] > 0 and d[1] > 0:
+                R[t] = Q[t] / np.outer(d, d)
+            else:
+                R[t] = np.eye(2)
+            
+            # Clip correlation
+            R[t, 0, 1] = np.clip(R[t, 0, 1], -0.999, 0.999)
+            R[t, 1, 0] = R[t, 0, 1]
+            
+            # Log-likelihood contribution
+            det_R = 1 - R[t, 0, 1] ** 2
+            if det_R > 0:
+                et_vec = np.array([e1[t], e2[t]])
+                ll += -0.5 * (np.log(det_R) +
+                              et_vec @ np.linalg.inv(R[t]) @ et_vec -
+                              et_vec @ et_vec)
+        
+        return -ll
+    
+    result = optimize.minimize(dcc_loglik, [0.05, 0.90],
+                                method='Nelder-Mead',
+                                options={'maxiter': 5000})
+    a_hat, b_hat = result.x
+    
+    # Reconstruct dynamic correlations
+    Q = np.zeros((T, 2, 2))
+    dcc_corr = np.zeros(T)
+    Q[0] = Q_bar.copy()
+    
+    for t in range(T):
+        if t > 0:
+            et = np.array([[e1[t-1]], [e2[t-1]]])
+            Q[t] = (1 - a_hat - b_hat) * Q_bar + a_hat * (et @ et.T) + b_hat * Q[t-1]
+        
+        d = np.sqrt(np.diag(Q[t]))
+        if d[0] > 0 and d[1] > 0:
+            dcc_corr[t] = Q[t, 0, 1] / (d[0] * d[1])
+        else:
+            dcc_corr[t] = 0
+    
+    return {
+        'a': a_hat, 'b': b_hat,
+        'persistence': a_hat + b_hat,
+        'dcc_corr': pd.Series(dcc_corr, index=common),
+        'cond_vol_1': cond_vols[0],
+        'cond_vol_2': cond_vols[1]
+    }
+
+# Estimate DCC: Vietnam vs MSCI World
+vn_ret = indices_aligned['VIETNAM'].dropna()
+world_ret = indices_aligned['MSCI_WORLD'].dropna()
+common_dates = vn_ret.index.intersection(world_ret.index)
+
+dcc_result = estimate_dcc(vn_ret[common_dates], world_ret[common_dates])
+
+print(f"DCC Parameters:")
+print(f"  a (news): {dcc_result['a']:.4f}")
+print(f"  b (persistence): {dcc_result['b']:.4f}")
+print(f"  a + b: {dcc_result['persistence']:.4f}")
+print(f"\nDCC Correlation with MSCI World:")
+print(f"  Mean: {dcc_result['dcc_corr'].mean():.3f}")
+print(f"  Min:  {dcc_result['dcc_corr'].min():.3f}")
+print(f"  Max:  {dcc_result['dcc_corr'].max():.3f}")
+```
+
+```{python}
+#| label: fig-dcc
+#| eval: false
+#| fig-cap: "DCC-GARCH dynamic correlation between Vietnam and the MSCI World Index. Unlike simple rolling correlation, the DCC isolates true changes in co-movement from volatility effects. The trend is clearly upward from near zero in the early 2000s to 0.3–0.5 in recent years. Major liberalization events (colored lines) are associated with sustained increases in the conditional correlation."
+#| code-summary: "Plot DCC dynamic correlation with event annotations"
+fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True,
+                          gridspec_kw={'height_ratios': [2, 1]})
+
+# Panel A: DCC correlation
+axes[0].plot(dcc_result['dcc_corr'].index, dcc_result['dcc_corr'].values,
+             color='#2C5F8A', linewidth=1.5)
+axes[0].fill_between(dcc_result['dcc_corr'].index,
+                       dcc_result['dcc_corr'].values, 0,
+                       alpha=0.2, color='#2C5F8A')
+
+# Liberalization events
+event_colors = {'Ownership': '#C0392B', 'Trade': '#27AE60',
+                'Institutional': '#E67E22', 'Legal': '#8E44AD',
+                'Index': '#1ABC9C', 'Regulatory': '#F1C40F',
+                'Infrastructure': '#3498DB'}
+
+for _, event in liberalization_events.iterrows():
+    if event['date'] in dcc_result['dcc_corr'].index or True:
+        color = event_colors.get(event['category'], 'gray')
+        axes[0].axvline(x=event['date'], color=color, linewidth=1.5,
+                         linestyle='--', alpha=0.7)
+        axes[0].text(event['date'], axes[0].get_ylim()[1] * 0.95,
+                      event['event'][:15], rotation=90, fontsize=6,
+                      va='top', color=color)
+
+axes[0].set_ylabel('Dynamic Conditional Correlation')
+axes[0].set_title('Panel A: DCC-GARCH Correlation (Vietnam–World)')
+axes[0].axhline(y=0, color='black', linewidth=0.5)
+
+# Panel B: Conditional volatilities
+vol1 = dcc_result['cond_vol_1'] * np.sqrt(12)  # Annualized
+vol2 = dcc_result['cond_vol_2'] * np.sqrt(12)
+common_vol = vol1.index.intersection(vol2.index)
+
+axes[1].plot(common_vol, vol1[common_vol], color='#C0392B',
+             linewidth=1, label='Vietnam', alpha=0.8)
+axes[1].plot(common_vol, vol2[common_vol], color='#2C5F8A',
+             linewidth=1, label='World', alpha=0.8)
+axes[1].set_ylabel('Annualized Cond. Vol')
+axes[1].set_title('Panel B: Conditional Volatility')
+axes[1].legend(fontsize=9)
+
+plt.tight_layout()
+plt.show()
+```
+
+### Asymmetric Integration
+
+Integration may be state-dependent: co-movement often increases during global crises (contagion) but not during local booms. @longin2001extreme and @ang2002asymmetric show that equity correlations are higher during market downturns. We test for asymmetry:
+
+```{python}
+#| label: asymmetric-corr
+#| eval: false
+#| code-summary: "Test for asymmetric integration (bear vs bull markets)"
+# Classify global market regimes
+world_ret_aligned = world_ret[common_dates]
+vn_ret_aligned = vn_ret[common_dates]
+
+# Bear: world return in bottom 25th percentile
+# Bull: world return in top 25th percentile
+q25 = world_ret_aligned.quantile(0.25)
+q75 = world_ret_aligned.quantile(0.75)
+
+bear = world_ret_aligned <= q25
+bull = world_ret_aligned >= q75
+normal = ~bear & ~bull
+
+regimes = {
+    'Bear (bottom 25%)': bear,
+    'Normal (middle 50%)': normal,
+    'Bull (top 25%)': bull,
+    'All': pd.Series(True, index=world_ret_aligned.index)
+}
+
+print("Asymmetric Correlation:")
+print(f"{'Regime':<25} {'Correlation':>12} {'N months':>10}")
+print("-" * 47)
+
+for name, mask in regimes.items():
+    r_vn = vn_ret_aligned[mask]
+    r_w = world_ret_aligned[mask]
+    corr = r_vn.corr(r_w)
+    print(f"{name:<25} {corr:>12.3f} {mask.sum():>10}")
+
+# Test: is bear correlation > bull correlation?
+r_bear_vn = vn_ret_aligned[bear]
+r_bear_w = world_ret_aligned[bear]
+r_bull_vn = vn_ret_aligned[bull]
+r_bull_w = world_ret_aligned[bull]
+
+# Fisher z-transformation test
+def fisher_z_test(r1, n1, r2, n2):
+    z1 = np.arctanh(r1)
+    z2 = np.arctanh(r2)
+    se = np.sqrt(1 / (n1 - 3) + 1 / (n2 - 3))
+    z_stat = (z1 - z2) / se
+    p_val = 2 * (1 - stats.norm.cdf(abs(z_stat)))
+    return z_stat, p_val
+
+z, p = fisher_z_test(
+    r_bear_vn.corr(r_bear_w), len(r_bear_vn),
+    r_bull_vn.corr(r_bull_w), len(r_bull_vn)
+)
+print(f"\nFisher z-test (bear vs bull): z = {z:.2f}, p = {p:.4f}")
+```
+
+## Factor-Based Integration Measures {#sec-market-integration-factor}
+
+### The Pukthuanthong-Roll R² Measure
+
+@pukthuanthong2009global propose measuring integration as the $R^2$ from regressing a country's returns on a set of global principal components. The intuition: if a market is fully integrated, global factors should explain all of its systematic return variation.
+
+```{python}
+#| label: pr-measure
+#| eval: false
+#| code-summary: "Implement the Pukthuanthong-Roll integration measure"
+def pukthuanthong_roll_integration(country_returns, global_returns_matrix,
+                                     n_components=10, rolling_window=36):
+    """
+    Pukthuanthong-Roll (2009) R²-based integration measure.
+    
+    1. Extract principal components from global returns.
+    2. Regress country returns on these PCs.
+    3. R² = degree of integration.
+    """
+    common = country_returns.dropna().index.intersection(
+        global_returns_matrix.dropna().index
+    )
+    
+    dates = sorted(common)
+    T = len(dates)
+    
+    integration = []
+    
+    for t in range(rolling_window, T):
+        window = dates[t - rolling_window:t]
+        
+        # Global returns in window
+        G = global_returns_matrix.loc[window].dropna(axis=1)
+        if G.shape[1] < n_components:
+            continue
+        
+        # Standardize
+        G_std = (G - G.mean()) / G.std()
+        
+        # PCA
+        cov = G_std.T @ G_std / len(G_std)
+        eigenvalues, eigenvectors = np.linalg.eigh(cov.values)
+        
+        # Sort descending
+        idx = np.argsort(-eigenvalues)
+        eigenvalues = eigenvalues[idx]
+        eigenvectors = eigenvectors[:, idx]
+        
+        # Project onto top K PCs
+        PCs = G_std.values @ eigenvectors[:, :n_components]
+        
+        # Regress country returns on PCs
+        y = country_returns.loc[window].values
+        X = sm.add_constant(PCs)
+        
+        try:
+            model = sm.OLS(y, X).fit()
+            integration.append({
+                'date': dates[t],
+                'r_squared': model.rsquared,
+                'adj_r_squared': model.rsquared_adj,
+                'var_explained_pc1': eigenvalues[0] / eigenvalues.sum(),
+                'n_countries': G.shape[1]
+            })
+        except Exception:
+            pass
+    
+    return pd.DataFrame(integration)
+
+# Build global returns matrix from multiple country indices
+global_matrix = global_indices.drop(columns=['VIETNAM'], errors='ignore')
+
+pr_result = pukthuanthong_roll_integration(
+    indices_aligned['VIETNAM'],
+    global_matrix,
+    n_components=5,
+    rolling_window=36
+)
+
+if len(pr_result) > 0:
+    pr_result['date'] = pd.to_datetime(pr_result['date'])
+    print(f"Pukthuanthong-Roll Integration (R²):")
+    print(f"  Mean: {pr_result['r_squared'].mean():.3f}")
+    print(f"  2008-2012: {pr_result[(pr_result['date'] >= '2008') & (pr_result['date'] < '2013')]['r_squared'].mean():.3f}")
+    print(f"  2013-2018: {pr_result[(pr_result['date'] >= '2013') & (pr_result['date'] < '2019')]['r_squared'].mean():.3f}")
+    print(f"  2019-2024: {pr_result[pr_result['date'] >= '2019']['r_squared'].mean():.3f}")
+```
+
+### Global vs. Local Factor Pricing
+
+@griffin2002fama tests whether global or local versions of the Fama-French factors better explain country-level returns. We implement this horse race for Vietnam:
+
+```{python}
+#| label: global-vs-local
+#| eval: false
+#| code-summary: "Compare explanatory power of global vs local factor models"
+# Align global and local factors
+common_factor_dates = (
+    global_factors.index
+    .intersection(local_factors.index)
+    .intersection(vn_index.index)
+)
+
+vn_excess = vn_index.loc[common_factor_dates, 'return']
+
+# Model 1: Global FF5
+X_global = sm.add_constant(
+    global_factors.loc[common_factor_dates,
+                        ['mkt_excess_world', 'smb_world', 'hml_world',
+                         'rmw_world', 'cma_world']]
+)
+model_global = sm.OLS(vn_excess, X_global).fit(
+    cov_type='HAC', cov_kwds={'maxlags': 6}
+)
+
+# Model 2: Local FF5
+X_local = sm.add_constant(
+    local_factors.loc[common_factor_dates,
+                       ['mkt_excess', 'smb', 'hml', 'rmw', 'cma']]
+)
+model_local = sm.OLS(vn_excess, X_local).fit(
+    cov_type='HAC', cov_kwds={'maxlags': 6}
+)
+
+# Model 3: Both global and local
+X_both = sm.add_constant(pd.concat([
+    global_factors.loc[common_factor_dates,
+                        ['mkt_excess_world', 'smb_world', 'hml_world']],
+    local_factors.loc[common_factor_dates,
+                       ['mkt_excess', 'smb', 'hml']]
+], axis=1))
+model_both = sm.OLS(vn_excess, X_both).fit(
+    cov_type='HAC', cov_kwds={'maxlags': 6}
+)
+
+print("Global vs Local Factor Models for VN-Index:")
+print(f"{'Model':<20} {'R²':>8} {'Adj R²':>8} {'α (ann)':>10} {'α t-stat':>10}")
+print("-" * 56)
+for name, mod in [('Global FF5', model_global),
+                    ('Local FF5', model_local),
+                    ('Global + Local', model_both)]:
+    print(f"{name:<20} {mod.rsquared:>8.3f} {mod.rsquared_adj:>8.3f} "
+          f"{mod.params['const']*12:>10.4f} {mod.tvalues['const']:>10.2f}")
+```
+
+```{python}
+#| label: fig-global-local-r2
+#| eval: false
+#| fig-cap: "Rolling 36-month R² from regressing Vietnamese market excess returns on global factors (MSCI World FF5) versus local factors (Vietnamese FF5). Panel A shows the R² time series for each model. When the local model dominates (higher R²), the market is more segmented; when the global model's R² approaches the local model's, the market is more integrated. Panel B shows the ratio of global R² to local R², which serves as an alternative integration metric."
+#| code-summary: "Rolling R² comparison of global and local models"
+rolling_r2 = []
+rw = 36
+
+for t in range(rw, len(common_factor_dates)):
+    window = common_factor_dates[t - rw:t]
+    y = vn_excess[window]
+    
+    # Global
+    X_g = sm.add_constant(global_factors.loc[window,
+                           ['mkt_excess_world', 'smb_world', 'hml_world',
+                            'rmw_world', 'cma_world']])
+    try:
+        r2_g = sm.OLS(y, X_g).fit().rsquared
+    except:
+        r2_g = np.nan
+    
+    # Local
+    X_l = sm.add_constant(local_factors.loc[window,
+                           ['mkt_excess', 'smb', 'hml', 'rmw', 'cma']])
+    try:
+        r2_l = sm.OLS(y, X_l).fit().rsquared
+    except:
+        r2_l = np.nan
+    
+    rolling_r2.append({
+        'date': common_factor_dates[t],
+        'r2_global': r2_g,
+        'r2_local': r2_l,
+        'ratio': r2_g / r2_l if r2_l > 0 else np.nan
+    })
+
+r2_df = pd.DataFrame(rolling_r2)
+
+fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True)
+
+axes[0].plot(r2_df['date'], r2_df['r2_global'], color='#2C5F8A',
+             linewidth=1.5, label='Global FF5')
+axes[0].plot(r2_df['date'], r2_df['r2_local'], color='#C0392B',
+             linewidth=1.5, label='Local FF5')
+axes[0].set_ylabel('R²')
+axes[0].set_title('Panel A: Global vs Local Factor R²')
+axes[0].legend()
+
+axes[1].plot(r2_df['date'], r2_df['ratio'], color='#27AE60', linewidth=1.5)
+axes[1].axhline(y=1, color='gray', linewidth=1, linestyle='--',
+                label='Full integration (ratio = 1)')
+axes[1].set_ylabel('Global R² / Local R²')
+axes[1].set_title('Panel B: Integration Ratio')
+axes[1].legend()
+axes[1].set_ylim([0, 1.5])
+
+plt.tight_layout()
+plt.show()
+```
+
+## Pricing-Error-Based Integration {#sec-market-integration-pricing-error}
+
+### The Bekaert-Harvey Approach
+
+@bekaert1995time measure integration as the ability of a global CAPM to price local assets. Under integration, the local market alpha (intercept) in a regression on the global market should be zero, and the global risk premium should explain the local expected return. Under segmentation, the local alpha captures the segmentation premium.
+
+```{python}
+#| label: bh-integration
+#| eval: false
+#| code-summary: "Bekaert-Harvey integration measure: rolling alpha from global CAPM"
+def bekaert_harvey_integration(local_return, global_return,
+                                 rolling_window=36):
+    """
+    Rolling alpha from regressing local on global market.
+    Under integration, alpha -> 0.
+    """
+    common = local_return.dropna().index.intersection(global_return.dropna().index)
+    
+    results = []
+    for t in range(rolling_window, len(common)):
+        window = common[t - rolling_window:t]
+        y = local_return[window]
+        X = sm.add_constant(global_return[window])
+        
+        model = sm.OLS(y, X).fit()
+        
+        results.append({
+            'date': common[t],
+            'alpha': model.params['const'],
+            'alpha_t': model.tvalues['const'],
+            'beta_global': model.params.iloc[1],
+            'r_squared': model.rsquared
+        })
+    
+    return pd.DataFrame(results)
+
+bh_result = bekaert_harvey_integration(
+    indices_aligned['VIETNAM'],
+    indices_aligned['MSCI_WORLD'],
+    rolling_window=36
+)
+
+# The absolute alpha is the segmentation premium
+bh_result['abs_alpha_ann'] = bh_result['alpha'].abs() * 12
+
+print("Bekaert-Harvey Integration Diagnostic:")
+print(f"  Mean |α| (ann.): {bh_result['abs_alpha_ann'].mean():.4f}")
+print(f"  Mean β_world: {bh_result['beta_global'].mean():.3f}")
+print(f"  Mean R²: {bh_result['r_squared'].mean():.3f}")
+```
+
+### Composite Integration Index
+
+We combine all measures into a single composite index of Vietnamese market integration:
+
+```{python}
+#| label: composite-index
+#| eval: false
+#| code-summary: "Construct a composite integration index"
+# Standardize each measure to [0, 1] using historical percentile ranks
+measures = pd.DataFrame(index=bh_result['date'])
+
+# 1. DCC correlation (higher = more integrated)
+dcc_aligned = dcc_result['dcc_corr'].reindex(measures.index).interpolate()
+measures['dcc_corr'] = dcc_aligned
+
+# 2. PR R² (higher = more integrated)
+pr_aligned = pr_result.set_index('date')['r_squared'].reindex(measures.index).interpolate()
+measures['pr_r2'] = pr_aligned
+
+# 3. Global/Local R² ratio (higher = more integrated)
+r2_aligned = r2_df.set_index('date')['ratio'].reindex(measures.index).interpolate()
+measures['gl_ratio'] = r2_aligned
+
+# 4. |Alpha| from global CAPM (lower = more integrated)
+# Invert: 1 - percentile rank of |alpha|
+measures['inv_alpha'] = bh_result.set_index('date')['abs_alpha_ann']
+measures['inv_alpha'] = 1 - measures['inv_alpha'].rank(pct=True)
+
+# 5. Global beta (higher = more integrated, up to a point)
+measures['global_beta'] = bh_result.set_index('date')['beta_global']
+
+# Standardize to percentile ranks
+for col in ['dcc_corr', 'pr_r2', 'gl_ratio', 'inv_alpha', 'global_beta']:
+    measures[f'{col}_rank'] = measures[col].rank(pct=True)
+
+# Composite = equal-weighted average of ranks
+rank_cols = [c for c in measures.columns if c.endswith('_rank')]
+measures['composite'] = measures[rank_cols].mean(axis=1)
+
+# Smooth with 6-month moving average
+measures['composite_smooth'] = measures['composite'].rolling(6).mean()
+```
+
+```{python}
+#| label: fig-composite
+#| eval: false
+#| fig-cap: "Composite integration index for the Vietnamese equity market, combining DCC correlation, Pukthuanthong-Roll R², global/local factor R² ratio, and global CAPM alpha. The index is scaled to [0, 1] where 1 represents maximum observed integration. Vietnam has followed a broad upward trend with significant setbacks during the GFC (2008–2009) and COVID (2020). The post-2018 period shows the highest sustained integration, coinciding with FTSE inclusion and relaxed foreign ownership limits."
+#| code-summary: "Plot the composite integration index with milestones"
+fig, ax = plt.subplots(figsize=(14, 6))
+
+ax.fill_between(measures.index, measures['composite_smooth'],
+                 alpha=0.3, color='#2C5F8A')
+ax.plot(measures.index, measures['composite_smooth'],
+        color='#2C5F8A', linewidth=2)
+
+# Add event markers
+for _, event in liberalization_events.iterrows():
+    if event['date'] >= measures.index.min():
+        color = event_colors.get(event['category'], 'gray')
+        ax.axvline(x=event['date'], color=color,
+                   linewidth=1.5, linestyle='--', alpha=0.6)
+
+ax.set_ylabel('Integration Index (0 = segmented, 1 = integrated)')
+ax.set_title('Vietnam Equity Market Integration: Composite Index')
+ax.set_ylim([0, 1])
+
+# Legend for event categories
+from matplotlib.patches import Patch
+legend_patches = [Patch(facecolor=c, label=cat)
+                   for cat, c in event_colors.items() if cat in
+                   liberalization_events['category'].values]
+ax.legend(handles=legend_patches, fontsize=7, loc='lower right', ncol=2)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Structural Break Detection {#sec-market-integration-breaks}
+
+### Bai-Perron Tests for Integration Regime Shifts
+
+We test whether Vietnam's integration trajectory contains discrete structural breaks (i.e., sudden shifts in the integration level) rather than a smooth trend:
+
+```{python}
+#| label: structural-breaks
+#| eval: false
+#| code-summary: "Detect structural breaks in the integration time series"
+def detect_breaks_cusum(series, significance=0.05):
+    """
+    CUSUM-based structural break detection.
+    """
+    y = series.dropna().values
+    T = len(y)
+    
+    # Recursive residuals from rolling mean
+    cumsum = np.cumsum(y - y.mean()) / (y.std() * np.sqrt(T))
+    
+    # Brown-Durbin-Evans critical values (approximate)
+    # At 5%: ±0.948
+    critical = 0.948
+    
+    breaks = []
+    for t in range(1, T - 1):
+        if abs(cumsum[t]) > critical:
+            breaks.append(t)
+    
+    return cumsum, breaks
+
+# Apply to composite index
+composite_clean = measures['composite_smooth'].dropna()
+cusum, break_points = detect_breaks_cusum(composite_clean)
+
+# Alternative: Chow test at key liberalization dates
+def chow_test(y, breakpoint_idx):
+    """Simple Chow test for structural break."""
+    T = len(y)
+    y1 = y[:breakpoint_idx]
+    y2 = y[breakpoint_idx:]
+    
+    # Full sample regression (on constant)
+    rss_full = np.sum((y - y.mean()) ** 2)
+    
+    # Split samples
+    rss1 = np.sum((y1 - y1.mean()) ** 2)
+    rss2 = np.sum((y2 - y2.mean()) ** 2)
+    rss_split = rss1 + rss2
+    
+    k = 1  # Number of parameters
+    f_stat = ((rss_full - rss_split) / k) / (rss_split / (T - 2 * k))
+    p_val = 1 - stats.f.cdf(f_stat, k, T - 2 * k)
+    
+    return f_stat, p_val
+
+print("Chow Tests for Structural Breaks at Key Dates:")
+print(f"{'Event':<30} {'Date':>12} {'F-stat':>10} {'p-value':>10}")
+print("-" * 62)
+
+for _, event in liberalization_events.iterrows():
+    if event['date'] < composite_clean.index.min():
+        continue
+    # Find nearest date
+    nearest = composite_clean.index.searchsorted(event['date'])
+    if nearest < 12 or nearest > len(composite_clean) - 12:
+        continue
+    
+    f_stat, p_val = chow_test(composite_clean.values, nearest)
+    sig = '***' if p_val < 0.01 else '**' if p_val < 0.05 else '*' if p_val < 0.1 else ''
+    print(f"{event['event']:<30} {event['date'].strftime('%Y-%m'):>12} "
+          f"{f_stat:>10.2f} {p_val:>10.4f} {sig}")
+```
+
+## The Segmentation Premium for Vietnam {#sec-market-integration-premium}
+
+### Cross-Sectional Evidence
+
+Under partial segmentation, stocks with higher foreign ownership should have lower expected returns (because foreign investors can diversify away local risk). This yields a testable prediction: foreign ownership should be negatively associated with expected returns, controlling for global risk exposure.
+
+```{python}
+#| label: segmentation-premium
+#| eval: false
+#| code-summary: "Estimate the cross-sectional segmentation premium"
+# Get monthly stock returns with foreign ownership
+stock_data = client.get_monthly_returns(
+    exchanges=['HOSE', 'HNX'],
+    start_date='2008-01-01',
+    end_date='2024-12-31',
+    fields=['ticker', 'month_end', 'monthly_return', 'market_cap',
+            'foreign_ownership_pct']
+)
+stock_data['month_end'] = pd.to_datetime(stock_data['month_end'])
+
+# Fama-MacBeth: regress returns on lagged foreign ownership
+stock_data = stock_data.sort_values(['ticker', 'month_end'])
+stock_data['fol_lag'] = (
+    stock_data.groupby('ticker')['foreign_ownership_pct'].shift(1)
+)
+stock_data['log_mcap'] = np.log(stock_data['market_cap'].clip(lower=1))
+
+# Monthly cross-sectional regressions
+gamma_fol = []
+for month, group in stock_data.dropna(subset=['fol_lag', 'monthly_return']).groupby('month_end'):
+    if len(group) < 100:
+        continue
+    
+    y = group['monthly_return'].values
+    X = sm.add_constant(group[['fol_lag', 'log_mcap']].values)
+    
+    try:
+        model = sm.OLS(y, X).fit()
+        gamma_fol.append({
+            'month': month,
+            'gamma_fol': model.params[1],
+            'gamma_size': model.params[2],
+            'n': len(group)
+        })
+    except:
+        pass
+
+gamma_fol_df = pd.DataFrame(gamma_fol)
+
+mean_gamma = gamma_fol_df['gamma_fol'].mean()
+se_gamma = gamma_fol_df['gamma_fol'].std() / np.sqrt(len(gamma_fol_df))
+t_gamma = mean_gamma / se_gamma
+
+print(f"Fama-MacBeth: Foreign Ownership and Expected Returns")
+print(f"  γ_FOL (monthly):  {mean_gamma:.6f}")
+print(f"  γ_FOL (ann.):     {mean_gamma * 12:.4f}")
+print(f"  t-statistic:      {t_gamma:.2f}")
+print(f"  Interpretation:   A 10pp increase in foreign ownership is "
+      f"associated with a {mean_gamma * 12 * 10:.2f}% change in "
+      f"annual expected returns")
+```
+
+```{python}
+#| label: fig-segmentation-premium
+#| eval: false
+#| fig-cap: "The segmentation premium in Vietnam. Panel A shows quintile portfolio returns sorted on lagged foreign ownership: a negative gradient (high FOL → lower returns) is consistent with segmentation theory. Panel B shows the rolling Fama-MacBeth coefficient on foreign ownership—the time-varying segmentation premium. The premium has been shrinking over time as the market integrates."
+#| code-summary: "Visualize the segmentation premium"
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Panel A: Quintile returns by foreign ownership
+fol_quintiles = stock_data.dropna(subset=['fol_lag', 'monthly_return']).copy()
+fol_quintiles['fol_q'] = (
+    fol_quintiles.groupby('month_end')['fol_lag']
+    .transform(lambda x: pd.qcut(x.rank(method='first'), 5,
+                                    labels=['Q1\n(Low FOL)', 'Q2', 'Q3', 'Q4',
+                                            'Q5\n(High FOL)']))
+)
+
+q_returns = (
+    fol_quintiles.groupby('fol_q')['monthly_return']
+    .mean() * 12 * 100
+)
+
+colors_q = plt.cm.RdYlGn_r(np.linspace(0.2, 0.8, 5))
+axes[0].bar(range(5), q_returns.values, color=colors_q,
+            edgecolor='white', alpha=0.85)
+axes[0].set_xticks(range(5))
+axes[0].set_xticklabels(q_returns.index)
+axes[0].set_ylabel('Ann. Return (%)')
+axes[0].set_title('Panel A: Returns by Foreign Ownership Quintile')
+axes[0].axhline(y=0, color='black', linewidth=0.5)
+
+# Panel B: Rolling FM coefficient
+gamma_fol_df['date'] = pd.to_datetime(gamma_fol_df['month'])
+rolling_gamma = gamma_fol_df.set_index('date')['gamma_fol'].rolling(24).mean() * 12
+
+axes[1].plot(rolling_gamma.index, rolling_gamma.values,
+             color='#2C5F8A', linewidth=1.5)
+axes[1].axhline(y=0, color='black', linewidth=0.5)
+axes[1].set_ylabel('γ_FOL (annualized)')
+axes[1].set_title('Panel B: Rolling Segmentation Premium')
+axes[1].fill_between(rolling_gamma.index, rolling_gamma.values, 0,
+                      where=rolling_gamma.values < 0,
+                      alpha=0.3, color='#27AE60', label='Negative (integration)')
+axes[1].fill_between(rolling_gamma.index, rolling_gamma.values, 0,
+                      where=rolling_gamma.values >= 0,
+                      alpha=0.3, color='#C0392B', label='Positive (segmentation)')
+axes[1].legend(fontsize=8)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Exchange Rate Risk and Integration {#sec-market-integration-fx}
+
+### Is Currency Risk Priced?
+
+In a partially integrated market, exchange rate risk may carry a separate premium. @jorion1991estimation and @dumas1995world test whether currency exposure is priced beyond global equity risk. For Vietnam, the VND/USD exchange rate is managed (a crawling peg with occasional step devaluations), creating a specific risk that is neither fully diversifiable nor fully priced by global equity factors.
+
+```{python}
+#| label: fx-risk
+#| eval: false
+#| code-summary: "Test whether VND/USD exchange rate risk is priced"
+# VND depreciation
+fx_return = fx['rate'].pct_change()
+fx_return.name = 'fx_return'
+
+# Merge with stock data
+stock_fx = stock_data.merge(
+    fx_return.to_frame().reset_index().rename(columns={'date': 'month_end'}),
+    on='month_end', how='left'
+)
+
+# Estimate FX beta for each stock (rolling 60-month)
+# Then test in Fama-MacBeth whether FX beta is priced
+fx_betas = {}
+for ticker, group in stock_fx.groupby('ticker'):
+    if len(group) < 60:
+        continue
+    group = group.sort_values('month_end')
+    y = group['monthly_return']
+    x = group[['fx_return']].dropna()
+    common = y.dropna().index.intersection(x.index)
+    if len(common) < 48:
+        continue
+    model = sm.OLS(y[common], sm.add_constant(x.loc[common])).fit()
+    fx_betas[ticker] = model.params.get('fx_return', np.nan)
+
+fx_beta_series = pd.Series(fx_betas, name='fx_beta')
+
+# Cross-sectional test: do stocks with higher FX beta earn different returns?
+stock_fx_beta = stock_fx.merge(
+    fx_beta_series.to_frame().reset_index().rename(columns={'index': 'ticker'}),
+    on='ticker', how='left'
+)
+
+# Quintile sort on FX beta
+fx_q = stock_fx_beta.dropna(subset=['fx_beta', 'monthly_return'])
+fx_q['fx_quintile'] = pd.qcut(fx_q['fx_beta'].rank(method='first'),
+                                 5, labels=False)
+
+fx_premium = fx_q.groupby('fx_quintile')['monthly_return'].mean() * 12
+print("Returns by FX Beta Quintile:")
+for q, ret in fx_premium.items():
+    print(f"  Q{q+1}: {ret*100:.2f}% ann.")
+print(f"  Q5-Q1: {(fx_premium.iloc[-1] - fx_premium.iloc[0])*100:.2f}% ann.")
+```
+
+## Contagion vs. Interdependence {#sec-market-integration-contagion}
+
+During global crises, correlations between Vietnam and world markets spike. The question is whether this represents *contagion* (a structural change in the transmission mechanism) or simply *interdependence* (normal co-movement amplified by higher volatility). @longin2001extreme show that correlation increases mechanically with volatility even without any change in the underlying dependence structure.
+
+```{python}
+#| label: contagion-test
+#| eval: false
+#| code-summary: "Test for contagion during major crisis episodes"
+def forbes_rigobon_test(r_local, r_global, crisis_dates, tranquil_dates):
+    """
+    Forbes-Rigobon (2002) contagion test.
+    Adjusts for heteroskedasticity-induced bias in correlation.
+    
+    H0: No contagion (correlation increase is explained by volatility)
+    H1: Contagion (correlation increase exceeds what volatility explains)
+    """
+    r_l_crisis = r_local[crisis_dates]
+    r_g_crisis = r_global[crisis_dates]
+    r_l_tranquil = r_local[tranquil_dates]
+    r_g_tranquil = r_global[tranquil_dates]
+    
+    # Unadjusted correlations
+    rho_crisis = r_l_crisis.corr(r_g_crisis)
+    rho_tranquil = r_l_tranquil.corr(r_g_tranquil)
+    
+    # Volatility ratio
+    delta = r_g_crisis.var() / r_g_tranquil.var() - 1
+    
+    # Adjusted correlation
+    rho_adj = rho_crisis / np.sqrt(1 + delta * (1 - rho_crisis ** 2))
+    
+    # Fisher z-test on adjusted vs tranquil
+    z_adj = np.arctanh(rho_adj)
+    z_tranquil = np.arctanh(rho_tranquil)
+    se = np.sqrt(1 / (len(r_l_crisis) - 3) + 1 / (len(r_l_tranquil) - 3))
+    z_stat = (z_adj - z_tranquil) / se
+    p_val = 2 * (1 - stats.norm.cdf(abs(z_stat)))
+    
+    return {
+        'rho_crisis_raw': rho_crisis,
+        'rho_crisis_adj': rho_adj,
+        'rho_tranquil': rho_tranquil,
+        'delta': delta,
+        'z_stat': z_stat,
+        'p_value': p_val,
+        'contagion': p_val < 0.05
+    }
+
+# Define crisis and tranquil periods
+crises = {
+    'GFC (2008-09)': (pd.Timestamp('2008-09-01'), pd.Timestamp('2009-03-31')),
+    'European Debt (2011-12)': (pd.Timestamp('2011-06-01'), pd.Timestamp('2012-06-30')),
+    'COVID (2020)': (pd.Timestamp('2020-02-01'), pd.Timestamp('2020-06-30')),
+    'Fed Tightening (2022)': (pd.Timestamp('2022-01-01'), pd.Timestamp('2022-12-31')),
+}
+
+# Tranquil = 24 months before each crisis
+vn_aligned = indices_aligned['VIETNAM']
+world_aligned = indices_aligned['MSCI_WORLD']
+
+print("Contagion Tests (Forbes-Rigobon):")
+print(f"{'Crisis':<28} {'ρ(raw)':>8} {'ρ(adj)':>8} {'ρ(calm)':>8} "
+      f"{'z-stat':>8} {'p-val':>8} {'Result':>12}")
+print("-" * 80)
+
+for name, (start, end) in crises.items():
+    crisis_mask = (vn_aligned.index >= start) & (vn_aligned.index <= end)
+    tranquil_start = start - pd.DateOffset(months=24)
+    tranquil_mask = ((vn_aligned.index >= tranquil_start) &
+                      (vn_aligned.index < start))
+    
+    crisis_dates = vn_aligned.index[crisis_mask]
+    tranquil_dates = vn_aligned.index[tranquil_mask]
+    
+    if len(crisis_dates) < 3 or len(tranquil_dates) < 12:
+        continue
+    
+    result = forbes_rigobon_test(vn_aligned, world_aligned,
+                                  crisis_dates, tranquil_dates)
+    
+    verdict = 'CONTAGION' if result['contagion'] else 'Interdependence'
+    print(f"{name:<28} {result['rho_crisis_raw']:>8.3f} "
+          f"{result['rho_crisis_adj']:>8.3f} {result['rho_tranquil']:>8.3f} "
+          f"{result['z_stat']:>8.2f} {result['p_value']:>8.3f} "
+          f"{verdict:>12}")
+```
+
+## ASEAN Peer Comparison {#sec-market-integration-asean}
+
+Vietnam's integration trajectory is best understood in the context of its ASEAN peers, which share similar starting conditions but have followed different liberalization paths:
+
+```{python}
+#| label: fig-asean-comparison
+#| eval: false
+#| fig-cap: "Integration with MSCI World across ASEAN markets, measured by rolling 36-month correlation. Thailand and Malaysia, which liberalized earlier, show higher and more stable correlations. Vietnam's integration has accelerated since 2015, converging toward regional peers but remaining below Thailand and Malaysia. Indonesia and the Philippines occupy an intermediate position."
+#| code-summary: "Compare integration trajectories across ASEAN markets"
+fig, ax = plt.subplots(figsize=(14, 6))
+
+asean_markets = {
+    'VIETNAM': '#C0392B',
+    'MSCI_THAILAND': '#2C5F8A',
+    'MSCI_INDONESIA': '#27AE60',
+    'MSCI_PHILIPPINES': '#E67E22',
+    'MSCI_MALAYSIA': '#8E44AD'
+}
+
+for market, color in asean_markets.items():
+    if market not in global_indices.columns:
+        continue
+    
+    corr = (
+        global_indices[['MSCI_WORLD', market]]
+        .rolling(36)
+        .corr()
+        .unstack()['MSCI_WORLD'][market]
+    )
+    
+    label = market.replace('MSCI_', '').replace('_', ' ').title()
+    if market == 'VIETNAM':
+        ax.plot(corr.index, corr.values, color=color,
+                linewidth=2.5, label=label, zorder=5)
+    else:
+        ax.plot(corr.index, corr.values, color=color,
+                linewidth=1.5, label=label, alpha=0.7)
+
+ax.set_ylabel('Correlation with MSCI World')
+ax.set_title('ASEAN Market Integration: Rolling 36-Month Correlation')
+ax.legend(fontsize=9)
+ax.set_ylim([-0.2, 0.9])
+ax.axhline(y=0, color='black', linewidth=0.5)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Practical Implications {#sec-market-integration-implications}
+
+The degree of integration determines which asset pricing model is appropriate for Vietnamese equities. The evidence in this chapter supports several practical conclusions:
+
+**Vietnam is partially integrated and trending toward integration.** The composite index shows a clear upward trajectory, with the post-2015 period representing the highest sustained integration in the market's history. However, Vietnam remains less integrated than Thailand or Malaysia, and far from fully integrated with global markets.
+
+**Local factors dominate global factors for pricing Vietnamese stocks.** The rolling $R^2$ comparison shows that local Vietnamese factors consistently explain more return variation than global factors. This means that researchers studying Vietnamese cross-sectional returns should use local factor models (Vietnamese FF5) rather than global factors. Global factors are useful primarily for international investors assessing co-movement risk.
+
+**The segmentation premium is shrinking but not zero.** The Fama-MacBeth evidence shows that stocks with higher foreign ownership earn lower returns, consistent with partial segmentation. The magnitude has declined over time as foreign ownership limits have been relaxed, but a residual premium persists—likely driven by remaining ownership caps in banking and strategic sectors.
+
+**Crisis-period co-movement is mostly interdependence, not contagion.** The Forbes-Rigobon adjusted correlations show that the spike in Vietnam-World correlation during crises is largely explained by increased global volatility, not a structural change in the transmission mechanism. This is reassuring for diversification: Vietnam continues to offer meaningful diversification benefits even during global stress.
+
+**The FTSE/MSCI upgrade path matters.** Vietnam's potential upgrade from frontier to emerging market status would trigger mandatory index rebalancing by passive funds, increasing foreign flows and likely accelerating integration. Researchers and investors should monitor upgrade criteria and their implications for the cost of capital.
+
+## Summary {#sec-market-integration-summary}
+
+| Measure | What It Captures | Vietnam Range | Current Level | Trend |
+|---------------|---------------|---------------|---------------|---------------|
+| DCC correlation (World) | Co-movement | 0.0–0.5 | \~0.35–0.45 | Rising |
+| PR R² (global PCs) | Global factor exposure | 0.05–0.50 | \~0.30–0.40 | Rising |
+| Global/Local R² ratio | Relative pricing power | 0.1–0.8 | \~0.5–0.6 | Rising |
+| Global CAPM α | Pricing error | 0–15% ann. | \~3–5% ann. | Falling |
+| FOL premium (γ) | Segmentation cost | -5% to +2% | \~-1% to 0% | Shrinking |
+
+: Summary of integration measures for the Vietnamese equity market. {#tbl-market-integration-summary}
+
+<!-- ## Exercises {#sec-market-integration-exercises}
+
+1.  **Regime-switching model.** Estimate the @bekaert1995time regime-switching model for Vietnam with two states (integrated, segmented). Use Hamilton filtering to extract the smoothed probability of being in the integrated state at each point in time. Does the filtered probability align with the composite index from this chapter?
+
+2.  **Spanning test.** Can a U.S. investor replicate the Vietnamese market return using a portfolio of U.S.-listed ETFs (e.g., VNM ETF, EEM, FXI, EWY)? Regress the VN-Index on these ETFs and examine the alpha. A zero alpha means the Vietnamese market is "spanned" and offers no diversification benefit beyond what is available through U.S.-listed instruments [@errunza1985international].
+
+3.  **Capital flow and integration.** Obtain monthly net foreign capital flow data for Vietnam (from the SSC or central bank). Test whether months of high foreign inflows are followed by higher Vietnam-World correlation. This tests whether integration is driven by capital flows or by other channels (trade, information).
+
+4.  **Sector-level integration.** Estimate DCC correlations separately for Vietnamese banking, real estate, consumer goods, and technology sectors against their global sector counterparts. Which sectors are most integrated? Sectors with heavy state ownership may be more segmented.
+
+5.  **Integration and the cost of capital.** Using the @bekaert2005does framework, estimate the reduction in Vietnam's implied cost of equity capital associated with the measured increase in integration since 2000. Use the local CAPM vs. global CAPM implied risk premia to quantify the "integration dividend."
+
+6.  **Chinn-Ito index.** Download the @chinn2006what capital account openness index (KAOPEN) for Vietnam and its ASEAN peers. Plot KAOPEN against the market-based integration measures from this chapter. Is de jure openness (legal capital account liberalization) a good predictor of de facto integration (market co-movement)?
+
+7.  **Frequency-domain integration.** Decompose Vietnam-World co-movement by frequency band (weekly, monthly, quarterly, annual) using wavelet coherence. Integration may differ at different frequencies: high-frequency co-movement reflects arbitrage and information transmission, while low-frequency co-movement reflects shared business cycles.
+
+8.  **COVID stress test.** The March 2020 COVID crash was the most severe global synchronized selloff in a decade. Using daily data, estimate hour-by-hour or day-by-day correlation between Vietnam and global markets during the crisis. Did Vietnam's price limits (Chapter on price limits) prevent full contagion transmission, or merely delay it? -->

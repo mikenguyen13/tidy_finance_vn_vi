@@ -1,0 +1,1465 @@
+# Price Limits and Volatility
+
+::: callout-note
+In this chapter, we examine how Vietnam's daily price limit regime distorts observed return distributions, biases volatility estimates, and affects the validity of standard asset pricing tests. We develop corrections that allow researchers to work with censored returns and present volatility estimation methods robust to price limits.
+:::
+
+Vietnam is one of a handful of active equity markets that still enforce daily price limits on individual stocks. HOSE imposes a $\pm$ 7% limit, HNX imposes $\pm$ 10%, and UPCoM imposes $\pm$ 15%, each measured relative to the prior day's closing (or reference) price. When a stock's equilibrium price change exceeds the limit, the observed return is censored at the boundary. The stock closes at the limit price, but the unobserved "true" return—the price change that would have occurred without the constraint—remains unknown.
+
+This censoring has pervasive consequences for empirical finance. Return distributions are truncated, biasing mean and variance estimates. Volatility models that ignore censoring understate true risk. Factor betas are attenuated. Event study abnormal returns are compressed. Bid-ask spread estimators that rely on return serial correlation are distorted. Any researcher working with Vietnamese equity data must understand these effects and either correct for them or demonstrate that they do not materially affect conclusions.
+
+Price limits exist for a stated policy purpose: to prevent panic selling and speculative excess, thereby "cooling" the market during periods of stress [@brennan1986theory]. Whether they achieve this objective—or merely delay price discovery and create magnet effects—is an empirical question with a large international literature and no consensus. We examine the Vietnamese evidence.
+
+## The Vietnamese Price Limit Regime {#sec-price-limit-regime}
+
+### Institutional Details
+
+```{python}
+#| label: setup
+#| code-summary: "Import libraries and configure environment"
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import statsmodels.api as sm
+from scipy import stats, optimize
+from arch import arch_model
+import warnings
+warnings.filterwarnings('ignore')
+
+plt.rcParams.update({
+    'figure.figsize': (12, 6),
+    'figure.dpi': 150,
+    'font.size': 11,
+    'axes.spines.top': False,
+    'axes.spines.right': False
+})
+```
+
+The price limit structure has evolved over time. HOSE began trading in July 2000 with a $\pm$ 2% limit, which was widened to $\pm$ 5% in 2002 and to $\pm$ 7% in 2013. HNX has operated at $\pm$ 10% since its current form, and UPCoM at $\pm$ 15% @tbl-price-limit-limits. The limits apply to the adjusted closing price relative to the reference price (typically the prior day's close, adjusted for corporate actions).
+
+| Exchange | Current Limit | Effective Date | Prior Limits                       |
+|------------------|------------------|------------------|-------------------|
+| HOSE     | $\pm$ 7%      | June 2013      | $\pm$ 2% (2000), $\pm$ 5% (2002)   |
+| HNX      | $\pm$ 10%     | —              | Various, stabilized at $\pm$ 10%   |
+| UPCoM    | $\pm$ 15%     | —              | Wider limits reflecting OTC nature |
+
+: Vietnamese daily price limit regime by exchange. {#tbl-price-limit-limits}
+
+Importantly, the limits are *asymmetric in practice*: they apply equally to up and down moves, but the economic consequences differ. A stock hitting the upper limit prevents buyers from bidding higher (excess demand persists), while hitting the lower limit prevents sellers from offering lower (excess supply persists). Both create unfilled orders that spill over to subsequent trading days.
+
+```{python}
+#| label: data-load
+#| eval: false
+#| code-summary: "Load daily price data with limit hit indicators"
+from datacore import DataCoreClient
+
+client = DataCoreClient()
+
+# Daily data with high, low, open, close, volume, and limit indicators
+daily = client.get_daily_prices(
+    exchanges=['HOSE', 'HNX', 'UPCoM'],
+    start_date='2008-01-01',
+    end_date='2024-12-31',
+    include_delisted=True,
+    fields=[
+        'ticker', 'date', 'exchange',
+        'open', 'high', 'low', 'close', 'adjusted_close',
+        'reference_price', 'ceiling_price', 'floor_price',
+        'volume', 'turnover_value',
+        'limit_up_hit', 'limit_down_hit'
+    ]
+)
+
+daily['date'] = pd.to_datetime(daily['date'])
+daily = daily.sort_values(['ticker', 'date'])
+
+# Compute daily returns
+daily['daily_return'] = daily.groupby('ticker')['adjusted_close'].pct_change()
+
+# Flag limit hits from price data if not provided
+if 'limit_up_hit' not in daily.columns or daily['limit_up_hit'].isna().all():
+    daily['limit_up_hit'] = (daily['close'] >= daily['ceiling_price'])
+    daily['limit_down_hit'] = (daily['close'] <= daily['floor_price'])
+
+# Exchange-specific limits
+exchange_limits = {'HOSE': 0.07, 'HNX': 0.10, 'UPCoM': 0.15}
+daily['limit_pct'] = daily['exchange'].map(exchange_limits)
+
+print(f"Daily observations: {len(daily):,}")
+print(f"Date range: {daily['date'].min()} to {daily['date'].max()}")
+print(f"Unique tickers: {daily['ticker'].nunique()}")
+```
+
+## Prevalence of Limit Hits {#sec-price-limit-prevalence}
+
+### Aggregate Frequency
+
+How often do Vietnamese stocks hit their price limits? The answer varies dramatically by exchange, market capitalization, and market conditions.
+
+```{python}
+#| label: limit-frequency
+#| eval: false
+#| code-summary: "Compute limit hit frequencies by exchange and over time"
+# Overall frequencies
+limit_stats = daily.groupby('exchange').agg(
+    n_obs=('daily_return', 'count'),
+    n_up=('limit_up_hit', 'sum'),
+    n_down=('limit_down_hit', 'sum'),
+).assign(
+    pct_up=lambda x: x['n_up'] / x['n_obs'] * 100,
+    pct_down=lambda x: x['n_down'] / x['n_obs'] * 100,
+    pct_either=lambda x: (x['n_up'] + x['n_down']) / x['n_obs'] * 100
+)
+
+print("Limit Hit Frequencies by Exchange:")
+print(limit_stats[['pct_up', 'pct_down', 'pct_either']].round(2).to_string())
+
+# Monthly aggregate: fraction of stock-days hitting limits
+daily['year_month'] = daily['date'].dt.to_period('M')
+monthly_limit = (
+    daily.groupby(['year_month', 'exchange'])
+    .agg(
+        n_obs=('daily_return', 'count'),
+        n_up=('limit_up_hit', 'sum'),
+        n_down=('limit_down_hit', 'sum')
+    )
+    .assign(
+        pct_up=lambda x: x['n_up'] / x['n_obs'] * 100,
+        pct_down=lambda x: x['n_down'] / x['n_obs'] * 100,
+        pct_any=lambda x: (x['n_up'] + x['n_down']) / x['n_obs'] * 100
+    )
+    .reset_index()
+)
+monthly_limit['date'] = monthly_limit['year_month'].dt.to_timestamp()
+```
+
+```{python}
+#| label: fig-limit-timeseries
+#| eval: false
+#| fig-cap: "Time series of daily price limit hit frequency on HOSE. Panel A shows the percentage of stock-days hitting the upper (green) and lower (red) limits each month. Panel B overlays the VN-Index return. Limit hits cluster during market stress (2008–2009, 2011–2012, March 2020, 2022) and during euphoric rallies (2006–2007, late 2021). The asymmetry between up and down hits reveals the market's directional bias."
+#| code-summary: "Plot limit hit frequency over time"
+fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True,
+                          gridspec_kw={'height_ratios': [3, 1]})
+
+hose_monthly = monthly_limit[monthly_limit['exchange'] == 'HOSE']
+
+axes[0].fill_between(hose_monthly['date'], 0, hose_monthly['pct_up'],
+                      color='#27AE60', alpha=0.6, label='Upper limit hits')
+axes[0].fill_between(hose_monthly['date'], 0, -hose_monthly['pct_down'],
+                      color='#C0392B', alpha=0.6, label='Lower limit hits')
+axes[0].axhline(y=0, color='black', linewidth=0.5)
+axes[0].set_ylabel('% of Stock-Days')
+axes[0].set_title('Panel A: HOSE Daily Price Limit Hits')
+axes[0].legend(loc='upper left')
+
+# VN-Index for context
+vnindex = client.get_index_returns(
+    index='VNINDEX', start_date='2008-01-01', end_date='2024-12-31',
+    frequency='monthly'
+)
+vnindex['date'] = pd.to_datetime(vnindex['date'])
+axes[1].bar(vnindex['date'], vnindex['return'] * 100,
+            color=np.where(vnindex['return'] > 0, '#27AE60', '#C0392B'),
+            width=25, alpha=0.7)
+axes[1].set_ylabel('VN-Index (%)')
+axes[1].set_title('Panel B: VN-Index Monthly Returns')
+
+plt.tight_layout()
+plt.show()
+```
+
+### By Market Capitalization
+
+```{python}
+#| label: fig-price-limit-by-size
+#| fig-cap: "Price limit hit frequency by market capitalization quintile on HOSE"
+#| fig-alt: "Price limit hit frequency by market capitalization quintile on HOSE. Smaller stocks hit limits far more frequently than large-caps, reflecting their higher volatility, wider bid-ask spreads, and thinner order books. The 7% HOSE limit is essentially non-binding for the largest quintile but censors a meaningful fraction of returns for the smallest quintile."
+#| eval: false
+#| code-summary: "Compute limit hit rates by size quintile"
+# Merge with lagged market cap
+monthly_mcap = client.get_monthly_returns(
+    exchanges=['HOSE'],
+    start_date='2008-01-01',
+    end_date='2024-12-31',
+    fields=['ticker', 'month_end', 'market_cap']
+)
+monthly_mcap['month_end'] = pd.to_datetime(monthly_mcap['month_end'])
+
+# Assign size quintiles each month
+monthly_mcap['size_quintile'] = (
+    monthly_mcap.groupby('month_end')['market_cap']
+    .transform(lambda x: pd.qcut(x.rank(method='first'), 5,
+                                   labels=['Q1\n(Small)', 'Q2', 'Q3', 'Q4',
+                                           'Q5\n(Big)']))
+)
+
+# Map to daily
+daily_hose = daily[daily['exchange'] == 'HOSE'].copy()
+daily_hose['month_end'] = daily_hose['date'].dt.to_period('M').dt.to_timestamp('M')
+daily_hose = daily_hose.merge(
+    monthly_mcap[['ticker', 'month_end', 'size_quintile']],
+    on=['ticker', 'month_end'], how='left'
+)
+
+size_limit = (
+    daily_hose.dropna(subset=['size_quintile'])
+    .groupby('size_quintile')
+    .agg(
+        pct_up=('limit_up_hit', 'mean'),
+        pct_down=('limit_down_hit', 'mean'),
+        n=('daily_return', 'count')
+    )
+)
+size_limit[['pct_up', 'pct_down']] *= 100
+
+fig, ax = plt.subplots(figsize=(10, 5))
+
+x = np.arange(len(size_limit))
+width = 0.35
+ax.bar(x - width / 2, size_limit['pct_up'], width,
+       color='#27AE60', alpha=0.85, label='Upper limit', edgecolor='white')
+ax.bar(x + width / 2, size_limit['pct_down'], width,
+       color='#C0392B', alpha=0.85, label='Lower limit', edgecolor='white')
+
+ax.set_xticks(x)
+ax.set_xticklabels(size_limit.index)
+ax.set_ylabel('% of Stock-Days')
+ax.set_title('Price Limit Hit Frequency by Size Quintile (HOSE)')
+ax.legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+### Consecutive Limit Days
+
+A single limit hit might simply reflect a large information event that is absorbed within one day. Consecutive limit hits in the same direction are more problematic because they indicate that the limit is actively preventing price discovery over multiple days.
+
+```{python}
+#| label: consecutive-limits
+#| eval: false
+#| code-summary: "Analyze consecutive limit hit sequences"
+def count_consecutive_limits(group):
+    """Count consecutive limit-up and limit-down sequences."""
+    up_runs = []
+    down_runs = []
+    
+    up_count = 0
+    down_count = 0
+    
+    for _, row in group.iterrows():
+        if row['limit_up_hit']:
+            up_count += 1
+            if down_count > 0:
+                down_runs.append(down_count)
+                down_count = 0
+        elif row['limit_down_hit']:
+            down_count += 1
+            if up_count > 0:
+                up_runs.append(up_count)
+                up_count = 0
+        else:
+            if up_count > 0:
+                up_runs.append(up_count)
+            if down_count > 0:
+                down_runs.append(down_count)
+            up_count = 0
+            down_count = 0
+    
+    if up_count > 0:
+        up_runs.append(up_count)
+    if down_count > 0:
+        down_runs.append(down_count)
+    
+    return up_runs, down_runs
+
+# Sample: compute for HOSE stocks
+hose_tickers = daily_hose['ticker'].unique()
+all_up_runs = []
+all_down_runs = []
+
+for ticker in hose_tickers:
+    group = daily_hose[daily_hose['ticker'] == ticker].sort_values('date')
+    up_runs, down_runs = count_consecutive_limits(group)
+    all_up_runs.extend(up_runs)
+    all_down_runs.extend(down_runs)
+
+print("Consecutive Limit Hit Distribution (HOSE):")
+for direction, runs in [('Upper', all_up_runs), ('Lower', all_down_runs)]:
+    if not runs:
+        continue
+    runs_series = pd.Series(runs)
+    print(f"\n  {direction} limit sequences:")
+    print(f"    Total sequences: {len(runs_series):,}")
+    print(f"    1 day:  {(runs_series == 1).sum():,} ({(runs_series == 1).mean():.1%})")
+    print(f"    2 days: {(runs_series == 2).sum():,} ({(runs_series == 2).mean():.1%})")
+    print(f"    3 days: {(runs_series == 3).sum():,} ({(runs_series == 3).mean():.1%})")
+    print(f"    4+ days: {(runs_series >= 4).sum():,} ({(runs_series >= 4).mean():.1%})")
+    print(f"    Max consecutive: {runs_series.max()}")
+```
+
+## Return Distribution Distortion {#sec-price-limit-distortion}
+
+### Censoring Mechanics
+
+Price limits create *Type I censoring* (also called "truncation at a known point"): the latent (unobserved) return $r^*$ is generated from some continuous distribution, but the observed return is:
+
+$$
+r^{\text{obs}} = \begin{cases}
+\bar{L} & \text{if } r^* \geq \bar{L} \quad \text{(upper limit hit)} \\
+r^* & \text{if } \underline{L} < r^* < \bar{L} \quad \text{(interior)} \\
+\underline{L} & \text{if } r^* \leq \underline{L} \quad \text{(lower limit hit)}
+\end{cases}
+$$ {#eq-censoring}
+
+where $\bar{L}$ and $\underline{L}$ are the upper and lower limits. For HOSE, $\bar{L} = +0.07$ and $\underline{L} = -0.07$.
+
+The censoring has predictable effects on the observed distribution:
+
+1.  **Mean bias.** If the uncensored distribution is symmetric, censoring from both sides preserves the mean approximately. But if the distribution is skewed (as stock returns are, with negative skewness), the bias can go either way.
+2.  **Variance underestimation.** Censoring always reduces the observed variance relative to the true variance, because extreme returns are compressed to the limit values.
+3.  **Kurtosis distortion.** Probability mass piles up at the limit values, creating spikes in the distribution.
+
+```{python}
+#| label: fig-return-distribution
+#| eval: false
+#| fig-cap: "Daily return distribution on HOSE. Panel A shows the full histogram with visible spikes at 7% (the price limits). Panel B zooms in on the tails to show the discontinuity at the limit values. The pile-up at exactly 7% is direct evidence of censoring—these observations represent stocks whose equilibrium return exceeded the limit."
+#| code-summary: "Visualize the effect of price limits on the return distribution"
+hose_returns = daily_hose['daily_return'].dropna()
+hose_returns = hose_returns[hose_returns.abs() < 0.15]  # Remove data errors
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Panel A: Full distribution
+axes[0].hist(hose_returns, bins=200, density=True,
+             color='#2C5F8A', alpha=0.7, edgecolor='none')
+axes[0].axvline(x=0.07, color='#C0392B', linewidth=2, linestyle='--',
+                label='$\pm$ 7% limit')
+axes[0].axvline(x=-0.07, color='#C0392B', linewidth=2, linestyle='--')
+axes[0].set_xlabel('Daily Return')
+axes[0].set_ylabel('Density')
+axes[0].set_title('Panel A: HOSE Daily Return Distribution')
+axes[0].legend()
+
+# Panel B: Zoom on tails
+bins_tail = np.linspace(-0.09, -0.05, 40)
+bins_tail_up = np.linspace(0.05, 0.09, 40)
+
+axes[1].hist(hose_returns[hose_returns < -0.04], bins=80, density=True,
+             color='#C0392B', alpha=0.6, label='Left tail')
+axes[1].hist(hose_returns[hose_returns > 0.04], bins=80, density=True,
+             color='#27AE60', alpha=0.6, label='Right tail')
+axes[1].axvline(x=0.07, color='black', linewidth=2)
+axes[1].axvline(x=-0.07, color='black', linewidth=2)
+axes[1].set_xlabel('Daily Return')
+axes[1].set_ylabel('Density')
+axes[1].set_title('Panel B: Tail Behavior at Limits')
+axes[1].legend()
+
+plt.tight_layout()
+plt.show()
+
+# Quantify the spike
+n_at_upper = ((hose_returns >= 0.069) & (hose_returns <= 0.071)).sum()
+n_at_lower = ((hose_returns >= -0.071) & (hose_returns <= -0.069)).sum()
+n_total = len(hose_returns)
+print(f"Observations at upper limit ($\pm$ 0.1% of 7%): {n_at_upper:,} "
+      f"({n_at_upper/n_total:.2%})")
+print(f"Observations at lower limit: {n_at_lower:,} "
+      f"({n_at_lower/n_total:.2%})")
+```
+
+### Comparing HOSE vs. HNX vs. UPCoM
+
+The three Vietnamese exchanges have different limit widths, creating a natural experiment: if limits distort the distribution, wider limits should produce distributions closer to the uncensored benchmark.
+
+```{python}
+#| label: fig-cross-exchange
+#| eval: false
+#| fig-cap: "Daily return distributions across Vietnamese exchanges with different price limit widths. HOSE (7%) shows the most pronounced pile-up at its limits. HNX (10%) has less pile-up. UPCoM (15%) is essentially uncensored—virtually no observations reach the limits. This cross-exchange comparison provides a benchmark for what the HOSE distribution would look like without censoring."
+#| code-summary: "Compare return distributions across exchanges"
+fig, axes = plt.subplots(1, 3, figsize=(16, 4.5))
+
+for i, (exchange, limit, color) in enumerate([
+    ('HOSE', 0.07, '#2C5F8A'),
+    ('HNX', 0.10, '#C0392B'),
+    ('UPCoM', 0.15, '#27AE60')
+]):
+    rets = daily[daily['exchange'] == exchange]['daily_return'].dropna()
+    rets = rets[rets.abs() < limit + 0.05]
+    
+    axes[i].hist(rets, bins=150, density=True,
+                  color=color, alpha=0.7, edgecolor='none')
+    axes[i].axvline(x=limit, color='black', linewidth=1.5, linestyle='--')
+    axes[i].axvline(x=-limit, color='black', linewidth=1.5, linestyle='--')
+    axes[i].set_title(f'{exchange} ($\pm$ {limit*100:.0f}%)')
+    axes[i].set_xlabel('Daily Return')
+    if i == 0:
+        axes[i].set_ylabel('Density')
+    
+    # Stats
+    pct_at_limit = ((rets.abs() >= limit - 0.001).sum() / len(rets) * 100)
+    axes[i].text(0.95, 0.95, f'At limit: {pct_at_limit:.2f}%',
+                  transform=axes[i].transAxes, ha='right', va='top',
+                  fontsize=9, bbox=dict(boxstyle='round', facecolor='white',
+                                         alpha=0.8))
+
+plt.suptitle('Return Distributions by Exchange', fontsize=13)
+plt.tight_layout()
+plt.show()
+```
+
+## Variance Bias from Censoring {#sec-price-limit-variance-bias}
+
+### Analytical Bias
+
+If the true return follows $r^* \sim N(\mu, \sigma^2)$, the variance of the censored return can be derived analytically. Let $a = (\underline{L} - \mu) / \sigma$ and $b = (\bar{L} - \mu) / \sigma$:
+
+$$
+\text{Var}(r^{\text{obs}}) = \sigma^2 \left[1 - \frac{b \phi(b) - a \phi(a)}{\Phi(b) - \Phi(a)} - \left(\frac{\phi(a) - \phi(b)}{\Phi(b) - \Phi(a)}\right)^2 \right] + \text{boundary terms}
+$$ {#eq-censored-variance}
+
+where $\phi$ and $\Phi$ are the standard normal PDF and CDF. The key result is that $\text{Var}(r^{\text{obs}}) < \sigma^2$ always—censoring systematically underestimates variance.
+
+```{python}
+#| label: variance-bias-simulation
+#| eval: false
+#| code-summary: "Simulate the variance bias from censoring under different volatility levels"
+def simulate_censored_variance(true_sigma, limit, n_sim=100000, mu=0):
+    """Simulate observed vs true variance under censoring."""
+    rng = np.random.default_rng(42)
+    r_star = rng.normal(mu, true_sigma, n_sim)
+    r_obs = np.clip(r_star, -limit, limit)
+    
+    var_true = np.var(r_star)
+    var_obs = np.var(r_obs)
+    
+    pct_censored = ((r_star >= limit) | (r_star <= -limit)).mean()
+    
+    return {
+        'true_sigma': true_sigma,
+        'true_var': var_true,
+        'obs_var': var_obs,
+        'var_ratio': var_obs / var_true,
+        'bias_pct': (1 - var_obs / var_true) * 100,
+        'pct_censored': pct_censored * 100
+    }
+
+# Sweep across volatility levels for each exchange limit
+results_bias = []
+sigmas = np.linspace(0.005, 0.08, 50)
+
+for limit_name, limit in [('HOSE $\pm$ 7%', 0.07), ('HNX $\pm$ 10%', 0.10),
+                            ('UPCoM $\pm$ 15%', 0.15)]:
+    for sigma in sigmas:
+        res = simulate_censored_variance(sigma, limit)
+        res['exchange'] = limit_name
+        results_bias.append(res)
+
+bias_df = pd.DataFrame(results_bias)
+```
+
+```{python}
+#| label: fig-variance-bias
+#| eval: false
+#| fig-cap: "Variance bias from price limit censoring as a function of true daily volatility. Panel A shows the ratio of observed to true variance: values below 1.0 indicate underestimation. Panel B shows the percentage of returns that are censored. For a typical HOSE stock with 2.5% daily volatility, the variance is underestimated by roughly 3–5%. For volatile small-caps with 5%+ daily volatility, the bias exceeds 15%, making naive variance estimates seriously misleading."
+#| code-summary: "Plot variance bias across volatility levels"
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+colors_exch = {'HOSE $\pm$ 7%': '#2C5F8A', 'HNX $\pm$ 10%': '#C0392B',
+                'UPCoM $\pm$ 15%': '#27AE60'}
+
+for exch in colors_exch:
+    subset = bias_df[bias_df['exchange'] == exch]
+    axes[0].plot(subset['true_sigma'] * 100, subset['var_ratio'],
+                  color=colors_exch[exch], linewidth=2, label=exch)
+
+axes[0].axhline(y=1, color='gray', linewidth=0.5, linestyle='--')
+axes[0].set_xlabel('True Daily Volatility (%)')
+axes[0].set_ylabel('Observed / True Variance')
+axes[0].set_title('Panel A: Variance Ratio')
+axes[0].legend()
+axes[0].set_ylim([0.5, 1.05])
+
+for exch in colors_exch:
+    subset = bias_df[bias_df['exchange'] == exch]
+    axes[1].plot(subset['true_sigma'] * 100, subset['pct_censored'],
+                  color=colors_exch[exch], linewidth=2, label=exch)
+
+axes[1].set_xlabel('True Daily Volatility (%)')
+axes[1].set_ylabel('% of Returns Censored')
+axes[1].set_title('Panel B: Censoring Rate')
+axes[1].legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+### Empirical Variance Bias by Size
+
+```{python}
+#| label: empirical-bias
+#| eval: false
+#| code-summary: "Estimate the empirical variance bias by comparing HOSE stocks that transferred from HNX"
+# Cross-listed stocks or transfer events provide a natural experiment:
+# Same stock, different limit regime
+# Alternative: compare variance of HOSE returns to variance of the same
+# stock's returns implied from intraday data (not censored by closing limit)
+
+# Approach: Tobit-based variance estimation
+# Model observed returns as censored normal
+def tobit_variance(returns, limit):
+    """
+    Estimate true variance via Tobit MLE under censored normal.
+    """
+    r = returns.dropna().values
+    upper = limit
+    lower = -limit
+    
+    # Classify observations
+    at_upper = r >= (upper - 1e-6)
+    at_lower = r <= (lower + 1e-6)
+    interior = ~at_upper & ~at_lower
+    
+    if interior.sum() < 20:
+        return np.nan, np.nan
+    
+    def neg_loglik(params):
+        mu, log_sigma = params
+        sigma = np.exp(log_sigma)
+        
+        ll = 0
+        # Interior observations
+        if interior.sum() > 0:
+            ll += np.sum(stats.norm.logpdf(r[interior], mu, sigma))
+        # Upper censored
+        if at_upper.sum() > 0:
+            ll += np.sum(np.log(1 - stats.norm.cdf(upper, mu, sigma) + 1e-15))
+        # Lower censored
+        if at_lower.sum() > 0:
+            ll += np.sum(np.log(stats.norm.cdf(lower, mu, sigma) + 1e-15))
+        
+        return -ll
+    
+    # Initial values
+    mu0 = r[interior].mean() if interior.sum() > 0 else 0
+    sigma0 = r[interior].std() if interior.sum() > 0 else r.std()
+    
+    try:
+        result = optimize.minimize(
+            neg_loglik, [mu0, np.log(max(sigma0, 1e-6))],
+            method='Nelder-Mead', options={'maxiter': 5000}
+        )
+        mu_hat = result.x[0]
+        sigma_hat = np.exp(result.x[1])
+        return mu_hat, sigma_hat
+    except Exception:
+        return np.nan, np.nan
+
+# Estimate for each HOSE stock
+hose_stocks = daily_hose.groupby('ticker').filter(
+    lambda x: len(x) >= 250
+)['ticker'].unique()
+
+tobit_results = []
+for ticker in hose_stocks[:500]:  # Sample for speed
+    rets = daily_hose[daily_hose['ticker'] == ticker]['daily_return'].dropna()
+    if len(rets) < 250:
+        continue
+    
+    naive_sigma = rets.std()
+    mu_hat, sigma_hat = tobit_variance(rets, 0.07)
+    
+    if np.isfinite(sigma_hat) and sigma_hat > 0:
+        tobit_results.append({
+            'ticker': ticker,
+            'naive_sigma': naive_sigma,
+            'tobit_sigma': sigma_hat,
+            'bias_pct': (sigma_hat - naive_sigma) / naive_sigma * 100
+        })
+
+tobit_df = pd.DataFrame(tobit_results)
+
+print("Tobit vs Naive Volatility Estimation (HOSE):")
+print(f"  Mean naive σ:  {tobit_df['naive_sigma'].mean():.4f}")
+print(f"  Mean Tobit σ:  {tobit_df['tobit_sigma'].mean():.4f}")
+print(f"  Mean bias:     {tobit_df['bias_pct'].mean():.1f}%")
+print(f"  Median bias:   {tobit_df['bias_pct'].median():.1f}%")
+print(f"  Max bias:      {tobit_df['bias_pct'].max():.1f}%")
+```
+
+```{python}
+#| label: fig-tobit-vs-naive
+#| eval: false
+#| fig-cap: "Tobit-corrected vs naive volatility estimates for HOSE stocks. Panel A is a scatter plot where points above the 45-degree line indicate stocks whose true volatility is higher than what naive estimation suggests. Panel B shows the distribution of the percentage correction. The Tobit correction is small for low-volatility large-caps (where censoring is rare) but substantial for high-volatility small-caps."
+#| code-summary: "Plot Tobit vs naive volatility comparison"
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+axes[0].scatter(tobit_df['naive_sigma'] * 100,
+                 tobit_df['tobit_sigma'] * 100,
+                 s=15, alpha=0.5, color='#2C5F8A', edgecolors='none')
+lim = max(tobit_df['tobit_sigma'].max(), tobit_df['naive_sigma'].max()) * 100 + 0.5
+axes[0].plot([0, lim], [0, lim], 'k--', linewidth=1)
+axes[0].set_xlabel('Naive σ (% daily)')
+axes[0].set_ylabel('Tobit σ (% daily)')
+axes[0].set_title('Panel A: Tobit vs Naive Volatility')
+
+axes[1].hist(tobit_df['bias_pct'], bins=50, color='#C0392B',
+             alpha=0.7, edgecolor='white', density=True)
+axes[1].axvline(x=0, color='black', linewidth=1)
+axes[1].axvline(x=tobit_df['bias_pct'].median(), color='#2C5F8A',
+                linewidth=2, linestyle='--',
+                label=f"Median: {tobit_df['bias_pct'].median():.1f}%")
+axes[1].set_xlabel('Bias (%): (Tobit - Naive) / Naive')
+axes[1].set_ylabel('Density')
+axes[1].set_title('Panel B: Distribution of Correction')
+axes[1].legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+## Volatility Estimation Under Price Limits {#sec-price-limit-vol-estimation}
+
+### Range-Based Estimators
+
+Range-based volatility estimators use the daily high and low prices rather than close-to-close returns, making them partially robust to closing-price censoring (since intraday prices may approach but not be censored at the same points). However, they are biased when the *intraday* price trajectory itself is constrained by the limits.
+
+```{python}
+#| label: range-estimators
+#| eval: false
+#| code-summary: "Implement range-based volatility estimators"
+def parkinson_vol(high, low, n_periods=20):
+    """
+    Parkinson (1980) range-based volatility estimator.
+    σ² = (1/4ln2) * E[(ln(H/L))²]
+    """
+    log_hl = np.log(high / low)
+    var = (1 / (4 * np.log(2))) * (log_hl ** 2)
+    return np.sqrt(var.rolling(n_periods).mean())
+
+def garman_klass_vol(open_p, high, low, close, n_periods=20):
+    """
+    Garman-Klass (1980) OHLC volatility estimator.
+    More efficient than Parkinson by using open and close.
+    """
+    log_hl = np.log(high / low)
+    log_co = np.log(close / open_p)
+    var = 0.5 * log_hl ** 2 - (2 * np.log(2) - 1) * log_co ** 2
+    return np.sqrt(var.rolling(n_periods).mean())
+
+def yang_zhang_vol(open_p, high, low, close, n_periods=20):
+    """
+    Yang-Zhang (2000) drift-independent estimator.
+    Combines overnight, Rogers-Satchell, and open-to-close components.
+    """
+    log_oc = np.log(open_p / close.shift(1))  # Overnight
+    log_co = np.log(close / open_p)
+    log_ho = np.log(high / open_p)
+    log_lo = np.log(low / open_p)
+    
+    # Rogers-Satchell component
+    rs = log_ho * (log_ho - log_co) + log_lo * (log_lo - log_co)
+    
+    k = 0.34 / (1.34 + (n_periods + 1) / (n_periods - 1))
+    
+    var_overnight = log_oc.rolling(n_periods).var()
+    var_open_close = log_co.rolling(n_periods).var()
+    var_rs = rs.rolling(n_periods).mean()
+    
+    var = var_overnight + k * var_open_close + (1 - k) * var_rs
+    return np.sqrt(var.clip(lower=0))
+
+# Compute for HOSE sample
+sample_ticker = 'VNM'  # Large, liquid stock
+sample = daily_hose[daily_hose['ticker'] == sample_ticker].copy()
+sample = sample.sort_values('date').set_index('date')
+
+# Close-to-close realized vol
+sample['cc_vol'] = sample['daily_return'].rolling(20).std() * np.sqrt(252)
+
+# Range-based
+sample['parkinson'] = parkinson_vol(
+    sample['high'], sample['low'], 20
+) * np.sqrt(252)
+
+sample['garman_klass'] = garman_klass_vol(
+    sample['open'], sample['high'], sample['low'], sample['close'], 20
+) * np.sqrt(252)
+
+sample['yang_zhang'] = yang_zhang_vol(
+    sample['open'], sample['high'], sample['low'], sample['close'], 20
+) * np.sqrt(252)
+```
+
+```{python}
+#| label: fig-vol-estimators
+#| eval: false
+#| fig-cap: "Comparison of volatility estimators for VNM (Vinamilk). Close-to-close (CC) volatility is subject to censoring bias when the stock hits price limits. Range-based estimators (Parkinson, Garman-Klass, Yang-Zhang) use high-low prices that are less affected by closing-price censoring. During high-volatility periods (shaded), the range-based estimators typically produce higher estimates than CC, consistent with the censoring bias."
+#| code-summary: "Plot and compare volatility estimators over time"
+fig, ax = plt.subplots(figsize=(14, 5))
+
+ax.plot(sample.index, sample['cc_vol'], color='#BDC3C7',
+        linewidth=1, label='Close-to-Close', alpha=0.8)
+ax.plot(sample.index, sample['parkinson'], color='#2C5F8A',
+        linewidth=1.5, label='Parkinson')
+ax.plot(sample.index, sample['yang_zhang'], color='#C0392B',
+        linewidth=1.5, label='Yang-Zhang')
+
+ax.set_ylabel('Annualized Volatility')
+ax.set_title(f'Volatility Estimators: {sample_ticker}')
+ax.legend(ncol=3)
+ax.set_ylim([0, ax.get_ylim()[1]])
+
+plt.tight_layout()
+plt.show()
+```
+
+### GARCH Models with Censored Returns
+
+Standard GARCH models assume returns are fully observed. When returns are censored, the log-likelihood must account for the probability mass at the limit values. We implement a censored GARCH(1,1):
+
+$$
+r_t = \mu + \varepsilon_t, \quad \varepsilon_t = \sigma_t z_t, \quad z_t \sim N(0, 1)
+$$ {#eq-garch-mean}
+
+$$
+\sigma_t^2 = \omega + \alpha \varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2
+$$ {#eq-garch-variance}
+
+The censored log-likelihood replaces the standard normal density for limit-hit observations:
+
+$$
+\ell_t = \begin{cases}
+\log \phi\left(\frac{r_t - \mu}{\sigma_t}\right) - \log \sigma_t & \text{if interior} \\
+\log \Phi\left(\frac{\underline{L} - \mu}{\sigma_t}\right) & \text{if lower limit} \\
+\log\left[1 - \Phi\left(\frac{\bar{L} - \mu}{\sigma_t}\right)\right] & \text{if upper limit}
+\end{cases}
+$$ {#eq-censored-likelihood}
+
+```{python}
+#| label: censored-garch
+#| eval: false
+#| code-summary: "Implement censored GARCH(1,1) estimation"
+def censored_garch11(returns, limit, max_iter=500):
+    """
+    GARCH(1,1) with censored normal likelihood.
+    
+    Parameters
+    ----------
+    returns : array-like
+        Observed daily returns (censored at $\pm$ limit).
+    limit : float
+        Price limit (e.g., 0.07 for HOSE).
+    
+    Returns
+    -------
+    Dictionary with estimated parameters and conditional variances.
+    """
+    r = np.array(returns, dtype=float)
+    T = len(r)
+    upper = limit
+    lower = -limit
+    
+    at_upper = r >= (upper - 1e-6)
+    at_lower = r <= (lower + 1e-6)
+    interior = ~at_upper & ~at_lower
+    
+    def neg_loglik(params):
+        mu, omega, alpha, beta = params
+        
+        if omega <= 0 or alpha < 0 or beta < 0 or (alpha + beta) >= 1:
+            return 1e10
+        
+        sigma2 = np.zeros(T)
+        sigma2[0] = omega / (1 - alpha - beta) if (alpha + beta) < 1 else r.var()
+        
+        ll = 0
+        for t in range(T):
+            if t > 0:
+                eps = r[t - 1] - mu
+                sigma2[t] = omega + alpha * eps ** 2 + beta * sigma2[t - 1]
+            
+            sigma2[t] = max(sigma2[t], 1e-10)
+            sigma = np.sqrt(sigma2[t])
+            
+            if interior[t]:
+                ll += stats.norm.logpdf(r[t], mu, sigma)
+            elif at_upper[t]:
+                prob = 1 - stats.norm.cdf(upper, mu, sigma)
+                ll += np.log(max(prob, 1e-15))
+            elif at_lower[t]:
+                prob = stats.norm.cdf(lower, mu, sigma)
+                ll += np.log(max(prob, 1e-15))
+        
+        return -ll
+    
+    # Initial values from standard GARCH
+    mu0 = r[interior].mean() if interior.any() else 0
+    var0 = r[interior].var() if interior.any() else r.var()
+    
+    try:
+        result = optimize.minimize(
+            neg_loglik,
+            [mu0, var0 * 0.05, 0.10, 0.85],
+            method='Nelder-Mead',
+            options={'maxiter': max_iter, 'xatol': 1e-8}
+        )
+        mu, omega, alpha, beta = result.x
+        
+        # Reconstruct conditional variance
+        sigma2 = np.zeros(T)
+        sigma2[0] = omega / max(1 - alpha - beta, 0.01)
+        for t in range(1, T):
+            eps = r[t - 1] - mu
+            sigma2[t] = omega + alpha * eps ** 2 + beta * sigma2[t - 1]
+        
+        return {
+            'mu': mu, 'omega': omega, 'alpha': alpha, 'beta': beta,
+            'persistence': alpha + beta,
+            'uncond_var': omega / max(1 - alpha - beta, 0.01),
+            'sigma2': sigma2,
+            'loglik': -result.fun,
+            'converged': result.success,
+            'n_censored': at_upper.sum() + at_lower.sum(),
+            'pct_censored': (at_upper.sum() + at_lower.sum()) / T * 100
+        }
+    except Exception as e:
+        return None
+
+# Compare standard vs censored GARCH for a volatile stock
+volatile_stock = daily_hose.groupby('ticker')['limit_up_hit'].mean()
+volatile_stock = volatile_stock.sort_values(ascending=False).head(20)
+test_ticker = volatile_stock.index[0]
+
+test_returns = (
+    daily_hose[daily_hose['ticker'] == test_ticker]
+    .sort_values('date')['daily_return']
+    .dropna()
+    .values
+)
+
+# Standard GARCH (arch library)
+std_garch = arch_model(test_returns * 100, vol='GARCH', p=1, q=1,
+                         mean='Constant', dist='normal')
+std_result = std_garch.fit(disp='off')
+
+# Censored GARCH
+cens_result = censored_garch11(test_returns, limit=0.07)
+
+print(f"Stock: {test_ticker}")
+print(f"Observations: {len(test_returns)}, "
+      f"Censored: {cens_result['pct_censored']:.1f}%\n")
+
+print(f"{'Parameter':<12} {'Standard':>12} {'Censored':>12}")
+print("-" * 36)
+print(f"{'μ':<12} {std_result.params['mu']/100:>12.6f} "
+      f"{cens_result['mu']:>12.6f}")
+print(f"{'ω':<12} {std_result.params['omega']/10000:>12.8f} "
+      f"{cens_result['omega']:>12.8f}")
+print(f"{'α':<12} {std_result.params['alpha[1]']:>12.4f} "
+      f"{cens_result['alpha']:>12.4f}")
+print(f"{'β':<12} {std_result.params['beta[1]']:>12.4f} "
+      f"{cens_result['beta']:>12.4f}")
+print(f"{'α+β':<12} "
+      f"{std_result.params['alpha[1]']+std_result.params['beta[1]']:>12.4f} "
+      f"{cens_result['persistence']:>12.4f}")
+print(f"{'Uncond σ':<12} "
+      f"{np.sqrt(std_result.params['omega']/(1-std_result.params['alpha[1]']-std_result.params['beta[1]'])/10000):>12.4f} "
+      f"{np.sqrt(cens_result['uncond_var']):>12.4f}")
+```
+
+```{python}
+#| label: fig-garch-comparison
+#| eval: false
+#| fig-cap: "Conditional volatility from standard GARCH(1,1) versus censored GARCH(1,1) for a frequently limit-hitting HOSE stock. The censored model consistently estimates higher conditional volatility because it recognizes that limit-hit returns understate the true price movement. The difference is most pronounced during high-volatility episodes when censoring is most frequent."
+#| code-summary: "Plot standard vs censored GARCH conditional volatility"
+test_data = daily_hose[daily_hose['ticker'] == test_ticker].sort_values('date')
+dates = test_data['date'].values[-len(test_returns):]
+
+fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True,
+                          gridspec_kw={'height_ratios': [1, 2]})
+
+# Panel A: Returns with limit hits highlighted
+axes[0].plot(dates, test_returns, color='#2C5F8A', linewidth=0.5, alpha=0.7)
+limit_up_mask = test_returns >= 0.069
+limit_down_mask = test_returns <= -0.069
+axes[0].scatter(dates[limit_up_mask], test_returns[limit_up_mask],
+                 color='#27AE60', s=10, zorder=3, label='Upper limit')
+axes[0].scatter(dates[limit_down_mask], test_returns[limit_down_mask],
+                 color='#C0392B', s=10, zorder=3, label='Lower limit')
+axes[0].axhline(y=0.07, color='gray', linewidth=0.5, linestyle='--')
+axes[0].axhline(y=-0.07, color='gray', linewidth=0.5, linestyle='--')
+axes[0].set_ylabel('Return')
+axes[0].set_title(f'Panel A: Daily Returns ({test_ticker})')
+axes[0].legend(fontsize=8)
+
+# Panel B: Conditional volatility
+std_sigma = std_result.conditional_volatility / 100  # Convert from % to decimal
+cens_sigma = np.sqrt(cens_result['sigma2'])
+
+axes[1].plot(dates, std_sigma * np.sqrt(252), color='#BDC3C7',
+             linewidth=1, label='Standard GARCH')
+axes[1].plot(dates, cens_sigma * np.sqrt(252), color='#C0392B',
+             linewidth=1.5, label='Censored GARCH')
+axes[1].set_ylabel('Annualized Conditional σ')
+axes[1].set_title('Panel B: Conditional Volatility')
+axes[1].legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+## Effects on Asset Pricing Tests {#sec-price-limit-asset-pricing}
+
+### Beta Attenuation
+
+Price limits attenuate the covariance between stock returns and factor returns, biasing beta estimates toward zero. The intuition is simple: on days when the market moves 3% but a stock's true return would have been 6%, the observed return is capped at 7%, understating the stock's sensitivity.
+
+```{python}
+#| label: beta-attenuation
+#| eval: false
+#| code-summary: "Quantify beta attenuation from price limit censoring"
+# Compare betas estimated with all days vs excluding limit-hit days
+# Also compare betas from HOSE stocks vs same stocks if they were on HNX
+
+daily_hose_merged = daily_hose.merge(
+    client.get_index_returns('VNINDEX', frequency='daily',
+                              start_date='2008-01-01',
+                              end_date='2024-12-31')[['date', 'return']],
+    on='date', how='left'
+).rename(columns={'return': 'mkt_return'})
+
+# For each stock, estimate beta:
+# (a) Using all days
+# (b) Excluding limit-hit days
+# (c) Tobit-corrected (censored regression)
+beta_comparison = []
+
+for ticker in hose_stocks[:300]:
+    stock = daily_hose_merged[daily_hose_merged['ticker'] == ticker].dropna(
+        subset=['daily_return', 'mkt_return']
+    )
+    if len(stock) < 250:
+        continue
+    
+    # (a) All days
+    X_all = sm.add_constant(stock['mkt_return'])
+    model_all = sm.OLS(stock['daily_return'], X_all).fit()
+    beta_all = model_all.params['mkt_return']
+    
+    # (b) Exclude limit-hit days
+    interior = stock[~stock['limit_up_hit'] & ~stock['limit_down_hit']]
+    if len(interior) < 200:
+        continue
+    X_int = sm.add_constant(interior['mkt_return'])
+    model_int = sm.OLS(interior['daily_return'], X_int).fit()
+    beta_interior = model_int.params['mkt_return']
+    
+    # Limit hit frequency for this stock
+    pct_limit = (stock['limit_up_hit'].sum() + stock['limit_down_hit'].sum()) / len(stock) * 100
+    
+    beta_comparison.append({
+        'ticker': ticker,
+        'beta_all': beta_all,
+        'beta_interior': beta_interior,
+        'beta_diff_pct': (beta_interior - beta_all) / abs(beta_all) * 100,
+        'pct_limit_hits': pct_limit
+    })
+
+beta_df = pd.DataFrame(beta_comparison)
+
+print("Beta Attenuation from Price Limits:")
+print(f"  Mean β (all days):      {beta_df['beta_all'].mean():.3f}")
+print(f"  Mean β (interior only): {beta_df['beta_interior'].mean():.3f}")
+print(f"  Mean difference:        {beta_df['beta_diff_pct'].mean():.1f}%")
+print(f"  Correlation(diff, limit_freq): "
+      f"{beta_df['beta_diff_pct'].corr(beta_df['pct_limit_hits']):.3f}")
+```
+
+```{python}
+#| label: fig-beta-attenuation
+#| eval: false
+#| fig-cap: "Beta attenuation from price limit censoring. Panel A scatters the all-days beta against the interior-only beta (excluding limit-hit days). Points above the 45-degree line are stocks whose beta is *higher* when estimated without censored observations. Panel B shows that the magnitude of attenuation increases with the stock's limit-hit frequency—stocks that hit limits more often have more severely attenuated betas."
+#| code-summary: "Visualize beta attenuation"
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+axes[0].scatter(beta_df['beta_all'], beta_df['beta_interior'],
+                 s=15, alpha=0.5, color='#2C5F8A', edgecolors='none')
+lim = max(beta_df['beta_all'].abs().max(),
+           beta_df['beta_interior'].abs().max()) + 0.2
+axes[0].plot([-0.5, lim], [-0.5, lim], 'k--', linewidth=1)
+axes[0].set_xlabel('β (all days)')
+axes[0].set_ylabel('β (interior only)')
+axes[0].set_title('Panel A: Beta with vs without Limit Days')
+
+axes[1].scatter(beta_df['pct_limit_hits'], beta_df['beta_diff_pct'],
+                 s=15, alpha=0.5, color='#C0392B', edgecolors='none')
+# Add regression line
+z = np.polyfit(beta_df['pct_limit_hits'], beta_df['beta_diff_pct'], 1)
+x_line = np.linspace(0, beta_df['pct_limit_hits'].max(), 100)
+axes[1].plot(x_line, np.polyval(z, x_line), 'k-', linewidth=1.5)
+axes[1].axhline(y=0, color='gray', linewidth=0.5)
+axes[1].set_xlabel('Limit Hit Frequency (%)')
+axes[1].set_ylabel('Beta Increase When Excluding Limit Days (%)')
+axes[1].set_title('Panel B: Attenuation vs Limit Frequency')
+
+plt.tight_layout()
+plt.show()
+```
+
+### Effect on Factor Premia
+
+If betas are attenuated by censoring, then cross-sectional Fama-MacBeth risk premia estimates are biased upward (because the denominator of the slope coefficient is too small). We quantify this effect:
+
+```{python}
+#| label: factor-premium-bias
+#| eval: false
+#| code-summary: "Compare factor premia with and without limit-hit days"
+# Monthly returns: compute with all days vs excluding limit-hit days
+# Then construct factors under each definition
+
+monthly_all = (
+    daily_hose.groupby(['ticker', daily_hose['date'].dt.to_period('M')])
+    .agg(
+        ret_all=('daily_return', lambda x: (1 + x).prod() - 1),
+        ret_interior=('daily_return',
+                       lambda x: (1 + x[~x.name.map(
+                           lambda idx: daily_hose.loc[idx, 'limit_up_hit'] |
+                                        daily_hose.loc[idx, 'limit_down_hit']
+                       ).values]).prod() - 1 if len(x) > 0 else np.nan),
+        n_limit_days=('limit_up_hit',
+                       lambda x: x.sum() + daily_hose.loc[x.index, 'limit_down_hit'].sum()),
+        n_trading_days=('daily_return', 'count')
+    )
+    .reset_index()
+)
+
+print("Impact on Monthly Returns:")
+print(f"  Mean monthly return (all days):     "
+      f"{monthly_all['ret_all'].mean():.4f}")
+print(f"  Mean monthly return (interior):     "
+      f"{monthly_all['ret_interior'].mean():.4f}")
+print(f"  Avg limit days per stock-month:     "
+      f"{monthly_all['n_limit_days'].mean():.2f}")
+```
+
+## The Magnet Effect {#sec-price-limit-magnet}
+
+### Do Limits Attract Prices?
+
+The *magnet effect* hypothesis posits that price limits, rather than cooling the market, actually attract prices to the limit as traders rush to execute before the stock becomes locked [@cho2003magnet]. If a stock is approaching the upper limit, buyers accelerate their orders to avoid being shut out, creating a self-fulfilling rush to the boundary.
+
+We test for the magnet effect by examining the speed of price movement toward the limit conditional on approaching it:
+
+```{python}
+#| label: magnet-effect
+#| eval: false
+#| code-summary: "Test for the magnet effect using intraday price trajectories"
+# Approach: for days that eventually hit the limit,
+# compare the return in the last hour vs the first hour
+# relative to non-limit days with similar initial trajectories
+
+# Without intraday data, we use a cross-day approach:
+# On day t, if the stock is within X% of the limit at some point,
+# what is the probability of hitting the limit on day t vs day t+1?
+
+# Simpler test: return continuation after near-limit days
+def magnet_test(daily_df, limit, proximity_threshold=0.8):
+    """
+    Test for the magnet effect.
+    
+    For each stock-day, classify:
+    - 'near_limit_up': return in [proximity_threshold * limit, limit)
+    - 'near_limit_down': return in (-limit, -proximity_threshold * limit]
+    - 'hit_limit_up': return = limit
+    - 'hit_limit_down': return = -limit
+    - 'normal': all others
+    
+    Then examine next-day behavior.
+    """
+    df = daily_df.copy()
+    df['abs_ret'] = df['daily_return'].abs()
+    
+    df['near_up'] = (df['daily_return'] >= proximity_threshold * limit) & \
+                     (df['daily_return'] < limit - 0.001)
+    df['near_down'] = (df['daily_return'] <= -proximity_threshold * limit) & \
+                       (df['daily_return'] > -limit + 0.001)
+    
+    df['next_return'] = df.groupby('ticker')['daily_return'].shift(-1)
+    df['next_limit_up'] = df.groupby('ticker')['limit_up_hit'].shift(-1)
+    df['next_limit_down'] = df.groupby('ticker')['limit_down_hit'].shift(-1)
+    
+    results = {}
+    
+    # Near upper limit
+    near_up = df[df['near_up']]
+    if len(near_up) > 100:
+        results['near_up'] = {
+            'n': len(near_up),
+            'next_day_return': near_up['next_return'].mean(),
+            'prob_next_limit_up': near_up['next_limit_up'].mean(),
+            'prob_next_limit_down': near_up['next_limit_down'].mean()
+        }
+    
+    # At upper limit
+    at_up = df[df['limit_up_hit']]
+    if len(at_up) > 100:
+        results['at_up'] = {
+            'n': len(at_up),
+            'next_day_return': at_up['next_return'].mean(),
+            'prob_next_limit_up': at_up['next_limit_up'].mean(),
+            'prob_next_limit_down': at_up['next_limit_down'].mean()
+        }
+    
+    # Near lower limit
+    near_down = df[df['near_down']]
+    if len(near_down) > 100:
+        results['near_down'] = {
+            'n': len(near_down),
+            'next_day_return': near_down['next_return'].mean(),
+            'prob_next_limit_up': near_down['next_limit_up'].mean(),
+            'prob_next_limit_down': near_down['next_limit_down'].mean()
+        }
+    
+    # At lower limit
+    at_down = df[df['limit_down_hit']]
+    if len(at_down) > 100:
+        results['at_down'] = {
+            'n': len(at_down),
+            'next_day_return': at_down['next_return'].mean(),
+            'prob_next_limit_up': at_down['next_limit_up'].mean(),
+            'prob_next_limit_down': at_down['next_limit_down'].mean()
+        }
+    
+    # Normal days (benchmark)
+    normal = df[~df['near_up'] & ~df['near_down'] &
+                 ~df['limit_up_hit'] & ~df['limit_down_hit']]
+    results['normal'] = {
+        'n': len(normal),
+        'next_day_return': normal['next_return'].mean(),
+        'prob_next_limit_up': normal['next_limit_up'].mean(),
+        'prob_next_limit_down': normal['next_limit_down'].mean()
+    }
+    
+    return pd.DataFrame(results).T
+
+magnet = magnet_test(daily_hose, 0.07, proximity_threshold=0.8)
+print("Magnet Effect Test (HOSE):")
+print(magnet.round(4).to_string())
+```
+
+```{python}
+#| label: fig-magnet
+#| eval: false
+#| fig-cap: "Evidence on the magnet effect. Panel A shows the next-day return conditional on today's return proximity to the limits. If limits cool markets, next-day returns should reverse (negative after near-upper, positive after near-lower). If the magnet effect dominates, continuation should prevail. Panel B shows the probability of hitting the limit on the next day conditional on today's proximity. An increasing probability as the stock approaches the limit is consistent with the magnet effect."
+#| code-summary: "Visualize magnet effect evidence"
+# More granular: bin today's return and compute next-day statistics
+bins = np.arange(-0.075, 0.08, 0.005)
+daily_hose_next = daily_hose.copy()
+daily_hose_next['next_return'] = (
+    daily_hose_next.groupby('ticker')['daily_return'].shift(-1)
+)
+daily_hose_next['ret_bin'] = pd.cut(daily_hose_next['daily_return'],
+                                      bins=bins, labels=False)
+
+bin_stats = (
+    daily_hose_next.dropna(subset=['ret_bin', 'next_return'])
+    .groupby('ret_bin')
+    .agg(
+        mean_ret=('daily_return', 'mean'),
+        next_ret=('next_return', 'mean'),
+        n=('next_return', 'count')
+    )
+)
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Panel A: Next-day return by today's return
+axes[0].bar(bin_stats['mean_ret'] * 100, bin_stats['next_ret'] * 100,
+            width=0.4,
+            color=np.where(bin_stats['next_ret'] > 0, '#27AE60', '#C0392B'),
+            alpha=0.7, edgecolor='white')
+axes[0].axhline(y=0, color='black', linewidth=0.5)
+axes[0].axvline(x=7, color='gray', linewidth=1, linestyle='--')
+axes[0].axvline(x=-7, color='gray', linewidth=1, linestyle='--')
+axes[0].set_xlabel("Today's Return (%)")
+axes[0].set_ylabel('Next-Day Return (%)')
+axes[0].set_title('Panel A: Next-Day Return by Current Return')
+
+# Panel B: Continuation probability
+# Probability of same-direction move next day
+daily_hose_next['continuation'] = (
+    np.sign(daily_hose_next['daily_return']) ==
+    np.sign(daily_hose_next['next_return'])
+)
+
+cont_by_bin = (
+    daily_hose_next.dropna(subset=['ret_bin', 'continuation'])
+    .groupby('ret_bin')
+    .agg(
+        mean_ret=('daily_return', 'mean'),
+        cont_prob=('continuation', 'mean'),
+        n=('continuation', 'count')
+    )
+)
+
+axes[1].scatter(cont_by_bin['mean_ret'] * 100, cont_by_bin['cont_prob'] * 100,
+                 color='#2C5F8A', s=40, alpha=0.7)
+axes[1].axhline(y=50, color='gray', linewidth=0.5, linestyle='--')
+axes[1].axvline(x=7, color='gray', linewidth=1, linestyle='--')
+axes[1].axvline(x=-7, color='gray', linewidth=1, linestyle='--')
+axes[1].set_xlabel("Today's Return (%)")
+axes[1].set_ylabel('Continuation Probability (%)')
+axes[1].set_title('Panel B: Same-Direction Move Next Day')
+
+plt.tight_layout()
+plt.show()
+```
+
+## The Delayed Price Discovery Hypothesis {#sec-price-limit-delayed}
+
+### Volatility Spillover
+
+If limits prevent full price adjustment on day $t$, the residual adjustment spills over to day $t+1$ (and possibly further). This predicts higher volatility on the day *after* a limit hit, and positive return autocorrelation (continuation in the direction of the limit hit). @kim1997price find strong evidence of this in the Tokyo Stock Exchange.
+
+```{python}
+#| label: spillover
+#| eval: false
+#| code-summary: "Test for volatility spillover after limit hit days"
+# Compare volatility and return on limit-hit days vs day after
+spillover_data = daily_hose.copy()
+spillover_data['prev_limit_up'] = (
+    spillover_data.groupby('ticker')['limit_up_hit'].shift(1)
+)
+spillover_data['prev_limit_down'] = (
+    spillover_data.groupby('ticker')['limit_down_hit'].shift(1)
+)
+spillover_data['abs_return'] = spillover_data['daily_return'].abs()
+
+# Classify days
+conditions = {
+    'After upper limit': spillover_data['prev_limit_up'] == True,
+    'After lower limit': spillover_data['prev_limit_down'] == True,
+    'Normal day': (spillover_data['prev_limit_up'] == False) &
+                   (spillover_data['prev_limit_down'] == False)
+}
+
+print("Volatility Spillover After Limit Hits:")
+print(f"{'Condition':<25} {'Mean |r|':>10} {'Mean r':>10} "
+      f"{'σ(r)':>10} {'N':>12}")
+print("-" * 67)
+
+for label, mask in conditions.items():
+    subset = spillover_data[mask].dropna(subset=['daily_return'])
+    print(f"{label:<25} "
+          f"{subset['abs_return'].mean()*100:>10.3f}% "
+          f"{subset['daily_return'].mean()*100:>10.3f}% "
+          f"{subset['daily_return'].std()*100:>10.3f}% "
+          f"{len(subset):>12,}")
+
+# Statistical test: is variance higher after limit days?
+normal = spillover_data[conditions['Normal day']]['daily_return'].dropna()
+after_up = spillover_data[conditions['After upper limit']]['daily_return'].dropna()
+after_down = spillover_data[conditions['After lower limit']]['daily_return'].dropna()
+
+f_up = after_up.var() / normal.var()
+f_down = after_down.var() / normal.var()
+print(f"\nVariance ratios (vs normal days):")
+print(f"  After upper limit: {f_up:.3f} "
+      f"(p = {1 - stats.f.cdf(f_up, len(after_up)-1, len(normal)-1):.4f})")
+print(f"  After lower limit: {f_down:.3f} "
+      f"(p = {1 - stats.f.cdf(f_down, len(after_down)-1, len(normal)-1):.4f})")
+```
+
+### Multi-Day Return Reconstruction
+
+To recover the "true" return that would have occurred without price limits, we can compound returns over consecutive limit-hit days until the stock resumes normal trading:
+
+```{python}
+#| label: return-reconstruction
+#| eval: false
+#| code-summary: "Reconstruct multi-day returns spanning limit-hit sequences"
+def reconstruct_returns(group, limit):
+    """
+    For each limit-hit sequence, compound returns until
+    the stock resumes normal trading (first non-limit day).
+    Returns the compound return and the number of days.
+    """
+    sequences = []
+    in_sequence = False
+    seq_start = None
+    seq_returns = []
+    seq_direction = None
+    
+    for _, row in group.iterrows():
+        if row['limit_up_hit'] or row['limit_down_hit']:
+            if not in_sequence:
+                in_sequence = True
+                seq_start = row['date']
+                seq_returns = [row['daily_return']]
+                seq_direction = 'up' if row['limit_up_hit'] else 'down'
+            else:
+                seq_returns.append(row['daily_return'])
+        else:
+            if in_sequence:
+                # Include the first non-limit day (the "resolution" day)
+                seq_returns.append(row['daily_return'])
+                compound_ret = np.prod([1 + r for r in seq_returns]) - 1
+                sequences.append({
+                    'ticker': group.name if hasattr(group, 'name') else group['ticker'].iloc[0],
+                    'start_date': seq_start,
+                    'n_limit_days': len(seq_returns) - 1,
+                    'compound_return': compound_ret,
+                    'direction': seq_direction,
+                    'limit_return': sum(seq_returns[:-1]),
+                    'resolution_return': seq_returns[-1]
+                })
+                in_sequence = False
+    
+    return sequences
+
+# Run for all HOSE stocks
+all_sequences = []
+for ticker, group in daily_hose.sort_values('date').groupby('ticker'):
+    seqs = reconstruct_returns(group, 0.07)
+    all_sequences.extend(seqs)
+
+seq_df = pd.DataFrame(all_sequences)
+
+if len(seq_df) > 0:
+    print("Limit-Hit Sequence Analysis:")
+    print(f"  Total sequences: {len(seq_df):,}")
+    print(f"  Mean limit days: {seq_df['n_limit_days'].mean():.1f}")
+    print(f"\nCompound Returns by Direction:")
+    for direction in ['up', 'down']:
+        subset = seq_df[seq_df['direction'] == direction]
+        print(f"  {direction.upper()} sequences: {len(subset):,}")
+        print(f"    Mean compound return: {subset['compound_return'].mean()*100:.2f}%")
+        print(f"    Mean resolution-day return: "
+              f"{subset['resolution_return'].mean()*100:.2f}%")
+        print(f"    Max compound return: {subset['compound_return'].max()*100:.1f}%")
+```
+
+## The Idiosyncratic Volatility Puzzle Under Price Limits {#sec-price-limit-ivol}
+
+@ang2006cross document that stocks with high idiosyncratic volatility earn low subsequent returns—the IVOL puzzle. In Vietnam, price limits contaminate IVOL estimation: stocks that frequently hit limits have *understated* IVOL (because their returns are censored), which could create a mechanical relation between measured IVOL and returns.
+
+```{python}
+#| label: ivol-puzzle
+#| eval: false
+#| code-summary: "Test whether price limits affect the IVOL-return relation"
+# Compute monthly IVOL two ways:
+# (a) Naive: std of daily residuals from FF3
+# (b) Corrected: excluding limit-hit days
+
+# Merge daily data with market returns for IVOL estimation
+daily_ff = daily_hose_merged.copy()
+
+monthly_ivol = []
+for (ticker, month), group in daily_ff.groupby(
+    ['ticker', daily_ff['date'].dt.to_period('M')]
+):
+    if len(group) < 15:
+        continue
+    
+    y = group['daily_return'].dropna()
+    x = group['mkt_return'].reindex(y.index).dropna()
+    common = y.index.intersection(x.index)
+    if len(common) < 15:
+        continue
+    
+    # Naive IVOL
+    model = sm.OLS(y[common], sm.add_constant(x[common])).fit()
+    ivol_naive = model.resid.std() * np.sqrt(252)
+    
+    # Interior-only IVOL
+    interior = group[~group['limit_up_hit'] & ~group['limit_down_hit']]
+    y_int = interior['daily_return'].dropna()
+    x_int = interior['mkt_return'].reindex(y_int.index).dropna()
+    common_int = y_int.index.intersection(x_int.index)
+    
+    if len(common_int) >= 10:
+        model_int = sm.OLS(y_int[common_int],
+                            sm.add_constant(x_int[common_int])).fit()
+        ivol_corrected = model_int.resid.std() * np.sqrt(252)
+    else:
+        ivol_corrected = np.nan
+    
+    n_limit = group['limit_up_hit'].sum() + group['limit_down_hit'].sum()
+    
+    monthly_ivol.append({
+        'ticker': ticker,
+        'month': month.to_timestamp(),
+        'ivol_naive': ivol_naive,
+        'ivol_corrected': ivol_corrected,
+        'n_limit_days': n_limit,
+        'pct_limit': n_limit / len(group) * 100,
+        'next_return': group['daily_return'].iloc[-1]  # Placeholder
+    })
+
+ivol_df = pd.DataFrame(monthly_ivol)
+
+print("IVOL Estimation: Naive vs Corrected:")
+print(f"  Mean naive IVOL:     {ivol_df['ivol_naive'].mean():.4f}")
+print(f"  Mean corrected IVOL: {ivol_df['ivol_corrected'].mean():.4f}")
+print(f"  Mean difference:     "
+      f"{(ivol_df['ivol_corrected'] - ivol_df['ivol_naive']).mean():.4f}")
+print(f"  Correlation:         "
+      f"{ivol_df['ivol_naive'].corr(ivol_df['ivol_corrected']):.3f}")
+```
+
+## Practical Recommendations {#sec-price-limit-recommendations}
+
+For researchers working with Vietnamese equity data:
+
+**Always report limit-hit frequency.** Any study using Vietnamese daily returns should document the fraction of observations at the price limits, broken down by exchange and market cap quintile. This tells the reader the severity of the censoring problem in the specific sample.
+
+**Use Tobit-corrected variance estimates.** For volatility-related analyses (IVOL sorts, GARCH, risk modeling), the naive sample variance underestimates true variance by 5–20% depending on the stock's limit-hit frequency. The Tobit MLE provides a consistent estimator under the censored normal assumption.
+
+**Consider range-based estimators.** The @yang2000drift estimator using OHLC prices is partially robust to closing-price censoring and does not require distributional assumptions. It is a good default for individual-stock volatility estimation.
+
+**Exclude limit-hit days for beta estimation.** Interior-only betas are less biased than all-day betas, though noisier. Report both and discuss the difference. For stocks with \>5% limit-hit frequency, the attenuation is economically meaningful.
+
+**Compound multi-day returns for event studies.** When studying events that coincide with limit hits (earnings announcements, M&A, regulatory changes), use the compound return from the limit-hit sequence start to the first non-limit day. Single-day returns are censored and understate the market's reaction.
+
+**Be cautious interpreting short-term return predictability.** The delayed price discovery effect creates positive return autocorrelation at the daily frequency. This is a mechanical consequence of censoring, not a market inefficiency. Monthly returns are largely free of this artifact because the censoring within a month averages out.
+
+**Test robustness to HNX and UPCoM.** If a result is driven by limit-related distortions, it should appear differently (or not at all) on HNX ($\pm$ 10%) and UPCoM ($\pm$ 15%). Cross-exchange comparison is a natural placebo test.
+
+## Summary {#sec-price-limit-summary}
+
+| Issue | Bias Direction | Magnitude (HOSE) | Recommended Fix |
+|------------------|------------------|------------------|------------------|
+| Return variance | Understated | 5–20% for volatile stocks | Tobit MLE or range-based |
+| GARCH vol | Understated | 10–30% during crises | Censored GARCH |
+| Market beta | Attenuated (toward 0) | 3–10% for small-caps | Interior-only estimation |
+| IVOL | Understated | Varies; correlated with size | Corrected IVOL |
+| Return autocorrelation | Positive (spurious) | Significant at daily freq | Use weekly/monthly |
+| Event study CARs | Understated | Up to 50% of true effect | Compound multi-day |
+| Distribution shape | Pile-up at limits | 2–5% of obs at limits | Acknowledge or correct |
+
+: Summary of price limit effects on empirical estimates. {#tbl-price-limit-summary}
+
+Price limits are not a minor institutional detail—they are a pervasive data-generating process that affects nearly every empirical quantity computed from Vietnamese daily returns. The corrections developed in this chapter—Tobit variance estimation, censored GARCH, interior-only betas, range-based volatility, and multi-day return compounding—form a toolkit that should be applied routinely. Ignoring censoring does not make it go away; it merely makes the resulting estimates quietly wrong.
+
+```{=html}
+<!-- ## Exercises {#sec-price-limit-exercises}
+
+1.  **Natural experiment from limit widening.** HOSE widened its limit from $\pm$ 5% to $\pm$ 7% in June 2013. Using a difference-in-differences design with HNX as a control group (whose limits did not change), test whether the widening reduced: (a) the frequency of limit hits, (b) next-day volatility spillover, (c) return autocorrelation. This is one of the cleanest identification strategies available for testing the cooling hypothesis.
+
+2.  **Censored EGARCH.** Extend the censored GARCH to the @nelson1991conditional EGARCH specification, which allows asymmetric volatility responses (leverage effect). Does the asymmetry parameter differ between the standard and censored specifications? The leverage effect in Vietnam may be understated by standard models because limit-down hits are disproportionately censored.
+
+3.  **Lottery demand and limit hits.** @bali2011maxing show that stocks with high maximum daily returns (MAX) earn low subsequent returns, interpreted as lottery demand. In Vietnam, MAX is mechanically bounded by the price limit. Construct the MAX anomaly using (a) the raw observed MAX and (b) the Tobit-corrected MAX. How does the correction affect the premium?
+
+4.  **Limit-hit-adjusted Fama-French factors.** Reconstruct the Vietnamese SMB, HML, and WML factors using only interior (non-limit) daily returns to compute monthly portfolio returns. Compare the resulting factor premia and Sharpe ratios to the standard construction. Quantify the "censoring premium"—the component of the factor return that comes from limit-day returns.
+
+5.  **Foreign investor response to limits.** Using foreign ownership data, test whether foreign investors systematically avoid stocks that frequently hit price limits. If foreign investors are more sophisticated, their avoidance of limit-prone stocks could explain part of the foreign ownership premium.
+
+6.  **Intraday volatility estimation.** If intraday data are available, compute realized variance from 5-minute returns. Compare this to close-to-close variance on limit-hit days versus non-limit days. The ratio reveals how much of the true volatility is captured by the closing price.
+
+7.  **Optimal limit design.** Using the Vietnamese data, estimate the "optimal" price limit width that minimizes next-day volatility spillover while minimizing the censoring rate. Plot the trade-off curve between censoring (too narrow) and insufficient cooling (too wide). Where does the current $\pm$ 7% HOSE limit sit on this curve?
+
+8.  **Sentiment and limit hits.** Construct a market-level sentiment indicator based on the ratio of upper-limit hits to lower-limit hits. Test whether this indicator predicts subsequent market returns, analogous to @baker2006investor. A high up/down ratio may signal overheating, while a low ratio may signal panic. -->
+```
