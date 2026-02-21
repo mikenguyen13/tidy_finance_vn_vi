@@ -1,0 +1,1924 @@
+# Networks and Graphs in Finance
+
+Financial markets are networks. Every stock return is shaped by connections: firms share supply chains, directors, auditors, investors, lenders, and regulators. Shocks propagate through these links (e.g., a bankruptcy ripples through supplier networks, a central bank liquidity squeeze radiates through interbank exposures, and information diffuses through board interlocks and institutional co-ownership). Yet the dominant empirical paradigm in finance treats firms as isolated observations indexed by $(i, t)$, connected only through their shared exposure to common factors. This chapter introduces tools for modeling, measuring, and exploiting the network structure that standard panel regressions ignore.
+
+The Vietnamese financial system is particularly network-dense. State ownership creates a lattice of cross-connected enterprises: the same line ministry may oversee the borrower, the lender, and the insurer. Pyramidal business groups (such as Vingroup, Masan, and FPT) link dozens of listed and unlisted entities through chains of equity ownership. The banking system is small and concentrated, with a few state-owned commercial banks accounting for the majority of assets, generating dense interbank exposures. Board interlocks (e.g., directors who serve on multiple boards simultaneously) are pervasive and often follow ownership lines. And the equity market itself exhibits return co-movement patterns that, when represented as a correlation network, reveal sector-level and ownership-level clustering invisible in standard factor analysis.
+
+This chapter covers the full spectrum of network methods used in financial economics, from classical graph theory through modern graph neural networks (GNNs). We organize the material in seven sections. First, graph theory fundamentals and the representation of financial data as networks. Second, ownership and control networks, which are the most distinctive network structure in Vietnamese markets. Third, board interlock and governance networks. Fourth, supply chain and trade networks. Fifth, correlation and co-movement networks for portfolio construction and systemic risk monitoring. Sixth, interbank and contagion networks. Seventh, graph neural networks and graph-based machine learning for asset pricing, credit risk, and anomaly detection.
+
+```{python}
+#| label: setup
+#| message: false
+
+import pandas as pd
+import numpy as np
+from pathlib import Path
+import warnings
+warnings.filterwarnings("ignore")
+
+# Graph libraries
+import networkx as nx
+from scipy import sparse
+from scipy.spatial.distance import squareform
+
+# Statistical and econometric
+from scipy import stats
+import statsmodels.api as sm
+from linearmodels.panel import PanelOLS
+
+# Visualization
+import plotnine as p9
+from mizani.formatters import percent_format, comma_format
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+
+# Deep learning (for GNNs later)
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+```
+
+```{python}
+#| eval: false
+# DataCore.vn API
+from datacore import DataCore
+dc = DataCore()
+```
+
+## Graph Theory Foundations for Finance
+
+### Representing Financial Data as Graphs
+
+A graph $G = (V, E)$ consists of a set of vertices (nodes) $V$ and edges (links) $E \subseteq V \times V$. In financial networks, nodes represent economic agents, such as firms, banks, investors, directors, and edges represent relationships including ownership stakes, lending, board seats, supply contracts, and return co-movement.
+
+Financial graphs come in several varieties:
+
+**Directed vs. undirected.** Ownership is directed: firm $A$ owns a stake in firm $B$, but not necessarily vice versa. Board interlocks are undirected: if director $d$ sits on both firm $A$'s and firm $B$'s boards, the connection is symmetric. Supply chains are directed: $A$ supplies to $B$.
+
+**Weighted vs. unweighted.** Ownership networks are naturally weighted by the ownership percentage. Correlation networks are weighted by the pairwise correlation coefficient. Board interlocks can be weighted by the number of shared directors.
+
+**Static vs. dynamic.** Most financial networks evolve over time as ownership changes, directors rotate, and correlations shift. A temporal graph $G_t = (V_t, E_t)$ captures this evolution.
+
+**Bipartite vs. unipartite.** The raw data for many financial networks is bipartite: directors $\times$ firms, investors $\times$ stocks, banks $\times$ borrowers. The one-mode projection converts this to a unipartite graph: two firms are connected if they share a director, two stocks are connected if they share an institutional investor, etc.
+
+### Key Graph Metrics
+
+For a graph $G$ with $n = |V|$ nodes and $m = |E|$ edges, we define the following metrics, each with a specific financial interpretation.
+
+**Degree centrality.** The degree $k_i$ of node $i$ is the number of edges incident to $i$. In a directed graph, we distinguish in-degree $k_i^{\text{in}}$ (edges pointing to $i$) and out-degree $k_i^{\text{out}}$ (edges from $i$). Normalized degree centrality is:
+
+$$
+C_D(i) = \frac{k_i}{n - 1}
+$$ {#eq-degree-centrality}
+
+In an ownership network, high out-degree means a firm owns stakes in many others (conglomerate); high in-degree means many entities own stakes in the firm (dispersed ownership).
+
+**Betweenness centrality.** The fraction of shortest paths between all pairs of nodes that pass through node $i$:
+
+$$
+C_B(i) = \sum_{s \neq i \neq t} \frac{\sigma_{st}(i)}{\sigma_{st}}
+$$ {#eq-betweenness}
+
+where $\sigma_{st}$ is the total number of shortest paths from $s$ to $t$ and $\sigma_{st}(i)$ is the number that pass through $i$. High betweenness identifies "bridge" nodes (i.e., firms or banks that connect otherwise disconnected parts of the financial system). The failure of a high-betweenness bank can fragment the interbank network.
+
+**Eigenvector centrality.** A node is central if it is connected to other central nodes. The eigenvector centrality is the solution to:
+
+$$
+\lambda \mathbf{c} = A \mathbf{c}
+$$ {#eq-eigenvector-centrality}
+
+where $A$ is the adjacency matrix and $\lambda$ is the largest eigenvalue. Google's PageRank is a regularized variant designed for directed graphs. In financial networks, eigenvector centrality identifies systemically important institutions (i.e., those connected to other important institutions).
+
+**Clustering coefficient.** The fraction of a node's neighbors that are also neighbors of each other:
+
+$$
+C_C(i) = \frac{2 T_i}{k_i(k_i - 1)}
+$$ {#eq-clustering}
+
+where $T_i$ is the number of triangles containing node $i$. High clustering indicates tightly knit groups (e.g., business groups, lending circles, co-invested portfolios).
+
+**Community structure.** Many financial networks exhibit modular structure: groups of densely connected nodes with sparse connections between groups. Community detection algorithms (Louvain, label propagation, spectral clustering) identify these modules, which in financial networks often correspond to business groups, industry sectors, or lending clusters.
+
+```{python}
+#| label: graph-fundamentals
+#| eval: false
+
+def compute_network_metrics(G):
+    """
+    Compute standard network metrics for a graph.
+
+    Parameters
+    ----------
+    G : nx.Graph or nx.DiGraph
+        Input graph.
+
+    Returns
+    -------
+    dict : Node-level and graph-level metrics.
+    """
+    is_directed = G.is_directed()
+
+    # Node-level metrics
+    if is_directed:
+        in_degree = dict(G.in_degree())
+        out_degree = dict(G.out_degree())
+        degree = {n: in_degree[n] + out_degree[n] for n in G.nodes()}
+    else:
+        degree = dict(G.degree())
+
+    betweenness = nx.betweenness_centrality(G, weight="weight")
+    eigenvector = nx.eigenvector_centrality_numpy(
+        G, weight="weight"
+    ) if len(G) > 0 else {}
+    clustering = nx.clustering(G, weight="weight") if not is_directed else {}
+
+    # PageRank (works for both directed and undirected)
+    pagerank = nx.pagerank(G, weight="weight")
+
+    # Graph-level metrics
+    n_nodes = G.number_of_nodes()
+    n_edges = G.number_of_edges()
+    density = nx.density(G)
+
+    # Connected components
+    if is_directed:
+        n_weak_components = nx.number_weakly_connected_components(G)
+        n_strong_components = nx.number_strongly_connected_components(G)
+    else:
+        n_components = nx.number_connected_components(G)
+
+    # Degree distribution statistics
+    degrees = list(degree.values())
+    avg_degree = np.mean(degrees) if degrees else 0
+    max_degree = max(degrees) if degrees else 0
+
+    # Assortativity
+    assortativity = nx.degree_assortativity_coefficient(G)
+
+    # Community detection (Louvain)
+    if not is_directed:
+        try:
+            communities = nx.community.louvain_communities(G)
+            modularity = nx.community.modularity(G, communities)
+            n_communities = len(communities)
+        except Exception:
+            modularity, n_communities = np.nan, 0
+    else:
+        modularity, n_communities = np.nan, 0
+
+    node_metrics = pd.DataFrame({
+        "degree": degree,
+        "betweenness": betweenness,
+        "eigenvector": eigenvector,
+        "pagerank": pagerank,
+        "clustering": clustering if clustering else {n: np.nan for n in G.nodes()}
+    })
+
+    graph_metrics = {
+        "n_nodes": n_nodes,
+        "n_edges": n_edges,
+        "density": density,
+        "avg_degree": avg_degree,
+        "max_degree": max_degree,
+        "assortativity": assortativity,
+        "modularity": modularity,
+        "n_communities": n_communities
+    }
+
+    return node_metrics, graph_metrics
+```
+
+### The Adjacency Matrix and Its Spectral Properties
+
+The adjacency matrix $A \in \mathbb{R}^{n \times n}$ encodes the graph structure: $A_{ij} = w_{ij}$ if there is an edge from $i$ to $j$ with weight $w_{ij}$, and $A_{ij} = 0$ otherwise. For undirected graphs, $A$ is symmetric.
+
+The graph Laplacian $L = D - A$ (where $D$ is the diagonal degree matrix) has eigenvalues $0 = \lambda_1 \leq \lambda_2 \leq \ldots \leq \lambda_n$ with important structural interpretations:
+
+-   The multiplicity of $\lambda = 0$ equals the number of connected components.
+-   The second eigenvalue $\lambda_2$ (the algebraic connectivity or Fiedler value) measures how well-connected the graph is. Low $\lambda_2$ implies the graph has a bottleneck, which is a weak point where cutting a few edges would disconnect large portions.
+-   The eigenvectors of $L$ provide the spectral embedding of the graph, which is the foundation for spectral clustering and graph convolutional networks.
+
+The normalized Laplacian $\tilde{L} = D^{-1/2} L D^{-1/2}$ is used in GCNs because it stabilizes message passing across nodes with different degrees.
+
+```{python}
+#| label: spectral-analysis
+#| eval: false
+
+def spectral_graph_analysis(A, n_components=10):
+    """
+    Compute spectral properties of a financial network.
+
+    Parameters
+    ----------
+    A : np.ndarray or sparse matrix
+        Adjacency matrix.
+    n_components : int
+        Number of eigenvalues/vectors to compute.
+
+    Returns
+    -------
+    dict : Eigenvalues, algebraic connectivity, spectral gap.
+    """
+    n = A.shape[0]
+
+    if sparse.issparse(A):
+        A_dense = A.toarray()
+    else:
+        A_dense = A
+
+    # Degree matrix
+    D = np.diag(A_dense.sum(axis=1))
+
+    # Graph Laplacian
+    L = D - A_dense
+
+    # Normalized Laplacian
+    D_inv_sqrt = np.diag(1.0 / np.sqrt(np.diag(D) + 1e-10))
+    L_norm = D_inv_sqrt @ L @ D_inv_sqrt
+
+    # Eigendecomposition (smallest eigenvalues)
+    eigenvalues, eigenvectors = np.linalg.eigh(L_norm)
+
+    # Sort by eigenvalue
+    idx = np.argsort(eigenvalues)
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:, idx]
+
+    # Algebraic connectivity (Fiedler value)
+    fiedler_value = eigenvalues[1] if n > 1 else 0
+    fiedler_vector = eigenvectors[:, 1] if n > 1 else np.zeros(n)
+
+    # Spectral gap
+    spectral_gap = eigenvalues[1] - eigenvalues[0] if n > 1 else 0
+
+    return {
+        "eigenvalues": eigenvalues[:n_components],
+        "fiedler_value": fiedler_value,
+        "fiedler_vector": fiedler_vector,
+        "spectral_gap": spectral_gap,
+        "spectral_embedding": eigenvectors[:, 1:n_components + 1]
+    }
+```
+
+## Ownership and Control Networks
+
+### Vietnamese Ownership Structure
+
+Ownership networks are arguably the most economically consequential graph structure in Vietnamese markets. The Vietnamese corporate landscape is characterized by three distinctive features that generate complex ownership topologies:
+
+**State ownership pyramids.** The government holds equity in hundreds of firms through a hierarchy of holding entities: the State Capital Investment Corporation (SCIC), line ministries, provincial People's Committees, and state-owned economic groups (tập đoàn kinh tế nhà nước). These chains create multi-layered pyramids where the state's ultimate control rights may substantially exceed its cash flow rights.
+
+**Private business groups.** Vietnamese conglomerates (Vingroup, Masan, FPT, Hoà Phát, Thaco) create complex webs of cross-ownership, subsidiary relationships, and associate stakes. These structures serve multiple purposes: internal capital markets, tax optimization, regulatory arbitrage, and control enhancement.
+
+**Circular and cross-ownership.** Vietnamese regulations do not effectively prevent circular ownership (firm $A$ owns firm $B$ which owns firm $C$ which owns firm $A$), creating loops in the ownership graph that amplify control beyond direct stakes and inflate accounting equity [@bebchuk1999rent].
+
+```{python}
+#| label: ownership-network-data
+#| eval: false
+
+# Load ownership data
+ownership = dc.get_ownership_network(
+    date="2024-06-30",
+    min_stake=1.0  # Minimum 1% ownership stake
+)
+
+# Load firm characteristics
+firms = dc.get_firm_characteristics(
+    start_date="2024-01-01",
+    end_date="2024-06-30"
+).groupby("ticker").last().reset_index()
+
+print(f"Ownership edges: {len(ownership)}")
+print(f"Unique owners: {ownership['owner_id'].nunique()}")
+print(f"Unique targets: {ownership['target_ticker'].nunique()}")
+```
+
+```{python}
+#| label: build-ownership-graph
+#| eval: false
+
+# Build directed ownership graph
+G_own = nx.DiGraph()
+
+# Add firm nodes with attributes
+for _, row in firms.iterrows():
+    G_own.add_node(
+        row["ticker"],
+        node_type="firm",
+        market_cap=row.get("market_cap", 0),
+        industry=row.get("industry", "Unknown"),
+        is_soe=row.get("state_ownership_pct", 0) > 50
+    )
+
+# Add ownership edges
+for _, row in ownership.iterrows():
+    owner = row["owner_id"]
+    target = row["target_ticker"]
+    stake = row["ownership_pct"]
+
+    # Add owner node if not present
+    if owner not in G_own:
+        G_own.add_node(
+            owner,
+            node_type=row.get("owner_type", "entity"),
+            market_cap=0,
+            industry="Holding"
+        )
+
+    G_own.add_edge(owner, target, weight=stake / 100)
+
+node_metrics_own, graph_metrics_own = compute_network_metrics(G_own)
+
+print(f"\nOwnership Network Summary:")
+for k, v in graph_metrics_own.items():
+    print(f"  {k}: {v}")
+```
+
+```{python}
+#| label: tbl-ownership-network-stats
+#| eval: false
+#| tbl-cap: "Ownership Network: Graph-Level Statistics"
+
+own_stats = pd.DataFrame([graph_metrics_own]).T
+own_stats.columns = ["Value"]
+own_stats = own_stats.round(4)
+own_stats
+```
+
+### Ultimate Ownership and Control Chains
+
+Direct ownership understates the actual control exercised through pyramidal chains. The ultimate ownership stake of entity $A$ in firm $Z$ through a chain $A \to B \to C \to Z$ is the product of intermediate stakes:
+
+$$
+\omega_{A \to Z}^{\text{ultimate}} = \prod_{(i,j) \in \text{path}(A, Z)} w_{ij}
+$$ {#eq-ultimate-ownership}
+
+where $w_{ij}$ is the direct stake of $i$ in $j$. When multiple paths exist from $A$ to $Z$, the total ultimate ownership is the sum across paths. The control rights, however, are determined by the weakest link in the chain (the minimum stake along the path), reflecting the principle that control requires a majority at each level.
+
+```{python}
+#| label: ultimate-ownership
+#| eval: false
+
+def compute_ultimate_ownership(G, source, target, max_depth=10):
+    """
+    Compute ultimate ownership of source in target through all paths.
+
+    Parameters
+    ----------
+    G : nx.DiGraph
+        Ownership graph with edge weights as ownership fractions.
+    source : str
+        Ultimate owner node.
+    target : str
+        Target firm node.
+    max_depth : int
+        Maximum chain length to consider.
+
+    Returns
+    -------
+    dict : Total ownership, control rights, number of paths.
+    """
+    if source not in G or target not in G:
+        return {"ownership": 0, "control": 0, "n_paths": 0}
+
+    total_ownership = 0
+    max_control = 0
+    n_paths = 0
+
+    # Find all simple paths from source to target
+    try:
+        for path in nx.all_simple_paths(G, source, target,
+                                         cutoff=max_depth):
+            # Cash flow rights: product of stakes
+            ownership = 1.0
+            min_stake = 1.0
+            for i in range(len(path) - 1):
+                edge_data = G[path[i]][path[i + 1]]
+                stake = edge_data.get("weight", 0)
+                ownership *= stake
+                min_stake = min(min_stake, stake)
+
+            total_ownership += ownership
+            max_control = max(max_control, min_stake)
+            n_paths += 1
+    except nx.NetworkXNoPath:
+        pass
+
+    return {
+        "ownership": total_ownership,
+        "control": max_control,
+        "n_paths": n_paths
+    }
+
+
+def compute_control_wedge(G, firms_list, max_depth=5):
+    """
+    Compute the wedge between control and cash flow rights
+    for the largest shareholder of each firm.
+
+    The wedge = control rights - cash flow rights.
+    Positive wedge → potential for tunneling.
+    """
+    wedge_data = []
+
+    for firm in firms_list:
+        if firm not in G:
+            continue
+
+        # Find all direct owners
+        predecessors = list(G.predecessors(firm))
+        if not predecessors:
+            continue
+
+        # Find largest direct owner
+        stakes = {p: G[p][firm]["weight"] for p in predecessors}
+        largest_owner = max(stakes, key=stakes.get)
+        direct_stake = stakes[largest_owner]
+
+        # Compute ultimate ownership through all paths
+        ultimate = compute_ultimate_ownership(
+            G, largest_owner, firm, max_depth
+        )
+
+        wedge_data.append({
+            "ticker": firm,
+            "largest_owner": largest_owner,
+            "direct_stake": direct_stake,
+            "ultimate_ownership": ultimate["ownership"],
+            "control_rights": ultimate["control"],
+            "n_ownership_paths": ultimate["n_paths"],
+            "wedge": ultimate["control"] - ultimate["ownership"]
+        })
+
+    return pd.DataFrame(wedge_data)
+
+
+# Compute for all listed firms
+listed_firms = [n for n, d in G_own.nodes(data=True)
+                if d.get("node_type") == "firm"]
+wedge_df = compute_control_wedge(G_own, listed_firms)
+```
+
+```{python}
+#| label: tbl-control-wedge
+#| eval: false
+#| tbl-cap: "Control-Cash Flow Wedge: Summary Statistics"
+
+wedge_summary = wedge_df[
+    ["direct_stake", "ultimate_ownership", "control_rights",
+     "n_ownership_paths", "wedge"]
+].describe(percentiles=[0.1, 0.25, 0.5, 0.75, 0.9]).T.round(4)
+wedge_summary
+```
+
+```{python}
+#| label: fig-control-wedge
+#| eval: false
+#| fig-cap: "Distribution of Control-Cash Flow Wedge Across Vietnamese Listed Firms"
+
+(
+    p9.ggplot(wedge_df, p9.aes(x="wedge"))
+    + p9.geom_histogram(bins=50, fill="#2E5090", alpha=0.7)
+    + p9.geom_vline(xintercept=0, linetype="dashed", color="#C0392B")
+    + p9.labs(
+        x="Control Wedge (Control Rights − Cash Flow Rights)",
+        y="Count",
+        title="Control-Ownership Wedge: Positive Values Indicate Tunneling Risk"
+    )
+    + p9.theme_minimal()
+    + p9.theme(figure_size=(10, 5))
+)
+```
+
+### Ownership Centrality and Firm Value
+
+We test whether a firm's position in the ownership network predicts its market valuation, controlling for standard determinants:
+
+$$
+Q_{i,t} = \beta_0 + \beta_1 \text{Centrality}_{i,t} + \beta_2 \text{Wedge}_{i,t} + \boldsymbol{\gamma}' \mathbf{X}_{i,t} + \alpha_{\text{ind}} + \delta_t + \varepsilon_{i,t}
+$$ {#eq-network-valuation}
+
+```{python}
+#| label: ownership-valuation
+#| eval: false
+
+# Merge network metrics with firm characteristics
+node_metrics_own_df = node_metrics_own.reset_index().rename(
+    columns={"index": "ticker"}
+)
+
+valuation_data = firms.merge(node_metrics_own_df, on="ticker", how="inner")
+valuation_data = valuation_data.merge(
+    wedge_df[["ticker", "wedge", "n_ownership_paths"]],
+    on="ticker", how="left"
+)
+
+# Panel regression
+val_clean = valuation_data.dropna(
+    subset=["tobins_q", "eigenvector", "wedge",
+            "log_size", "profitability", "leverage"]
+)
+
+if len(val_clean) > 50:
+    model_network_val = sm.OLS(
+        val_clean["tobins_q"],
+        sm.add_constant(val_clean[[
+            "eigenvector", "betweenness", "wedge",
+            "log_size", "profitability", "leverage"
+        ]])
+    ).fit(cov_type="HC1")
+
+    print("Ownership Network Position and Firm Value:")
+    for var in ["eigenvector", "betweenness", "wedge"]:
+        print(f"  {var}: {model_network_val.params[var]:.4f} "
+              f"(t = {model_network_val.tvalues[var]:.3f})")
+```
+
+### Business Group Detection
+
+Business groups (i.e., collections of legally independent firms linked by common ownership) are a defining feature of Vietnamese corporate structure. We detect them algorithmically using community detection on the ownership graph.
+
+```{python}
+#| label: business-groups
+#| eval: false
+
+def detect_business_groups(G, min_group_size=3, ownership_threshold=0.10):
+    """
+    Detect business groups from ownership network.
+
+    A business group is a connected component in the undirected
+    projection of the ownership graph, filtered for economically
+    meaningful ownership stakes.
+
+    Parameters
+    ----------
+    G : nx.DiGraph
+        Directed ownership graph.
+    min_group_size : int
+        Minimum firms in a group.
+    ownership_threshold : float
+        Minimum ownership stake to count as a link.
+
+    Returns
+    -------
+    DataFrame : Group assignments with apex firm.
+    """
+    # Filter edges by threshold
+    G_filtered = nx.DiGraph()
+    for u, v, d in G.edges(data=True):
+        if d.get("weight", 0) >= ownership_threshold:
+            G_filtered.add_edge(u, v, **d)
+
+    # Convert to undirected for component detection
+    G_undirected = G_filtered.to_undirected()
+
+    # Find connected components
+    components = list(nx.connected_components(G_undirected))
+
+    # Filter by size
+    groups = [c for c in components if len(c) >= min_group_size]
+
+    # For each group, identify the apex (top of pyramid)
+    group_data = []
+    for group_id, members in enumerate(groups):
+        subgraph = G_filtered.subgraph(members)
+
+        # Apex: node with highest out-degree and lowest in-degree
+        # (controls others but is not controlled)
+        scores = {}
+        for node in members:
+            in_deg = subgraph.in_degree(node)
+            out_deg = subgraph.out_degree(node)
+            scores[node] = out_deg - in_deg
+
+        apex = max(scores, key=scores.get) if scores else list(members)[0]
+
+        for member in members:
+            node_data = G.nodes.get(member, {})
+            group_data.append({
+                "ticker": member,
+                "group_id": group_id,
+                "group_size": len(members),
+                "apex": apex,
+                "is_apex": member == apex,
+                "node_type": node_data.get("node_type", "unknown"),
+                "industry": node_data.get("industry", "Unknown"),
+                "market_cap": node_data.get("market_cap", 0)
+            })
+
+    return pd.DataFrame(group_data)
+
+
+groups_df = detect_business_groups(G_own)
+print(f"Business groups detected: {groups_df['group_id'].nunique()}")
+print(f"Firms in groups: {len(groups_df[groups_df['node_type'] == 'firm'])}")
+```
+
+```{python}
+#| label: tbl-business-groups
+#| eval: false
+#| tbl-cap: "Largest Vietnamese Business Groups by Ownership Network Analysis"
+
+top_groups = (
+    groups_df.groupby("group_id")
+    .agg(
+        apex=("apex", "first"),
+        n_members=("ticker", "count"),
+        n_listed=("node_type", lambda x: (x == "firm").sum()),
+        total_mcap=("market_cap", "sum"),
+        industries=("industry", lambda x: x.nunique())
+    )
+    .sort_values("total_mcap", ascending=False)
+    .head(15)
+    .reset_index()
+)
+top_groups["total_mcap_bn"] = top_groups["total_mcap"] / 1e9
+top_groups[["apex", "n_members", "n_listed", "total_mcap_bn", "industries"]]
+```
+
+## Board Interlock Networks
+
+### Construction
+
+A board interlock exists when a director serves on the boards of two or more firms simultaneously. The board interlock network is a unipartite projection of the bipartite director$\times$firm graph: two firms are connected if they share at least one director, weighted by the number of shared directors.
+
+Board interlocks are an information channel. @bizjak2008does show that compensation practices diffuse through board networks. @cai2014board demonstrate that firms connected through interlocks have correlated investment policies. In Vietnamese markets, interlocks often follow ownership lines (e.g., the parent company appoints directors to subsidiary boards), creating a governance channel that reinforces the ownership channel.
+
+```{python}
+#| label: board-interlock-data
+#| eval: false
+
+# Load board membership data
+board_data = dc.get_board_memberships(
+    date="2024-06-30"
+)
+
+print(f"Director-firm pairs: {len(board_data)}")
+print(f"Unique directors: {board_data['director_id'].nunique()}")
+print(f"Unique firms: {board_data['ticker'].nunique()}")
+
+# Build bipartite graph
+B = nx.Graph()
+for _, row in board_data.iterrows():
+    B.add_node(row["director_id"], bipartite=0)
+    B.add_node(row["ticker"], bipartite=1)
+    B.add_edge(
+        row["director_id"], row["ticker"],
+        role=row.get("role", "director"),
+        is_independent=row.get("is_independent", False)
+    )
+
+# Project to firm-firm interlock network
+firm_nodes = [n for n, d in B.nodes(data=True) if d.get("bipartite") == 1]
+G_interlock = nx.bipartite.weighted_projected_graph(B, firm_nodes)
+
+# Edge weight = number of shared directors
+interlock_metrics, interlock_graph = compute_network_metrics(G_interlock)
+
+print(f"\nBoard Interlock Network:")
+print(f"  Firms: {G_interlock.number_of_nodes()}")
+print(f"  Interlocking pairs: {G_interlock.number_of_edges()}")
+print(f"  Density: {nx.density(G_interlock):.4f}")
+```
+
+```{python}
+#| label: interlock-vs-ownership
+#| eval: false
+
+# Do board interlocks follow ownership lines?
+# Compare interlock edges with ownership edges
+interlock_edges = set(G_interlock.edges())
+ownership_edges_undirected = set()
+
+for u, v in G_own.edges():
+    if u in firm_nodes and v in firm_nodes:
+        ownership_edges_undirected.add((min(u, v), max(u, v)))
+
+interlock_edges_normalized = {
+    (min(u, v), max(u, v)) for u, v in interlock_edges
+}
+
+overlap = interlock_edges_normalized & ownership_edges_undirected
+n_interlock = len(interlock_edges_normalized)
+n_ownership = len(ownership_edges_undirected)
+n_overlap = len(overlap)
+
+print(f"Interlock edges: {n_interlock}")
+print(f"Ownership edges (firm-firm): {n_ownership}")
+print(f"Overlap: {n_overlap}")
+if n_interlock > 0:
+    print(f"Fraction of interlocks with ownership link: "
+          f"{n_overlap / n_interlock:.3f}")
+```
+
+### Interlocks and Return Co-Movement
+
+If board interlocks serve as information channels, firms connected through interlocks should exhibit excess return co-movement beyond what is explained by shared industry or size characteristics. We test this using the methodology of @cohen2008economic:
+
+$$
+\rho_{ij,t} = \alpha + \beta \cdot \text{Interlock}_{ij,t} + \gamma \cdot \text{SameIndustry}_{ij} + \delta \cdot \text{SizeProximity}_{ij,t} + \varepsilon_{ij,t}
+$$ {#eq-interlock-comovement}
+
+```{python}
+#| label: interlock-comovement
+#| eval: false
+
+# Compute pairwise return correlations for interlocked and non-interlocked pairs
+monthly_returns = dc.get_monthly_returns(
+    start_date="2023-01-01",
+    end_date="2024-06-30"
+)
+
+# Pivot to wide format
+returns_wide = monthly_returns.pivot(
+    index="date", columns="ticker", values="ret"
+).dropna(axis=1, thresh=12)
+
+# Correlation matrix
+corr_matrix = returns_wide.corr()
+
+# Compare correlations: interlocked vs non-interlocked
+interlock_corrs = []
+non_interlock_corrs = []
+
+tickers_in_both = set(corr_matrix.columns) & set(G_interlock.nodes())
+
+for i, ticker_i in enumerate(tickers_in_both):
+    for ticker_j in list(tickers_in_both)[i + 1:]:
+        corr = corr_matrix.loc[ticker_i, ticker_j]
+        if np.isnan(corr):
+            continue
+
+        if G_interlock.has_edge(ticker_i, ticker_j):
+            interlock_corrs.append(corr)
+        else:
+            non_interlock_corrs.append(corr)
+
+if interlock_corrs and non_interlock_corrs:
+    t_stat, p_val = stats.ttest_ind(interlock_corrs, non_interlock_corrs)
+    print(f"Interlocked pairs: n={len(interlock_corrs)}, "
+          f"mean corr={np.mean(interlock_corrs):.4f}")
+    print(f"Non-interlocked: n={len(non_interlock_corrs)}, "
+          f"mean corr={np.mean(non_interlock_corrs):.4f}")
+    print(f"Difference t-stat: {t_stat:.3f}, p-value: {p_val:.4f}")
+```
+
+## Supply Chain and Trade Networks
+
+### Constructing the Supply Chain Graph
+
+Supply chain relationships (customer-supplier linkages) represent real economic connections through which shocks propagate. @acemoglu2015systemic demonstrate theoretically that in the presence of supply chain linkages, idiosyncratic shocks to individual firms can generate aggregate fluctuations rather than washing out. @cohen2008economic and @menzly2010market show that supply chain connections predict cross-sectional return differences: when a major customer's stock drops, its suppliers' stocks follow with a delay.
+
+```{python}
+#| label: supply-chain-data
+#| eval: false
+
+# Load supply chain data
+supply_chain = dc.get_supply_chain_data(
+    start_date="2020-01-01",
+    end_date="2024-12-31"
+)
+
+# Build directed supply chain graph
+G_supply = nx.DiGraph()
+
+for _, row in supply_chain.iterrows():
+    G_supply.add_edge(
+        row["supplier_ticker"],
+        row["customer_ticker"],
+        weight=row.get("transaction_value", 1),
+        pct_of_supplier_revenue=row.get("pct_supplier_revenue", 0),
+        pct_of_customer_cogs=row.get("pct_customer_cogs", 0),
+        year=row.get("year", 2024)
+    )
+
+print(f"Supply chain links: {G_supply.number_of_edges()}")
+print(f"Firms involved: {G_supply.number_of_nodes()}")
+```
+
+### Customer Momentum
+
+The "customer momentum" strategy of @cohen2008economic exploits the delayed propagation of information through supply chains. When a customer firm's stock rises, its suppliers' stocks tend to follow in subsequent months:
+
+$$
+r_{i,t+1} = \alpha + \beta \cdot \text{CustomerReturn}_{i,t} + \gamma \cdot r_{i,t} + \boldsymbol{\delta}' \mathbf{X}_{i,t} + \varepsilon_{i,t}
+$$ {#eq-customer-momentum}
+
+where $\text{CustomerReturn}_{i,t} = \sum_{j \in \text{Customers}(i)} w_{ij} \cdot r_{j,t}$ is the weighted average return of firm $i$'s customers.
+
+```{python}
+#| label: customer-momentum
+#| eval: false
+
+# Compute customer-weighted returns for each supplier
+def compute_customer_returns(supply_graph, monthly_returns):
+    """
+    Compute customer-weighted returns for each supplier firm.
+    """
+    # For each supplier, compute weighted average customer return
+    results = []
+
+    for date in monthly_returns["date"].unique():
+        date_returns = monthly_returns[monthly_returns["date"] == date]
+        ret_dict = dict(zip(date_returns["ticker"], date_returns["ret"]))
+
+        for supplier in supply_graph.nodes():
+            customers = list(supply_graph.successors(supplier))
+            if not customers:
+                continue
+
+            customer_rets = []
+            customer_weights = []
+            for cust in customers:
+                if cust in ret_dict:
+                    edge_data = supply_graph[supplier][cust]
+                    weight = edge_data.get("pct_of_supplier_revenue", 1)
+                    customer_rets.append(ret_dict[cust])
+                    customer_weights.append(weight)
+
+            if customer_rets:
+                weights = np.array(customer_weights)
+                if weights.sum() > 0:
+                    weights = weights / weights.sum()
+                else:
+                    weights = np.ones(len(weights)) / len(weights)
+
+                weighted_ret = np.average(customer_rets, weights=weights)
+                results.append({
+                    "date": date,
+                    "ticker": supplier,
+                    "customer_ret": weighted_ret,
+                    "n_customers": len(customer_rets)
+                })
+
+    return pd.DataFrame(results)
+
+
+customer_rets = compute_customer_returns(G_supply, monthly_returns)
+
+# Merge with own returns and lag
+momentum_data = monthly_returns.merge(
+    customer_rets, on=["ticker", "date"], how="inner"
+)
+
+momentum_data = momentum_data.sort_values(["ticker", "date"])
+momentum_data["own_ret_lag"] = momentum_data.groupby("ticker")["ret"].shift(1)
+momentum_data["customer_ret_lag"] = momentum_data.groupby(
+    "ticker"
+)["customer_ret"].shift(1)
+momentum_data["ret_lead"] = momentum_data.groupby("ticker")["ret"].shift(-1)
+
+# Regression
+mom_clean = momentum_data.dropna(
+    subset=["ret_lead", "customer_ret_lag", "own_ret_lag"]
+)
+
+model_mom = sm.OLS(
+    mom_clean["ret_lead"],
+    sm.add_constant(mom_clean[["customer_ret_lag", "own_ret_lag"]])
+).fit(cov_type="cluster", cov_kwds={"groups": mom_clean["ticker"]})
+```
+
+```{python}
+#| label: tbl-customer-momentum
+#| eval: false
+#| tbl-cap: "Customer Momentum: Supplier Returns Predicted by Customer Returns"
+
+mom_results = pd.DataFrame({
+    "Coefficient": model_mom.params.round(4),
+    "Std Error": model_mom.bse.round(4),
+    "t-stat": model_mom.tvalues.round(3),
+    "p-value": model_mom.pvalues.round(4)
+})
+mom_results
+```
+
+### Network Propagation: Shock Diffusion Through Supply Chains
+
+The @acemoglu2015systemic model predicts that the aggregate effect of an idiosyncratic shock depends on the network's topology. In a star network (one central hub), hub shocks generate aggregate fluctuations. In a symmetric network, shocks cancel out. We implement a simulation-based approach to measure shock propagation in the Vietnamese supply chain.
+
+```{python}
+#| label: shock-propagation
+#| eval: false
+
+def simulate_shock_propagation(G, shocked_node, shock_size=-0.10,
+                                decay=0.5, max_steps=5):
+    """
+    Simulate the propagation of an idiosyncratic shock through
+    a supply chain network.
+
+    Parameters
+    ----------
+    G : nx.DiGraph
+        Supply chain graph (supplier → customer).
+    shocked_node : str
+        Node receiving the initial shock.
+    shock_size : float
+        Initial shock magnitude (e.g., -0.10 = -10% revenue shock).
+    decay : float
+        Fraction of shock transmitted per link (0 < decay < 1).
+    max_steps : int
+        Maximum propagation steps.
+
+    Returns
+    -------
+    dict : {node: cumulative shock received}.
+    """
+    shocks = {shocked_node: shock_size}
+    frontier = {shocked_node}
+
+    for step in range(max_steps):
+        new_frontier = set()
+        for node in frontier:
+            # Propagate to customers (downstream)
+            for customer in G.successors(node):
+                edge_weight = G[node][customer].get(
+                    "pct_of_customer_cogs", 0.1
+                )
+                transmitted = shocks[node] * decay * edge_weight
+                if abs(transmitted) > 0.001:
+                    shocks[customer] = shocks.get(customer, 0) + transmitted
+                    new_frontier.add(customer)
+
+            # Propagate to suppliers (upstream)
+            for supplier in G.predecessors(node):
+                edge_weight = G[supplier][node].get(
+                    "pct_of_supplier_revenue", 0.1
+                )
+                transmitted = shocks[node] * decay * edge_weight
+                if abs(transmitted) > 0.001:
+                    shocks[supplier] = shocks.get(supplier, 0) + transmitted
+                    new_frontier.add(supplier)
+
+        frontier = new_frontier
+        if not frontier:
+            break
+
+    return shocks
+
+
+# Identify systemically important supply chain nodes
+# (Those whose shock has largest aggregate impact)
+systemic_importance = {}
+listed_in_supply = [n for n in G_supply.nodes()
+                    if n in set(firms["ticker"])]
+
+for firm in listed_in_supply[:100]:  # Sample for computational feasibility
+    shocks = simulate_shock_propagation(G_supply, firm, -0.10)
+    aggregate_impact = sum(abs(v) for k, v in shocks.items() if k != firm)
+    systemic_importance[firm] = aggregate_impact
+
+systemic_df = pd.DataFrame(
+    list(systemic_importance.items()),
+    columns=["ticker", "systemic_impact"]
+).sort_values("systemic_impact", ascending=False)
+```
+
+```{python}
+#| label: tbl-systemic-supply-chain
+#| eval: false
+#| tbl-cap: "Most Systemically Important Firms in the Supply Chain Network"
+
+top_systemic = systemic_df.head(20).merge(
+    firms[["ticker", "industry", "market_cap"]],
+    on="ticker", how="left"
+)
+top_systemic["market_cap_bn"] = top_systemic["market_cap"] / 1e9
+top_systemic[["ticker", "industry", "market_cap_bn", "systemic_impact"]].round(4)
+```
+
+## Correlation and Co-Movement Networks
+
+### Construction from Return Data
+
+A correlation network connects assets whose returns co-move. This is perhaps the most widely used financial network because it requires only return data---no proprietary ownership or supply chain information. The standard construction involves three steps:
+
+1.  **Compute pairwise correlations.** For $n$ assets over $T$ periods, the sample correlation matrix $\hat{\rho} \in \mathbb{R}^{n \times n}$ has $n(n-1)/2$ unique entries.
+
+2.  **Threshold or transform.** Convert the dense correlation matrix into a sparse graph. Common approaches: hard threshold ($\rho_{ij} > \bar{\rho}$), Minimum Spanning Tree (MST), or Planar Maximally Filtered Graph (PMFG).
+
+3.  **Analyze the graph.** Community detection reveals sector clustering; centrality identifies market bellwethers; temporal evolution tracks regime changes.
+
+```{python}
+#| label: correlation-network
+#| eval: false
+
+# Compute correlation matrix from daily returns
+daily_returns = dc.get_daily_returns(
+    start_date="2023-01-01",
+    end_date="2024-06-30"
+)
+
+daily_wide = daily_returns.pivot(
+    index="date", columns="ticker", values="ret"
+).dropna(axis=1, thresh=200)
+
+corr = daily_wide.corr()
+
+# Minimum Spanning Tree (MST)
+# Convert correlation to distance: d = sqrt(2(1-ρ))
+dist = np.sqrt(2 * (1 - corr.values))
+np.fill_diagonal(dist, 0)
+
+# Build complete graph with distances
+G_complete = nx.Graph()
+tickers = list(corr.columns)
+for i in range(len(tickers)):
+    for j in range(i + 1, len(tickers)):
+        G_complete.add_edge(
+            tickers[i], tickers[j],
+            weight=dist[i, j],
+            correlation=corr.iloc[i, j]
+        )
+
+# MST
+G_mst = nx.minimum_spanning_tree(G_complete, weight="weight")
+
+# Thresholded correlation network
+threshold = 0.5
+G_corr = nx.Graph()
+for i in range(len(tickers)):
+    for j in range(i + 1, len(tickers)):
+        if corr.iloc[i, j] > threshold:
+            G_corr.add_edge(
+                tickers[i], tickers[j],
+                weight=corr.iloc[i, j]
+            )
+
+print(f"MST: {G_mst.number_of_nodes()} nodes, "
+      f"{G_mst.number_of_edges()} edges")
+print(f"Corr network (ρ > {threshold}): "
+      f"{G_corr.number_of_nodes()} nodes, "
+      f"{G_corr.number_of_edges()} edges")
+```
+
+### The Diebold-Yilmaz Connectedness Framework
+
+@diebold2014network propose measuring financial connectedness using the variance decomposition from a vector autoregression (VAR). The fraction of the $H$-step-ahead forecast error variance of variable $i$ attributable to shocks from variable $j$ defines the pairwise directional connectedness:
+
+$$
+C_{i \leftarrow j}(H) = \frac{\tilde{\theta}_{ij}^g(H)}{\sum_{j=1}^{n} \tilde{\theta}_{ij}^g(H)} \times 100
+$$ {#eq-dy-connectedness}
+
+where $\tilde{\theta}_{ij}^g(H)$ is the generalized forecast error variance decomposition. The total connectedness index (TCI) aggregates across all pairs:
+
+$$
+\text{TCI}(H) = \frac{\sum_{i \neq j} C_{i \leftarrow j}(H)}{\sum_{i,j} C_{i \leftarrow j}(H)} \times 100
+$$ {#eq-tci}
+
+High TCI indicates a tightly connected system where shocks propagate widely; low TCI indicates relative isolation.
+
+```{python}
+#| label: diebold-yilmaz
+#| eval: false
+
+def diebold_yilmaz_connectedness(returns_df, var_order=2,
+                                  forecast_horizon=10):
+    """
+    Compute the Diebold-Yilmaz (2014) connectedness table.
+
+    Parameters
+    ----------
+    returns_df : DataFrame
+        Returns with columns as assets, index as dates.
+    var_order : int
+        VAR lag order.
+    forecast_horizon : int
+        Forecast horizon for variance decomposition.
+
+    Returns
+    -------
+    dict : Connectedness matrix, TCI, TO/FROM measures.
+    """
+    from statsmodels.tsa.api import VAR
+
+    # Fit VAR
+    model = VAR(returns_df.dropna())
+    results = model.fit(var_order)
+
+    # Generalized Forecast Error Variance Decomposition
+    fevd = results.fevd(forecast_horizon)
+
+    # Extract decomposition matrix at horizon H
+    n = returns_df.shape[1]
+    C = np.zeros((n, n))
+
+    for i in range(n):
+        decomp = fevd.decomp[i]  # H x n array
+        C[i, :] = decomp[-1, :]  # Take horizon H values
+
+    # Normalize rows to sum to 100
+    row_sums = C.sum(axis=1, keepdims=True)
+    C_norm = C / row_sums * 100
+
+    # Connectedness measures
+    # FROM: how much of i's variance comes from others
+    FROM = C_norm.sum(axis=1) - np.diag(C_norm)
+
+    # TO: how much of others' variance comes from i
+    TO = C_norm.sum(axis=0) - np.diag(C_norm)
+
+    # NET = TO - FROM
+    NET = TO - FROM
+
+    # Total Connectedness Index
+    TCI = FROM.sum() / n
+
+    names = returns_df.columns.tolist()
+
+    connectedness_df = pd.DataFrame(C_norm, index=names, columns=names)
+    connectedness_df["FROM_others"] = FROM
+    connectedness_df.loc["TO_others"] = list(TO) + [TCI]
+
+    return {
+        "connectedness_matrix": connectedness_df,
+        "TCI": TCI,
+        "FROM": pd.Series(FROM, index=names),
+        "TO": pd.Series(TO, index=names),
+        "NET": pd.Series(NET, index=names)
+    }
+
+
+# Apply to top Vietnamese stocks by liquidity
+top_stocks = (
+    daily_returns.groupby("ticker")["volume"]
+    .mean()
+    .nlargest(20)
+    .index
+)
+
+top_returns = daily_wide[
+    [c for c in top_stocks if c in daily_wide.columns]
+].dropna()
+
+dy_results = diebold_yilmaz_connectedness(top_returns)
+print(f"Total Connectedness Index: {dy_results['TCI']:.2f}%")
+```
+
+```{python}
+#| label: tbl-connectedness
+#| eval: false
+#| tbl-cap: "Diebold-Yilmaz Net Connectedness: Net Transmitters (+) and Receivers (−)"
+
+net_df = pd.DataFrame({
+    "TO_others": dy_results["TO"].round(2),
+    "FROM_others": dy_results["FROM"].round(2),
+    "NET": dy_results["NET"].round(2)
+}).sort_values("NET", ascending=False)
+
+net_df
+```
+
+```{python}
+#| label: rolling-connectedness
+#| eval: false
+
+# Rolling TCI to track systemic risk over time
+def rolling_tci(returns_wide, window=252, step=21, var_order=1,
+                 forecast_horizon=10, min_stocks=10):
+    """Compute rolling Total Connectedness Index."""
+    dates = returns_wide.index
+    tci_series = []
+
+    for i in range(window, len(dates), step):
+        window_data = returns_wide.iloc[i - window:i]
+
+        # Keep stocks with sufficient data
+        valid_cols = window_data.dropna(axis=1, thresh=int(window * 0.9))
+        if valid_cols.shape[1] < min_stocks:
+            continue
+
+        # Use top stocks by variance (most informative)
+        top_cols = valid_cols.var().nlargest(min_stocks).index
+        subset = valid_cols[top_cols].dropna()
+
+        if len(subset) < window * 0.8:
+            continue
+
+        try:
+            result = diebold_yilmaz_connectedness(
+                subset, var_order, forecast_horizon
+            )
+            tci_series.append({
+                "date": dates[i],
+                "TCI": result["TCI"],
+                "n_stocks": len(top_cols)
+            })
+        except Exception:
+            continue
+
+    return pd.DataFrame(tci_series)
+
+
+# tci_df = rolling_tci(daily_wide, window=252, step=21)
+```
+
+## Interbank and Financial Contagion Networks
+
+### The Interbank Market as a Network
+
+The interbank market, where banks lend reserves to each other, is the canonical financial network. @allen2000financial demonstrate that the structure of interbank linkages determines whether a bank failure cascades into a systemic crisis or is absorbed by the network. Two extreme topologies illustrate:
+
+**Complete network (all banks linked to all).** Each bank's exposure to any single counterpart is small. A bank failure imposes small losses on many banks, which can individually absorb them. The network is resilient.
+
+**Ring network (each bank linked to one neighbor).** Each bank's exposure is concentrated in a single counterpart. A failure in one bank can topple its neighbor, triggering a chain of cascading defaults. The network is fragile.
+
+The Vietnamese banking system, with its concentration of state-owned banks and the regulatory emphasis on interbank lending for liquidity management, lies between these extremes.
+
+```{python}
+#| label: interbank-network
+#| eval: false
+
+# Load interbank exposure data
+interbank = dc.get_interbank_exposures(
+    date="2024-06-30"
+)
+
+# Build interbank network
+G_bank = nx.DiGraph()
+
+for _, row in interbank.iterrows():
+    G_bank.add_edge(
+        row["lender_bank"],
+        row["borrower_bank"],
+        weight=row["exposure_bn_vnd"],
+        exposure_pct_equity=row.get("exposure_pct_equity", 0)
+    )
+
+# Add bank attributes
+bank_info = dc.get_bank_characteristics(date="2024-06-30")
+for _, row in bank_info.iterrows():
+    if row["ticker"] in G_bank:
+        G_bank.nodes[row["ticker"]].update({
+            "total_assets": row.get("total_assets", 0),
+            "equity": row.get("equity", 0),
+            "is_soe": row.get("is_soe", False),
+            "tier1_ratio": row.get("tier1_ratio", 0)
+        })
+
+bank_metrics, bank_graph_stats = compute_network_metrics(G_bank)
+```
+
+### Cascading Default Simulation
+
+We implement the @eisenberg2001systemic clearing mechanism to simulate cascading defaults in the interbank network. When a bank fails, it cannot honor its interbank obligations, imposing losses on its creditors, who may in turn fail:
+
+$$
+p_i^* = \min\left(\bar{p}_i, \; e_i + \sum_{j} \frac{L_{ji}}{\sum_k L_{jk}} p_j^*\right)
+$$ {#eq-eisenberg-noe}
+
+where $p_i^*$ is bank $i$'s actual payment, $\bar{p}_i$ is its total obligation, $e_i$ is its external assets minus external liabilities, and $L_{ji}/\sum_k L_{jk}$ is the fraction of bank $j$'s obligations owed to bank $i$.
+
+```{python}
+#| label: cascading-defaults
+#| eval: false
+
+
+def simulate_cascading_defaults(G, initial_failure, 
+                                  equity_buffer=0.08,
+                                  max_rounds=20):
+    """
+    Simulate cascading defaults in an interbank network.
+
+    Parameters
+    ----------
+    G : nx.DiGraph
+        Interbank exposure graph (lender → borrower, weight = exposure).
+    initial_failure : str
+        Bank that fails initially.
+    equity_buffer : float
+        Fraction of equity that absorbs losses before default.
+    max_rounds : int
+        Maximum cascade rounds.
+
+    Returns
+    -------
+    dict : Defaulted banks, round-by-round losses, systemic loss.
+    """
+    defaulted = {initial_failure}
+    cascade_history = [{"round": 0, "defaults": [initial_failure],
+                        "total_defaults": 1}]
+
+    for round_num in range(1, max_rounds + 1):
+        new_defaults = set()
+
+        for bank in G.nodes():
+            if bank in defaulted:
+                continue
+
+            # Compute losses from defaulted counterparties
+            total_loss = 0
+            for defaulted_bank in defaulted:
+                if G.has_edge(bank, defaulted_bank):
+                    # bank lent to defaulted_bank → loss
+                    exposure = G[bank][defaulted_bank]["weight"]
+                    # Assume LGD = 60%
+                    loss = exposure * 0.6
+                    total_loss += loss
+
+            # Check if losses exceed equity buffer
+            bank_data = G.nodes.get(bank, {})
+            equity = bank_data.get("equity", float("inf"))
+
+            if total_loss > equity * equity_buffer:
+                new_defaults.add(bank)
+
+        if not new_defaults:
+            break
+
+        defaulted |= new_defaults
+        cascade_history.append({
+            "round": round_num,
+            "defaults": list(new_defaults),
+            "total_defaults": len(defaulted)
+        })
+
+    # Compute systemic loss
+    total_system_equity = sum(
+        G.nodes[n].get("equity", 0) for n in G.nodes()
+    )
+    defaulted_equity = sum(
+        G.nodes[n].get("equity", 0) for n in defaulted
+    )
+    systemic_loss_pct = (
+        defaulted_equity / total_system_equity
+        if total_system_equity > 0 else 0
+    )
+
+    return {
+        "defaulted_banks": list(defaulted),
+        "n_defaults": len(defaulted),
+        "cascade_rounds": len(cascade_history) - 1,
+        "cascade_history": cascade_history,
+        "systemic_loss_pct": systemic_loss_pct
+    }
+
+
+# Simulate cascade for each bank
+cascade_results = []
+for bank in G_bank.nodes():
+    result = simulate_cascading_defaults(G_bank, bank)
+    cascade_results.append({
+        "initial_failure": bank,
+        "n_cascading_defaults": result["n_defaults"],
+        "systemic_loss_pct": result["systemic_loss_pct"],
+        "cascade_rounds": result["cascade_rounds"]
+    })
+
+cascade_df = pd.DataFrame(cascade_results).sort_values(
+    "systemic_loss_pct", ascending=False
+)
+```
+
+```{python}
+#| label: tbl-systemic-banks
+#| eval: false
+#| tbl-cap: "Systemically Important Banks: Cascading Default Analysis"
+
+cascade_df.head(15).round(4)
+```
+
+## Graph Neural Networks for Financial Prediction
+
+### From Graphs to Predictions
+
+Classical network analysis computes hand-crafted features (centrality, clustering, community membership) and feeds them into standard regression models. Graph neural networks (GNNs) learn features directly from the graph structure and node attributes through message passing. The key insight is that a node's representation should depend not only on its own features but on the features of its neighbors, their neighbors, and so on.
+
+### Graph Convolutional Networks (GCN)
+
+The Graph Convolutional Network of @kipf2016semi performs spectral convolution on graphs. The layer-wise propagation rule is:
+
+$$
+H^{(\ell+1)} = \sigma\left(\tilde{D}^{-1/2} \tilde{A} \tilde{D}^{-1/2} H^{(\ell)} W^{(\ell)}\right)
+$$ {#eq-gcn}
+
+where $\tilde{A} = A + I_n$ is the adjacency matrix with self-loops, $\tilde{D}$ is the corresponding degree matrix, $H^{(\ell)}$ is the node feature matrix at layer $\ell$, $W^{(\ell)}$ is the learnable weight matrix, and $\sigma$ is a nonlinearity (ReLU). The normalized $\tilde{D}^{-1/2} \tilde{A} \tilde{D}^{-1/2}$ term averages each node's features with its neighbors' features, weighted by degree.
+
+### Graph Attention Networks (GAT)
+
+The Graph Attention Network of @velivckovic2017graph replaces the fixed normalization in GCN with learned attention coefficients:
+
+$$
+h_i^{(\ell+1)} = \sigma\left(\sum_{j \in \mathcal{N}(i)} \alpha_{ij}^{(\ell)} W^{(\ell)} h_j^{(\ell)}\right)
+$$ {#eq-gat}
+
+where the attention coefficient $\alpha_{ij}$ is computed as:
+
+$$
+\alpha_{ij} = \frac{\exp\left(\text{LeakyReLU}\left(\mathbf{a}^\top [W h_i \| W h_j]\right)\right)}{\sum_{k \in \mathcal{N}(i)} \exp\left(\text{LeakyReLU}\left(\mathbf{a}^\top [W h_i \| W h_k]\right)\right)}
+$$ {#eq-gat-attention}
+
+This allows the model to learn which neighbors are most informative for each node, rather than treating all neighbors equally.
+
+```{python}
+#| label: gnn-models
+#| eval: false
+
+class GCNLayer(nn.Module):
+    """Graph Convolutional Network layer (Kipf & Welling, 2016)."""
+
+    def __init__(self, in_features, out_features, bias=True):
+        super().__init__()
+        self.weight = nn.Parameter(torch.FloatTensor(in_features, out_features))
+        if bias:
+            self.bias = nn.Parameter(torch.FloatTensor(out_features))
+        else:
+            self.bias = None
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        nn.init.xavier_uniform_(self.weight)
+        if self.bias is not None:
+            nn.init.zeros_(self.bias)
+
+    def forward(self, x, adj_norm):
+        """
+        Parameters
+        ----------
+        x : Tensor (n_nodes, in_features)
+            Node feature matrix.
+        adj_norm : Tensor (n_nodes, n_nodes)
+            Normalized adjacency matrix (D^{-1/2} A D^{-1/2}).
+        """
+        support = x @ self.weight
+        output = adj_norm @ support
+        if self.bias is not None:
+            output = output + self.bias
+        return output
+
+
+class GATLayer(nn.Module):
+    """Graph Attention Network layer (Velickovic et al., 2017)."""
+
+    def __init__(self, in_features, out_features, n_heads=4,
+                 dropout=0.1, concat=True):
+        super().__init__()
+        self.n_heads = n_heads
+        self.out_features = out_features
+        self.concat = concat
+
+        self.W = nn.Parameter(
+            torch.FloatTensor(n_heads, in_features, out_features)
+        )
+        self.a = nn.Parameter(torch.FloatTensor(n_heads, 2 * out_features, 1))
+        self.dropout = nn.Dropout(dropout)
+        self.leaky_relu = nn.LeakyReLU(0.2)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        nn.init.xavier_uniform_(self.W)
+        nn.init.xavier_uniform_(self.a)
+
+    def forward(self, x, adj):
+        """
+        Parameters
+        ----------
+        x : Tensor (n_nodes, in_features)
+        adj : Tensor (n_nodes, n_nodes)
+            Binary adjacency matrix (1 if edge, 0 otherwise).
+        """
+        n = x.size(0)
+
+        # Linear transformation for each head
+        # x: (n, in_f) -> h: (heads, n, out_f)
+        h = torch.einsum("ni,hio->hno", x, self.W)
+
+        # Attention coefficients
+        # Concatenate h_i and h_j for all pairs
+        h_i = h.unsqueeze(2).expand(-1, -1, n, -1)  # (heads, n, n, out_f)
+        h_j = h.unsqueeze(1).expand(-1, n, -1, -1)  # (heads, n, n, out_f)
+        concat_h = torch.cat([h_i, h_j], dim=-1)    # (heads, n, n, 2*out_f)
+
+        e = self.leaky_relu(
+            torch.einsum("hnmo,hoi->hnm", concat_h, self.a).squeeze(-1)
+        )
+
+        # Mask non-edges
+        mask = adj.unsqueeze(0).expand(self.n_heads, -1, -1)
+        e = e.masked_fill(mask == 0, float("-inf"))
+
+        # Softmax attention
+        alpha = F.softmax(e, dim=-1)
+        alpha = self.dropout(alpha)
+
+        # Weighted aggregation
+        out = torch.einsum("hnm,hmo->hno", alpha, h)  # (heads, n, out_f)
+
+        if self.concat:
+            out = out.permute(1, 0, 2).reshape(n, -1)  # (n, heads * out_f)
+        else:
+            out = out.mean(dim=0)  # (n, out_f)
+
+        return out, alpha
+
+
+class FinancialGNN(nn.Module):
+    """
+    Graph Neural Network for financial node prediction.
+    Supports GCN and GAT layers with flexible architecture.
+    """
+
+    def __init__(self, input_dim, hidden_dim=64, output_dim=1,
+                 n_layers=2, n_heads=4, gnn_type="gat",
+                 dropout=0.3):
+        super().__init__()
+
+        self.gnn_type = gnn_type
+        self.dropout = nn.Dropout(dropout)
+
+        if gnn_type == "gcn":
+            self.layers = nn.ModuleList()
+            self.layers.append(GCNLayer(input_dim, hidden_dim))
+            for _ in range(n_layers - 1):
+                self.layers.append(GCNLayer(hidden_dim, hidden_dim))
+
+        elif gnn_type == "gat":
+            self.layers = nn.ModuleList()
+            self.layers.append(
+                GATLayer(input_dim, hidden_dim // n_heads,
+                         n_heads=n_heads, concat=True)
+            )
+            for _ in range(n_layers - 2):
+                self.layers.append(
+                    GATLayer(hidden_dim, hidden_dim // n_heads,
+                             n_heads=n_heads, concat=True)
+                )
+            # Last layer: single head, no concat
+            self.layers.append(
+                GATLayer(hidden_dim, hidden_dim,
+                         n_heads=1, concat=False)
+            )
+
+        # Prediction head
+        self.head = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim // 2, output_dim)
+        )
+
+    def forward(self, x, adj):
+        """
+        Parameters
+        ----------
+        x : Tensor (n_nodes, input_dim)
+            Node features.
+        adj : Tensor (n_nodes, n_nodes)
+            Adjacency matrix.
+        """
+        h = x
+        attention_weights = []
+
+        for i, layer in enumerate(self.layers):
+            if self.gnn_type == "gcn":
+                h = layer(h, adj)
+                h = F.relu(h) if i < len(self.layers) - 1 else h
+            elif self.gnn_type == "gat":
+                h, alpha = layer(h, adj)
+                attention_weights.append(alpha)
+                if i < len(self.layers) - 1:
+                    h = F.elu(h)
+
+            h = self.dropout(h)
+
+        predictions = self.head(h).squeeze(-1)
+        return predictions, attention_weights
+```
+
+### GNN for Cross-Sectional Return Prediction
+
+We apply the GNN to predict cross-sectional stock returns, where the graph encodes ownership connections between firms. The hypothesis is that firms connected through ownership have correlated return dynamics that the GNN can exploit.
+
+```{python}
+#| label: gnn-return-prediction
+#| eval: false
+
+def prepare_gnn_data(firms_df, ownership_graph, returns_df, date):
+    """
+    Prepare node features and adjacency matrix for GNN prediction.
+
+    Parameters
+    ----------
+    firms_df : DataFrame
+        Firm characteristics.
+    ownership_graph : nx.DiGraph
+        Ownership network.
+    returns_df : DataFrame
+        Stock returns.
+
+    Returns
+    -------
+    tuple : (node_features, adjacency, target_returns, ticker_list)
+    """
+    # Get stocks with both features and network presence
+    tickers = sorted(
+        set(firms_df["ticker"]) &
+        set(ownership_graph.nodes()) &
+        set(returns_df["ticker"])
+    )
+
+    if not tickers:
+        return None, None, None, None
+
+    # Node features
+    feature_cols = [
+        "log_size", "book_to_market", "momentum_12m",
+        "profitability", "investment", "leverage",
+        "beta", "volatility", "turnover"
+    ]
+
+    feat_df = firms_df[firms_df["ticker"].isin(tickers)].set_index("ticker")
+    feat_df = feat_df.reindex(tickers)
+
+    X = feat_df[feature_cols].fillna(0).values
+    X = (X - X.mean(axis=0)) / (X.std(axis=0) + 1e-8)
+
+    # Adjacency matrix
+    ticker_to_idx = {t: i for i, t in enumerate(tickers)}
+    n = len(tickers)
+    A = np.zeros((n, n))
+
+    for u, v, d in ownership_graph.edges(data=True):
+        if u in ticker_to_idx and v in ticker_to_idx:
+            weight = d.get("weight", 1)
+            A[ticker_to_idx[u], ticker_to_idx[v]] = weight
+            A[ticker_to_idx[v], ticker_to_idx[u]] = weight  # Symmetrize
+
+    # Add self-loops
+    A = A + np.eye(n)
+
+    # Normalize: D^{-1/2} A D^{-1/2}
+    D = np.diag(A.sum(axis=1))
+    D_inv_sqrt = np.diag(1.0 / np.sqrt(np.diag(D) + 1e-10))
+    A_norm = D_inv_sqrt @ A @ D_inv_sqrt
+
+    # Target returns
+    ret_df = returns_df[
+        (returns_df["ticker"].isin(tickers)) &
+        (returns_df["date"] == date)
+    ].set_index("ticker").reindex(tickers)
+
+    y = ret_df["ret"].fillna(0).values
+
+    return (
+        torch.tensor(X, dtype=torch.float32),
+        torch.tensor(A_norm, dtype=torch.float32),
+        torch.tensor(y, dtype=torch.float32),
+        tickers
+    )
+
+
+def train_gnn_model(model, X_train, A_train, y_train,
+                     X_val, A_val, y_val,
+                     n_epochs=100, lr=1e-3):
+    """Train GNN model with validation-based early stopping."""
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr,
+                                  weight_decay=1e-4)
+
+    best_val_loss = float("inf")
+    patience_counter = 0
+
+    for epoch in range(n_epochs):
+        model.train()
+        optimizer.zero_grad()
+
+        pred, _ = model(X_train, A_train)
+        loss = F.mse_loss(pred, y_train)
+        loss.backward()
+        optimizer.step()
+
+        # Validation
+        model.eval()
+        with torch.no_grad():
+            val_pred, _ = model(X_val, A_val)
+            val_loss = F.mse_loss(val_pred, y_val).item()
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_state = {k: v.clone() for k, v in model.state_dict().items()}
+            patience_counter = 0
+        else:
+            patience_counter += 1
+            if patience_counter >= 15:
+                break
+
+    model.load_state_dict(best_state)
+    return model, best_val_loss
+```
+
+### Temporal Graph Networks
+
+Financial networks evolve over time. Ownership stakes change, directors rotate, correlations shift. Temporal GNNs extend static GNNs by incorporating the time dimension explicitly. The Temporal Graph Network (TGN) of @rossi2020temporal maintains a memory state for each node that is updated whenever an event involving the node occurs:
+
+$$
+\mathbf{s}_i(t) = \text{GRU}\left(\mathbf{s}_i(t^-), \; \text{msg}(i, t)\right)
+$$ {#eq-tgn}
+
+where $\mathbf{s}_i(t)$ is the memory state of node $i$ at time $t$, $\text{msg}(i, t)$ is the message aggregated from events at time $t$, and GRU is a gated recurrent unit.
+
+```{python}
+#| label: temporal-gnn
+#| eval: false
+
+class TemporalFinancialGNN(nn.Module):
+    """
+    Temporal GNN for dynamic financial networks.
+    Combines graph convolution with temporal memory.
+    """
+
+    def __init__(self, node_dim, edge_dim=1, memory_dim=64,
+                 hidden_dim=64, output_dim=1, n_heads=4):
+        super().__init__()
+
+        self.memory_dim = memory_dim
+
+        # Memory update (GRU)
+        self.memory_updater = nn.GRUCell(
+            input_size=node_dim + edge_dim + memory_dim,
+            hidden_size=memory_dim
+        )
+
+        # Message function
+        self.message_fn = nn.Sequential(
+            nn.Linear(memory_dim * 2 + edge_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, memory_dim)
+        )
+
+        # Graph attention for spatial aggregation
+        self.spatial_attn = GATLayer(
+            memory_dim + node_dim, hidden_dim // n_heads,
+            n_heads=n_heads, concat=True
+        )
+
+        # Temporal attention for recent history
+        self.temporal_attn = nn.MultiheadAttention(
+            embed_dim=hidden_dim, num_heads=n_heads,
+            batch_first=True
+        )
+
+        # Prediction head
+        self.head = nn.Sequential(
+            nn.Linear(hidden_dim * 2, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(hidden_dim, output_dim)
+        )
+
+    def forward(self, node_features, adj_sequence, memory=None):
+        """
+        Parameters
+        ----------
+        node_features : list of Tensors
+            Node features at each time step.
+        adj_sequence : list of Tensors
+            Adjacency matrices at each time step.
+        memory : Tensor or None
+            Initial memory state (n_nodes, memory_dim).
+
+        Returns
+        -------
+        predictions : Tensor
+            Predictions for the last time step.
+        """
+        n_nodes = node_features[0].shape[0]
+        T = len(node_features)
+
+        if memory is None:
+            memory = torch.zeros(n_nodes, self.memory_dim)
+
+        temporal_states = []
+
+        for t in range(T):
+            x_t = node_features[t]
+            adj_t = adj_sequence[t]
+
+            # Spatial aggregation via GAT
+            combined = torch.cat([x_t, memory], dim=-1)
+            spatial_out, _ = self.spatial_attn(combined, adj_t)
+
+            temporal_states.append(spatial_out.unsqueeze(1))
+
+            # Update memory with current state
+            update_input = torch.cat([
+                x_t, spatial_out[:, :1].squeeze(1) if spatial_out.dim() > 2
+                else spatial_out,
+                memory
+            ], dim=-1)[:, :self.memory_updater.input_size]
+
+        # Stack temporal states: (n_nodes, T, hidden)
+        temporal_stack = torch.cat(temporal_states, dim=1)
+
+        # Temporal attention across time steps
+        temporal_out, _ = self.temporal_attn(
+            temporal_stack, temporal_stack, temporal_stack
+        )
+
+        # Use last time step
+        last_spatial = temporal_states[-1].squeeze(1)
+        last_temporal = temporal_out[:, -1, :]
+
+        combined = torch.cat([last_spatial, last_temporal], dim=-1)
+        predictions = self.head(combined).squeeze(-1)
+
+        return predictions
+```
+
+### GNN for Credit Risk and Fraud Detection
+
+Beyond return prediction, GNNs are particularly powerful for credit risk assessment and fraud detection, where the network structure itself is informative. In credit risk, firms connected to defaulted counterparties face elevated risk. In fraud detection, suspicious transaction patterns propagate through networks of related entities.
+
+```{python}
+#| label: gnn-credit-risk
+#| eval: false
+
+class CreditRiskGNN(nn.Module):
+    """
+    GNN for credit default prediction using firm and bank networks.
+    Node classification: predict default probability per firm.
+    """
+
+    def __init__(self, firm_features_dim, bank_features_dim=0,
+                 hidden_dim=64, n_heads=4):
+        super().__init__()
+
+        input_dim = firm_features_dim + bank_features_dim
+
+        # GNN backbone
+        self.gnn = FinancialGNN(
+            input_dim=input_dim,
+            hidden_dim=hidden_dim,
+            output_dim=1,
+            n_layers=3,
+            n_heads=n_heads,
+            gnn_type="gat"
+        )
+
+        # Additional head for probability output
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x, adj):
+        logits, attn = self.gnn(x, adj)
+        probs = self.sigmoid(logits)
+        return probs, attn
+```
+
+## When to Use Network Methods
+
+### Decision Framework
+
+| Question | Best Approach | Example |
+|----------------------|------------------------------|--------------------|
+| Does firm $A$ affect firm $B$? | Pairwise test + network controls | Supply chain momentum |
+| Which firms are most systemically important? | Centrality measures | Interbank contagion |
+| Do network-connected firms co-move? | Correlation vs. interlock overlap | Board interlock diffusion |
+| Can network structure predict returns? | GNN or network-augmented regression | GCN return prediction |
+| How does a shock propagate? | Cascade simulation | Eisenberg-Noe default model |
+| What is the optimal portfolio given network risk? | Network-regularized optimization | Correlation MST filtering |
+| How does the network change over time? | Temporal GNN or rolling analysis | DY rolling connectedness |
+
+: Decision Framework for Network Methods {#tbl-network-decision}
+
+### Data Requirements and Vietnamese Availability
+
+| Network Type | Required Data | Vietnamese Availability | Update Frequency |
+|------------------|------------------|-------------------|------------------|
+| Ownership | Shareholder registers | Good (semi-annual filings) | Semi-annual |
+| Board interlocks | Director appointments | Good (filings) | Annual |
+| Supply chain | Customer-supplier disclosures, trade data | Moderate (related-party disclosures) | Annual |
+| Correlation | Return data | Excellent (daily from exchanges) | Daily |
+| Interbank | Bilateral exposures | Limited (SBV data, banks' notes to FS) | Quarterly |
+| Co-holdings | Institutional holdings | Moderate (semi-annual disclosures) | Semi-annual |
+| Lending | Loan-level data | Limited (banking supervision data) | Quarterly |
+
+: Financial Network Data Sources in Vietnam {#tbl-network-data}
+
+<!-- ## Exercises
+
+1.  **Ownership Pyramid Depth and Tunneling.** For each listed firm, compute the depth of the longest ownership chain from the ultimate controller to the firm. Regress Tobin's $Q$ and ROA on pyramid depth, controlling for the control-cash flow wedge, firm size, industry, and listing exchange. Does deeper pyramidal ownership destroy value? Does the effect differ between state and private pyramids? Use the @claessens2002disentangling methodology.
+
+2.  **Board Network Information Diffusion.** Construct the board interlock network for 2020-2024 and identify firms that added new interlocking directors. Using a difference-in-differences design, test whether newly interlocked firms exhibit increased return co-movement relative to a matched control group. Does the effect depend on whether the shared director is classified as independent?
+
+3.  **Supply Chain Contagion During COVID-19.** Reconstruct the supply chain network as of December 2019. Identify firms with direct supply chain links to Chinese manufacturers. Using the onset of COVID-19 lockdowns in China (January 2020) as a shock, estimate the differential stock price decline for firms with high vs. low exposure to Chinese suppliers. Does the effect attenuate by network distance (direct supplier vs. supplier's supplier)?
+
+4.  **Correlation Network Regime Detection.** Compute rolling 6-month correlation networks with monthly updates for 2014-2024. Apply community detection (Louvain algorithm) at each date. Track the number of communities, modularity, and the composition of the largest community over time. Do correlation regime changes (merging of previously distinct communities) precede periods of elevated market volatility? Construct a "network fragility" indicator based on decreasing modularity and test its predictive power for VN-Index drawdowns.
+
+5.  **GNN vs. Linear Models for Return Prediction.** Implement a rigorous horse race between: (a) Fama-MacBeth cross-sectional regression with standard characteristics, (b) the same regression augmented with hand-crafted network features (degree, betweenness, eigenvector centrality, community membership), and (c) a GCN and GAT that take the same node features plus the adjacency matrix as input. Use expanding-window time-series cross-validation with monthly rebalancing. Report out-of-sample $R^2$, information coefficient, and the Sharpe ratio of quintile-sorted long-short portfolios. Does the GNN's ability to learn features from graph structure outperform hand-crafted network features?
+
+6.  **Dynamic Interbank Contagion Index.** Implement the rolling Diebold-Yilmaz (2014) connectedness index for the Vietnamese banking sector using quarterly data. Compute the Total Connectedness Index, directional FROM/TO measures, and net connectedness for each bank. Plot the TCI over time and identify peaks corresponding to known stress events (2011 banking consolidation, 2022 corporate bond crisis). Does a rising TCI at time $t$ predict banking sector underperformance at $t+1$?
+
+7.  **Heterogeneous Graph Neural Network.** Construct a heterogeneous financial graph with three node types (firms, banks, directors) and four edge types (ownership, lending, board membership, supply chain). Implement a Heterogeneous GAT (HAN) that uses edge-type-specific attention. Does the heterogeneous graph outperform separate homogeneous graphs for return prediction? Which edge type receives the highest attention weight?
+
+8.  **Node2Vec Financial Embeddings.** Apply the Node2Vec algorithm [@grover2016node2vec] to the ownership network with different hyperparameters ($p$, $q$) controlling the balance between BFS-like (local neighborhood) and DFS-like (structural role) exploration. Visualize the 128-dimensional embeddings using t-SNE, colored by industry. Do the embeddings capture industry structure? Use the embeddings as additional features in a return prediction model and compare with hand-crafted centrality features. -->
+
+## Summary
+
+This chapter developed the network toolkit for Vietnamese financial markets, spanning classical graph theory, domain-specific financial network construction, and modern graph neural networks.
+
+The central insight is that financial networks encode information invisible to standard panel regressions. Ownership networks reveal pyramidal control structures and tunneling risk that explain cross-sectional differences in firm value. Board interlocks serve as information channels through which compensation practices, investment policies, and governance norms diffuse. Supply chain networks propagate real economic shocks: the customer momentum anomaly demonstrates that market prices incorporate supply chain information with a predictable delay. Correlation networks capture co-movement structure that both reveals sector clustering and evolves across market regimes. And interbank networks determine whether individual bank failures cascade into systemic crises.
+
+Vietnamese markets are particularly network-dense because of the pervasive role of state ownership, the prominence of business groups, and the concentration of the banking system. The control-cash flow wedge (i.e., the gap between control rights and cash flow rights created by pyramidal ownership) is larger and more variable than in markets with stronger minority shareholder protections. This wedge, which is computable only through network analysis of ownership chains, is both a governance risk measure and a predictor of firm value.
+
+Graph neural networks extend the toolkit from hand-crafted network features to learned representations. The GCN and GAT architectures aggregate information across network neighborhoods, and the temporal GNN captures the evolution of network structure over time. For return prediction, the empirical question is whether the GNN's ability to learn flexible functions of the graph structure outperforms the simpler approach of computing centrality measures and feeding them into standard models. The exercises provide a framework for answering this question rigorously.
+
+The network perspective is not a replacement for standard asset pricing or corporate finance methods; it is a complement. The most productive research designs combine network structure with identification strategies from the causal inference toolkit: using network shocks as instruments, exploiting network disruptions as natural experiments, and controlling for network position when estimating treatment effects. The intersection of networks and causal inference (e.g., network interference, peer effects identification, spatial econometrics) represents the frontier of empirical finance.

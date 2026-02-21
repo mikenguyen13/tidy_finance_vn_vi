@@ -54,6 +54,20 @@ $$ {#eq-convolution}
 
 By stacking convolutional layers with nonlinearities and pooling operations, the network builds a hierarchy of representations: early layers detect edges and textures; middle layers detect parts and patterns; deep layers detect objects and scenes. The final layer output $\mathbf{z} \in \mathbb{R}^{d}$ (with $d$ typically 512-2048) is a compact representation of the image's semantic content, which can be used directly as a feature vector for financial prediction.
 
+Financial images span a wide range of resolutions and modalities:
+
+| Source               | Resolution | Channels | Typical Size    | Update Frequency  |
+|---------------|---------------|---------------|---------------|---------------|
+| Sentinel-2 satellite | 10m/pixel  | 13 bands | 10,980 × 10,980 | 5 days            |
+| Planet Labs          | 3m/pixel   | 4 bands  | 4,000 × 4,000   | Daily             |
+| VIIRS nightlights    | 500m/pixel | 1 (DNB)  | 3,000 × 1,800   | Monthly composite |
+| Annual report scan   | 300 DPI    | 3 (RGB)  | 2,480 × 3,508   | Annual            |
+| CEO photograph       | Varies     | 3 (RGB)  | 500 × 500       | Annual            |
+| News photograph      | Varies     | 3 (RGB)  | 800 × 600       | Real-time         |
+| Financial chart      | Varies     | 3 (RGB)  | 1,000 × 600     | Real-time         |
+
+: Image Data Sources for Vietnamese Financial Markets {#tbl-image-sources}
+
 ### Transfer Learning for Finance
 
 Training a CNN from scratch requires millions of labeled images, which is far more than any financial application can provide. Transfer learning solves this by using networks pre-trained on ImageNet (1.2 million images, 1,000 classes) as feature extractors. The pre-trained network has already learned generic visual representations (edges, textures, shapes, objects); we simply replace the final classification layer with a task-specific head.
@@ -62,6 +76,14 @@ Formally, let $f_{\boldsymbol{\theta}}(\mathbf{I})$ denote a pre-trained network
 
 1.  **Feature extraction**: Freeze $\boldsymbol{\theta}_{\text{feat}}$, extract $\mathbf{z} = f_{\boldsymbol{\theta}_{\text{feat}}}(\mathbf{I})$, and train a simple model (linear regression, gradient boosting) on $\mathbf{z}$.
 2.  **Fine-tuning**: Initialize from $\boldsymbol{\theta}$ and train all parameters on the financial task with a small learning rate to avoid catastrophic forgetting.
+
+The key architectural families are:
+
+**ResNet** \[@he2016deep\]. Residual connections ($y = F(x) + x$) enable training of very deep networks (50-152 layers). The skip connection solves the vanishing gradient problem. ResNet-50 produces a 2,048-dimensional feature vector from the penultimate layer.
+
+**EfficientNet** \[@tan2019efficientnet\]. Compound scaling of depth, width, and resolution simultaneously. EfficientNet-B0 achieves ResNet-50 accuracy with 5.3M parameters (vs. 25.6M), making it practical for processing thousands of satellite tiles.
+
+**Vision Transformer (ViT)** \[@dosovitskiy2020image\]. Treats an image as a sequence of $16 \times 16$ patches, processes them through a standard Transformer encoder. ViT-B/16 produces a 768-dimensional embedding. Particularly effective for document images where spatial relationships between elements (tables, headers, text blocks) matter.
 
 ```{python}
 #| label: feature-extractor
@@ -166,7 +188,11 @@ def extract_features(image_paths, model, transform, device="cpu",
 
 ### Economic Activity from Space
 
-Satellite imagery provides high-frequency, spatially granular measurements of economic activity that are independent of and often lead official statistics. The foundational work of @henderson2012measuring demonstrated that nighttime luminosity, measured by the Defense Meteorological Satellite Program (DMSP), is a reliable proxy for GDP, particularly in countries where official statistics are noisy or delayed. @donaldson2018railroads use satellite-derived agricultural output measures to study the welfare gains from railroads in colonial India. @jean2016combining combine daytime satellite imagery with CNNs to predict poverty from space with $r^2 > 0.7$.
+Satellite imagery provides high-frequency, spatially granular measurements of economic activity that are independent of and often lead official statistics. The foundational work of @henderson2012measuring demonstrated that nighttime luminosity, measured by the Defense Meteorological Satellite Program (DMSP), is a reliable proxy for GDP, particularly in countries where official statistics are noisy or delayed. @donaldson2016view survey the broad applications of satellite data in economics, from agricultural productivity to urban growth to conflict measurement. @donaldson2018railroads use satellite-derived agricultural output measures to study the welfare gains from railroads in colonial India. @jean2016combining combine daytime satellite imagery with CNNs to predict poverty from space with $r^2 > 0.7$.
+
+
+The political economy literature exploits satellite data to answer questions impossible with official statistics. @hodler2014regional use nighttime lights to show that subnational regions politically aligned with the national leader receive differentially more economic activity (e.g., a finding on regional favoritism that has direct relevance for Vietnam's province-level investment allocation). @henderson2018global extend the lights framework to study the global distribution of economic activity, showing how geography, history, and trade jointly determine the spatial pattern of prosperity.
+
 
 For financial applications, the key insight is that satellite data arrives faster than corporate earnings or government statistics. A retailer's quarterly revenue is reported 4-8 weeks after the quarter ends; satellite imagery of its parking lots is available within days. This temporal advantage creates a natural use case for nowcasting (i.e., estimating current economic conditions before official data arrives) and for constructing trading signals based on information that is public but costly to process.
 
@@ -1472,6 +1498,7 @@ Multimodal analysis in Vietnamese markets faces several practical considerations
 
 : Image Data Sources for Vietnamese Financial Applications {#tbl-image-sources}
 
+```{=html}
 <!-- ## Exercises
 
 1.  **Nightlight and Firm Performance.** Extend the nightlight analysis by constructing a multi-province exposure measure for firms with geographically diversified operations (e.g., a retailer with stores across multiple provinces). Weight the nightlight signal by the estimated revenue share from each province. Test whether this weighted signal predicts quarterly earnings surprises better than the headquarters-only measure.
@@ -1485,6 +1512,7 @@ Multimodal analysis in Vietnamese markets faces several practical considerations
 5.  **Multimodal Earnings Prediction.** For each firm-quarter observation, construct three feature sets: (a) tabular financial ratios, (b) textual features from the management discussion section of the annual report (using PhoBERT embeddings from the previous chapter), and (c) satellite features of the firm's headquarters region. Implement early, late, and cross-attention fusion and compare forecast accuracy for next-quarter earnings. Which modality contributes most? Does the multimodal model significantly outperform the best unimodal model?
 
 6.  **Chart Digitization for Historical Vietnamese Market Data.** Obtain scanned charts of the VN-Index from pre-2005 sources (before electronic data was widely available). Digitize the index level time series using the line chart digitization algorithm. Cross-validate against any available electronic data for overlapping periods. Estimate the digitization error and assess whether the recovered time series is sufficiently accurate for computing return statistics (mean, volatility, maximum drawdown). -->
+```
 
 ## Summary
 
