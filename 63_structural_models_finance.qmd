@@ -6,7 +6,6 @@ This chapter introduces the key structural estimation frameworks used in financi
 
 Vietnamese markets offer both challenges and opportunities for structural estimation. On the challenge side, data quality is uneven, market microstructure is evolving, and institutional features (price limits, foreign ownership caps, state ownership) introduce constraints that standard models do not accommodate. On the opportunity side, several features of Vietnamese markets create natural variation that aids identification: the coexistence of two exchanges (HOSE and HNX) with different trading rules, regulatory changes that shift trading costs and price limits, and the phased liberalization of foreign ownership caps that generates exogenous demand shocks.
 
-
 ```{python}
 #| label: setup
 #| message: false
@@ -47,8 +46,8 @@ where $v_s$ is the (possibly private) valuation, $q_s$ is the trade quantity, $c
 
 The distinction is not about sophistication (reduced-form work can be highly rigorous) but about the type of question being answered:
 
-| | Reduced Form | Structural |
-|------|-------------|-----------|
+|   | Reduced Form | Structural |
+|------------------|------------------------------|-------------------------|
 | Answers | "What happened?" | "What would happen if...?" |
 | Identification | Exogenous variation (events, instruments) | Model restrictions + data moments |
 | Key assumption | Unconfoundedness or exclusion restriction | Correct model specification |
@@ -76,11 +75,11 @@ This is the Generalized Method of Moments (GMM) framework applied to structural 
 Every structural model involves choices about which features of reality to include and which to abstract from. @tbl-tradeoff illustrates this for several canonical finance models.
 
 | Model | Key Simplification | What It Misses | What It Gains |
-|-------|-------------------|----------------|---------------|
-| Kyle (1985) | Single informed trader, normal distributions | Multiple insiders, fat tails | Closed-form $\lambda$, clean identification |
-| Glosten-Milgrom (1985) | Binary signal, competitive market makers | Complex information, inventory costs | Bid-ask spread decomposition |
-| Koijen-Yogo (2019) | Characteristics-based demand, no dynamics | Dynamic portfolio rebalancing | Demand elasticity estimation at scale |
-| Roll (1984) | No information, serial independence | Information-driven trades | Spread estimation from return autocovariance |
+|-----------------|---------------------|-----------------|-----------------|
+| @kyle1985continuous | Single informed trader, normal distributions | Multiple insiders, fat tails | Closed-form $\lambda$, clean identification |
+| @glosten1985bid | Binary signal, competitive market makers | Complex information, inventory costs | Bid-ask spread decomposition |
+| @koijen2019demand | Characteristics-based demand, no dynamics | Dynamic portfolio rebalancing | Demand elasticity estimation at scale |
+| @roll1984simple | No information, serial independence | Information-driven trades | Spread estimation from return autocovariance |
 
 : Structural Model Tradeoffs {#tbl-tradeoff}
 
@@ -90,7 +89,7 @@ The researcher's task is to choose the simplest model that captures the economic
 
 ### The Demand System Approach
 
-@Koijen2019 (hereafter KY) develop a demand system for financial assets that estimates the elasticity of institutional investor demand with respect to asset characteristics. The framework adapts the discrete-choice demand estimation methodology of @Berry1995 from industrial organization to financial markets.
+@koijen2019demand (hereafter KY) develop a demand system for financial assets that estimates the elasticity of institutional investor demand with respect to asset characteristics. The framework adapts the discrete-choice demand estimation methodology of @berry1995automobile from industrial organization to financial markets.
 
 Each investor $i$ holds a portfolio of $N$ assets. The demand for asset $j$ by investor $i$ at time $t$ is:
 
@@ -120,6 +119,7 @@ In a frictionless market with perfectly elastic demand, a supply shock (e.g., an
 
 ```{python}
 #| label: load-holdings-data
+#| eval: false
 
 # DataCore.vn API
 from datacore import DataCore
@@ -150,6 +150,7 @@ print(f"Unique stocks: {holdings['ticker'].nunique()}")
 
 ```{python}
 #| label: demand-system-construction
+#| eval: false
 
 # Construct demand system variables
 demand = holdings.merge(
@@ -182,6 +183,7 @@ demand["log_weight_ratio"] = np.log(
 
 ```{python}
 #| label: demand-estimation
+#| eval: false
 
 # Simplified KY demand estimation
 # log(w_ij / w_i0) = delta_j + beta_i' x_j + epsilon_ij
@@ -232,6 +234,7 @@ demand_params = (
 
 ```{python}
 #| label: tbl-demand-params
+#| eval: false
 #| tbl-cap: "Demand Elasticities by Investor Type"
 
 avg_params = (
@@ -252,6 +255,7 @@ avg_params
 
 ```{python}
 #| label: fig-demand-elasticity-time
+#| eval: false
 #| fig-cap: "Time-Varying Demand Sensitivity to Size Across Investor Types"
 
 top_types = demand_params.groupby("institution_type").size().nlargest(4).index
@@ -282,10 +286,11 @@ $$
 \frac{\Delta P_j}{P_j} = \frac{1}{\varepsilon_{jj}} \cdot \frac{\Delta D_j}{D_j}
 $$ {#eq-price-impact-demand}
 
-where $\varepsilon_{jj}$ is the demand elasticity and $\Delta D_j / D_j$ is the percentage demand shock. Less elastic demand implies larger price impact for the same demand shock---a prediction with direct implications for the price impact of index rebalancing, fund flows, and forced selling.
+where $\varepsilon_{jj}$ is the demand elasticity and $\Delta D_j / D_j$ is the percentage demand shock. Less elastic demand implies larger price impact for the same demand shock (a prediction with direct implications for the price impact of index rebalancing, fund flows, and forced selling).
 
 ```{python}
 #| label: price-pressure
+#| eval: false
 
 # Estimate aggregate demand elasticity via index rebalancing events
 # Use VN30 index reconstitutions as demand shocks
@@ -383,6 +388,7 @@ car_results = event_study_car(index_changes, daily_data)
 
 ```{python}
 #| label: fig-index-event-study
+#| eval: false
 #| fig-cap: "Cumulative Abnormal Returns Around VN30 Index Reconstitutions"
 
 if len(car_results) > 0:
@@ -427,7 +433,7 @@ The permanent component of the CAR measures the information content of index inc
 
 ### Demand Inelasticity and Its Implications
 
-@Gabaix2021 argue that the aggregate demand for equities is remarkably inelastic, with elasticity estimates on the order of 0.2 (meaning a 1\% supply increase requires a 5\% price decline to clear). The implications are profound: if demand is this inelastic, then flows---from index funds, foreign investors, retail traders---have outsized effects on prices. In Vietnamese markets, where foreign ownership caps create binding constraints on a key investor class, demand inelasticity may be even more severe.
+@gabaix2021search argue that the aggregate demand for equities is remarkably inelastic, with elasticity estimates on the order of 0.2 (meaning a 1% supply increase requires a 5% price decline to clear). The implications are profound: if demand is this inelastic, then flows (from index funds, foreign investors, retail traders) have outsized effects on prices. In Vietnamese markets, where foreign ownership caps create binding constraints on a key investor class, demand inelasticity may be even more severe.
 
 The inelasticity also generates a role for "the market portfolio" as an equilibrium concept: if most investors hold portfolios close to the market (as in CAPM), then deviations from market weights require someone to absorb the excess supply, and the compensation required is the inverse of demand elasticity.
 
@@ -435,7 +441,7 @@ The inelasticity also generates a role for "the market portfolio" as an equilibr
 
 ### Optimal Execution: The Almgren-Chriss Framework
 
-The optimal execution problem, formalized by @Almgren2001, asks: given a large order to execute over a fixed horizon, what is the optimal trading schedule that minimizes the total execution cost? The problem is fundamental to institutional investing because large orders cannot be executed instantaneously without severe price impact.
+The optimal execution problem, formalized by @almgren2001optimal, asks: given a large order to execute over a fixed horizon, what is the optimal trading schedule that minimizes the total execution cost? The problem is fundamental to institutional investing because large orders cannot be executed instantaneously without severe price impact.
 
 Let $X_t$ denote the remaining shares to sell at time $t$, with $X_0 = X$ (total order) and $X_T = 0$ (completion). The trading rate is $n_t = X_{t-1} - X_t$. The execution price for shares traded at $t$ is affected by both temporary and permanent price impact:
 
@@ -471,6 +477,7 @@ where $\kappa = \sqrt{\lambda \sigma^2 / \eta}$ governs the trade-off between ur
 
 ```{python}
 #| label: almgren-chriss
+#| eval: false
 
 def almgren_chriss_trajectory(X, T, sigma, eta, gamma, lam, n_steps=100):
     """
@@ -535,6 +542,7 @@ def almgren_chriss_trajectory(X, T, sigma, eta, gamma, lam, n_steps=100):
 
 ```{python}
 #| label: fig-execution-trajectories
+#| eval: false
 #| fig-cap: "Optimal Execution Trajectories for Different Risk Aversion Levels"
 
 # Estimate market impact parameters from Vietnamese data
@@ -580,7 +588,7 @@ traj_all = pd.concat(trajectories, ignore_index=True)
 
 ### Estimating Market Impact from Transaction Data
 
-The structural parameters $(\gamma, \eta, \sigma)$ must be estimated from data. The standard approach uses the square-root law of market impact, documented empirically by @kyle1985continuous and @Hasbrouck1991 and derived theoretically by @Gabaix2003:
+The structural parameters $(\gamma, \eta, \sigma)$ must be estimated from data. The standard approach uses the square-root law of market impact, documented empirically by @kyle1985continuous and @hasbrouck1991measuring and derived theoretically by @gabaix2003theory:
 
 $$
 \Delta P / P = c \cdot \text{sgn}(Q) \cdot |Q / V|^{\delta}
@@ -590,6 +598,7 @@ where $Q$ is the signed order flow, $V$ is daily volume, $c$ is the impact coeff
 
 ```{python}
 #| label: impact-estimation
+#| eval: false
 
 # Load intraday transaction data (or daily order flow proxy)
 order_flow = dc.get_order_flow(
@@ -651,6 +660,7 @@ impact_df = pd.DataFrame(impact_results)
 
 ```{python}
 #| label: tbl-impact-by-size
+#| eval: false
 #| tbl-cap: "Market Impact Exponent by Firm Size Quintile"
 
 impact_df.round(4)
@@ -666,10 +676,11 @@ $$
 \text{TC} = \underbrace{\frac{s}{2}}_{\text{Half-spread}} + \underbrace{\gamma \cdot Q}_{\text{Permanent impact}} + \underbrace{\eta \cdot \frac{Q}{V}}_{\text{Temporary impact}} + \underbrace{\sigma \sqrt{T}}_{\text{Timing risk}}
 $$ {#eq-tc-decomposition}
 
-We estimate each component separately, following the @Hasbrouck2009 methodology for effective spread decomposition.
+We estimate each component separately, following the @hasbrouck2009trading methodology for effective spread decomposition.
 
 ```{python}
 #| label: tc-decomposition
+#| eval: false
 
 # Effective spread estimation
 spreads = dc.get_bid_ask_data(
@@ -723,6 +734,7 @@ roll_spreads = (
 
 ```{python}
 #| label: fig-spread-size
+#| eval: false
 #| fig-cap: "Transaction Costs by Firm Size: Roll Implied Spread"
 
 # Bin by market cap deciles
@@ -764,12 +776,12 @@ spread_by_size = (
 
 ### The IPO Allocation Problem
 
-Initial public offerings present a classic information asymmetry problem. Issuers and underwriters do not know the true market-clearing price; informed investors do (approximately). The allocation mechanism---how shares are distributed and at what price---determines the IPO's pricing efficiency, the degree of underpricing, and the distribution of surplus between issuers and investors.
+Initial public offerings present a classic information asymmetry problem. Issuers and underwriters do not know the true market-clearing price; informed investors do (approximately). The allocation mechanism (i.e., how shares are distributed and at what price) determines the IPO's pricing efficiency, the degree of underpricing, and the distribution of surplus between issuers and investors.
 
-@Rock1986 provides the canonical model. There are two types of investors: informed (who know the true value $v$) and uninformed (who know only the distribution $v \sim F$). If the IPO is priced at $P$:
+@rock1986new provides the canonical model. There are two types of investors: informed (who know the true value $v$) and uninformed (who know only the distribution $v \sim F$). If the IPO is priced at $P$:
 
-- When $v > P$ (good IPO): both informed and uninformed subscribe, so uninformed receive only a fraction of their order (rationing).
-- When $v < P$ (bad IPO): only uninformed subscribe, so they receive full allocation (the "winner's curse").
+-   When $v > P$ (good IPO): both informed and uninformed subscribe, so uninformed receive only a fraction of their order (rationing).
+-   When $v < P$ (bad IPO): only uninformed subscribe, so they receive full allocation (the "winner's curse").
 
 The uninformed investor's expected return, accounting for rationing, is:
 
@@ -789,12 +801,13 @@ That is, IPOs must be underpriced on average to compensate uninformed investors 
 
 Vietnamese IPO history provides variation in allocation mechanisms. State-owned enterprise equitizations have used Dutch auctions, while private-sector IPOs have used book building. This institutional variation allows structural comparison of the mechanisms.
 
-**Book Building** [@Benveniste1989]: The underwriter solicits indications of interest from institutional investors during the roadshow. Investors who reveal positive information (high valuations) receive favorable allocations as compensation. The mechanism aggregates information efficiently but grants discretion to the underwriter.
+**Book Building** [@benveniste1989investment]: The underwriter solicits indications of interest from institutional investors during the roadshow. Investors who reveal positive information (high valuations) receive favorable allocations as compensation. The mechanism aggregates information efficiently but grants discretion to the underwriter.
 
 **Uniform-Price Auction**: All winning bidders pay the same market-clearing price. This eliminates the underwriter's allocation discretion but may lead to free-riding on information revelation.
 
 ```{python}
 #| label: ipo-data
+#| eval: false
 
 # Load IPO data
 ipo_data = dc.get_ipo_data(
@@ -821,6 +834,7 @@ print(f"By mechanism:\n{ipo_data['mechanism'].value_counts()}")
 
 ```{python}
 #| label: tbl-ipo-underpricing
+#| eval: false
 #| tbl-cap: "IPO Underpricing by Allocation Mechanism"
 
 ipo_summary = (
@@ -840,16 +854,18 @@ ipo_summary
 
 ### Structural Estimation of Information Asymmetry
 
-We estimate the Rock (1986) model parameters---the fraction of informed investors ($\mu$) and the precision of their information ($\sigma_v^2$)---using the method of simulated moments (MSM).
+We estimate the @rock1986new model parameters (i.e., the fraction of informed investors ($\mu$) and the precision of their information ($\sigma_v^2$)) using the method of simulated moments (MSM).
 
-The model predicts two key moments:
-1. Average underpricing: $E[U] = f(\mu, \sigma_v^2)$
+The model predicts two key moments: 
+
+1 . Average underpricing: $E[U] = f(\mu, \sigma_v^2)$ 
 2. Cross-sectional variance of underpricing: $\text{Var}(U) = g(\mu, \sigma_v^2)$
 
 We match these model-implied moments to the data.
 
 ```{python}
 #| label: rock-model-estimation
+#| eval: false
 
 def rock_model_moments(params, n_sim=10000):
     """
@@ -936,6 +952,7 @@ print(f"  Objective value: {result.fun:.6f}")
 
 ```{python}
 #| label: fig-ipo-underpricing-time
+#| eval: false
 #| fig-cap: "IPO Underpricing Over Time by Mechanism"
 
 ipo_plot = ipo_data.dropna(subset=["underpricing", "mechanism"]).copy()
@@ -977,6 +994,7 @@ With the structural parameters $(\hat{\mu}, \hat{\sigma}_v)$ in hand, we can sim
 
 ```{python}
 #| label: counterfactual-ipo
+#| eval: false
 
 def simulate_ipo_mechanism(mu, sigma_v, mechanism="book_building",
                            n_sim=50000):
@@ -1034,12 +1052,12 @@ counterfactual
 
 ### Order Submission as a Strategic Choice
 
-In a limit order market, every trader faces a fundamental tradeoff: submit a market order (immediate execution, but at an adverse price) or a limit order (better price, but risk of non-execution). @Parlour1998 models this as a sequential game where each trader's optimal strategy depends on the current state of the order book.
+In a limit order market, every trader faces a fundamental tradeoff: submit a market order (immediate execution, but at an adverse price) or a limit order (better price, but risk of non-execution). @parlour1998price models this as a sequential game where each trader's optimal strategy depends on the current state of the order book.
 
 Let $a_t$ and $b_t$ denote the best ask and bid prices at time $t$, with the spread $s_t = a_t - b_t$. A buyer who arrives at time $t$ chooses between:
 
-- **Market buy**: Execute immediately at $a_t$. Cost: $a_t - v_t$ where $v_t$ is the true value.
-- **Limit buy at $b_t$**: Provides liquidity. If executed, profit: $v_t - b_t$. Probability of execution: $\pi(b_t, \text{book state})$.
+-   **Market buy**: Execute immediately at $a_t$. Cost: $a_t - v_t$ where $v_t$ is the true value.
+-   **Limit buy at** $b_t$: Provides liquidity. If executed, profit: $v_t - b_t$. Probability of execution: $\pi(b_t, \text{book state})$.
 
 The buyer submits a market order if:
 
@@ -1051,7 +1069,7 @@ Rearranging: market orders are optimal when the spread is narrow relative to the
 
 ### The Glosten-Milgrom Model
 
-@Glosten1985 provide the foundational structural model of bid-ask spread determination under asymmetric information. A competitive market maker sets bid and ask prices to break even in expectation, recognizing that some trades come from informed traders.
+@glosten1985bid provide the foundational structural model of bid-ask spread determination under asymmetric information. A competitive market maker sets bid and ask prices to break even in expectation, recognizing that some trades come from informed traders.
 
 Let $\mu$ denote the probability that an incoming order is from an informed trader, and let $V^H$ and $V^L$ denote the high and low values of the asset ($\Pr(V = V^H) = p$). The zero-profit conditions yield:
 
@@ -1067,7 +1085,8 @@ The spread $s = a - b$ is positive whenever $\mu > 0$, and increases in both the
 
 ### PIN: Probability of Informed Trading
 
-@Easley1996 extend the Glosten-Milgrom framework to a dynamic setting and develop the Probability of Informed Trading (PIN) measure, which can be estimated from trade data. The model assumes that on each trading day, an information event occurs with probability $\alpha$. Conditional on an event, it is bad news with probability $\delta$. Informed traders arrive at rate $\mu$; uninformed buyers and sellers arrive at rates $\varepsilon_b$ and $\varepsilon_s$, respectively.
+
+@easley1996liquidity extend the Glosten-Milgrom framework to a dynamic setting and develop the Probability of Informed Trading (PIN) measure, which can be estimated from trade data. The model assumes that on each trading day, an information event occurs with probability $\alpha$. Conditional on an event, it is bad news with probability $\delta$. Informed traders arrive at rate $\mu$; uninformed buyers and sellers arrive at rates $\varepsilon_b$ and $\varepsilon_s$, respectively.
 
 The likelihood of observing $B_t$ buys and $S_t$ sells on day $t$ is:
 
@@ -1203,6 +1222,7 @@ def estimate_pin(buys, sells, n_starts=10):
 
 ```{python}
 #| label: pin-cross-section
+#| eval: false
 
 # Estimate PIN for a cross-section of stocks
 # Using daily buy/sell counts from Lee-Ready classification
@@ -1238,6 +1258,7 @@ print(f"  Median PIN: {pin_df['pin'].median():.4f}")
 
 ```{python}
 #| label: fig-pin-distribution
+#| eval: false
 #| fig-cap: "Cross-Sectional Distribution of Probability of Informed Trading (PIN)"
 
 (
@@ -1259,10 +1280,11 @@ print(f"  Median PIN: {pin_df['pin'].median():.4f}")
 
 ### PIN and Asset Pricing
 
-@Easley2002 argue that PIN should be priced in the cross-section of expected returns: stocks with higher information asymmetry require a risk premium to compensate uninformed investors. We test this prediction using Fama-MacBeth regressions.
+@easley2002information argue that PIN should be priced in the cross-section of expected returns: stocks with higher information asymmetry require a risk premium to compensate uninformed investors. We test this prediction using Fama-MacBeth regressions.
 
 ```{python}
 #| label: pin-asset-pricing
+#| eval: false
 
 # Merge PIN with firm characteristics and forward returns
 pin_chars = pin_df[["ticker", "pin"]].merge(
@@ -1307,11 +1329,11 @@ if len(pin_returns) > 20:
 
 Structural estimation of limit order book models faces several challenges specific to Vietnamese markets:
 
-**Tick size effects.** Vietnamese exchanges use discrete tick sizes that vary with price level. At low prices, the minimum tick size represents a large fraction of the price, artificially widening the spread and distorting the structural parameters. The standard Glosten-Milgrom and PIN models assume continuous prices; adapting them to discrete price grids requires the modifications proposed by @Bollen2004.
+**Tick size effects.** Vietnamese exchanges use discrete tick sizes that vary with price level. At low prices, the minimum tick size represents a large fraction of the price, artificially widening the spread and distorting the structural parameters. The standard Glosten-Milgrom and PIN models assume continuous prices; adapting them to discrete price grids requires the modifications proposed by @bollen2004modeling.
 
 **Price limits.** When a stock hits its price limit, the order book is effectively frozen at one side. Orders accumulate but cannot execute until the limit is lifted. This creates a censoring problem analogous to the price limit censoring in return distributions: the observed order flow is a truncated version of the latent flow.
 
-**Missing data.** Full order book snapshots at high frequency are not universally available for Vietnamese stocks. PIN estimation requires only daily buy/sell counts, making it feasible with lower-frequency data. But richer models (@Foucault1999 dynamic limit order book, @Rosu2009 continuous-time model) require tick-by-tick order book data that may be unavailable for smaller stocks.
+**Missing data.** Full order book snapshots at high frequency are not universally available for Vietnamese stocks. PIN estimation requires only daily buy/sell counts, making it feasible with lower-frequency data. But richer models (@foucault1999order dynamic limit order book, @rocsu2009dynamic continuous-time model) require tick-by-tick order book data that may be unavailable for smaller stocks.
 
 **Institutional features.** The coexistence of HOSE (continuous auction) and HNX (with periodic call auctions for less liquid stocks) creates heterogeneity in the appropriate structural model. A model estimated on HOSE continuous trading data does not directly apply to HNX call auction stocks.
 
@@ -1322,7 +1344,7 @@ Structural estimation of limit order book models faces several challenges specif
 Structural estimation is not always the right tool. The additional complexity, data requirements, and model risk must be justified by the research question. @tbl-when-structural provides a decision framework.
 
 | Criterion | Structural Preferred | Reduced Form Preferred |
-|-----------|---------------------|----------------------|
+|------------------|---------------------------|----------------------------|
 | Research question | Counterfactual or policy evaluation | Causal effect of observed variation |
 | Data availability | Rich micro-data (transactions, holdings) | Standard panel (returns, fundamentals) |
 | Institutional environment | Stable (model assumptions plausible) | Rapidly changing (model may be misspecified) |
@@ -1337,7 +1359,7 @@ Structural estimation is not always the right tool. The additional complexity, d
 Structural models are data-hungry. @tbl-data-requirements summarizes the minimum data needs for each model class covered in this chapter.
 
 | Model | Minimum Data | Ideal Data | Vietnamese Availability |
-|-------|-------------|-----------|------------------------|
+|----------------|----------------|----------------|-------------------------|
 | KY demand system | Quarterly institutional holdings + prices | 13F-equivalent filings + fund flows | Partial (semi-annual disclosure) |
 | Almgren-Chriss | Daily volume, spread, volatility | Intraday order-by-order data | Good (HOSE provides) |
 | Rock/IPO | Offer price, first-day close, allocation | Investor-level bids and allocations | Limited (auction data available) |
@@ -1402,33 +1424,32 @@ The primary risk of structural estimation is model misspecification. If the mode
 
 Structural papers in top finance journals are held to specific standards:
 
-**Identification clarity.** The paper must clearly state which parameters are identified, from which moments, and what variation in the data provides identification. The @rust1987optimal critique---that without clear identification, structural estimation is curve-fitting---must be addressed head-on.
+**Identification clarity.** The paper must clearly state which parameters are identified, from which moments, and what variation in the data provides identification. The @rust1987optimal critique that without clear identification, structural estimation is curve-fitting, must be addressed head-on.
 
 **Counterfactual credibility.** Counterfactual exercises should be economically motivated and the range of counterfactual scenarios should not extrapolate far beyond the data.
 
 **Robustness to specification.** Reviewers will ask what happens under alternative distributional assumptions, alternative moment conditions, and alternative model features.
 
-**Transparency.** Code and data should be made available. Structural estimation is sufficiently complex that replicability is a first-order concern. @Christensen2022 document widespread replicability issues in structural finance papers.
+**Transparency.** Code and data should be made available. Structural estimation is sufficiently complex that replicability is a first-order concern. 
 
-## Exercises
+<!-- ## Exercises
 
-1. **Demand Elasticity Heterogeneity.** Extend the KY demand system by allowing demand elasticities to vary by investor type (mutual funds, insurance companies, pension funds, foreign institutional investors). Estimate separate $\boldsymbol{\beta}_i$ vectors for each type. Which investor type has the most elastic demand? Which has the most inelastic? Relate your findings to the price impact predictions of @Gabaix2021.
+1.  **Demand Elasticity Heterogeneity.** Extend the KY demand system by allowing demand elasticities to vary by investor type (mutual funds, insurance companies, pension funds, foreign institutional investors). Estimate separate $\boldsymbol{\beta}_i$ vectors for each type. Which investor type has the most elastic demand? Which has the most inelastic? Relate your findings to the price impact predictions of @gabaix2021search.
 
-2. **Optimal Execution with Price Limits.** Modify the Almgren-Chriss framework to incorporate Vietnamese daily price limits. The constraint is that the execution price on any day cannot exceed the limit: $|S_t - S_{t-1}| \leq L$. Solve the modified optimization numerically and compare the optimal trajectory with the unconstrained solution. How do price limits affect total execution cost and the optimal time horizon?
+2.  **Optimal Execution with Price Limits.** Modify the Almgren-Chriss framework to incorporate Vietnamese daily price limits. The constraint is that the execution price on any day cannot exceed the limit: $|S_t - S_{t-1}| \leq L$. Solve the modified optimization numerically and compare the optimal trajectory with the unconstrained solution. How do price limits affect total execution cost and the optimal time horizon?
 
-3. **Mechanism Design for SOE Equitization.** Using the estimated Rock model parameters, simulate IPO outcomes under a Vickrey (second-price) auction mechanism. Compare welfare (issuer revenue, investor surplus, total surplus) with the observed auction and book building outcomes. Under what conditions does the Vickrey mechanism dominate?
+3.  **Mechanism Design for SOE Equitization.** Using the estimated Rock model parameters, simulate IPO outcomes under a Vickrey (second-price) auction mechanism. Compare welfare (issuer revenue, investor surplus, total surplus) with the observed auction and book building outcomes. Under what conditions does the Vickrey mechanism dominate?
 
-4. **PIN and Corporate Events.** Estimate PIN in event windows around earnings announcements, M\&A announcements, and regulatory changes for a sample of Vietnamese firms. Does PIN spike before public announcements (consistent with informed trading or leakage)? Compare the magnitude of the pre-announcement PIN increase across event types.
+4.  **PIN and Corporate Events.** Estimate PIN in event windows around earnings announcements, M&A announcements, and regulatory changes for a sample of Vietnamese firms. Does PIN spike before public announcements (consistent with informed trading or leakage)? Compare the magnitude of the pre-announcement PIN increase across event types.
 
-5. **Kyle's Lambda and Market Depth.** Estimate Kyle's $\lambda$ (the price impact coefficient from the regression of price changes on signed order flow) for the cross-section of Vietnamese stocks. Test whether $\lambda$ is inversely related to measures of market depth (average volume, number of active traders, institutional ownership). Construct a tradeable portfolio long low-$\lambda$ (liquid) stocks and short high-$\lambda$ (illiquid) stocks. Does this liquidity factor earn a risk premium?
+5.  **Kyle's Lambda and Market Depth.** Estimate Kyle's $\lambda$ (the price impact coefficient from the regression of price changes on signed order flow) for the cross-section of Vietnamese stocks. Test whether $\lambda$ is inversely related to measures of market depth (average volume, number of active traders, institutional ownership). Construct a tradeable portfolio long low-$\lambda$ (liquid) stocks and short high-$\lambda$ (illiquid) stocks. Does this liquidity factor earn a risk premium?
 
-6. **Structural Break in Market Microstructure.** Vietnam implemented tick size changes and trading hour extensions at various points. Using the PIN model and the Roll spread, estimate structural breaks in information asymmetry and transaction costs around these regulatory changes. Do the structural parameters change in the direction predicted by market microstructure theory? Use the @Bai1998 sequential breakpoint methodology to formally test for and date the breaks.
+6.  **Structural Break in Market Microstructure.** Vietnam implemented tick size changes and trading hour extensions at various points. Using the PIN model and the Roll spread, estimate structural breaks in information asymmetry and transaction costs around these regulatory changes. Do the structural parameters change in the direction predicted by market microstructure theory? Use the @bai1998estimating sequential breakpoint methodology to formally test for and date the breaks. -->
 
 ## Summary
 
 This chapter introduced structural estimation as a distinct methodology for financial economics, one that trades the simplicity and transparency of reduced-form analysis for the ability to estimate economic primitives and conduct counterfactual policy evaluation. We implemented four classes of structural models: demand systems for financial assets, optimal execution and transaction cost models, IPO auction models, and limit order book models of informed trading.
 
-The demand system approach of @Koijen2019 reveals that institutional investors in Vietnam exhibit heterogeneous demand elasticities across characteristics, with foreign investors showing different sensitivity patterns than domestic institutions. Market impact estimation confirms the universality of the square-root law, while the Almgren-Chriss framework provides the optimal execution benchmark for large institutional orders. The Rock IPO model quantifies the information asymmetry premium embedded in Vietnamese IPO underpricing, and the PIN model estimates the probability of informed trading across the cross-section.
+The demand system approach of @koijen2019demand reveals that institutional investors in Vietnam exhibit heterogeneous demand elasticities across characteristics, with foreign investors showing different sensitivity patterns than domestic institutions. Market impact estimation confirms the universality of the square-root law, while the Almgren-Chriss framework provides the optimal execution benchmark for large institutional orders. The Rock IPO model quantifies the information asymmetry premium embedded in Vietnamese IPO underpricing, and the PIN model estimates the probability of informed trading across the cross-section.
 
-Each model involves a tradeoff between the economic questions it can answer and the assumptions it requires. The decision to use structural estimation should be driven by the research question---specifically, whether counterfactual analysis is essential---and tempered by honest assessment of whether the model's assumptions are sufficiently credible in the Vietnamese institutional environment. When they are, structural models provide insights that no amount of reduced-form regression can deliver.
-
+Each model involves a tradeoff between the economic questions it can answer and the assumptions it requires. The decision to use structural estimation should be driven by the research question (specifically, whether counterfactual analysis is essential) and tempered by honest assessment of whether the model's assumptions are sufficiently credible in the Vietnamese institutional environment. When they are, structural models provide insights that no amount of reduced-form regression can deliver.

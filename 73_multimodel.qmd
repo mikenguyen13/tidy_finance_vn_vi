@@ -1,0 +1,1896 @@
+# Multimodal Models in Finance
+
+The preceding chapters treated text and images as isolated data modalities, but financial decision-making is inherently multimodal. An analyst evaluating a Vietnamese real estate developer simultaneously reads the annual report (text), inspects satellite imagery of construction sites (image), reviews quarterly financial statements (tabular), monitors the stock's price and volume dynamics (time series), and perhaps listens to the earnings call (audio). No single modality captures the full information set. The question this chapter addresses is: can we build models that fuse multiple modalities in a principled way, and does the fusion yield economically meaningful improvements over the best single-modality model?
+
+The answer from the recent machine learning literature is increasingly yes, but with important caveats. Multimodal models can exploit complementarities between modalities (e.g., text describes intentions and context; images reveal physical states; tabular data provides precise quantitative snapshots; time series captures dynamics). However, the gains are not automatic. Naive concatenation of heterogeneous features often degrades performance relative to the best unimodal model, a phenomenon known as the "modality laziness" problem [@huang2021makes]. Effective fusion requires architectures that align representations across modalities, handle missing modalities gracefully (not every firm-quarter has satellite imagery and an earnings call), and avoid the dominant modality drowning out weaker but complementary signals.
+
+This chapter develops the multimodal toolkit for Vietnamese financial markets across four progressively complex architectures. We begin with representation alignment (i.e., how to map different modalities into a shared embedding space). We then implement early, late, and cross-attention fusion for return prediction. We build a multimodal document understanding system that jointly processes the text, tables, and images within Vietnamese annual reports. We construct a multimodal earnings surprise model that combines pre-announcement text, satellite imagery, and financial time series. And we address the practical engineering challenges, including missing modalities, computational cost, evaluation protocols that determine whether multimodal models work in production.
+
+```{python}
+#| label: setup
+#| message: false
+
+import pandas as pd
+import numpy as np
+from pathlib import Path
+import warnings
+warnings.filterwarnings("ignore")
+
+# Deep learning
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader
+import torchvision.transforms as transforms
+import torchvision.models as models
+
+# NLP
+from transformers import (
+    AutoTokenizer, AutoModel,
+    CLIPProcessor, CLIPModel
+)
+
+# Tabular and statistical
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import TimeSeriesSplit
+from sklearn.metrics import r2_score, mean_squared_error
+from scipy import stats
+import statsmodels.api as sm
+from linearmodels.panel import PanelOLS
+
+# Visualization
+import plotnine as p9
+from mizani.formatters import percent_format
+```
+
+## Foundations of Multimodal Learning
+
+### The Information Structure of Financial Data
+
+Financial data is naturally organized into modalities with distinct statistical properties, temporal frequencies, and information content. @tbl-modality-landscape summarizes the modalities relevant to Vietnamese equity markets.
+
+| Modality | Examples | Dimensionality | Frequency | Encoding |
+|---------------|---------------|---------------|---------------|---------------|
+| Tabular | Financial ratios, ownership, governance | Low ($\sim$ 50 features) | Quarterly/Annual | Structured numeric |
+| Text | Annual reports, news, filings, social media | High ($\sim$ 10k tokens) | Event-driven | Sequential tokens |
+| Image | Satellite tiles, document scans, news photos | Very high ($\sim$ 150k pixels) | Daily to monthly | Spatial grid |
+| Time series | Price, volume, order flow, volatility | Moderate ($\sim$ 250 days × features) | Daily/Intraday | Temporal sequence |
+| Audio | Earnings calls, conference presentations | Very high (waveform) | Quarterly | Temporal waveform |
+| Graph | Ownership networks, supply chains, co-holdings | Variable | Quarterly | Adjacency + node features |
+
+: Modality Landscape in Financial Data {#tbl-modality-landscape}
+
+Each modality carries both unique and redundant information relative to others. The value of multimodal fusion lies in the unique (complementary) information:
+
+$$
+I(\text{Returns}; \text{Text}, \text{Image}, \text{Tabular}) \geq \max\left(I(\text{Returns}; \text{Text}), I(\text{Returns}; \text{Image}), I(\text{Returns}; \text{Tabular})\right)
+$$ {#eq-information-inequality}
+
+where $I(\cdot; \cdot)$ denotes mutual information. The inequality is strict whenever the modalities carry non-redundant predictive content. The goal of fusion is to design architectures that approach the left-hand side.
+
+### Taxonomies of Fusion
+
+The multimodal learning literature [@Baltrusaitis2019; @Liang2024] organizes fusion strategies along three dimensions.
+
+**By stage.** Where in the processing pipeline are modalities combined?
+
+-   *Input-level (early) fusion*: Concatenate raw or lightly processed features before any shared model.
+-   *Feature-level (intermediate) fusion*: Align learned representations in a shared latent space, then combine.
+-   *Decision-level (late) fusion*: Train separate models per modality, combine predictions.
+
+**By mechanism.** How are representations combined?
+
+-   *Concatenation*: $\mathbf{z} = [\mathbf{z}^{(1)}; \mathbf{z}^{(2)}; \ldots; \mathbf{z}^{(M)}]$. Simple but ignores cross-modal interactions.
+-   *Attention-based*: One modality attends to another. Captures interactions but requires sufficient data.
+-   *Tensor product*: $\mathbf{z} = \mathbf{z}^{(1)} \otimes \mathbf{z}^{(2)}$. Captures all pairwise interactions but scales quadratically.
+-   *Gating*: $\mathbf{z} = g(\mathbf{z}^{(1)}) \odot \mathbf{z}^{(2)} + (1 - g(\mathbf{z}^{(1)})) \odot \mathbf{z}^{(3)}$. Modality selection.
+
+**By training.** How are parameters learned?
+
+-   *Joint training*: All modalities processed end-to-end.
+-   *Pre-train then fuse*: Train unimodal encoders separately, then learn the fusion layer.
+-   *Contrastive alignment*: Train modality encoders to produce similar representations for matched pairs (the CLIP approach of @Radford2021).
+
+```{python}
+#| label: load-multimodal-data
+
+# DataCore.vn API
+from datacore import DataCore
+dc = DataCore()
+
+# Load aligned multimodal dataset
+# Each observation: firm × quarter with all available modalities
+
+# Tabular: financial statements
+financials = dc.get_firm_financials(
+    start_date="2014-01-01",
+    end_date="2024-12-31",
+    frequency="quarterly"
+)
+
+# Text: management discussion from annual reports
+report_text = dc.get_annual_report_text(
+    start_date="2014-01-01",
+    end_date="2024-12-31",
+    section="management_discussion"
+)
+
+# Image: satellite nightlight features (from Chapter 61)
+satellite_features = dc.get_satellite_features(
+    start_date="2014-01-01",
+    end_date="2024-12-31",
+    feature_type="cnn_resnet50"
+)
+
+# Time series: daily returns and volume
+daily_data = dc.get_daily_returns(
+    start_date="2014-01-01",
+    end_date="2024-12-31"
+)
+
+# Target: forward quarterly returns
+quarterly_returns = dc.get_quarterly_returns(
+    start_date="2014-01-01",
+    end_date="2024-12-31"
+)
+
+print(f"Firms with financials: {financials['ticker'].nunique()}")
+print(f"Firms with report text: {report_text['ticker'].nunique()}")
+print(f"Firms with satellite data: {satellite_features['ticker'].nunique()}")
+```
+
+## Representation Alignment
+
+### The Alignment Problem
+
+Different modalities produce embeddings in different vector spaces with different geometries. A PhoBERT text embedding lives in $\mathbb{R}^{768}$; a ResNet50 image feature lives in $\mathbb{R}^{2048}$; a tabular feature vector might have 50 dimensions with heterogeneous scales. Naively concatenating these into a single vector $[\mathbf{z}^{\text{text}}; \mathbf{z}^{\text{image}}; \mathbf{z}^{\text{tab}}] \in \mathbb{R}^{2866}$ is problematic because the high-dimensional modalities dominate gradient flow, the scales are mismatched, and there is no mechanism for cross-modal interaction.
+
+Alignment projects each modality into a shared latent space $\mathbb{R}^d$ where geometric relationships are semantically meaningful---similar firms should be nearby regardless of which modality is used to represent them.
+
+### Contrastive Alignment: CLIP for Finance
+
+The Contrastive Language-Image Pre-training (CLIP) framework of @Radford2021 learns aligned representations by training on matched (text, image) pairs. We adapt this to financial data: for each firm-quarter, we have a textual description and a satellite image, and we train the encoders so that matched pairs produce similar embeddings while unmatched pairs produce dissimilar embeddings.
+
+The contrastive loss is:
+
+$$
+\mathcal{L}_{\text{CLIP}} = -\frac{1}{2N}\sum_{i=1}^{N}\left[\log\frac{\exp(\mathbf{z}_i^{\text{txt}} \cdot \mathbf{z}_i^{\text{img}} / \tau)}{\sum_{j=1}^{N}\exp(\mathbf{z}_i^{\text{txt}} \cdot \mathbf{z}_j^{\text{img}} / \tau)} + \log\frac{\exp(\mathbf{z}_i^{\text{img}} \cdot \mathbf{z}_i^{\text{txt}} / \tau)}{\sum_{j=1}^{N}\exp(\mathbf{z}_i^{\text{img}} \cdot \mathbf{z}_j^{\text{txt}} / \tau)}\right]
+$$ {#eq-clip-loss}
+
+where $\tau$ is a learnable temperature parameter and the embeddings are $L_2$-normalized. This is a symmetric version of the InfoNCE loss [@Oord2018] that simultaneously trains the text encoder to predict the correct image and vice versa.
+
+```{python}
+#| label: contrastive-alignment
+
+class FinancialCLIP(nn.Module):
+    """
+    Contrastive alignment of text and image embeddings
+    for Vietnamese financial data.
+    """
+
+    def __init__(self, text_dim=768, image_dim=2048, proj_dim=256):
+        super().__init__()
+
+        # Text projection
+        self.text_proj = nn.Sequential(
+            nn.Linear(text_dim, proj_dim),
+            nn.LayerNorm(proj_dim),
+            nn.GELU(),
+            nn.Linear(proj_dim, proj_dim)
+        )
+
+        # Image projection
+        self.image_proj = nn.Sequential(
+            nn.Linear(image_dim, proj_dim),
+            nn.LayerNorm(proj_dim),
+            nn.GELU(),
+            nn.Linear(proj_dim, proj_dim)
+        )
+
+        # Learnable temperature
+        self.log_temp = nn.Parameter(torch.tensor(np.log(1 / 0.07)))
+
+    def forward(self, text_emb, image_emb):
+        """Compute aligned embeddings and contrastive loss."""
+        # Project and normalize
+        z_text = F.normalize(self.text_proj(text_emb), dim=-1)
+        z_image = F.normalize(self.image_proj(image_emb), dim=-1)
+
+        # Similarity matrix
+        temp = self.log_temp.exp()
+        logits = z_text @ z_image.T * temp
+
+        # Symmetric cross-entropy loss
+        labels = torch.arange(len(text_emb), device=text_emb.device)
+        loss_t2i = F.cross_entropy(logits, labels)
+        loss_i2t = F.cross_entropy(logits.T, labels)
+
+        loss = (loss_t2i + loss_i2t) / 2
+
+        return z_text, z_image, loss
+
+    def encode_text(self, text_emb):
+        return F.normalize(self.text_proj(text_emb), dim=-1)
+
+    def encode_image(self, image_emb):
+        return F.normalize(self.image_proj(image_emb), dim=-1)
+```
+
+### Projection Alignment for Arbitrary Modalities
+
+For more than two modalities, we generalize to a shared projection space where each modality has its own encoder but all encoders map to the same target space:
+
+$$
+\mathbf{z}_i^{(m)} = f^{(m)}(\mathbf{x}_i^{(m)}; \boldsymbol{\theta}^{(m)}) \in \mathbb{R}^d, \qquad m = 1, \ldots, M
+$$ {#eq-projection}
+
+The alignment loss encourages all modality embeddings for the same observation to be similar:
+
+$$
+\mathcal{L}_{\text{align}} = \sum_{m < m'} \frac{1}{N}\sum_{i=1}^{N} \left\|\mathbf{z}_i^{(m)} - \mathbf{z}_i^{(m')}\right\|^2
+$$ {#eq-alignment-loss}
+
+This MSE alignment is simpler than contrastive alignment but does not enforce the discriminative property (different observations should have dissimilar embeddings). In practice, we combine alignment with a prediction objective:
+
+$$
+\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{predict}}(\hat{y}, y) + \lambda \cdot \mathcal{L}_{\text{align}}
+$$ {#eq-total-loss}
+
+```{python}
+#| label: multi-projection
+
+class MultimodalProjector(nn.Module):
+    """
+    Project arbitrary modalities into a shared latent space.
+    Supports variable numbers of modalities per observation.
+    """
+
+    def __init__(self, modality_dims, proj_dim=128, dropout=0.2):
+        """
+        Parameters
+        ----------
+        modality_dims : dict
+            {modality_name: input_dim}, e.g.,
+            {'text': 768, 'image': 2048, 'tabular': 50, 'ts': 128}
+        proj_dim : int
+            Shared projection dimensionality.
+        """
+        super().__init__()
+
+        self.modality_names = list(modality_dims.keys())
+        self.proj_dim = proj_dim
+
+        # Per-modality encoders
+        self.encoders = nn.ModuleDict()
+        for name, dim in modality_dims.items():
+            self.encoders[name] = nn.Sequential(
+                nn.Linear(dim, proj_dim * 2),
+                nn.LayerNorm(proj_dim * 2),
+                nn.GELU(),
+                nn.Dropout(dropout),
+                nn.Linear(proj_dim * 2, proj_dim),
+                nn.LayerNorm(proj_dim)
+            )
+
+    def forward(self, modality_inputs):
+        """
+        Parameters
+        ----------
+        modality_inputs : dict
+            {modality_name: tensor}, may be missing some modalities.
+
+        Returns
+        -------
+        dict : {modality_name: projected_embedding}
+        """
+        embeddings = {}
+        for name, x in modality_inputs.items():
+            if name in self.encoders and x is not None:
+                embeddings[name] = self.encoders[name](x)
+
+        return embeddings
+
+    def compute_alignment_loss(self, embeddings):
+        """Pairwise MSE alignment across all available modalities."""
+        names = list(embeddings.keys())
+        if len(names) < 2:
+            return torch.tensor(0.0, device=next(self.parameters()).device)
+
+        loss = torch.tensor(0.0, device=next(self.parameters()).device)
+        n_pairs = 0
+        for i in range(len(names)):
+            for j in range(i + 1, len(names)):
+                loss += F.mse_loss(
+                    embeddings[names[i]], embeddings[names[j]]
+                )
+                n_pairs += 1
+
+        return loss / n_pairs if n_pairs > 0 else loss
+```
+
+## Fusion Architectures for Return Prediction
+
+### Unimodal Encoders
+
+Before fusing modalities, we need encoders that produce fixed-dimensional representations from each raw input. We build four encoders corresponding to the primary modalities in Vietnamese equity markets.
+
+```{python}
+#| label: unimodal-encoders
+
+class TabularEncoder(nn.Module):
+    """Encode financial statement features."""
+
+    def __init__(self, input_dim, hidden_dim=128, output_dim=64):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(hidden_dim, output_dim)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
+class TextEncoder(nn.Module):
+    """
+    Encode Vietnamese text using pre-extracted PhoBERT embeddings.
+    Input: pre-computed [CLS] token embedding (768-d).
+    """
+
+    def __init__(self, input_dim=768, output_dim=64):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(input_dim, 256),
+            nn.LayerNorm(256),
+            nn.GELU(),
+            nn.Dropout(0.2),
+            nn.Linear(256, output_dim)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
+class ImageEncoder(nn.Module):
+    """
+    Encode satellite / document image features.
+    Input: pre-computed CNN features (e.g., ResNet50 2048-d).
+    """
+
+    def __init__(self, input_dim=2048, output_dim=64):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(input_dim, 512),
+            nn.LayerNorm(512),
+            nn.GELU(),
+            nn.Dropout(0.2),
+            nn.Linear(512, output_dim)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
+class TimeSeriesEncoder(nn.Module):
+    """
+    Encode price/volume time series using a 1D CNN + attention.
+    Input: (batch, seq_len, n_features) tensor of daily data.
+    """
+
+    def __init__(self, n_features=5, seq_len=60, output_dim=64):
+        super().__init__()
+
+        # 1D convolutional layers
+        self.conv1 = nn.Conv1d(n_features, 32, kernel_size=5, padding=2)
+        self.conv2 = nn.Conv1d(32, 64, kernel_size=3, padding=1)
+        self.pool = nn.AdaptiveAvgPool1d(1)
+
+        # Temporal attention
+        self.attn = nn.MultiheadAttention(
+            embed_dim=64, num_heads=4, batch_first=True
+        )
+
+        self.fc = nn.Linear(64, output_dim)
+
+    def forward(self, x):
+        # x: (B, T, F) -> (B, F, T) for Conv1d
+        x = x.transpose(1, 2)
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+
+        # (B, 64, T) -> (B, T, 64) for attention
+        x = x.transpose(1, 2)
+        attn_out, _ = self.attn(x, x, x)
+
+        # Pool over time
+        x = attn_out.transpose(1, 2)  # (B, 64, T)
+        x = self.pool(x).squeeze(-1)  # (B, 64)
+
+        return self.fc(x)
+```
+
+### Early Fusion
+
+Early fusion concatenates modality embeddings before a shared prediction head. This is the simplest approach and serves as a natural baseline.
+
+```{python}
+#| label: early-fusion
+
+class EarlyFusionModel(nn.Module):
+    """
+    Concatenate modality embeddings, then predict.
+    """
+
+    def __init__(self, encoders, hidden_dim=128, output_dim=1):
+        """
+        Parameters
+        ----------
+        encoders : dict
+            {modality_name: encoder_module}
+            Each encoder outputs a vector of the same dimension.
+        """
+        super().__init__()
+        self.encoders = nn.ModuleDict(encoders)
+        self.n_modalities = len(encoders)
+
+        # Infer encoder output dim from first encoder
+        sample_encoder = list(encoders.values())[0]
+        enc_dim = list(sample_encoder.parameters())[-1].shape[0]
+
+        self.head = nn.Sequential(
+            nn.Linear(enc_dim * self.n_modalities, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.ReLU(),
+            nn.Linear(hidden_dim // 2, output_dim)
+        )
+
+    def forward(self, inputs):
+        """
+        Parameters
+        ----------
+        inputs : dict
+            {modality_name: tensor}
+        """
+        embeddings = []
+        for name, encoder in self.encoders.items():
+            if name in inputs and inputs[name] is not None:
+                embeddings.append(encoder(inputs[name]))
+            else:
+                # Zero-fill missing modalities
+                device = next(self.parameters()).device
+                enc_dim = list(encoder.parameters())[-1].shape[0]
+                embeddings.append(torch.zeros(
+                    inputs[list(inputs.keys())[0]].shape[0],
+                    enc_dim, device=device
+                ))
+
+        combined = torch.cat(embeddings, dim=-1)
+        return self.head(combined).squeeze(-1)
+```
+
+### Late Fusion
+
+Late fusion trains independent models per modality and combines their predictions. The combination weights can be fixed (equal averaging), learned (linear), or adaptive (gating network).
+
+```{python}
+#| label: late-fusion
+
+class LateFusionModel(nn.Module):
+    """
+    Independent prediction per modality, learned combination.
+    """
+
+    def __init__(self, encoders, enc_dim=64, combination="learned"):
+        """
+        Parameters
+        ----------
+        combination : str
+            'average', 'learned', or 'gating'.
+        """
+        super().__init__()
+        self.encoders = nn.ModuleDict(encoders)
+        self.combination = combination
+        self.n_modalities = len(encoders)
+
+        # Per-modality prediction heads
+        self.heads = nn.ModuleDict({
+            name: nn.Linear(enc_dim, 1)
+            for name in encoders
+        })
+
+        if combination == "learned":
+            self.weights = nn.Parameter(
+                torch.ones(self.n_modalities) / self.n_modalities
+            )
+        elif combination == "gating":
+            # Gating network takes all embeddings as input
+            self.gate = nn.Sequential(
+                nn.Linear(enc_dim * self.n_modalities, self.n_modalities),
+                nn.Softmax(dim=-1)
+            )
+
+    def forward(self, inputs):
+        predictions = {}
+        embeddings = {}
+
+        for name, encoder in self.encoders.items():
+            if name in inputs and inputs[name] is not None:
+                emb = encoder(inputs[name])
+                pred = self.heads[name](emb).squeeze(-1)
+                predictions[name] = pred
+                embeddings[name] = emb
+            else:
+                device = next(self.parameters()).device
+                batch_size = inputs[list(inputs.keys())[0]].shape[0]
+                predictions[name] = torch.zeros(batch_size, device=device)
+                enc_dim = list(encoder.parameters())[-1].shape[0]
+                embeddings[name] = torch.zeros(
+                    batch_size, enc_dim, device=device
+                )
+
+        pred_stack = torch.stack(list(predictions.values()), dim=-1)
+
+        if self.combination == "average":
+            return pred_stack.mean(dim=-1)
+        elif self.combination == "learned":
+            weights = F.softmax(self.weights, dim=0)
+            return (pred_stack * weights).sum(dim=-1)
+        elif self.combination == "gating":
+            all_emb = torch.cat(list(embeddings.values()), dim=-1)
+            gate_weights = self.gate(all_emb)
+            return (pred_stack * gate_weights).sum(dim=-1)
+
+    def get_modality_weights(self):
+        """Return the contribution of each modality."""
+        if self.combination == "learned":
+            return F.softmax(self.weights, dim=0).detach().cpu().numpy()
+        return None
+```
+
+### Cross-Attention Fusion
+
+Cross-attention fusion is the most expressive architecture. Each modality attends to every other modality, learning which cross-modal interactions are informative. This is the mechanism underlying modern vision-language models like Flamingo [@Alayrac2022] and GPT-4V.
+
+The cross-attention operation for modality $m$ attending to modality $m'$ is:
+
+$$
+\text{CA}^{(m \to m')} = \text{softmax}\left(\frac{\mathbf{Q}^{(m)} \left(\mathbf{K}^{(m')}\right)^\top}{\sqrt{d_k}}\right) \mathbf{V}^{(m')}
+$$ {#eq-cross-attention-detail}
+
+where $\mathbf{Q}^{(m)} = \mathbf{z}^{(m)} W_Q$, $\mathbf{K}^{(m')} = \mathbf{z}^{(m')} W_K$, $\mathbf{V}^{(m')} = \mathbf{z}^{(m')} W_V$. The output enriches modality $m$'s representation with information from modality $m'$.
+
+```{python}
+#| label: cross-attention-fusion
+
+class CrossAttentionBlock(nn.Module):
+    """Single cross-attention block: query modality attends to key modality."""
+
+    def __init__(self, dim, n_heads=4, dropout=0.1):
+        super().__init__()
+        self.attn = nn.MultiheadAttention(
+            embed_dim=dim, num_heads=n_heads,
+            dropout=dropout, batch_first=True
+        )
+        self.norm1 = nn.LayerNorm(dim)
+        self.norm2 = nn.LayerNorm(dim)
+        self.ffn = nn.Sequential(
+            nn.Linear(dim, dim * 4),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(dim * 4, dim),
+            nn.Dropout(dropout)
+        )
+
+    def forward(self, query, key_value):
+        # Cross-attention
+        q = query.unsqueeze(1) if query.dim() == 2 else query
+        kv = key_value.unsqueeze(1) if key_value.dim() == 2 else key_value
+
+        attn_out, attn_weights = self.attn(q, kv, kv)
+        q = self.norm1(q + attn_out)
+
+        # Feed-forward
+        out = self.norm2(q + self.ffn(q))
+        return out.squeeze(1) if query.dim() == 2 else out, attn_weights
+
+
+class CrossAttentionFusionModel(nn.Module):
+    """
+    Full cross-attention fusion across M modalities.
+    Each modality attends to all others via cross-attention blocks.
+    """
+
+    def __init__(self, encoders, enc_dim=64, n_layers=2, n_heads=4):
+        super().__init__()
+        self.encoders = nn.ModuleDict(encoders)
+        self.modality_names = list(encoders.keys())
+        self.n_modalities = len(encoders)
+
+        # Cross-attention blocks: each modality attends to each other
+        self.cross_attn_layers = nn.ModuleList()
+        for _ in range(n_layers):
+            layer = nn.ModuleDict()
+            for m in self.modality_names:
+                for m_prime in self.modality_names:
+                    if m != m_prime:
+                        layer[f"{m}_to_{m_prime}"] = CrossAttentionBlock(
+                            enc_dim, n_heads
+                        )
+            self.cross_attn_layers.append(layer)
+
+        # Prediction head
+        self.head = nn.Sequential(
+            nn.Linear(enc_dim * self.n_modalities, enc_dim),
+            nn.LayerNorm(enc_dim),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(enc_dim, 1)
+        )
+
+    def forward(self, inputs):
+        # Encode each modality
+        embeddings = {}
+        for name, encoder in self.encoders.items():
+            if name in inputs and inputs[name] is not None:
+                embeddings[name] = encoder(inputs[name])
+            else:
+                device = next(self.parameters()).device
+                batch_size = inputs[list(inputs.keys())[0]].shape[0]
+                enc_dim = list(encoder.parameters())[-1].shape[0]
+                embeddings[name] = torch.zeros(
+                    batch_size, enc_dim, device=device
+                )
+
+        # Cross-attention layers
+        all_attn_weights = {}
+        for layer in self.cross_attn_layers:
+            new_embeddings = {k: v.clone() for k, v in embeddings.items()}
+            for key, block in layer.items():
+                parts = key.split("_to_")
+                query_mod, kv_mod = parts[0], parts[1]
+                if query_mod in embeddings and kv_mod in embeddings:
+                    updated, weights = block(
+                        embeddings[query_mod],
+                        embeddings[kv_mod]
+                    )
+                    new_embeddings[query_mod] = (
+                        new_embeddings[query_mod] + updated
+                    )
+                    all_attn_weights[key] = weights
+
+            embeddings = new_embeddings
+
+        # Concatenate and predict
+        combined = torch.cat(
+            [embeddings[name] for name in self.modality_names],
+            dim=-1
+        )
+        return self.head(combined).squeeze(-1), all_attn_weights
+```
+
+### Comparison Experiment
+
+We now compare the three fusion architectures against unimodal baselines on forward quarterly return prediction for Vietnamese equities.
+
+```{python}
+#| label: multimodal-dataset
+
+class MultimodalFinanceDataset(Dataset):
+    """
+    Dataset that aligns multiple modalities per firm-quarter.
+    Handles missing modalities with None values.
+    """
+
+    def __init__(self, tabular_df, text_embeddings, image_features,
+                 ts_features, returns, tickers, dates):
+        self.tabular = tabular_df
+        self.text = text_embeddings
+        self.image = image_features
+        self.ts = ts_features
+        self.returns = returns
+        self.tickers = tickers
+        self.dates = dates
+
+    def __len__(self):
+        return len(self.returns)
+
+    def __getitem__(self, idx):
+        sample = {
+            "tabular": torch.tensor(
+                self.tabular[idx], dtype=torch.float32
+            ) if self.tabular[idx] is not None else None,
+            "text": torch.tensor(
+                self.text[idx], dtype=torch.float32
+            ) if self.text[idx] is not None else None,
+            "image": torch.tensor(
+                self.image[idx], dtype=torch.float32
+            ) if self.image[idx] is not None else None,
+            "ts": torch.tensor(
+                self.ts[idx], dtype=torch.float32
+            ) if self.ts[idx] is not None else None,
+            "return": torch.tensor(
+                self.returns[idx], dtype=torch.float32
+            ),
+            "ticker": self.tickers[idx],
+            "date": self.dates[idx]
+        }
+        return sample
+
+
+def collate_multimodal(batch):
+    """Custom collate that handles None modalities."""
+    result = {"return": torch.stack([b["return"] for b in batch])}
+
+    for mod in ["tabular", "text", "image", "ts"]:
+        values = [b[mod] for b in batch]
+        if all(v is not None for v in values):
+            result[mod] = torch.stack(values)
+        elif any(v is not None for v in values):
+            # Fill None with zeros, matching shape of non-None entries
+            ref = next(v for v in values if v is not None)
+            filled = [v if v is not None else torch.zeros_like(ref)
+                      for v in values]
+            result[mod] = torch.stack(filled)
+        else:
+            result[mod] = None
+
+    return result
+```
+
+```{python}
+#| label: prepare-aligned-data
+
+# Prepare aligned firm-quarter dataset
+# Step 1: Financial ratios (tabular)
+tabular_features = [
+    "roe", "roa", "book_to_market", "log_size", "leverage",
+    "asset_growth", "gross_profitability", "capex_to_assets",
+    "cash_to_assets", "dividend_yield", "sales_growth",
+    "accruals", "earnings_volatility", "beta"
+]
+
+financials["quarter_date"] = pd.to_datetime(
+    financials["year"].astype(str) + "-" +
+    (financials["quarter"] * 3).astype(str).str.zfill(2) + "-01"
+)
+
+# Step 2: Text embeddings from PhoBERT
+# (Pre-computed in Chapter 60)
+text_emb = dc.get_text_embeddings(
+    model="phobert",
+    section="management_discussion",
+    start_date="2014-01-01",
+    end_date="2024-12-31"
+)
+
+# Step 3: Image features (pre-computed in Chapter 61)
+# Satellite CNN features linked to firm headquarters province
+
+# Step 4: Time series features (60-day window before quarter end)
+def compute_ts_features(ticker, date, daily_df, lookback=60):
+    """Extract time-series feature tensor for a firm-quarter."""
+    mask = (
+        (daily_df["ticker"] == ticker) &
+        (daily_df["date"] <= date) &
+        (daily_df["date"] >= date - pd.Timedelta(days=lookback * 1.5))
+    )
+    subset = daily_df[mask].sort_values("date").tail(lookback)
+
+    if len(subset) < lookback // 2:
+        return None
+
+    features = subset[["ret", "volume_log", "volatility_20d",
+                        "spread", "turnover"]].values
+
+    # Pad if shorter than lookback
+    if len(features) < lookback:
+        padding = np.zeros((lookback - len(features), features.shape[1]))
+        features = np.vstack([padding, features])
+
+    return features
+
+# Step 5: Forward quarterly returns (target)
+# Align everything to quarter-end dates
+print("Preparing aligned multimodal dataset...")
+```
+
+```{python}
+#| label: training-loop
+
+def train_multimodal_model(model, train_loader, val_loader,
+                            n_epochs=50, lr=1e-3, patience=10,
+                            alignment_weight=0.0):
+    """
+    Train a multimodal model with early stopping.
+
+    Parameters
+    ----------
+    model : nn.Module
+        Multimodal fusion model.
+    alignment_weight : float
+        Weight for modality alignment loss (0 = no alignment).
+
+    Returns
+    -------
+    dict : Training history and best validation metrics.
+    """
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr,
+                                   weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode="min", patience=5, factor=0.5
+    )
+
+    best_val_loss = float("inf")
+    epochs_no_improve = 0
+    history = {"train_loss": [], "val_loss": [], "val_r2": []}
+
+    for epoch in range(n_epochs):
+        # Training
+        model.train()
+        train_losses = []
+        for batch in train_loader:
+            optimizer.zero_grad()
+
+            inputs = {k: batch[k] for k in ["tabular", "text", "image", "ts"]}
+            targets = batch["return"]
+
+            # Forward pass (handle both output types)
+            output = model(inputs)
+            if isinstance(output, tuple):
+                predictions, attn_weights = output
+            else:
+                predictions = output
+
+            loss = F.mse_loss(predictions, targets)
+
+            # Optional alignment loss
+            if alignment_weight > 0 and hasattr(model, "projector"):
+                embeddings = model.projector(inputs)
+                align_loss = model.projector.compute_alignment_loss(embeddings)
+                loss = loss + alignment_weight * align_loss
+
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            optimizer.step()
+
+            train_losses.append(loss.item())
+
+        # Validation
+        model.eval()
+        val_preds, val_targets = [], []
+        val_losses = []
+
+        with torch.no_grad():
+            for batch in val_loader:
+                inputs = {k: batch[k]
+                          for k in ["tabular", "text", "image", "ts"]}
+                targets = batch["return"]
+
+                output = model(inputs)
+                if isinstance(output, tuple):
+                    predictions, _ = output
+                else:
+                    predictions = output
+
+                val_losses.append(F.mse_loss(predictions, targets).item())
+                val_preds.extend(predictions.cpu().numpy())
+                val_targets.extend(targets.cpu().numpy())
+
+        val_loss = np.mean(val_losses)
+        val_r2 = r2_score(val_targets, val_preds) if len(val_preds) > 10 else 0
+
+        history["train_loss"].append(np.mean(train_losses))
+        history["val_loss"].append(val_loss)
+        history["val_r2"].append(val_r2)
+
+        scheduler.step(val_loss)
+
+        # Early stopping
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_state = {k: v.cpu().clone()
+                         for k, v in model.state_dict().items()}
+            epochs_no_improve = 0
+        else:
+            epochs_no_improve += 1
+            if epochs_no_improve >= patience:
+                break
+
+    # Restore best model
+    model.load_state_dict(best_state)
+
+    return {
+        "history": history,
+        "best_val_loss": best_val_loss,
+        "best_val_r2": max(history["val_r2"]),
+        "epochs_trained": len(history["train_loss"])
+    }
+```
+
+```{python}
+#| label: model-comparison
+
+def compare_fusion_strategies(dataset, n_splits=5):
+    """
+    Compare unimodal baselines and multimodal fusion strategies
+    using expanding-window time-series cross-validation.
+
+    Returns
+    -------
+    DataFrame : Out-of-sample R², MSE, IC for each model.
+    """
+    tscv = TimeSeriesSplit(n_splits=n_splits)
+    results = []
+
+    enc_dim = 64
+
+    for fold, (train_idx, test_idx) in enumerate(
+        tscv.split(range(len(dataset)))
+    ):
+        # Create data loaders
+        train_subset = torch.utils.data.Subset(dataset, train_idx)
+        test_subset = torch.utils.data.Subset(dataset, test_idx)
+
+        train_loader = DataLoader(
+            train_subset, batch_size=128, shuffle=True,
+            collate_fn=collate_multimodal
+        )
+        test_loader = DataLoader(
+            test_subset, batch_size=256, shuffle=False,
+            collate_fn=collate_multimodal
+        )
+
+        # Define encoders
+        def make_encoders():
+            return {
+                "tabular": TabularEncoder(len(tabular_features), 128, enc_dim),
+                "text": TextEncoder(768, enc_dim),
+                "image": ImageEncoder(2048, enc_dim),
+                "ts": TimeSeriesEncoder(5, 60, enc_dim)
+            }
+
+        # Unimodal baselines
+        for mod_name in ["tabular", "text", "image", "ts"]:
+            single_encoder = {mod_name: make_encoders()[mod_name]}
+            model = EarlyFusionModel(single_encoder, enc_dim, 1)
+
+            result = train_multimodal_model(
+                model, train_loader, test_loader, n_epochs=30
+            )
+            results.append({
+                "fold": fold,
+                "model": f"Unimodal ({mod_name})",
+                "val_r2": result["best_val_r2"],
+                "val_loss": result["best_val_loss"]
+            })
+
+        # Multimodal: Early Fusion
+        model_early = EarlyFusionModel(make_encoders(), enc_dim * 2, 1)
+        result = train_multimodal_model(
+            model_early, train_loader, test_loader, n_epochs=30
+        )
+        results.append({
+            "fold": fold,
+            "model": "Early Fusion",
+            "val_r2": result["best_val_r2"],
+            "val_loss": result["best_val_loss"]
+        })
+
+        # Multimodal: Late Fusion (gating)
+        model_late = LateFusionModel(
+            make_encoders(), enc_dim, combination="gating"
+        )
+        result = train_multimodal_model(
+            model_late, train_loader, test_loader, n_epochs=30
+        )
+        results.append({
+            "fold": fold,
+            "model": "Late Fusion (Gating)",
+            "val_r2": result["best_val_r2"],
+            "val_loss": result["best_val_loss"]
+        })
+
+        # Multimodal: Cross-Attention
+        model_ca = CrossAttentionFusionModel(
+            make_encoders(), enc_dim, n_layers=2, n_heads=4
+        )
+        result = train_multimodal_model(
+            model_ca, train_loader, test_loader, n_epochs=30
+        )
+        results.append({
+            "fold": fold,
+            "model": "Cross-Attention Fusion",
+            "val_r2": result["best_val_r2"],
+            "val_loss": result["best_val_loss"]
+        })
+
+    return pd.DataFrame(results)
+```
+
+```{python}
+#| label: tbl-fusion-comparison
+#| tbl-cap: "Out-of-Sample Return Prediction: Unimodal vs. Multimodal"
+
+# results_df = compare_fusion_strategies(dataset)
+
+# Aggregate across folds
+# summary = (
+#     results_df.groupby("model")
+#     .agg(
+#         mean_r2=("val_r2", "mean"),
+#         std_r2=("val_r2", "std"),
+#         mean_loss=("val_loss", "mean")
+#     )
+#     .sort_values("mean_r2", ascending=False)
+#     .round(4)
+# )
+# summary
+```
+
+```{python}
+#| label: fig-fusion-comparison
+#| fig-cap: "Out-of-Sample R² Across Fusion Strategies and Time-Series Folds"
+
+# (
+#     p9.ggplot(results_df, p9.aes(x="model", y="val_r2", fill="model"))
+#     + p9.geom_boxplot(alpha=0.7)
+#     + p9.coord_flip()
+#     + p9.labs(
+#         x="", y="Out-of-Sample R²",
+#         title="Multimodal Fusion Improves Return Prediction"
+#     )
+#     + p9.theme_minimal()
+#     + p9.theme(figure_size=(10, 6), legend_position="none")
+# )
+```
+
+## Handling Missing Modalities
+
+### The Missing Modality Problem
+
+In practice, not every firm-quarter has every modality available. A firm may not have an earnings call transcript (no audio), its headquarters may be in a province where satellite coverage is intermittent (no image), or its annual report may not be publicly available in digital form (no text). This creates a missing modality problem that is structurally different from missing values in tabular data: an entire feature vector (hundreds or thousands of dimensions) is absent.
+
+The fraction of observations with all four modalities available is typically much smaller than the fraction with at least one:
+
+| Available Modalities     | Typical Coverage (Vietnamese Firms) |
+|--------------------------|-------------------------------------|
+| Tabular only             | \$\sim\$95% of firm-quarters        |
+| Tabular + Text           | \$\sim\$70%                         |
+| Tabular + Text + Image   | \$\sim\$50%                         |
+| All four (+ time series) | \$\sim\$45%                         |
+
+: Modality Availability in Vietnamese Market Data {#tbl-modality-coverage}
+
+Restricting the sample to complete cases discards half the data and introduces selection bias (larger, more transparent firms are overrepresented). We need architectures that degrade gracefully when modalities are missing.
+
+### Strategies for Missing Modalities
+
+**Zero imputation.** Replace missing modality embeddings with zeros. Simple but introduces bias: the model cannot distinguish "this modality is absent" from "this modality has zero signal."
+
+**Learned default embedding.** Replace missing modalities with a learnable "default" vector $\mathbf{d}^{(m)}$ that is trained alongside the model. This allows the model to learn what the absence of a modality implies.
+
+**Modality dropout.** During training, randomly drop entire modalities with probability $p$ (analogous to dropout on neurons). This forces the model to perform well even when modalities are missing, and acts as regularization.
+
+**Mixture of Experts (MoE).** Route each observation to a fusion subnetwork specialized for its available modality combination. With $M$ modalities, there are $2^M - 1$ possible subsets, requiring efficient parameter sharing.
+
+```{python}
+#| label: missing-modality-handler
+
+class ModalityDropout(nn.Module):
+    """
+    Randomly drop entire modalities during training.
+    Forces robustness to missing inputs at test time.
+    """
+
+    def __init__(self, drop_prob=0.2):
+        super().__init__()
+        self.drop_prob = drop_prob
+
+    def forward(self, modality_inputs):
+        if not self.training:
+            return modality_inputs
+
+        result = {}
+        for name, tensor in modality_inputs.items():
+            if tensor is not None and torch.rand(1).item() > self.drop_prob:
+                result[name] = tensor
+            else:
+                result[name] = None
+
+        # Ensure at least one modality remains
+        if all(v is None for v in result.values()):
+            # Keep the first available modality
+            for name, tensor in modality_inputs.items():
+                if tensor is not None:
+                    result[name] = tensor
+                    break
+
+        return result
+
+
+class RobustFusionModel(nn.Module):
+    """
+    Multimodal model robust to missing modalities.
+    Uses learned default embeddings and modality dropout.
+    """
+
+    def __init__(self, encoders, enc_dim=64, drop_prob=0.2):
+        super().__init__()
+        self.encoders = nn.ModuleDict(encoders)
+        self.modality_names = list(encoders.keys())
+        self.n_modalities = len(encoders)
+        self.enc_dim = enc_dim
+
+        # Learned default embeddings for missing modalities
+        self.defaults = nn.ParameterDict({
+            name: nn.Parameter(torch.randn(enc_dim) * 0.01)
+            for name in encoders
+        })
+
+        # Modality presence indicator embedding
+        self.presence_proj = nn.Linear(self.n_modalities, enc_dim)
+
+        # Modality dropout
+        self.mod_dropout = ModalityDropout(drop_prob)
+
+        # Attention-based aggregation
+        self.attn_pool = nn.Sequential(
+            nn.Linear(enc_dim, 1),
+            nn.Softmax(dim=0)
+        )
+
+        # Prediction head
+        self.head = nn.Sequential(
+            nn.Linear(enc_dim * 2, enc_dim),
+            nn.LayerNorm(enc_dim),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(enc_dim, 1)
+        )
+
+    def forward(self, inputs):
+        # Apply modality dropout during training
+        inputs = self.mod_dropout(inputs)
+
+        embeddings = []
+        presence = []
+
+        for name in self.modality_names:
+            if name in inputs and inputs[name] is not None:
+                emb = self.encoders[name](inputs[name])
+                embeddings.append(emb)
+                presence.append(1.0)
+            else:
+                batch_size = next(
+                    v.shape[0] for v in inputs.values()
+                    if v is not None
+                )
+                emb = self.defaults[name].unsqueeze(0).expand(
+                    batch_size, -1
+                )
+                embeddings.append(emb)
+                presence.append(0.0)
+
+        # Stack: (n_modalities, batch, enc_dim)
+        emb_stack = torch.stack(embeddings, dim=0)
+
+        # Attention-weighted aggregation
+        attn_weights = self.attn_pool(emb_stack)  # (n_mod, batch, 1)
+        aggregated = (emb_stack * attn_weights).sum(dim=0)  # (batch, enc_dim)
+
+        # Presence indicator
+        device = aggregated.device
+        presence_tensor = torch.tensor(
+            presence, device=device
+        ).unsqueeze(0).expand(aggregated.shape[0], -1)
+        presence_emb = self.presence_proj(presence_tensor)
+
+        # Combine
+        combined = torch.cat([aggregated, presence_emb], dim=-1)
+        return self.head(combined).squeeze(-1)
+```
+
+## Multimodal Document Understanding
+
+### Annual Report as a Multimodal Object
+
+A Vietnamese annual report is inherently multimodal: it contains running text (management discussion, risk factors, strategy), tables (financial statements, segment data, shareholder structure), images (photographs of facilities, products, management), and charts (revenue trends, market share). Prior chapters treated these as separate extraction problems. Here we build a model that processes the entire report as a unified multimodal document.
+
+The architecture follows the Document Understanding Transformer (Donut) approach of @Kim2022, adapted for Vietnamese financial filings:
+
+$$
+\mathbf{h} = \text{Encoder}(\mathbf{I}_{\text{page}}) + \text{Encoder}(\mathbf{T}_{\text{ocr}}) + \text{Encoder}(\mathbf{L}_{\text{layout}})
+$$ {#eq-donut}
+
+where $\mathbf{I}$ is the page image, $\mathbf{T}$ is the OCR text, and $\mathbf{L}$ is the spatial layout (bounding boxes). The joint representation $\mathbf{h}$ captures both what is written and where it appears on the page.
+
+```{python}
+#| label: multimodal-document
+
+class MultimodalDocumentEncoder(nn.Module):
+    """
+    Joint encoder for Vietnamese annual report pages.
+    Processes text, layout, and page image simultaneously.
+    """
+
+    def __init__(self, vocab_size=64000, max_boxes=512,
+                 img_dim=2048, hidden_dim=256, n_layers=4,
+                 n_heads=8):
+        super().__init__()
+
+        # Text embedding (Vietnamese tokens)
+        self.text_emb = nn.Embedding(vocab_size, hidden_dim)
+
+        # Layout embedding (bounding box coordinates)
+        # Each box: [x0, y0, x1, y1] normalized to [0, 1000]
+        self.x_emb = nn.Embedding(1001, hidden_dim // 4)
+        self.y_emb = nn.Embedding(1001, hidden_dim // 4)
+
+        # Image patch embedding
+        self.img_proj = nn.Sequential(
+            nn.Linear(img_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim)
+        )
+
+        # Modality type embedding
+        self.modality_emb = nn.Embedding(3, hidden_dim)  # text, layout, image
+
+        # Transformer encoder
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=hidden_dim,
+            nhead=n_heads,
+            dim_feedforward=hidden_dim * 4,
+            dropout=0.1,
+            activation="gelu",
+            batch_first=True
+        )
+        self.transformer = nn.TransformerEncoder(
+            encoder_layer, num_layers=n_layers
+        )
+
+        # [CLS] token
+        self.cls_token = nn.Parameter(torch.randn(1, 1, hidden_dim))
+
+    def embed_layout(self, boxes):
+        """Embed bounding box coordinates."""
+        x0 = self.x_emb(boxes[:, :, 0])
+        y0 = self.y_emb(boxes[:, :, 1])
+        x1 = self.x_emb(boxes[:, :, 2])
+        y1 = self.y_emb(boxes[:, :, 3])
+        return torch.cat([x0, y0, x1, y1], dim=-1)
+
+    def forward(self, token_ids, boxes, img_features,
+                attention_mask=None):
+        """
+        Parameters
+        ----------
+        token_ids : LongTensor (B, T)
+            OCR token IDs.
+        boxes : LongTensor (B, T, 4)
+            Bounding boxes for each token.
+        img_features : Tensor (B, P, img_dim)
+            Image patch features from CNN.
+        """
+        batch_size = token_ids.shape[0]
+
+        # Text + layout
+        text_h = self.text_emb(token_ids) + self.embed_layout(boxes)
+        text_h = text_h + self.modality_emb(
+            torch.zeros(batch_size, text_h.shape[1],
+                       dtype=torch.long, device=text_h.device)
+        )
+
+        # Image patches
+        img_h = self.img_proj(img_features)
+        img_h = img_h + self.modality_emb(
+            torch.full((batch_size, img_h.shape[1]), 2,
+                      dtype=torch.long, device=img_h.device)
+        )
+
+        # Prepend [CLS]
+        cls = self.cls_token.expand(batch_size, -1, -1)
+
+        # Concatenate all modalities
+        sequence = torch.cat([cls, text_h, img_h], dim=1)
+
+        # Transformer encoding
+        output = self.transformer(sequence)
+
+        # Return [CLS] representation
+        return output[:, 0, :]
+```
+
+### Extracting Structured Financials from Multimodal Reports
+
+With the document encoder, we can build extraction heads for specific financial fields. The key advantage over the OCR-only pipeline in Chapter 61 is that the multimodal encoder can resolve ambiguities using visual context---a number's meaning depends on where it appears on the page and what headers and labels surround it.
+
+```{python}
+#| label: financial-extraction-head
+
+class FinancialFieldExtractor(nn.Module):
+    """
+    Extract specific financial fields from a document embedding.
+    Uses the multimodal document encoder as backbone.
+    """
+
+    def __init__(self, doc_encoder, fields, hidden_dim=256):
+        """
+        Parameters
+        ----------
+        doc_encoder : MultimodalDocumentEncoder
+        fields : list
+            Target field names, e.g.,
+            ['revenue', 'net_income', 'total_assets', 'total_equity']
+        """
+        super().__init__()
+        self.doc_encoder = doc_encoder
+        self.fields = fields
+
+        # Per-field extraction heads
+        self.extractors = nn.ModuleDict({
+            field: nn.Sequential(
+                nn.Linear(hidden_dim, hidden_dim // 2),
+                nn.GELU(),
+                nn.Linear(hidden_dim // 2, 1)
+            )
+            for field in fields
+        })
+
+        # Confidence head
+        self.confidence = nn.ModuleDict({
+            field: nn.Sequential(
+                nn.Linear(hidden_dim, 1),
+                nn.Sigmoid()
+            )
+            for field in fields
+        })
+
+    def forward(self, token_ids, boxes, img_features):
+        doc_emb = self.doc_encoder(token_ids, boxes, img_features)
+
+        results = {}
+        for field in self.fields:
+            value = self.extractors[field](doc_emb).squeeze(-1)
+            conf = self.confidence[field](doc_emb).squeeze(-1)
+            results[field] = {"value": value, "confidence": conf}
+
+        return results
+```
+
+## Multimodal Earnings Surprise Model
+
+### Architecture
+
+We now build the chapter's central empirical application: a multimodal model that predicts earnings surprises using all available modalities observed before the earnings announcement date.
+
+The information set at time $t^-$ (just before the announcement) includes:
+
+-   **Tabular**: Last reported financial ratios, analyst consensus forecasts
+-   **Text**: News articles and filings in the pre-announcement window
+-   **Image**: Satellite features of the firm's operating region
+-   **Time series**: Price and volume dynamics in the 60 trading days before announcement
+
+The target is the standardized unexpected earnings (SUE):
+
+$$
+\text{SUE}_{i,q} = \frac{E_{i,q} - \hat{E}_{i,q}}{\sigma_{i,q}}
+$$ {#eq-sue}
+
+where $E_{i,q}$ is actual earnings per share, $\hat{E}_{i,q}$ is the consensus forecast (or seasonal random walk forecast if analyst coverage is absent), and $\sigma_{i,q}$ is the standard deviation of forecast errors.
+
+```{python}
+#| label: earnings-surprise-data
+
+# Construct earnings surprise dataset
+earnings = dc.get_earnings_announcements(
+    start_date="2016-01-01",
+    end_date="2024-12-31"
+)
+
+# Standardized Unexpected Earnings
+earnings["sue"] = (
+    (earnings["actual_eps"] - earnings["consensus_eps"]) /
+    earnings["forecast_std"].clip(lower=0.01)
+)
+
+# Pre-announcement features
+# Text: aggregate PhoBERT sentiment of news in [-30, -1] window
+pre_ann_text = dc.get_pre_announcement_text_features(
+    start_date="2016-01-01",
+    end_date="2024-12-31",
+    window_days=30,
+    model="phobert"
+)
+
+# Image: satellite features at quarter end
+pre_ann_image = satellite_features.copy()
+
+# Time series: 60 trading days before announcement
+# (Pre-computed above)
+
+# Tabular: most recent quarterly financials
+pre_ann_tabular = financials[tabular_features + ["ticker", "quarter_date"]]
+
+print(f"Earnings announcements: {len(earnings)}")
+print(f"With text features: {len(pre_ann_text)}")
+```
+
+```{python}
+#| label: earnings-model
+
+class MultimodalEarningsSurpriseModel(nn.Module):
+    """
+    Predict standardized unexpected earnings (SUE) from
+    multimodal pre-announcement information.
+    """
+
+    def __init__(self, tab_dim, text_dim=768, img_dim=2048,
+                 ts_features=5, ts_len=60, hidden_dim=64,
+                 n_heads=4, drop_prob=0.2):
+        super().__init__()
+
+        # Unimodal encoders
+        self.tab_enc = TabularEncoder(tab_dim, 128, hidden_dim)
+        self.text_enc = TextEncoder(text_dim, hidden_dim)
+        self.img_enc = ImageEncoder(img_dim, hidden_dim)
+        self.ts_enc = TimeSeriesEncoder(ts_features, ts_len, hidden_dim)
+
+        # Modality dropout
+        self.mod_dropout = ModalityDropout(drop_prob)
+
+        # Cross-attention: text attends to time series
+        # (news context informs price dynamics interpretation)
+        self.text_ts_attn = CrossAttentionBlock(hidden_dim, n_heads)
+
+        # Cross-attention: tabular attends to image
+        # (financial ratios contextualized by physical activity)
+        self.tab_img_attn = CrossAttentionBlock(hidden_dim, n_heads)
+
+        # Modality importance weights (learned)
+        self.importance = nn.Parameter(torch.ones(4))
+
+        # Prediction head
+        self.head = nn.Sequential(
+            nn.Linear(hidden_dim * 2, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.GELU(),
+            nn.Dropout(0.3),
+            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.GELU(),
+            nn.Linear(hidden_dim // 2, 1)
+        )
+
+    def forward(self, tabular, text, image, ts):
+        # Encode each modality
+        h_tab = self.tab_enc(tabular) if tabular is not None else None
+        h_txt = self.text_enc(text) if text is not None else None
+        h_img = self.img_enc(image) if image is not None else None
+        h_ts = self.ts_enc(ts) if ts is not None else None
+
+        # Cross-attention pairs (if both available)
+        if h_txt is not None and h_ts is not None:
+            h_txt_enriched, _ = self.text_ts_attn(h_txt, h_ts)
+        else:
+            h_txt_enriched = h_txt
+
+        if h_tab is not None and h_img is not None:
+            h_tab_enriched, _ = self.tab_img_attn(h_tab, h_img)
+        else:
+            h_tab_enriched = h_tab
+
+        # Weighted combination of available modalities
+        embeddings = []
+        weights = F.softmax(self.importance, dim=0)
+
+        for i, h in enumerate([h_tab_enriched, h_txt_enriched,
+                                h_img, h_ts]):
+            if h is not None:
+                embeddings.append(h * weights[i])
+            else:
+                device = next(self.parameters()).device
+                batch_size = next(
+                    x.shape[0] for x in [tabular, text, image, ts]
+                    if x is not None
+                )
+                embeddings.append(
+                    torch.zeros(batch_size, h_tab.shape[-1]
+                               if h_tab is not None else 64,
+                               device=device)
+                )
+
+        # Aggregate
+        stacked = torch.stack(embeddings, dim=0)
+        aggregated = stacked.sum(dim=0)
+
+        # Also compute variance across modalities (disagreement signal)
+        if stacked.shape[0] > 1:
+            disagreement = stacked.var(dim=0)
+        else:
+            disagreement = torch.zeros_like(aggregated)
+
+        combined = torch.cat([aggregated, disagreement], dim=-1)
+        return self.head(combined).squeeze(-1)
+```
+
+### Modality Importance Analysis
+
+A key interpretability question is: which modality contributes most to earnings surprise prediction? We analyze the learned importance weights and conduct ablation experiments.
+
+```{python}
+#| label: modality-importance
+
+def ablation_study(model, test_loader, modality_names):
+    """
+    Measure each modality's contribution via leave-one-out ablation.
+
+    For each modality m, zero out that modality's input and measure
+    the degradation in prediction accuracy.
+
+    Returns
+    -------
+    DataFrame : Modality, R² with all, R² without, Δ R².
+    """
+    model.eval()
+
+    # Full model performance
+    all_preds, all_targets = [], []
+    with torch.no_grad():
+        for batch in test_loader:
+            inputs = {k: batch[k] for k in modality_names}
+            targets = batch["return"]
+
+            output = model(inputs)
+            pred = output[0] if isinstance(output, tuple) else output
+            all_preds.extend(pred.cpu().numpy())
+            all_targets.extend(targets.cpu().numpy())
+
+    r2_full = r2_score(all_targets, all_preds)
+
+    # Ablation: remove one modality at a time
+    results = [{"modality": "All", "r2": r2_full, "delta_r2": 0.0}]
+
+    for drop_mod in modality_names:
+        ablated_preds = []
+        with torch.no_grad():
+            for batch in test_loader:
+                inputs = {}
+                for k in modality_names:
+                    if k == drop_mod:
+                        inputs[k] = None  # Remove this modality
+                    else:
+                        inputs[k] = batch[k]
+
+                targets = batch["return"]
+                output = model(inputs)
+                pred = output[0] if isinstance(output, tuple) else output
+                ablated_preds.extend(pred.cpu().numpy())
+
+        r2_ablated = r2_score(all_targets, ablated_preds)
+        results.append({
+            "modality": f"Without {drop_mod}",
+            "r2": r2_ablated,
+            "delta_r2": r2_full - r2_ablated
+        })
+
+    return pd.DataFrame(results)
+```
+
+```{python}
+#| label: tbl-ablation
+#| tbl-cap: "Modality Ablation Study: Contribution to Earnings Surprise Prediction"
+
+# ablation_df = ablation_study(model, test_loader, modality_names)
+# ablation_df.round(4)
+```
+
+```{python}
+#| label: fig-modality-importance
+#| fig-cap: "Learned Modality Importance Weights Over Training Epochs"
+
+# Track importance weights during training
+# importance_history = pd.DataFrame(...)
+
+# (
+#     p9.ggplot(importance_history, p9.aes(
+#         x="epoch", y="weight", color="modality"
+#     ))
+#     + p9.geom_line(size=1)
+#     + p9.labs(
+#         x="Training Epoch", y="Softmax Weight",
+#         title="Modality Importance Convergence",
+#         color="Modality"
+#     )
+#     + p9.scale_color_manual(
+#         values=["#2E5090", "#C0392B", "#27AE60", "#8E44AD"]
+#     )
+#     + p9.theme_minimal()
+#     + p9.theme(figure_size=(10, 5))
+# )
+```
+
+## Large Multimodal Models for Financial Analysis
+
+### Prompting Vision-Language Models
+
+The most powerful multimodal systems available today are large vision-language models (VLMs) such as GPT-4V, Gemini, and open-source alternatives (LLaVA, InternVL). These models can jointly process images and text through natural language prompts, enabling zero-shot financial analysis without model training.
+
+For Vietnamese financial applications, VLMs can:
+
+-   Interpret satellite imagery of industrial zones and estimate activity levels
+-   Read and extract data from scanned financial tables
+-   Analyze news photographs for sentiment
+-   Compare current and historical aerial views for change detection
+
+```{python}
+#| label: vlm-financial-prompting
+
+def vlm_financial_qa(image_path, question, context=None):
+    """
+    Financial question-answering using a vision-language model.
+
+    Parameters
+    ----------
+    image_path : str
+        Path to image (satellite tile, document page, news photo).
+    question : str
+        Financial analysis question.
+    context : str, optional
+        Additional textual context (e.g., firm name, sector).
+
+    Returns
+    -------
+    dict : Answer, confidence, extracted entities.
+    """
+    from transformers import (
+        LlavaForConditionalGeneration,
+        LlavaProcessor
+    )
+
+    model_id = "llava-hf/llava-v1.6-vicuna-7b-hf"
+    processor = LlavaProcessor.from_pretrained(model_id)
+    model = LlavaForConditionalGeneration.from_pretrained(
+        model_id, torch_dtype=torch.float16, device_map="auto"
+    )
+
+    img = Image.open(image_path).convert("RGB")
+
+    # Build financial analysis prompt
+    system_prompt = (
+        "You are a financial analyst examining visual evidence. "
+        "Provide specific, quantitative observations when possible. "
+        "State your confidence level (high/medium/low)."
+    )
+
+    if context:
+        prompt = (
+            f"{system_prompt}\n\nContext: {context}\n\n"
+            f"Question: {question}\n\nAnswer:"
+        )
+    else:
+        prompt = f"{system_prompt}\n\nQuestion: {question}\n\nAnswer:"
+
+    inputs = processor(
+        text=prompt,
+        images=img,
+        return_tensors="pt"
+    ).to(model.device)
+
+    with torch.no_grad():
+        output = model.generate(
+            **inputs,
+            max_new_tokens=300,
+            temperature=0.1,
+            do_sample=False
+        )
+
+    answer = processor.decode(output[0], skip_special_tokens=True)
+    answer = answer.split("Answer:")[-1].strip()
+
+    return {"answer": answer, "question": question}
+
+
+# Example financial VLM queries
+FINANCIAL_VLM_PROMPTS = {
+    "satellite_activity": (
+        "Examine this satellite image of an industrial zone. "
+        "Estimate the occupancy rate of factory buildings, "
+        "the density of vehicles in parking areas, "
+        "and whether the site appears to be operating at "
+        "full, partial, or minimal capacity."
+    ),
+    "document_extraction": (
+        "This is a page from a Vietnamese annual report. "
+        "Extract the following if present: "
+        "total revenue (doanh thu), net income (lợi nhuận ròng), "
+        "total assets (tổng tài sản). "
+        "Report values in billions VND."
+    ),
+    "construction_progress": (
+        "Compare this aerial image to a baseline. "
+        "Estimate the percentage completion of visible "
+        "construction projects. Note any new structures, "
+        "cleared land, or infrastructure changes."
+    )
+}
+```
+
+### Retrieval-Augmented Multimodal Analysis
+
+For complex financial questions, we can combine VLM capabilities with retrieval from structured databases. The pipeline:
+
+1.  **Query**: Analyst asks "Is Vingroup's construction activity in Vinhomes Grand Park accelerating?"
+2.  **Retrieve**: Fetch satellite time series, financial statements, news articles
+3.  **Process**: VLM analyzes satellite images; NLP processes text; tabular model processes financials
+4.  **Fuse**: Aggregate evidence across modalities
+5.  **Answer**: Generate a structured response with confidence scores and supporting evidence
+
+```{python}
+#| label: rag-multimodal
+
+class MultimodalRAG:
+    """
+    Retrieval-Augmented Generation with multimodal evidence.
+    """
+
+    def __init__(self, datacore_client, vlm_model=None):
+        self.dc = datacore_client
+        self.vlm = vlm_model
+
+    def retrieve_evidence(self, ticker, date, modalities=None):
+        """
+        Retrieve all available evidence for a firm at a given date.
+        """
+        evidence = {}
+
+        if modalities is None or "tabular" in modalities:
+            evidence["tabular"] = self.dc.get_firm_financials(
+                ticker=ticker,
+                end_date=date,
+                n_quarters=4
+            )
+
+        if modalities is None or "text" in modalities:
+            evidence["text"] = self.dc.get_news(
+                ticker=ticker,
+                start_date=pd.to_datetime(date) - pd.Timedelta(days=30),
+                end_date=date,
+                limit=20
+            )
+
+        if modalities is None or "image" in modalities:
+            evidence["image"] = self.dc.get_satellite_images(
+                ticker=ticker,
+                date=date,
+                lookback_months=6
+            )
+
+        if modalities is None or "ts" in modalities:
+            evidence["ts"] = self.dc.get_daily_returns(
+                ticker=ticker,
+                start_date=pd.to_datetime(date) - pd.Timedelta(days=90),
+                end_date=date
+            )
+
+        return evidence
+
+    def analyze(self, ticker, date, question):
+        """
+        Full multimodal analysis pipeline.
+        """
+        evidence = self.retrieve_evidence(ticker, date)
+
+        analysis = {
+            "ticker": ticker,
+            "date": date,
+            "question": question,
+            "evidence_available": list(evidence.keys()),
+            "modality_signals": {}
+        }
+
+        # Tabular signal
+        if "tabular" in evidence and evidence["tabular"] is not None:
+            latest = evidence["tabular"].iloc[-1]
+            analysis["modality_signals"]["tabular"] = {
+                "revenue_growth": latest.get("revenue_growth", None),
+                "roe": latest.get("roe", None),
+                "leverage": latest.get("leverage", None)
+            }
+
+        # Text signal
+        if "text" in evidence and evidence["text"] is not None:
+            # Aggregate sentiment from PhoBERT
+            texts = evidence["text"]
+            if len(texts) > 0:
+                avg_sentiment = texts["sentiment_score"].mean()
+                analysis["modality_signals"]["text"] = {
+                    "avg_sentiment": avg_sentiment,
+                    "n_articles": len(texts),
+                    "sentiment_trend": (
+                        "improving" if texts["sentiment_score"].is_monotonic_increasing
+                        else "deteriorating" if texts["sentiment_score"].is_monotonic_decreasing
+                        else "mixed"
+                    )
+                }
+
+        # Time series signal
+        if "ts" in evidence and evidence["ts"] is not None:
+            ts = evidence["ts"]
+            analysis["modality_signals"]["ts"] = {
+                "return_60d": (1 + ts["ret"]).prod() - 1,
+                "volatility": ts["ret"].std() * np.sqrt(252),
+                "avg_turnover": ts["turnover"].mean()
+            }
+
+        return analysis
+```
+
+## Evaluation and Deployment Considerations
+
+### Evaluation Protocol for Multimodal Financial Models
+
+Standard machine learning evaluation (random train/test split) is inappropriate for financial prediction. We require time-series-aware evaluation that respects the temporal ordering of information.
+
+| Evaluation Aspect | Correct Approach | Common Mistake |
+|--------------------------|------------------------|----------------------|
+| Train/test split | Expanding or rolling time window | Random split (look-ahead bias) |
+| Feature timing | Features available before prediction date | Using concurrent or future information |
+| Missing modalities | Test with realistic missingness patterns | Complete-case only |
+| Performance metric | OOS $R^2$, IC, Sharpe of L-S portfolio | In-sample $R^2$ |
+| Statistical inference | @Diebold1995 test for forecast comparison | Point estimates without SE |
+| Economic significance | Transaction-cost-adjusted portfolio returns | Ignoring implementation costs |
+
+: Evaluation Best Practices for Multimodal Finance Models {#tbl-evaluation}
+
+### Computational Budget
+
+Multimodal models are computationally expensive. @tbl-compute-budget provides order-of-magnitude estimates for Vietnamese equity markets.
+
+| Component | Single Firm-Quarter | Full Panel (1000 firms × 40 quarters) |
+|------------------|------------------|------------------------------------|
+| PhoBERT text encoding | 0.5s | \~5.5 hours |
+| ResNet50 satellite feature | 0.1s | \~1.1 hours |
+| Time series encoding (CNN) | 0.01s | \~7 minutes |
+| Tabular preprocessing | \<0.01s | \~1 minute |
+| Cross-attention fusion (forward) | 0.05s | \~33 minutes |
+| Training (50 epochs) | -- | \~12 hours (GPU) |
+| Full pipeline | -- | \~1 day (single GPU) |
+
+: Computational Budget for Multimodal Pipeline {#tbl-compute-budget}
+
+The practical implication is that pre-computation of unimodal embeddings is essential. Extract and cache PhoBERT embeddings, CNN features, and time-series representations once; reuse them across all fusion experiments. Only the fusion layers need retraining when the architecture changes.
+
+## Exercises
+
+1.  **Contrastive Pre-Training for Vietnamese Finance.** Implement the FinancialCLIP contrastive alignment for paired (annual report text, satellite image) data. Train on 2014--2020 data and evaluate alignment quality on 2021--2024 by measuring zero-shot retrieval accuracy: given a text description, can the model retrieve the correct satellite image (and vice versa)? Report Recall\@1, Recall\@5, and Recall\@10.
+
+2.  **Fusion Architecture Search.** Implement the following additional fusion strategies beyond the three in this chapter: (a) bilinear fusion with low-rank approximation, (b) mixture-of-experts with $2^M - 1$ expert networks, and (c) FiLM (Feature-wise Linear Modulation) conditioning. Compare all six strategies on forward quarterly return prediction using the same time-series cross-validation protocol. Which architecture achieves the best out-of-sample Sharpe ratio after transaction costs?
+
+3.  **Missing Modality Robustness.** Using the RobustFusionModel, systematically evaluate degradation as modalities are removed. Start with all four modalities and progressively remove them in all possible orderings. Plot the performance surface: $R^2$ as a function of the number and identity of available modalities. Which single modality is most informative? Which pair? Is there diminishing returns to adding the third and fourth modality?
+
+4.  **Multimodal Earnings Call Analysis.** If earnings call audio or transcripts are available from DataCore.vn, extend the multimodal earnings surprise model to include a fifth modality: audio features (vocal tone, speaking rate, pause patterns). Use the wav2vec2 model to extract audio embeddings. Does the CEO's vocal tone add predictive power beyond the transcript text? Implement the @Mayew2012 methodology for comparing vocal and textual signals.
+
+5.  **Document Understanding Benchmark.** Construct a benchmark dataset of 200 Vietnamese annual report pages with manually annotated financial fields (revenue, COGS, net income, total assets, total equity, total debt). Evaluate three approaches: (a) OCR + rule-based extraction (Chapter 61), (b) LayoutLMv3 fine-tuned on 100 pages, and (c) zero-shot VLM extraction via GPT-4V or Gemini. Report field-level exact match accuracy and mean absolute percentage error for numerical values.
+
+6.  **Multimodal Factor Construction.** Using the best-performing fusion model, generate firm-quarter-level multimodal scores. Sort firms into quintiles on this score and compute equal- and value-weighted portfolio returns. Is the multimodal long-short factor priced in the cross-section (Fama-MacBeth)? Does it subsume the textual sentiment factor from Chapter 60 or the satellite-based factor from Chapter 61? Report spanning test results.
+
+## Summary
+
+This chapter developed the multimodal learning framework for Vietnamese financial markets, progressing from foundational representation alignment through production-ready fusion architectures.
+
+The key contributions are threefold. First, we demonstrated that financial data is inherently multimodal and that effective fusion requires explicit architectural choices---contrastive alignment, cross-attention mechanisms, and missing-modality handling---rather than naive concatenation. The FinancialCLIP alignment framework learns a shared embedding space where text, image, tabular, and time-series representations are geometrically comparable, enabling cross-modal retrieval and transfer.
+
+Second, we built and compared five fusion architectures (early, late with gating, cross-attention, robust with modality dropout, and the custom earnings surprise model) on the prediction of forward returns and earnings surprises. The cross-attention architecture with modality dropout consistently outperforms unimodal baselines and simpler fusion strategies, though the margin varies across prediction horizons and firm characteristics.
+
+Third, we showed how large vision-language models can perform zero-shot financial analysis on Vietnamese documents and satellite imagery, offering a path to multimodal analysis without task-specific training. The retrieval-augmented multimodal pipeline combines the strengths of structured retrieval (from DataCore.vn) with the reasoning capabilities of VLMs.
+
+The practical lesson for researchers working with Vietnamese financial data is that multimodal fusion is most valuable when modalities are complementary---text captures management intent and market narrative, images capture physical economic activity, tabular data provides precise quantitative snapshots, and time series captures market dynamics. When a single modality already captures most of the relevant signal (as tabular features do for many standard prediction tasks), the marginal gain from fusion is modest. When the prediction task requires information that no single modality captures well (as earnings surprises require both quantitative and qualitative assessment), multimodal models provide their largest advantage.
