@@ -1,0 +1,1788 @@
+# Corporate Finance Estimators and Identification
+
+Corporate finance is the study of how firms make investment, financing, and payout decisions under real-world frictions (e.g., taxes, asymmetric information, agency conflicts, transaction costs, and financial constraints). Unlike asset pricing, where the primary objects of interest are expected returns and risk premia estimated from market data, corporate finance estimators are tied to firm-level accounting and governance data, and their economic interpretation depends critically on the institutional environment in which the firm operates.
+
+This chapter develops the core econometric toolkit for empirical corporate finance and applies it to Vietnamese listed firms. The estimators we cover (including investment-$Q$ regressions, cash flow sensitivity tests, capital structure determinants, payout smoothing models, and agency cost proxies) form the backbone of the modern corporate finance literature. Each estimator embeds specific theoretical assumptions, and each has been the subject of substantial methodological debate. We pay careful attention to identification challenges: the conditions under which a regression coefficient admits a causal or structural interpretation versus merely a descriptive association.
+
+Vietnamese firms present distinctive features that interact with these estimators in economically meaningful ways. State ownership remains pervasive and creates agency problems qualitatively different from the dispersed-ownership setting of the Anglo-American literature. Concentrated family ownership, pyramidal structures, and cross-holdings generate tunneling incentives documented by @johnson2000tunneling and @claessens2002disentangling. The banking system is dominated by state-owned commercial banks whose lending decisions may reflect political rather than purely economic criteria, complicating the interpretation of financing constraint measures. And dividend policy is shaped by regulatory requirements, including minimum payout ratios for state-owned enterprises, that have no parallel in more developed markets.
+
+```{python}
+#| label: setup
+#| message: false
+
+import pandas as pd
+import numpy as np
+from scipy import stats
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from linearmodels.panel import PanelOLS, PooledOLS
+import plotnine as p9
+from mizani.formatters import percent_format, comma_format
+import warnings
+warnings.filterwarnings("ignore")
+
+
+```
+
+```{python}
+#| label: load-data
+#| eval: false
+
+# DataCore.vn API
+from datacore import DataCore
+dc = DataCore()
+
+# Load annual firm-level financial data
+firm_annual = dc.get_firm_financials(
+    start_date="2008-01-01",
+    end_date="2024-12-31",
+    frequency="annual"
+)
+
+# Load ownership data
+ownership = dc.get_ownership_data(
+    start_date="2008-01-01",
+    end_date="2024-12-31"
+)
+
+# Load stock returns (monthly)
+monthly_returns = dc.get_monthly_returns(
+    start_date="2008-01-01",
+    end_date="2024-12-31"
+)
+
+# Load market and factor returns
+factors = dc.get_factor_returns(
+    start_date="2008-01-01",
+    end_date="2024-12-31"
+)
+
+print(f"Firm-year observations: {len(firm_annual)}")
+print(f"Unique firms: {firm_annual['ticker'].nunique()}")
+print(f"Year range: {firm_annual['year'].min()}–{firm_annual['year'].max()}")
+```
+
+## Investment-$Q$ Regressions
+
+### Tobin's $Q$: Intuition and Theory
+
+The investment-$Q$ framework is the canonical structural model of corporate investment. The core insight, formalized by @hayashi1982tobin, is elegant: under perfect capital markets and constant returns to scale in the production and adjustment cost technologies, a firm's investment rate should be a sufficient statistic of a single observable (i.e., the ratio of the market value of installed capital to its replacement cost).
+
+Let $V_t$ denote the market value of the firm's assets at time $t$ and $K_t$ the replacement cost of its capital stock. Tobin's $Q$ is:
+
+$$
+Q_t = \frac{V_t}{K_t}
+$$ {#eq-tobins-q}
+
+When $Q > 1$, the market values a unit of installed capital above its replacement cost, signaling that the firm should invest. When $Q < 1$, the firm should disinvest. In the frictionless @hayashi1982tobin environment, the marginal $Q$ (the shadow value of an additional unit of capital) equals the average $Q$ (the ratio of total market value to total replacement cost), and the optimal investment policy is:
+
+$$
+\frac{I_{i,t}}{K_{i,t-1}} = \frac{1}{\alpha}\left(Q_{i,t} - 1\right)
+$$ {#eq-investment-q-theory}
+
+where $\alpha$ governs the convexity of adjustment costs. The empirical counterpart is the regression:
+
+$$
+\frac{I_{i,t}}{K_{i,t-1}} = \beta_0 + \beta_1 Q_{i,t} + \varepsilon_{i,t}
+$$ {#eq-investment-q-regression}
+
+Under the structural interpretation, $\beta_1 = 1/\alpha > 0$ and $Q$ is the sole explanatory variable. Any additional variable that enters significantly implies a violation of the underlying assumptions (e.g., financial frictions, agency problems, measurement error in $Q$, or departures from constant returns to scale).
+
+### Measurement Issues
+
+The theoretical object is marginal $Q$ (i.e., the value of the next dollar of investment) which is unobservable. The empirical proxy is average $Q$, typically constructed as:
+
+$$
+Q_{i,t}^{\text{avg}} = \frac{\text{Market Value of Equity} + \text{Book Value of Debt}}{\text{Book Value of Total Assets}}
+$$ {#eq-average-q}
+
+This proxy introduces several problems that are well-documented in the literature.
+
+**Problem 1: Marginal** $\neq$ Average. The equality $q^{\text{marginal}} = Q^{\text{average}}$ requires constant returns to scale in both production and adjustment costs [@hayashi1982tobin]. With decreasing returns to scale (empirically relevant for most firms), average $Q$ overstates marginal $Q$ for high-$Q$ firms and understates it for low-$Q$ firms. @abel1994unified derive the wedge analytically.
+
+**Problem 2: Measurement error in numerator.** The market value of equity reflects market sentiment, bubbles, and noise-trader demand in addition to fundamentals. @bond2012real provide a comprehensive treatment. In Vietnamese markets, where retail investors dominate and price limits constrain daily adjustment, market prices may deviate persistently from fundamental value.
+
+**Problem 3: Measurement error in denominator.** Book values of assets reflect historical cost, depreciation schedules, and accounting conventions that may poorly approximate replacement cost. This is especially problematic in Vietnam, where revaluation of fixed assets is infrequent and inflation has historically been volatile, creating wedges between historical and replacement cost.
+
+**Problem 4: Errors-in-variables bias.** Because the empirical $Q$ is a noisy proxy for the true $Q$, OLS estimates of $\beta_1$ in @eq-investment-q-regression suffer from classical attenuation bias (i.e., $hat{\beta}_1$ is biased toward zero). @erickson2012treating develop a higher-order cumulant estimator that corrects for this bias without requiring external instruments.
+
+```{python}
+#| label: construct-q
+#| eval: false
+
+# Construct Tobin's Q and investment variables
+panel = firm_annual.copy()
+
+# Tobin's Q: (Market cap + Book debt) / Total assets
+panel["tobins_q"] = (
+    (panel["market_cap"] + panel["total_debt"]) /
+    panel["total_assets"]
+)
+
+# Investment rate: Capital expenditure / Lagged total assets
+panel = panel.sort_values(["ticker", "year"])
+panel["lag_assets"] = panel.groupby("ticker")["total_assets"].shift(1)
+panel["lag_ppe"] = panel.groupby("ticker")["ppe_net"].shift(1)
+
+panel["inv_rate"] = panel["capex"] / panel["lag_assets"]
+panel["inv_rate_ppe"] = panel["capex"] / panel["lag_ppe"]
+
+# Cash flow / Assets
+panel["cf_assets"] = panel["operating_cf"] / panel["lag_assets"]
+
+# Sales growth
+panel["lag_revenue"] = panel.groupby("ticker")["revenue"].shift(1)
+panel["sales_growth"] = (
+    (panel["revenue"] - panel["lag_revenue"]) / panel["lag_revenue"]
+)
+
+# Winsorize at 1st and 99th percentiles
+def winsorize(s, lower=0.01, upper=0.99):
+    return s.clip(s.quantile(lower), s.quantile(upper))
+
+for col in ["tobins_q", "inv_rate", "cf_assets", "sales_growth"]:
+    panel[col] = winsorize(panel[col])
+
+panel_clean = panel.dropna(
+    subset=["tobins_q", "inv_rate", "cf_assets"]
+).copy()
+
+print(f"Clean panel: {len(panel_clean)} firm-years, "
+      f"{panel_clean['ticker'].nunique()} firms")
+```
+
+```{python}
+#| label: tbl-investment-summary
+#| eval: false
+#| tbl-cap: "Summary Statistics: Investment and Q Variables"
+
+summary_vars = ["inv_rate", "tobins_q", "cf_assets", "sales_growth"]
+summary = panel_clean[summary_vars].describe(
+    percentiles=[0.05, 0.25, 0.5, 0.75, 0.95]
+).T.round(4)
+
+summary.columns = ["N", "Mean", "Std", "Min", "5%", "25%",
+                    "Median", "75%", "95%", "Max"]
+summary
+```
+
+```{python}
+#| label: baseline-q-regression
+#| eval: false
+
+# Baseline investment-Q regression with firm and year fixed effects
+panel_clean = panel_clean.set_index(["ticker", "year"])
+
+# Model 1: Q only
+model1 = PanelOLS(
+    panel_clean["inv_rate"],
+    panel_clean[["tobins_q"]],
+    entity_effects=True,
+    time_effects=True,
+    check_rank=False
+).fit(cov_type="clustered", cluster_entity=True)
+
+# Model 2: Q + Cash Flow
+model2 = PanelOLS(
+    panel_clean["inv_rate"],
+    panel_clean[["tobins_q", "cf_assets"]],
+    entity_effects=True,
+    time_effects=True,
+    check_rank=False
+).fit(cov_type="clustered", cluster_entity=True)
+
+# Model 3: Q + Cash Flow + Sales Growth
+model3 = PanelOLS(
+    panel_clean["inv_rate"],
+    panel_clean[["tobins_q", "cf_assets", "sales_growth"]],
+    entity_effects=True,
+    time_effects=True,
+    check_rank=False
+).fit(cov_type="clustered", cluster_entity=True)
+
+panel_clean = panel_clean.reset_index()
+```
+
+```{python}
+#| label: tbl-q-regression
+#| eval: false
+#| tbl-cap: "Investment-Q Regressions with Firm and Year Fixed Effects"
+
+results_table = pd.DataFrame({
+    "Q Only": {
+        "Tobin's Q": f"{model1.params['tobins_q']:.4f}",
+        "": f"({model1.std_errors['tobins_q']:.4f})",
+        "Cash Flow/Assets": "",
+        " ": "",
+        "Sales Growth": "",
+        "  ": "",
+        "R² (within)": f"{model1.rsquared_within:.4f}",
+        "N": f"{int(model1.nobs)}"
+    },
+    "Q + CF": {
+        "Tobin's Q": f"{model2.params['tobins_q']:.4f}",
+        "": f"({model2.std_errors['tobins_q']:.4f})",
+        "Cash Flow/Assets": f"{model2.params['cf_assets']:.4f}",
+        " ": f"({model2.std_errors['cf_assets']:.4f})",
+        "Sales Growth": "",
+        "  ": "",
+        "R² (within)": f"{model2.rsquared_within:.4f}",
+        "N": f"{int(model2.nobs)}"
+    },
+    "Q + CF + SG": {
+        "Tobin's Q": f"{model3.params['tobins_q']:.4f}",
+        "": f"({model3.std_errors['tobins_q']:.4f})",
+        "Cash Flow/Assets": f"{model3.params['cf_assets']:.4f}",
+        " ": f"({model3.std_errors['cf_assets']:.4f})",
+        "Sales Growth": f"{model3.params['sales_growth']:.4f}",
+        "  ": f"({model3.std_errors['sales_growth']:.4f})",
+        "R² (within)": f"{model3.rsquared_within:.4f}",
+        "N": f"{int(model3.nobs)}"
+    }
+})
+
+results_table
+```
+
+### Interpretation Under Market Frictions
+
+The coefficient on $Q$ in @tbl-q-regression admits multiple interpretations depending on the maintained assumptions:
+
+**Structural interpretation.** If the Hayashi conditions hold, $\hat{\beta}_1$ estimates the inverse of the adjustment cost parameter: $\hat{\beta}_1 = 1/\hat{\alpha}$. A larger coefficient implies lower adjustment costs. However, measurement error in $Q$ biases $\hat{\beta}_1$ downward, so the raw OLS estimate provides a lower bound on $1/\alpha$.
+
+**Reduced-form interpretation.** Without the Hayashi conditions, $\hat{\beta}_1$ captures the association between market valuation and investment intensity. This association reflects a mixture of genuine investment opportunities (the $Q$-theory channel), market mispricing that managers exploit (the market timing channel of @baker2003does), and reverse causality (investment announcements that move market values).
+
+**The cash flow coefficient puzzle.** The significance of $\hat{\beta}_2$ on cash flow has been the subject of a 35-year debate. @fazzari1987financing interpret it as evidence that firms face financing constraints: controlling for investment opportunities ($Q$), cash flow should be irrelevant in a frictionless world, so its significance implies that internal funds relax binding constraints. @kaplan1997investment counter that cash flow proxies for investment opportunities not captured by the noisy $Q$ measure, making the cash flow coefficient an artifact of measurement error rather than evidence of constraints. @erickson2012treating show that correcting for measurement error in $Q$ substantially reduces (but does not eliminate) the cash flow coefficient, supporting a middle ground.
+
+### Limitations in Emerging Markets
+
+The investment-$Q$ framework faces amplified challenges in Vietnamese markets.
+
+**Thin trading and price limits.** Market prices adjust slowly to information, so $Q$ measured at fiscal year-end may not reflect the firm's current investment opportunity set. Price limits of $\pm 7\%$ (HOSE) and $\pm 10\%$ (HNX) mechanically compress the numerator of $Q$, attenuating the investment-$Q$ relationship.
+
+**State ownership.** For state-owned enterprises (SOEs), investment decisions may be driven by policy directives rather than $Q$-theoretic optimality. Including SOEs in the regression without interactions confounds the structural relationship.
+
+**Related-party transactions.** Tunneling through related-party transactions means that measured investment may include capital expenditures that benefit controlling shareholders rather than maximizing firm value. The investment-$Q$ coefficient in tunneling firms reflects the relationship between market valuation and expropriation, not efficient capital allocation.
+
+```{python}
+#| label: fig-investment-q-scatter
+#| eval: false
+#| fig-cap: "Investment Rate vs. Tobin's Q: Binned Scatter Plot"
+
+# Create Q-decile bins for clean visualization
+plot_data = panel_clean.copy()
+plot_data["q_bin"] = pd.qcut(
+    plot_data["tobins_q"], q=20, duplicates="drop"
+)
+
+binned = (
+    plot_data.groupby("q_bin", observed=True)
+    .agg(
+        mean_q=("tobins_q", "mean"),
+        mean_inv=("inv_rate", "mean"),
+        se_inv=("inv_rate", lambda x: x.std() / np.sqrt(len(x)))
+    )
+    .reset_index()
+)
+
+(
+    p9.ggplot(binned, p9.aes(x="mean_q", y="mean_inv"))
+    + p9.geom_pointrange(
+        p9.aes(ymin="mean_inv - 1.96*se_inv",
+               ymax="mean_inv + 1.96*se_inv"),
+        color="#2E5090", size=0.5
+    )
+    + p9.geom_smooth(method="lm", color="#C0392B", se=False, size=0.8)
+    + p9.labs(
+        x="Tobin's Q (Vingtile Mean)",
+        y="Investment Rate (I/A)",
+        title="Investment-Q Relationship: Binned Scatter"
+    )
+    + p9.theme_minimal()
+    + p9.theme(figure_size=(10, 6))
+)
+```
+
+```{python}
+#| label: q-regression-soe-interaction
+#| eval: false
+
+# Merge ownership data
+panel_with_own = panel_clean.merge(
+    ownership[["ticker", "year", "state_ownership_pct",
+               "foreign_ownership_pct", "insider_ownership_pct"]],
+    on=["ticker", "year"],
+    how="left"
+)
+
+panel_with_own["soe_dummy"] = (
+    panel_with_own["state_ownership_pct"] > 50
+).astype(int)
+
+panel_with_own["q_x_soe"] = (
+    panel_with_own["tobins_q"] * panel_with_own["soe_dummy"]
+)
+panel_with_own["cf_x_soe"] = (
+    panel_with_own["cf_assets"] * panel_with_own["soe_dummy"]
+)
+
+# Regression with SOE interactions
+panel_soe = panel_with_own.dropna(
+    subset=["inv_rate", "tobins_q", "cf_assets", "soe_dummy"]
+).set_index(["ticker", "year"])
+
+model_soe = PanelOLS(
+    panel_soe["inv_rate"],
+    panel_soe[["tobins_q", "cf_assets", "soe_dummy",
+               "q_x_soe", "cf_x_soe"]],
+    entity_effects=True,
+    time_effects=True,
+    check_rank=False
+).fit(cov_type="clustered", cluster_entity=True)
+
+panel_soe = panel_soe.reset_index()
+```
+
+```{python}
+#| label: tbl-soe-interaction
+#| eval: false
+#| tbl-cap: "Investment-Q Regression with State Ownership Interactions"
+
+soe_results = pd.DataFrame({
+    "Coefficient": model_soe.params.round(4),
+    "Std Error": model_soe.std_errors.round(4),
+    "t-stat": model_soe.tstats.round(3),
+    "p-value": model_soe.pvalues.round(4)
+})
+
+soe_results
+```
+
+A negative coefficient on $Q \times \text{SOE}$ indicates that the investment-$Q$ sensitivity is attenuated for state-owned enterprises, consistent with SOE investment being driven by non-market factors. The interaction of cash flow with SOE status reveals whether state firms face tighter or looser financing constraints. This is a question with direct policy implications for SOE reform.
+
+### The Erickson-Whited Measurement Error Correction
+
+@erickson2012treating develop a GMM estimator that uses higher-order moments of the data to identify the investment-$Q$ slope in the presence of measurement error, without requiring external instruments. The key insight is that if the measurement error $\eta$ in $Q$ is independent of the true $Q^*$ and the structural error $\varepsilon$, then the third-order cumulants identify the signal-to-noise ratio.
+
+The model is:
+
+$$
+\frac{I_{i,t}}{K_{i,t-1}} = \beta_0 + \beta_1 Q_{i,t}^* + \gamma X_{i,t} + \varepsilon_{i,t}, \qquad Q_{i,t} = Q_{i,t}^* + \eta_{i,t}
+$$ {#eq-erickson-whited}
+
+where $Q_{i,t}^*$ is unobserved true $Q$ and $\eta_{i,t}$ is measurement error. The OLS estimator $\hat{\beta}_1^{\text{OLS}}$ converges to $\beta_1 \cdot \lambda$ where $\lambda = \text{Var}(Q^*) / (\text{Var}(Q^*) + \text{Var}(\eta)) < 1$ is the signal-to-noise ratio. The Erickson-Whited estimator recovers $\beta_1$ and $\lambda$ simultaneously.
+
+```{python}
+#| label: erickson-whited
+#| eval: false
+
+def erickson_whited_gmm(y, Q_obs, X=None, order=3):
+    """
+    Simplified Erickson-Whited (2012) measurement error correction
+    using third-order cumulants.
+
+    Parameters
+    ----------
+    y : array
+        Dependent variable (investment rate).
+    Q_obs : array
+        Observed (mismeasured) Q.
+    X : array or None
+        Additional controls (partialled out first).
+    order : int
+        Cumulant order for identification (3 or 5).
+
+    Returns
+    -------
+    dict : Corrected beta, signal-to-noise ratio, OLS beta.
+    """
+    if X is not None:
+        # Partial out controls via OLS
+        X_aug = sm.add_constant(X)
+        y = y - X_aug @ np.linalg.lstsq(X_aug, y, rcond=None)[0]
+        Q_obs = Q_obs - X_aug @ np.linalg.lstsq(X_aug, Q_obs, rcond=None)[0]
+
+    # Demean
+    y_dm = y - y.mean()
+    q_dm = Q_obs - Q_obs.mean()
+    n = len(y)
+
+    # Second moments
+    m_yq = np.mean(y_dm * q_dm)
+    m_qq = np.mean(q_dm**2)
+
+    # OLS beta
+    beta_ols = m_yq / m_qq
+
+    # Third-order cumulants for identification
+    k3_q = np.mean(q_dm**3)
+    k2y_q = np.mean(y_dm * q_dm**2)
+
+    if abs(k3_q) < 1e-10:
+        return {
+            "beta_corrected": np.nan,
+            "lambda_snr": np.nan,
+            "beta_ols": beta_ols,
+            "note": "Insufficient skewness for identification"
+        }
+
+    # Corrected beta: beta = kappa_{y,q,q} / kappa_{q,q,q}
+    beta_ew = k2y_q / k3_q
+
+    # Signal-to-noise ratio
+    # lambda = kappa_{q,q,q}^2 / (kappa_{q,q} * kappa_{q,q,q,q,q})
+    # Simplified: lambda = beta_ols / beta_ew
+    lambda_snr = beta_ols / beta_ew if abs(beta_ew) > 1e-10 else np.nan
+
+    return {
+        "beta_corrected": beta_ew,
+        "lambda_snr": lambda_snr,
+        "beta_ols": beta_ols,
+        "attenuation_pct": round((1 - lambda_snr) * 100, 1) if not np.isnan(lambda_snr) else np.nan
+    }
+
+# Apply to Vietnamese data
+ew_data = panel_clean.dropna(subset=["inv_rate", "tobins_q", "cf_assets"])
+
+ew_result = erickson_whited_gmm(
+    y=ew_data["inv_rate"].values,
+    Q_obs=ew_data["tobins_q"].values,
+    X=ew_data["cf_assets"].values.reshape(-1, 1)
+)
+
+print("Erickson-Whited Measurement Error Correction:")
+for k, v in ew_result.items():
+    if isinstance(v, float):
+        print(f"  {k}: {v:.4f}")
+    else:
+        print(f"  {k}: {v}")
+```
+
+## Cash Flow Sensitivity of Investment
+
+### The Financing Constraints Hypothesis
+
+The cash flow sensitivity of investment (CFSI) literature tests whether firms' investment decisions are constrained by the availability of internal funds. In a Modigliani-Miller world, internal and external funds are perfect substitutes, so cash flow should be irrelevant for investment after controlling for investment opportunities. The CFSI approach, pioneered by @fazzari1987financing, classifies firms as financially constrained or unconstrained using observable characteristics and tests whether constrained firms exhibit higher sensitivity of investment to cash flow.
+
+The augmented investment regression is:
+
+$$
+\frac{I_{i,t}}{K_{i,t-1}} = \beta_0 + \beta_1 Q_{i,t} + \beta_2 \frac{CF_{i,t}}{K_{i,t-1}} + \varepsilon_{i,t}
+$$ {#eq-cfsi-base}
+
+The CFSI hypothesis predicts $\beta_2^{\text{constrained}} > \beta_2^{\text{unconstrained}} > 0$: constrained firms rely more heavily on internal cash flow to fund investment because external finance is costly or unavailable.
+
+### The FHP-KZ Debate
+
+@fazzari1987financing (FHP) classify firms by dividend payout ratios and find that low-payout firms (presumed constrained) exhibit significantly higher cash flow sensitivity. @kaplan1997investment (KZ) challenge this interpretation on two grounds:
+
+**Critique 1:** $Q$ measurement error. If $Q$ is a noisy proxy for true investment opportunities, and cash flow is correlated with the measurement error (because both respond to demand shocks), then the cash flow coefficient captures omitted investment opportunities, not financing constraints.
+
+**Critique 2: Monotonicity failure.** KZ show that the firms FHP classify as "most constrained" (low-payout firms) are often rapidly growing firms that choose to retain earnings for investment, not firms that are denied external financing. Using qualitative information from annual reports, KZ reclassify firms and find that the CFSI ranking reverses: firms judged to be truly constrained by their own disclosures exhibit lower CFSI than unconstrained firms.
+
+The resolution, as argued by @farre2016measures, is that no single proxy reliably identifies financially constrained firms. Each proxy (size, age, payout ratio, bond rating, KZ index, WW index, SA index) captures a different dimension of the financing environment, and the CFSI test is not a clean test of any single theory.
+
+### Constraint Indices
+
+We implement the three most widely used composite constraint measures.
+
+**KZ Index** [@kaplan1997investment; @lamont2001financial]:
+
+$$
+\text{KZ}_{i,t} = -1.002 \cdot \frac{CF_{i,t}}{K_{i,t-1}} + 0.283 \cdot Q_{i,t} + 3.139 \cdot \frac{D_{i,t}}{A_{i,t}} - 39.368 \cdot \frac{\text{Div}_{i,t}}{K_{i,t-1}} - 1.315 \cdot \frac{C_{i,t}}{K_{i,t-1}}
+$$ {#eq-kz-index}
+
+**WW Index** [@whited2006financial]:
+
+$$
+\text{WW}_{i,t} = -0.091 \cdot \frac{CF_{i,t}}{A_{i,t}} - 0.062 \cdot \mathbb{1}(\text{Div} > 0) + 0.021 \cdot \frac{D_{i,t}}{A_{i,t}} - 0.044 \cdot \ln(A_{i,t}) + 0.102 \cdot \text{ISG}_{i,t} - 0.035 \cdot \text{SG}_{i,t}
+$$ {#eq-ww-index}
+
+where ISG is industry sales growth and SG is firm sales growth.
+
+**SA Index** [@hadlock2010new]:
+
+$$
+\text{SA}_{i,t} = -0.737 \cdot \text{Size}_{i,t} + 0.043 \cdot \text{Size}_{i,t}^2 - 0.040 \cdot \text{Age}_{i,t}
+$$ {#eq-sa-index}
+
+where Size $= \ln(\text{Total Assets})$ and Age is years since listing. @hadlock2010new argue that the SA index is preferable because it uses only exogenous firm characteristics (size and age), avoiding the endogeneity inherent in cash flow and leverage-based indices.
+
+```{python}
+#| label: constraint-indices
+#| eval: false
+
+# Compute financial constraint indices
+panel_fc = panel_clean.copy()
+
+# Lagged PPE for KZ scaling
+panel_fc["lag_ppe"] = panel_fc.groupby("ticker")["ppe_net"].shift(1)
+
+# KZ Index
+panel_fc["kz_index"] = (
+    -1.002 * panel_fc["cf_assets"]
+    + 0.283 * panel_fc["tobins_q"]
+    + 3.139 * (panel_fc["total_debt"] / panel_fc["total_assets"])
+    - 39.368 * (panel_fc["dividends"] / panel_fc["lag_assets"])
+    - 1.315 * (panel_fc["cash"] / panel_fc["lag_assets"])
+)
+
+# SA Index
+panel_fc["log_assets"] = np.log(panel_fc["total_assets"])
+panel_fc["listing_age"] = panel_fc["year"] - panel_fc["listing_year"]
+
+panel_fc["sa_index"] = (
+    -0.737 * panel_fc["log_assets"]
+    + 0.043 * panel_fc["log_assets"]**2
+    - 0.040 * panel_fc["listing_age"]
+)
+
+# WW Index (simplified: using firm-level variables)
+panel_fc["div_dummy"] = (panel_fc["dividends"] > 0).astype(int)
+panel_fc["leverage"] = panel_fc["total_debt"] / panel_fc["total_assets"]
+
+# Industry sales growth
+panel_fc["isg"] = panel_fc.groupby(
+    ["industry", "year"]
+)["sales_growth"].transform("median")
+
+panel_fc["ww_index"] = (
+    -0.091 * panel_fc["cf_assets"]
+    - 0.062 * panel_fc["div_dummy"]
+    + 0.021 * panel_fc["leverage"]
+    - 0.044 * panel_fc["log_assets"]
+    + 0.102 * panel_fc["isg"]
+    - 0.035 * panel_fc["sales_growth"]
+)
+```
+
+```{python}
+#| label: tbl-constraint-summary
+#| eval: false
+#| tbl-cap: "Distribution of Financial Constraint Indices"
+
+constraint_vars = ["kz_index", "sa_index", "ww_index"]
+constraint_summary = (
+    panel_fc[constraint_vars]
+    .describe(percentiles=[0.1, 0.25, 0.5, 0.75, 0.9])
+    .T.round(4)
+)
+constraint_summary
+```
+
+### Split-Sample CFSI Tests
+
+We classify firms into constrained and unconstrained groups using each index and compare the cash flow sensitivity of investment across groups.
+
+```{python}
+#| label: cfsi-split-sample
+#| eval: false
+
+def cfsi_by_group(data, group_var, threshold="median"):
+    """
+    Estimate cash flow sensitivity of investment by constraint group.
+
+    Parameters
+    ----------
+    data : DataFrame
+        Panel data with inv_rate, tobins_q, cf_assets, group_var.
+    group_var : str
+        Variable used for classification.
+    threshold : str
+        "median" for sample split or "tercile" for top/bottom third.
+
+    Returns
+    -------
+    dict : Coefficient estimates by group.
+    """
+    df = data.dropna(subset=["inv_rate", "tobins_q", "cf_assets", group_var])
+
+    if threshold == "median":
+        median_val = df[group_var].median()
+        df["constrained"] = (df[group_var] >= median_val).astype(int)
+    elif threshold == "tercile":
+        t33 = df[group_var].quantile(0.33)
+        t67 = df[group_var].quantile(0.67)
+        df = df[(df[group_var] <= t33) | (df[group_var] >= t67)]
+        df["constrained"] = (df[group_var] >= t67).astype(int)
+
+    results = {}
+    for group_name, group_label in [(0, "Unconstrained"), (1, "Constrained")]:
+        subset = df[df["constrained"] == group_name].copy()
+        if len(subset) < 100:
+            continue
+
+        subset = subset.set_index(["ticker", "year"])
+        model = PanelOLS(
+            subset["inv_rate"],
+            subset[["tobins_q", "cf_assets"]],
+            entity_effects=True,
+            time_effects=True,
+            check_rank=False
+        ).fit(cov_type="clustered", cluster_entity=True)
+
+        results[group_label] = {
+            "beta_Q": model.params["tobins_q"],
+            "se_Q": model.std_errors["tobins_q"],
+            "beta_CF": model.params["cf_assets"],
+            "se_CF": model.std_errors["cf_assets"],
+            "R2_within": model.rsquared_within,
+            "N": int(model.nobs)
+        }
+
+    return pd.DataFrame(results).T
+
+# Run for each constraint index
+cfsi_kz = cfsi_by_group(panel_fc, "kz_index", "median")
+cfsi_sa = cfsi_by_group(panel_fc, "sa_index", "median")
+cfsi_ww = cfsi_by_group(panel_fc, "ww_index", "median")
+```
+
+```{python}
+#| label: tbl-cfsi-comparison
+#| eval: false
+#| tbl-cap: "Cash Flow Sensitivity by Financial Constraint Classification"
+
+# Combine results
+cfsi_all = pd.concat({
+    "KZ Index": cfsi_kz,
+    "SA Index": cfsi_sa,
+    "WW Index": cfsi_ww
+})
+
+cfsi_display = cfsi_all[["beta_CF", "se_CF", "beta_Q", "se_Q", "N"]].round(4)
+cfsi_display
+```
+
+### Alternative Specifications
+
+The baseline CFSI test has been augmented in several directions:
+
+**Dynamic investment models.** @bond2003financial argue that the static regression @eq-cfsi-base omits the autoregressive component of investment. The Euler equation approach, which derives directly from the firm's dynamic optimization problem, yields:
+
+$$
+\frac{I_{i,t}}{K_{i,t-1}} = \gamma_1 \frac{I_{i,t-1}}{K_{i,t-2}} + \gamma_2 \left(\frac{Y_{i,t}}{K_{i,t-1}}\right) + \gamma_3 \frac{CF_{i,t}}{K_{i,t-1}} + \varepsilon_{i,t}
+$$ {#eq-euler-investment}
+
+This specification avoids the need for $Q$ entirely, sidestepping the measurement error problem.
+
+**External finance dependence.** @rajan1998financial propose using the industry-level technological demand for external finance as an instrument for financing constraints. Industries that technologically require more external funding should be disproportionately affected by financial development and firm-level constraints.
+
+```{python}
+#| label: euler-equation
+#| eval: false
+
+# Euler equation investment model (dynamic panel)
+panel_euler = panel_fc.copy().sort_values(["ticker", "year"])
+
+panel_euler["lag_inv_rate"] = panel_euler.groupby("ticker")["inv_rate"].shift(1)
+panel_euler["revenue_assets"] = panel_euler["revenue"] / panel_euler["lag_assets"]
+
+euler_data = panel_euler.dropna(
+    subset=["inv_rate", "lag_inv_rate", "revenue_assets", "cf_assets"]
+).set_index(["ticker", "year"])
+
+model_euler = PanelOLS(
+    euler_data["inv_rate"],
+    euler_data[["lag_inv_rate", "revenue_assets", "cf_assets"]],
+    entity_effects=True,
+    time_effects=True,
+    check_rank=False
+).fit(cov_type="clustered", cluster_entity=True)
+
+euler_data = euler_data.reset_index()
+```
+
+```{python}
+#| label: tbl-euler
+#| eval: false
+#| tbl-cap: "Euler Equation Investment Model"
+
+euler_results = pd.DataFrame({
+    "Coefficient": model_euler.params.round(4),
+    "Std Error": model_euler.std_errors.round(4),
+    "t-stat": model_euler.tstats.round(3),
+    "p-value": model_euler.pvalues.round(4)
+})
+euler_results
+```
+
+## Financing Choice Models
+
+### Capital Structure Determinants
+
+The two dominant theories of capital structure (i.e., trade-off theory and pecking order theory) generate distinct predictions about the determinants of leverage. @frank2009capital provide the most comprehensive empirical synthesis, identifying six "core" variables that reliably predict leverage across samples and specifications.
+
+The baseline capital structure regression is:
+
+$$
+\text{Lev}_{i,t} = \beta_0 + \boldsymbol{\beta}' \mathbf{X}_{i,t} + \alpha_i + \delta_t + \varepsilon_{i,t}
+$$ {#eq-leverage-regression}
+
+where $\text{Lev}_{i,t}$ is either book leverage ($D / A$) or market leverage ($D / (D + E^{\text{mkt}})$), and $\mathbf{X}_{i,t}$ includes the core determinants.
+
+@tbl-cs-predictions summarizes the theoretical predictions.
+
+| Determinant | Trade-Off | Pecking Order | Measurement |
+|------------------|------------------|-------------------|------------------|
+| Profitability | \+ (tax shield) | − (less need for external) | EBITDA / Assets |
+| Size | \+ (lower distress costs) | \+ (less information asymmetry) | ln(Total Assets) |
+| Tangibility | \+ (collateral value) | \+ (less adverse selection) | PPE / Assets |
+| Growth (MTB) | − (underinvestment) | \+ (financing needs) | Market-to-Book |
+| Industry median leverage | \+ (target) | ambiguous | Industry median |
+| Profitability volatility | − (distress risk) | ambiguous | Rolling σ(EBITDA/A) |
+
+: Capital Structure Predictions by Theory {#tbl-cs-predictions}
+
+```{python}
+#| label: capital-structure-data
+#| eval: false
+
+# Construct capital structure variables
+cs = panel_fc.copy()
+
+# Book leverage
+cs["book_leverage"] = cs["total_debt"] / cs["total_assets"]
+
+# Market leverage
+cs["market_leverage"] = cs["total_debt"] / (
+    cs["total_debt"] + cs["market_cap"]
+)
+
+# Profitability
+cs["profitability"] = cs["ebitda"] / cs["total_assets"]
+
+# Tangibility
+cs["tangibility"] = cs["ppe_net"] / cs["total_assets"]
+
+# Size
+cs["size"] = np.log(cs["total_assets"])
+
+# Market-to-Book
+cs["mtb"] = cs["market_cap"] / cs["book_equity"]
+
+# Industry median leverage
+cs["ind_median_lev"] = cs.groupby(
+    ["industry", "year"]
+)["book_leverage"].transform("median")
+
+# Rolling profitability volatility (3-year)
+cs = cs.sort_values(["ticker", "year"])
+cs["profit_vol"] = (
+    cs.groupby("ticker")["profitability"]
+    .transform(lambda x: x.rolling(3, min_periods=2).std())
+)
+
+# Winsorize
+for col in ["book_leverage", "market_leverage", "profitability",
+            "tangibility", "mtb", "profit_vol"]:
+    cs[col] = winsorize(cs[col])
+
+cs_clean = cs.dropna(
+    subset=["book_leverage", "profitability", "size",
+            "tangibility", "mtb", "ind_median_lev"]
+)
+```
+
+```{python}
+#| label: leverage-regressions
+#| eval: false
+
+# Capital structure regressions
+cs_panel = cs_clean.set_index(["ticker", "year"])
+
+regressors = ["profitability", "size", "tangibility",
+              "mtb", "ind_median_lev"]
+
+# Book leverage
+model_book = PanelOLS(
+    cs_panel["book_leverage"],
+    cs_panel[regressors],
+    entity_effects=True,
+    time_effects=True,
+    check_rank=False
+).fit(cov_type="clustered", cluster_entity=True)
+
+# Market leverage
+model_mkt = PanelOLS(
+    cs_panel["market_leverage"],
+    cs_panel[regressors],
+    entity_effects=True,
+    time_effects=True,
+    check_rank=False
+).fit(cov_type="clustered", cluster_entity=True)
+
+cs_panel = cs_panel.reset_index()
+```
+
+```{python}
+#| label: tbl-capital-structure
+#| eval: false
+#| tbl-cap: "Capital Structure Determinants: Book and Market Leverage"
+
+cs_table = pd.DataFrame({
+    "Book Leverage": [
+        f"{model_book.params[v]:.4f} ({model_book.std_errors[v]:.4f})"
+        for v in regressors
+    ] + [f"{model_book.rsquared_within:.4f}", str(int(model_book.nobs))],
+    "Market Leverage": [
+        f"{model_mkt.params[v]:.4f} ({model_mkt.std_errors[v]:.4f})"
+        for v in regressors
+    ] + [f"{model_mkt.rsquared_within:.4f}", str(int(model_mkt.nobs))]
+}, index=regressors + ["R² (within)", "N"])
+
+cs_table
+```
+
+### Pecking Order Tests
+
+The pecking order theory [@myers1984capital] predicts that firms prefer internal finance, then debt, then equity. @shyam1999testing propose a direct test: if the pecking order holds strictly, the financing deficit (investment minus internal funds) should be financed dollar-for-dollar by debt:
+
+$$
+\Delta D_{i,t} = \alpha + \beta_{\text{PO}} \cdot \text{DEF}_{i,t} + \varepsilon_{i,t}
+$$ {#eq-pecking-order}
+
+where $\text{DEF}_{i,t} = \text{Div}_{i,t} + \text{Capex}_{i,t} + \Delta W_{i,t} - CF_{i,t}$ is the financing deficit and $\Delta D_{i,t}$ is net debt issuance. A strict pecking order implies $\hat{\alpha} = 0$ and $\hat{\beta}_{\text{PO}} = 1$. @frank2003testing show that the coefficient is typically well below 1, especially for large firms and equity issuers.
+
+```{python}
+#| label: pecking-order
+#| eval: false
+
+# Construct financing deficit
+po = cs.copy().sort_values(["ticker", "year"])
+po["lag_debt"] = po.groupby("ticker")["total_debt"].shift(1)
+po["net_debt_issuance"] = po["total_debt"] - po["lag_debt"]
+
+# Financing deficit = Div + Capex + ΔWC - CF
+po["delta_wc"] = po["working_capital"] - po.groupby(
+    "ticker"
+)["working_capital"].shift(1)
+
+po["fin_deficit"] = (
+    po["dividends"] + po["capex"]
+    + po["delta_wc"].fillna(0) - po["operating_cf"]
+)
+
+# Scale by lagged assets
+for col in ["net_debt_issuance", "fin_deficit"]:
+    po[col] = po[col] / po["lag_assets"]
+
+po_clean = po.dropna(
+    subset=["net_debt_issuance", "fin_deficit"]
+)
+
+# Winsorize
+for col in ["net_debt_issuance", "fin_deficit"]:
+    po_clean[col] = winsorize(po_clean[col])
+
+# Pecking order regression
+po_panel = po_clean.set_index(["ticker", "year"])
+
+model_po = PanelOLS(
+    po_panel["net_debt_issuance"],
+    po_panel[["fin_deficit"]],
+    entity_effects=True,
+    time_effects=True,
+    check_rank=False
+).fit(cov_type="clustered", cluster_entity=True)
+
+po_panel = po_panel.reset_index()
+
+print(f"Pecking order coefficient: {model_po.params['fin_deficit']:.4f}")
+print(f"  (se = {model_po.std_errors['fin_deficit']:.4f})")
+print(f"  H0: β = 1, t = "
+      f"{(model_po.params['fin_deficit'] - 1) / model_po.std_errors['fin_deficit']:.3f}")
+```
+
+### Market Timing Measures
+
+@baker2002market argue that capital structure is largely the cumulative outcome of market timing (i.e., firms issue equity when valuations are high and repurchase when valuations are low). Their key variable is the external-finance-weighted average market-to-book ratio:
+
+$$
+\left(\frac{M}{B}\right)_{i,t}^{efwa} = \sum_{s=\text{IPO}}^{t-1} \frac{e_s + d_s}{\sum_{r=\text{IPO}}^{t-1}(e_r + d_r)} \cdot \left(\frac{M}{B}\right)_{i,s}
+$$ {#eq-efwa-mtb}
+
+where $e_s$ and $d_s$ are net equity and net debt issuance in year $s$. This variable captures the historical valuations at which the firm raised capital. The market timing hypothesis predicts that higher $\left(M/B\right)^{efwa}$ is associated with lower current leverage (i.e., firms that historically issued equity at high valuations have persistently lower leverage).
+
+```{python}
+#| label: market-timing
+#| eval: false
+
+# External-Finance-Weighted Average M/B
+def compute_efwa_mtb(group):
+    """Compute Baker-Wurgler EFWA M/B for one firm."""
+    g = group.sort_values("year").copy()
+
+    # Net issuance each year
+    g["net_equity"] = g["equity_issuance"].fillna(0)
+    g["net_debt"] = g["net_debt_issuance"].fillna(0)
+    g["total_issuance"] = (
+        g["net_equity"].abs() + g["net_debt"].abs()
+    ).replace(0, np.nan)
+
+    efwa_values = []
+    for idx in range(1, len(g)):
+        past = g.iloc[:idx]
+        weights = past["total_issuance"] / past["total_issuance"].sum()
+        weights = weights.fillna(0)
+        efwa = (weights * past["mtb"]).sum()
+        efwa_values.append(efwa)
+
+    g = g.iloc[1:].copy()
+    g["efwa_mtb"] = efwa_values
+    return g[["ticker", "year", "efwa_mtb"]]
+
+mt = po_clean.copy()
+mt["equity_issuance"] = mt["market_cap"] - mt.groupby(
+    "ticker"
+)["market_cap"].shift(1) - mt["net_income"]
+
+efwa_data = (
+    mt.groupby("ticker", group_keys=False)
+    .apply(compute_efwa_mtb)
+    .reset_index(drop=True)
+)
+
+# Merge and regress
+mt_merged = cs_clean.merge(efwa_data, on=["ticker", "year"], how="left")
+mt_clean = mt_merged.dropna(
+    subset=["market_leverage", "efwa_mtb", "profitability",
+            "size", "tangibility", "mtb"]
+)
+
+mt_panel = mt_clean.set_index(["ticker", "year"])
+
+model_mt = PanelOLS(
+    mt_panel["market_leverage"],
+    mt_panel[["efwa_mtb", "mtb", "profitability", "size", "tangibility"]],
+    entity_effects=True,
+    time_effects=True,
+    check_rank=False
+).fit(cov_type="clustered", cluster_entity=True)
+
+mt_panel = mt_panel.reset_index()
+```
+
+```{python}
+#| label: tbl-market-timing
+#| eval: false
+#| tbl-cap: "Market Timing and Capital Structure"
+
+mt_results = pd.DataFrame({
+    "Coefficient": model_mt.params.round(4),
+    "Std Error": model_mt.std_errors.round(4),
+    "t-stat": model_mt.tstats.round(3),
+    "p-value": model_mt.pvalues.round(4)
+})
+mt_results
+```
+
+A negative coefficient on $\text{EFWA}_{M/B}$ after controlling for the current $M/B$ (which captures current investment opportunities) supports the market timing hypothesis: firms that historically raised capital at high valuations maintain persistently lower leverage.
+
+## Payout Policy Estimators
+
+### Dividend Smoothing
+
+@lintner1956distribution established the foundational model of dividend behavior: firms target a payout ratio and partially adjust dividends toward the target each year. The partial adjustment model is:
+
+$$
+\Delta D_{i,t} = \alpha_i + \lambda(\tau \cdot E_{i,t} - D_{i,t-1}) + \varepsilon_{i,t}
+$$ {#eq-lintner}
+
+where $D_{i,t}$ is the dividend per share, $E_{i,t}$ is earnings per share, $\tau$ is the target payout ratio, and $\lambda \in (0, 1)$ is the speed of adjustment. Low $\lambda$ implies strong smoothing (i.e., firms adjust dividends slowly toward the target). Rearranging:
+
+$$
+D_{i,t} = \alpha_i + (1 - \lambda) D_{i,t-1} + \lambda \tau \cdot E_{i,t} + \varepsilon_{i,t}
+$$ {#eq-lintner-regression}
+
+The coefficient on lagged dividends, $(1 - \lambda)$, measures the degree of smoothing. Values close to 1 indicate near-complete smoothing; values close to 0 indicate no smoothing (full adjustment).
+
+```{python}
+#| label: lintner-model
+#| eval: false
+
+# Construct dividend and earnings variables
+div = panel_fc.copy().sort_values(["ticker", "year"])
+
+div["lag_dps"] = div.groupby("ticker")["dividends_per_share"].shift(1)
+div["delta_dps"] = div["dividends_per_share"] - div["lag_dps"]
+
+# Only firms with positive dividends in both periods
+div_clean = div.dropna(
+    subset=["dividends_per_share", "lag_dps", "eps"]
+).query("lag_dps > 0 and dividends_per_share > 0")
+
+# Lintner regression
+div_panel = div_clean.set_index(["ticker", "year"])
+
+model_lintner = PanelOLS(
+    div_panel["dividends_per_share"],
+    div_panel[["lag_dps", "eps"]],
+    entity_effects=True,
+    time_effects=True,
+    check_rank=False
+).fit(cov_type="clustered", cluster_entity=True)
+
+div_panel = div_panel.reset_index()
+
+# Extract structural parameters
+lambda_hat = 1 - model_lintner.params["lag_dps"]
+tau_hat = model_lintner.params["eps"] / lambda_hat
+
+print(f"Lintner Model Estimates:")
+print(f"  Speed of adjustment (λ): {lambda_hat:.4f}")
+print(f"  Target payout ratio (τ): {tau_hat:.4f}")
+print(f"  Smoothing coefficient (1-λ): {model_lintner.params['lag_dps']:.4f}")
+```
+
+```{python}
+#| label: tbl-lintner
+#| eval: false
+#| tbl-cap: "Lintner Partial Adjustment Model"
+
+lintner_table = pd.DataFrame({
+    "Coefficient": model_lintner.params.round(4),
+    "Std Error": model_lintner.std_errors.round(4),
+    "t-stat": model_lintner.tstats.round(3),
+    "p-value": model_lintner.pvalues.round(4)
+})
+lintner_table
+```
+
+```{python}
+#| label: fig-payout-ratio
+#| eval: false
+#| fig-cap: "Cross-Sectional Distribution of Dividend Payout Ratios Over Time"
+
+payout = panel_fc.copy()
+payout["payout_ratio"] = payout["dividends"] / payout["net_income"]
+payout = payout[
+    (payout["net_income"] > 0) &
+    (payout["payout_ratio"].between(0, 2))
+]
+
+payout_ts = (
+    payout.groupby("year")
+    .agg(
+        median_payout=("payout_ratio", "median"),
+        mean_payout=("payout_ratio", "mean"),
+        q25=("payout_ratio", lambda x: x.quantile(0.25)),
+        q75=("payout_ratio", lambda x: x.quantile(0.75)),
+        pct_payers=("payout_ratio", lambda x: (x > 0).mean())
+    )
+    .reset_index()
+)
+
+(
+    p9.ggplot(payout_ts, p9.aes(x="year"))
+    + p9.geom_ribbon(
+        p9.aes(ymin="q25", ymax="q75"),
+        fill="#2E5090", alpha=0.2
+    )
+    + p9.geom_line(
+        p9.aes(y="median_payout"),
+        color="#2E5090", size=1
+    )
+    + p9.geom_line(
+        p9.aes(y="mean_payout"),
+        color="#C0392B", linetype="dashed", size=0.7
+    )
+    + p9.labs(
+        x="Year",
+        y="Dividend Payout Ratio",
+        title="Payout Ratio: Median (Solid) and Mean (Dashed)"
+    )
+    + p9.theme_minimal()
+    + p9.theme(figure_size=(10, 5))
+)
+```
+
+### Smoothing Heterogeneity: SOEs vs. Private Firms
+
+Dividend policy in Vietnam is shaped by regulatory mandates. The State Capital Investment Corporation (SCIC) and line ministries have historically required SOEs to distribute minimum dividend amounts, sometimes at the expense of reinvestment. This creates a fundamental asymmetry: SOE dividends are partially policy-determined rather than the outcome of the Lintner optimization.
+
+```{python}
+#| label: lintner-soe-split
+#| eval: false
+
+# Merge SOE indicator
+div_with_soe = div_clean.merge(
+    ownership[["ticker", "year", "state_ownership_pct"]],
+    on=["ticker", "year"],
+    how="left"
+)
+div_with_soe["soe"] = (div_with_soe["state_ownership_pct"] > 50).astype(int)
+
+# Estimate Lintner model separately for SOEs and private firms
+lintner_results = {}
+for label, soe_val in [("Private", 0), ("SOE", 1)]:
+    subset = div_with_soe[div_with_soe["soe"] == soe_val].copy()
+    if len(subset) < 100:
+        continue
+
+    subset_panel = subset.set_index(["ticker", "year"])
+    model = PanelOLS(
+        subset_panel["dividends_per_share"],
+        subset_panel[["lag_dps", "eps"]],
+        entity_effects=True,
+        time_effects=True,
+        check_rank=False
+    ).fit(cov_type="clustered", cluster_entity=True)
+
+    lam = 1 - model.params["lag_dps"]
+    tau = model.params["eps"] / lam if abs(lam) > 0.01 else np.nan
+
+    lintner_results[label] = {
+        "Smoothing (1-λ)": round(model.params["lag_dps"], 4),
+        "Speed of adj (λ)": round(lam, 4),
+        "Target payout (τ)": round(tau, 4),
+        "N": int(model.nobs)
+    }
+
+pd.DataFrame(lintner_results).T
+```
+
+### Share Repurchases
+
+Share repurchases are a relatively new phenomenon in Vietnamese markets, gradually gaining traction as regulations have evolved. Unlike dividends, repurchases are more flexible and do not create expectations of future payments. The decision to repurchase can be modeled as:
+
+$$
+\text{Repurchase}_{i,t} = \mathbb{1}\left(\beta_0 + \beta_1 \frac{CF_{i,t}}{A_{i,t}} + \beta_2 Q_{i,t} + \beta_3 \text{Lev}_{i,t} + \beta_4 \frac{\text{Cash}_{i,t}}{A_{i,t}} + \boldsymbol{\gamma}' \mathbf{Z}_{i,t} + \varepsilon_{i,t} > 0\right)
+$$ {#eq-repurchase-probit}
+
+```{python}
+#| label: repurchase-model
+#| eval: false
+
+# Identify repurchase years
+repurchase = panel_fc.copy()
+repurchase["repurchase_dummy"] = (
+    repurchase["share_repurchases"] > 0
+).astype(int)
+
+repurchase["cash_assets"] = repurchase["cash"] / repurchase["total_assets"]
+
+# Probit model for repurchase decision
+rep_clean = repurchase.dropna(
+    subset=["repurchase_dummy", "cf_assets", "tobins_q",
+            "book_leverage", "cash_assets", "log_assets"]
+)
+
+probit_model = smf.probit(
+    "repurchase_dummy ~ cf_assets + tobins_q + book_leverage "
+    "+ cash_assets + log_assets + C(year)",
+    data=rep_clean
+).fit(disp=False, cov_type="cluster", cov_kwds={"groups": rep_clean["ticker"]})
+```
+
+```{python}
+#| label: tbl-repurchase-probit
+#| eval: false
+#| tbl-cap: "Probit Model: Determinants of Share Repurchase Decision"
+
+# Extract non-year-dummy coefficients
+main_vars = ["cf_assets", "tobins_q", "book_leverage",
+             "cash_assets", "log_assets"]
+
+probit_results = pd.DataFrame({
+    "Coefficient": probit_model.params[main_vars].round(4),
+    "Std Error": probit_model.bse[main_vars].round(4),
+    "z-stat": probit_model.tvalues[main_vars].round(3),
+    "p-value": probit_model.pvalues[main_vars].round(4),
+    "Marginal Effect": (
+        probit_model.get_margeff().margeff[:len(main_vars)]
+    ).round(4)
+})
+probit_results
+```
+
+### Agency and Signaling Interpretations
+
+Payout policy is interpreted through two competing lenses:
+
+**Agency view** [@jensen1986agency; @la2000agency]: Dividends are a mechanism for disgorging free cash flow that managers would otherwise waste on empire-building or perquisite consumption. In this view, firms with weaker governance should face greater pressure to pay dividends as a bonding device. @la2000agency distinguish the "outcome" model (dividends are the result of effective minority shareholder pressure) from the "substitute" model (firms with weak governance pay high dividends to build reputation for fair treatment).
+
+**Signaling view** [@bhattacharya1979imperfect; @miller1985dividend]: Dividends convey private information about future earnings. Because dividends are costly to fake (they require actual cash), they serve as a credible signal. The signaling interpretation predicts that dividend changes should predict future earnings changes.
+
+```{python}
+#| label: dividend-signaling
+#| eval: false
+
+# Test dividend signaling: do dividend changes predict future earnings?
+signal = panel_fc.copy().sort_values(["ticker", "year"])
+
+signal["delta_div"] = signal.groupby("ticker")["dividends"].diff()
+signal["div_increase"] = (signal["delta_div"] > 0).astype(int)
+signal["div_decrease"] = (signal["delta_div"] < 0).astype(int)
+
+# Future earnings change
+signal["lead_earnings"] = signal.groupby("ticker")["net_income"].shift(-1)
+signal["delta_earnings_lead"] = (
+    (signal["lead_earnings"] - signal["net_income"]) /
+    signal["total_assets"]
+)
+
+# Current earnings change (control)
+signal["lag_earnings"] = signal.groupby("ticker")["net_income"].shift(1)
+signal["delta_earnings_curr"] = (
+    (signal["net_income"] - signal["lag_earnings"]) /
+    signal["total_assets"]
+)
+
+signal_clean = signal.dropna(
+    subset=["delta_earnings_lead", "div_increase",
+            "div_decrease", "delta_earnings_curr"]
+)
+
+# Regression: future earnings change on dividend change indicators
+signal_model = smf.ols(
+    "delta_earnings_lead ~ div_increase + div_decrease "
+    "+ delta_earnings_curr + C(year) + C(industry)",
+    data=signal_clean
+).fit(cov_type="cluster", cov_kwds={"groups": signal_clean["ticker"]})
+
+print("Dividend Signaling Test:")
+for var in ["div_increase", "div_decrease", "delta_earnings_curr"]:
+    print(f"  {var}: {signal_model.params[var]:.4f} "
+          f"(t = {signal_model.tvalues[var]:.3f})")
+```
+
+## Agency Cost Proxies
+
+### Ownership Concentration and Agency Problems
+
+The agency framework of @jensen2019theory identifies the separation of ownership and control as the fundamental source of corporate agency costs. In concentrated-ownership economies like Vietnam, the dominant agency conflict is not between dispersed shareholders and professional managers (Berle-Means agency problem) but between controlling and minority shareholders (principal-principal agency problem, @young2008corporate).
+
+The key mechanisms through which controlling shareholders extract private benefits include: tunneling via related-party transactions [@johnson2000tunneling], diversion of corporate opportunities, excessive compensation, and dilutive equity issuances. The extent of these costs depends on the ownership structure, legal protections for minorities, and monitoring intensity.
+
+```{python}
+#| label: ownership-structure
+#| eval: false
+
+# Merge ownership data comprehensively
+agency = panel_fc.merge(
+    ownership[["ticker", "year", "state_ownership_pct",
+               "foreign_ownership_pct", "insider_ownership_pct",
+               "largest_shareholder_pct", "top5_shareholder_pct",
+               "board_size", "independent_directors_pct",
+               "ceo_duality"]],
+    on=["ticker", "year"],
+    how="left"
+)
+
+# Ownership concentration measures
+# Herfindahl of top-5 shareholdings
+agency["ownership_hhi"] = agency["top5_shareholder_pct"]**2
+
+# Excess control rights (proxy: difference between
+# largest shareholder and second largest)
+agency["control_wedge"] = (
+    agency["largest_shareholder_pct"] -
+    (agency["top5_shareholder_pct"] - agency["largest_shareholder_pct"]) / 4
+)
+```
+
+### Free Cash Flow Measures
+
+@jensen1986agency argues that the agency cost of free cash flow is the central problem in firms that generate cash in excess of positive-NPV investment opportunities. The standard measure is:
+
+$$
+\text{FCF}_{i,t} = \frac{\text{Operating CF}_{i,t} - \text{Depreciation}_{i,t} - \text{Required Capex}_{i,t}}{\text{Total Assets}_{i,t}}
+$$ {#eq-fcf}
+
+In practice, "required capex" is unobservable, so researchers use operating cash flow minus capital expenditures as a proxy, or add the interaction of cash flow with low $Q$ (which identifies firms with cash flow but without investment opportunities):
+
+$$
+\text{FCF Overinvestment} = \frac{CF_{i,t}}{A_{i,t}} \times \mathbb{1}(Q_{i,t} < 1)
+$$ {#eq-fcf-overinvest}
+
+```{python}
+#| label: fcf-agency
+#| eval: false
+
+# Free cash flow measures
+agency["fcf"] = (agency["operating_cf"] - agency["capex"]) / agency["total_assets"]
+
+agency["low_q"] = (agency["tobins_q"] < 1).astype(int)
+agency["fcf_low_q"] = agency["fcf"] * agency["low_q"]
+
+# Asset utilization (inverse proxy for agency costs)
+agency["asset_turnover"] = agency["revenue"] / agency["total_assets"]
+
+# SGA ratio (proxy for discretionary spending / empire building)
+agency["sga_ratio"] = agency["sga_expenses"] / agency["revenue"]
+```
+
+### Monitoring Mechanisms and Governance Variables
+
+We construct a governance quality composite based on observable monitoring mechanisms:
+
+```{python}
+#| label: governance-variables
+#| eval: false
+
+# Governance quality indicators
+agency["foreign_monitor"] = (
+    agency["foreign_ownership_pct"] > 20
+).astype(int)
+
+agency["board_independence"] = agency["independent_directors_pct"]
+
+agency["no_duality"] = (1 - agency["ceo_duality"]).astype(int)
+
+# Related-party transaction intensity (if available)
+# agency["rpt_ratio"] = agency["related_party_transactions"] / agency["revenue"]
+```
+
+```{python}
+#| label: tbl-agency-proxies
+#| eval: false
+#| tbl-cap: "Summary Statistics: Agency Cost Proxies and Governance Variables"
+
+agency_vars = [
+    "largest_shareholder_pct", "state_ownership_pct",
+    "foreign_ownership_pct", "fcf", "fcf_low_q",
+    "asset_turnover", "board_independence"
+]
+
+agency_summary = (
+    agency[agency_vars].dropna()
+    .describe(percentiles=[0.1, 0.25, 0.5, 0.75, 0.9])
+    .T.round(4)
+)
+agency_summary
+```
+
+### Agency Costs and Firm Value
+
+We test whether agency cost proxies are associated with firm value (Tobin's $Q$) and operating performance (ROA), controlling for standard determinants:
+
+$$
+Q_{i,t} = \beta_0 + \beta_1 \text{Own}_{i,t} + \beta_2 \text{Own}_{i,t}^2 + \boldsymbol{\gamma}'\mathbf{X}_{i,t} + \alpha_i + \delta_t + \varepsilon_{i,t}
+$$ {#eq-agency-valuation}
+
+The quadratic in ownership captures the @morck1988management nonlinearity: at low levels, managerial ownership aligns incentives (positive effect on $Q$); at high levels, entrenchment dominates (negative effect).
+
+```{python}
+#| label: agency-valuation
+#| eval: false
+
+# Agency cost and valuation regression
+agency["largest_sq"] = agency["largest_shareholder_pct"]**2
+
+val_data = agency.dropna(
+    subset=["tobins_q", "largest_shareholder_pct", "foreign_ownership_pct",
+            "fcf", "size", "profitability", "leverage"]
+).copy()
+
+val_panel = val_data.set_index(["ticker", "year"])
+
+model_val = PanelOLS(
+    val_panel["tobins_q"],
+    val_panel[["largest_shareholder_pct", "largest_sq",
+               "foreign_ownership_pct", "fcf",
+               "size", "profitability", "leverage"]],
+    entity_effects=True,
+    time_effects=True,
+    check_rank=False
+).fit(cov_type="clustered", cluster_entity=True)
+
+val_panel = val_panel.reset_index()
+```
+
+```{python}
+#| label: tbl-agency-valuation
+#| tbl-cap: "Agency Proxies and Firm Value (Tobin's Q)"
+#| eval: false
+
+val_results = pd.DataFrame({
+    "Coefficient": model_val.params.round(4),
+    "Std Error": model_val.std_errors.round(4),
+    "t-stat": model_val.tstats.round(3),
+    "p-value": model_val.pvalues.round(4)
+})
+val_results
+```
+
+```{python}
+#| label: fig-ownership-q
+#| eval: false
+#| fig-cap: "Nonlinear Relationship Between Ownership Concentration and Firm Value"
+
+# Binned scatter: largest shareholder vs Q
+own_bins = val_data.copy()
+own_bins["own_bin"] = pd.qcut(
+    own_bins["largest_shareholder_pct"], q=20, duplicates="drop"
+)
+
+own_binned = (
+    own_bins.groupby("own_bin", observed=True)
+    .agg(
+        mean_own=("largest_shareholder_pct", "mean"),
+        mean_q=("tobins_q", "mean"),
+        se_q=("tobins_q", lambda x: x.std() / np.sqrt(len(x)))
+    )
+    .reset_index()
+)
+
+(
+    p9.ggplot(own_binned, p9.aes(x="mean_own", y="mean_q"))
+    + p9.geom_pointrange(
+        p9.aes(ymin="mean_q - 1.96*se_q",
+               ymax="mean_q + 1.96*se_q"),
+        color="#2E5090", size=0.5
+    )
+    + p9.geom_smooth(method="loess", color="#C0392B", se=False, size=0.8)
+    + p9.labs(
+        x="Largest Shareholder Ownership (%)",
+        y="Tobin's Q",
+        title="Ownership Concentration and Firm Value"
+    )
+    + p9.theme_minimal()
+    + p9.theme(figure_size=(10, 6))
+)
+```
+
+The inverted-U pattern, if present, would be consistent with the Morck-Shleifer-Vishny incentive-alignment/entrenchment tradeoff. In Vietnamese markets, the pattern may differ because the dominant controlling shareholder is often the state, whose objective function includes non-value-maximizing goals (employment, regional development, strategic sector control).
+
+## Linking Corporate Decisions to Returns
+
+### Investment-Based Anomalies
+
+The asset pricing literature has documented that corporate investment decisions predict cross-sectional return differences (i.e., the "investment anomalies"). The theoretical foundation is the $q$-theory of investment applied to asset pricing [@cochrane1991production; @liu2009investment]: firms invest more when the discount rate on their projects is lower. High investment therefore signals low expected returns.
+
+**The investment effect.** @titman2004capital and @cooper2008asset document that firms with high asset growth earn lower subsequent returns. The asset growth variable is:
+
+$$
+\text{AG}_{i,t} = \frac{A_{i,t} - A_{i,t-1}}{A_{i,t-1}}
+$$ {#eq-asset-growth}
+
+**The investment-to-assets effect.** @fama2006profitability and @hou2015digesting show that capital expenditure scaled by assets negatively predicts returns.
+
+**The profitability effect.** @novy2013other shows that gross profitability (revenue minus COGS, scaled by assets) positively predicts returns. This is consistent with $q$-theory: controlling for investment, more profitable firms must have higher discount rates (otherwise they would invest more).
+
+```{python}
+#| label: investment-anomalies
+#| eval: false
+
+# Construct anomaly variables
+anomaly = panel_fc.copy().sort_values(["ticker", "year"])
+
+# Asset growth
+anomaly["asset_growth"] = (
+    (anomaly["total_assets"] - anomaly["lag_assets"]) /
+    anomaly["lag_assets"]
+)
+
+# Investment-to-assets
+anomaly["inv_to_assets"] = anomaly["capex"] / anomaly["lag_assets"]
+
+# Gross profitability
+anomaly["gross_profit"] = (
+    (anomaly["revenue"] - anomaly["cogs"]) / anomaly["total_assets"]
+)
+
+# ROE
+anomaly["roe"] = anomaly["net_income"] / anomaly["book_equity"]
+
+# Winsorize
+for col in ["asset_growth", "inv_to_assets", "gross_profit", "roe"]:
+    anomaly[col] = winsorize(anomaly[col])
+```
+
+```{python}
+#| label: portfolio-sorts-investment
+#| eval: false
+
+# Portfolio sorts: quintiles on asset growth
+# Merge with monthly returns (using June rebalancing)
+anomaly_june = anomaly.copy()
+anomaly_june["formation_year"] = anomaly_june["year"]
+
+# Create quintile assignments
+anomaly_june["ag_quintile"] = anomaly_june.groupby("year")[
+    "asset_growth"
+].transform(lambda x: pd.qcut(x, 5, labels=[1, 2, 3, 4, 5],
+                                duplicates="drop"))
+
+# Merge with forward returns
+monthly_with_signal = monthly_returns.copy()
+monthly_with_signal["formation_year"] = np.where(
+    monthly_with_signal["date"].dt.month >= 7,
+    monthly_with_signal["date"].dt.year,
+    monthly_with_signal["date"].dt.year - 1
+)
+
+portfolios = monthly_with_signal.merge(
+    anomaly_june[["ticker", "formation_year", "ag_quintile",
+                   "asset_growth", "gross_profit"]],
+    on=["ticker", "formation_year"],
+    how="inner"
+)
+
+# Compute equal-weighted quintile returns
+ag_returns = (
+    portfolios.groupby(["date", "ag_quintile"])
+    .agg(port_ret=("ret", "mean"))
+    .reset_index()
+)
+
+# Long-short: Q1 (low growth) - Q5 (high growth)
+ag_wide = ag_returns.pivot(
+    index="date", columns="ag_quintile", values="port_ret"
+)
+ag_wide["L-S"] = ag_wide[1] - ag_wide[5]
+```
+
+```{python}
+#| label: tbl-investment-anomaly
+#| eval: false
+#| tbl-cap: "Asset Growth Quintile Portfolio Returns"
+
+quintile_summary = ag_wide.describe().T[["mean", "std"]].copy()
+quintile_summary["mean_ann"] = quintile_summary["mean"] * 12
+quintile_summary["std_ann"] = quintile_summary["std"] * np.sqrt(12)
+quintile_summary["sharpe"] = (
+    quintile_summary["mean_ann"] / quintile_summary["std_ann"]
+)
+
+# t-statistics
+for col in ag_wide.columns:
+    t_stat = ag_wide[col].mean() / (ag_wide[col].std() / np.sqrt(len(ag_wide)))
+    quintile_summary.loc[col, "t_stat"] = t_stat
+
+quintile_summary = quintile_summary[
+    ["mean_ann", "std_ann", "sharpe", "t_stat"]
+].round(4)
+
+quintile_summary.columns = [
+    "Ann. Return", "Ann. Vol", "Sharpe Ratio", "t-stat"
+]
+quintile_summary
+```
+
+```{python}
+#| label: fig-ag-cumulative
+#| eval: false
+#| fig-cap: "Cumulative Returns: Low vs. High Asset Growth Quintiles"
+
+cumret = ag_wide[["L-S"]].copy()
+cumret.columns = ["Long-Short"]
+cumret = cumret.dropna()
+cumret["cumulative"] = (1 + cumret["Long-Short"]).cumprod()
+cumret = cumret.reset_index()
+
+(
+    p9.ggplot(cumret, p9.aes(x="date", y="cumulative"))
+    + p9.geom_line(color="#2E5090", size=0.8)
+    + p9.geom_hline(yintercept=1, linetype="dashed", color="gray")
+    + p9.labs(
+        x="",
+        y="Cumulative Return (Growth of $1)",
+        title="Investment Anomaly: Low – High Asset Growth"
+    )
+    + p9.theme_minimal()
+    + p9.theme(figure_size=(12, 5))
+)
+```
+
+### Financing Anomalies
+
+Firms' financing decisions also predict returns. @pontiff2008share document that net stock issuance negatively predicts returns: firms that issue equity earn lower future returns, while firms that repurchase shares earn higher returns. This is consistent with both managerial market timing and an issuance-based risk factor.
+
+The net stock issuance variable is typically measured as:
+
+$$
+\text{NSI}_{i,t} = \ln\left(\frac{\text{Split-Adjusted Shares}_{i,t}}{\text{Split-Adjusted Shares}_{i,t-1}}\right)
+$$ {#eq-nsi}
+
+Positive NSI indicates net equity issuance; negative NSI indicates net repurchases.
+
+```{python}
+#| label: financing-anomaly
+#| eval: false
+
+# Net Stock Issuance
+fin_anomaly = anomaly.copy()
+fin_anomaly["lag_shares"] = fin_anomaly.groupby(
+    "ticker"
+)["shares_outstanding"].shift(1)
+
+fin_anomaly["nsi"] = np.log(
+    fin_anomaly["shares_outstanding"] / fin_anomaly["lag_shares"]
+)
+fin_anomaly["nsi"] = winsorize(fin_anomaly["nsi"])
+
+# Net debt issuance (change in total debt / assets)
+fin_anomaly["ndi"] = (
+    (fin_anomaly["total_debt"] -
+     fin_anomaly.groupby("ticker")["total_debt"].shift(1)) /
+    fin_anomaly["lag_assets"]
+)
+fin_anomaly["ndi"] = winsorize(fin_anomaly["ndi"])
+
+# Portfolio sorts on NSI
+fin_anomaly["nsi_quintile"] = fin_anomaly.groupby("year")[
+    "nsi"
+].transform(lambda x: pd.qcut(x, 5, labels=[1, 2, 3, 4, 5],
+                                duplicates="drop"))
+
+port_nsi = monthly_with_signal.merge(
+    fin_anomaly[["ticker", "formation_year", "nsi_quintile"]],
+    on=["ticker", "formation_year"],
+    how="inner"
+)
+
+nsi_returns = (
+    port_nsi.groupby(["date", "nsi_quintile"])
+    .agg(port_ret=("ret", "mean"))
+    .reset_index()
+)
+
+nsi_wide = nsi_returns.pivot(
+    index="date", columns="nsi_quintile", values="port_ret"
+)
+nsi_wide["L-S"] = nsi_wide[1] - nsi_wide[5]
+```
+
+```{python}
+#| label: tbl-nsi-anomaly
+#| eval: false
+#| tbl-cap: "Net Stock Issuance Quintile Portfolio Returns"
+
+nsi_summary = nsi_wide.describe().T[["mean", "std"]].copy()
+nsi_summary["mean_ann"] = nsi_summary["mean"] * 12
+nsi_summary["sharpe"] = (
+    nsi_summary["mean_ann"] /
+    (nsi_summary["std"] * np.sqrt(12))
+)
+
+for col in nsi_wide.columns:
+    t_stat = nsi_wide[col].mean() / (
+        nsi_wide[col].std() / np.sqrt(len(nsi_wide))
+    )
+    nsi_summary.loc[col, "t_stat"] = t_stat
+
+nsi_summary = nsi_summary[["mean_ann", "sharpe", "t_stat"]].round(4)
+nsi_summary.columns = ["Ann. Return", "Sharpe", "t-stat"]
+nsi_summary
+```
+
+### Valuation Implications: Fama-French Factor Regressions
+
+We evaluate whether the investment and financing anomalies represent compensation for systematic risk by regressing the long-short portfolios on standard factor models:
+
+$$
+R_{p,t} - R_{f,t} = \alpha + \beta_{\text{MKT}} \text{MKT}_t + \beta_{\text{SMB}} \text{SMB}_t + \beta_{\text{HML}} \text{HML}_t + \varepsilon_t
+$$ {#eq-factor-regression}
+
+Significant positive $\alpha$ after controlling for known risk factors would indicate that the anomaly is not explained by size and value exposures.
+
+```{python}
+#| label: factor-regressions
+#| eval: false
+
+# Merge long-short returns with factor data
+factor_data = factors.set_index("date")
+
+# Asset growth anomaly alpha
+ag_ls = ag_wide[["L-S"]].dropna().rename(columns={"L-S": "excess_ret"})
+ag_merged = ag_ls.join(factor_data[["mkt_rf", "smb", "hml"]], how="inner")
+
+model_ag_ff3 = sm.OLS(
+    ag_merged["excess_ret"],
+    sm.add_constant(ag_merged[["mkt_rf", "smb", "hml"]])
+).fit(cov_type="HAC", cov_kwds={"maxlags": 6})
+
+# NSI anomaly alpha
+nsi_ls = nsi_wide[["L-S"]].dropna().rename(columns={"L-S": "excess_ret"})
+nsi_merged = nsi_ls.join(factor_data[["mkt_rf", "smb", "hml"]], how="inner")
+
+model_nsi_ff3 = sm.OLS(
+    nsi_merged["excess_ret"],
+    sm.add_constant(nsi_merged[["mkt_rf", "smb", "hml"]])
+).fit(cov_type="HAC", cov_kwds={"maxlags": 6})
+```
+
+```{python}
+#| label: tbl-factor-alphas
+#| eval: false
+#| tbl-cap: "Fama-French Three-Factor Alphas for Corporate Decision Anomalies"
+
+alpha_table = pd.DataFrame({
+    "Asset Growth L-S": {
+        "Alpha (monthly)": f"{model_ag_ff3.params['const']:.4f}",
+        "  t-stat": f"{model_ag_ff3.tvalues['const']:.3f}",
+        "MKT": f"{model_ag_ff3.params['mkt_rf']:.4f}",
+        "SMB": f"{model_ag_ff3.params['smb']:.4f}",
+        "HML": f"{model_ag_ff3.params['hml']:.4f}",
+        "R²": f"{model_ag_ff3.rsquared:.4f}"
+    },
+    "Net Issuance L-S": {
+        "Alpha (monthly)": f"{model_nsi_ff3.params['const']:.4f}",
+        "  t-stat": f"{model_nsi_ff3.tvalues['const']:.3f}",
+        "MKT": f"{model_nsi_ff3.params['mkt_rf']:.4f}",
+        "SMB": f"{model_nsi_ff3.params['smb']:.4f}",
+        "HML": f"{model_nsi_ff3.params['hml']:.4f}",
+        "R²": f"{model_nsi_ff3.rsquared:.4f}"
+    }
+})
+alpha_table
+```
+
+```{python}
+#| label: fig-anomaly-comparison
+#| eval: false
+#| fig-cap: "Corporate Decision Anomalies: Cumulative Long-Short Returns"
+
+# Combine asset growth and NSI long-short for comparison
+combined = pd.DataFrame({
+    "Asset Growth": ag_wide["L-S"],
+    "Net Issuance": nsi_wide["L-S"]
+}).dropna()
+
+combined_cum = (1 + combined).cumprod().reset_index()
+combined_long = combined_cum.melt(
+    id_vars="date",
+    var_name="Anomaly",
+    value_name="Cumulative Return"
+)
+
+(
+    p9.ggplot(combined_long, p9.aes(
+        x="date", y="Cumulative Return", color="Anomaly"
+    ))
+    + p9.geom_line(size=0.8)
+    + p9.geom_hline(yintercept=1, linetype="dashed", color="gray")
+    + p9.scale_color_manual(values=["#2E5090", "#C0392B"])
+    + p9.labs(
+        x="",
+        y="Cumulative Return (Growth of $1)",
+        title="Investment vs. Financing Anomalies: Long-Short Portfolios"
+    )
+    + p9.theme_minimal()
+    + p9.theme(figure_size=(12, 5), legend_position="top")
+)
+```
+
+<!-- ## Exercises
+
+1.  **Measurement Error Quantification.** Implement the full @erickson2012treating fifth-order cumulant estimator (using both third and fifth moments) for the investment-$Q$ regression. Compare the corrected $\beta_1$ with the OLS estimate. What fraction of the OLS attenuation is attributable to measurement error in $Q$? Does the correction change the significance of the cash flow coefficient?
+
+2.  **Financial Constraints and Investment Efficiency.** Construct the @hadlock2010new SA index for all Vietnamese firms. Sort firms into SA quintiles and estimate separate investment-$Q$ regressions for each quintile. Plot the $Q$ coefficient across quintiles. Is the investment-$Q$ sensitivity monotonically increasing in the SA index (as the constraint hypothesis predicts), or does the Kaplan-Zingales monotonicity failure replicate?
+
+3.  **Speed of Leverage Adjustment.** Estimate the target adjustment model: $\text{Lev}_{i,t} - \text{Lev}_{i,t-1} = \lambda(\text{Lev}_{i,t}^* - \text{Lev}_{i,t-1}) + \varepsilon_{i,t}$, where $\text{Lev}^*$ is the target leverage predicted by the Frank-Goyal determinants. Estimate $\lambda$ for the full sample and separately for SOEs versus private firms. Does state ownership accelerate or retard adjustment to target leverage? Use a system GMM estimator to address the Nickell bias from the lagged dependent variable in short panels.
+
+4.  **Tunneling and Related-Party Transactions.** If DataCore.vn provides related-party transaction (RPT) data, estimate the effect of RPT intensity on firm value (Tobin's $Q$) and operating performance (ROA), controlling for ownership concentration, governance variables, and firm fundamentals. Use the @jiang2010tunneling methodology to distinguish potentially expropriative RPTs from benign ones. Does the RPT-value relationship depend on the identity of the controlling shareholder (state vs. family vs. foreign)?
+
+5.  **Dividend Tax Clientele.** Vietnam implemented a 5% dividend tax in 2014. Using a difference-in-differences design around this regulatory change, test whether the tax altered payout composition (dividends vs. share repurchases vs. retained earnings). Control for firm characteristics and use a matched sample of high- vs. low-dividend firms to estimate the treatment effect on total payout and payout mix.
+
+6.  **Investment Factor Construction.** Construct a Vietnamese investment factor (CMA, "Conservative Minus Aggressive") following the @FamaFrench2015 methodology. Sort firms into 2×3 portfolios on size and asset growth, compute value-weighted returns, and form the long-short factor. Test whether the factor is priced in the cross-section using Fama-MacBeth regressions and whether it subsumes the asset growth anomaly documented in this chapter. Compare the factor's performance with the profitability factor (RMW). -->
+
+## Summary
+
+This chapter implemented the core econometric toolkit of empirical corporate finance for Vietnamese listed firms. The estimators span four interconnected domains: investment decisions (investment-$Q$ regressions and their measurement-error-corrected variants), financing decisions (capital structure determinants, pecking order tests, and market timing measures), payout policy (Lintner smoothing, repurchase models, and dividend signaling tests), and agency costs (ownership-value relationships, free cash flow measures, and governance variables).
+
+Several findings deserve emphasis. The investment-$Q$ relationship in Vietnam is attenuated relative to developed-market benchmarks, reflecting both the severity of measurement error in $Q$ (thin trading, price limits, volatile inflation) and the prevalence of non-market-driven investment by SOEs. Cash flow remains a significant predictor of investment across constraint classifications, though the FHP-KZ debate about interpretation applies with full force. Capital structure is strongly predicted by profitability (negatively, consistent with the pecking order) and tangibility (positively, consistent with trade-off theory). Dividend smoothing is pronounced, but the smoothing parameter differs systematically between SOEs and private firms, reflecting the distinct institutional forces governing each group's payout policy.
+
+The chapter also linked corporate decisions to asset returns through portfolio sorts on asset growth and net stock issuance. Whether these anomalies survive risk adjustment and persist out of sample in Vietnamese markets is an important open question for future research.
