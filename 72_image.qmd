@@ -1,0 +1,1294 @@
+```{python}
+#| label: setup
+#| message: false
+
+import pandas as pd
+import numpy as np
+from pathlib import Path
+import warnings
+warnings.filterwarnings("ignore")
+
+from PIL import Image
+import io
+import base64
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torchvision import models, transforms
+
+from scipy import stats
+import statsmodels.api as sm
+from linearmodels.panel import PanelOLS
+
+import plotnine as p9
+from mizani.formatters import percent_format, comma_format
+
+from datacore import DataCore
+dc = DataCore()
+```
+
+```{python}
+#| label: feature-extractor
+
+def build_feature_extractor(model_name="resnet50", device="cpu"):
+    """
+    Build a pre-trained CNN feature extractor.
+
+    Returns the model (with classification head removed),
+    the appropriate image transform, and the output dimension.
+    """
+    if model_name == "resnet50":
+        weights = models.ResNet50_Weights.DEFAULT
+        model = models.resnet50(weights=weights)
+        model = nn.Sequential(*list(model.children())[:-1])
+        transform = weights.transforms()
+        dim = 2048
+
+    elif model_name == "efficientnet_b0":
+        weights = models.EfficientNet_B0_Weights.DEFAULT
+        model = models.efficientnet_b0(weights=weights)
+        model = nn.Sequential(
+            model.features,
+            nn.AdaptiveAvgPool2d(1),
+            nn.Flatten()
+        )
+        transform = weights.transforms()
+        dim = 1280
+
+    elif model_name == "vit_b_16":
+        weights = models.ViT_B_16_Weights.DEFAULT
+        model = models.vit_b_16(weights=weights)
+        model.heads = nn.Identity()
+        transform = weights.transforms()
+        dim = 768
+
+    else:
+        raise ValueError(f"Unknown model: {model_name}")
+
+    model = model.to(device)
+    model.eval()
+    return model, transform, dim
+
+
+def extract_features(image_paths, model, transform, device="cpu",
+                      batch_size=32):
+    """
+    Extract CNN features from a list of image paths.
+
+    Returns
+    -------
+    np.ndarray : (n_images, feature_dim) feature matrix.
+    """
+    all_features = []
+
+    for i in range(0, len(image_paths), batch_size):
+        batch_paths = image_paths[i:i + batch_size]
+        batch_tensors = []
+
+        for path in batch_paths:
+            try:
+                img = Image.open(path).convert("RGB")
+                tensor = transform(img)
+                batch_tensors.append(tensor)
+            except Exception:
+                continue
+
+        if not batch_tensors:
+            continue
+
+        batch = torch.stack(batch_tensors).to(device)
+
+        with torch.no_grad():
+            features = model(batch)
+            if features.dim() > 2:
+                features = features.squeeze(-1).squeeze(-1)
+
+        all_features.append(features.cpu().numpy())
+
+    if all_features:
+        return np.vstack(all_features)
+    return np.array([])
+```
+
+## Satellite and Geospatial Imagery
+
+### Application 1: Nighttime Luminosity and Provincial GDP
+
+Vietnam's General Statistics Office (GSO) publishes provincial GDP with a delay of 3--6 months and subject to revision. Nighttime lights provide a near-real-time alternative. We replicate the @Henderson2012 framework for Vietnam using VIIRS nighttime lights data.
+
+The statistical model relates measured GDP growth to a composite of official statistics and lights:
+
+$$
+\hat{g}_{i,t} = (1 - \lambda) \cdot g_{i,t}^{\text{official}} + \lambda \cdot \hat{\beta} \cdot \Delta \log(\text{lights}_{i,t})
+$$ {#eq-lights-gdp}
+
+where $\hat{\beta}$ is the lights-GDP elasticity and $\lambda$ is the optimal weight that depends on the signal-to-noise ratios of the two data sources. For countries with poor-quality GDP data, $\lambda$ is large; for countries with reliable statistics, $\lambda$ is small.
+
+```{python}
+#| label: nightlights-gdp
+
+nightlights = dc.get_nightlights(
+    country="VNM",
+    start_date="2014-01-01",
+    end_date="2024-12-31",
+    frequency="annual",
+    level="province"
+)
+
+provincial_gdp = dc.get_provincial_gdp(
+    start_date="2014-01-01",
+    end_date="2024-12-31"
+)
+
+panel = nightlights.merge(
+    provincial_gdp,
+    on=["province_code", "year"],
+    how="inner"
+)
+
+panel["log_lights"] = np.log(panel["sum_of_lights"] + 1)
+panel["log_gdp"] = np.log(panel["gdp_bn_vnd"] + 1)
+
+# --- Cross-section: levels ---
+cross_section = panel.groupby("province_code").last().reset_index()
+
+model_cross = sm.OLS(
+    cross_section["log_gdp"],
+    sm.add_constant(cross_section["log_lights"])
+).fit(cov_type="HC1")
+
+print(f"Cross-sectional: log(GDP) = {model_cross.params['const']:.3f} "
+      f"+ {model_cross.params['log_lights']:.3f} × log(Lights)")
+print(f"R² = {model_cross.rsquared:.3f}, N = {len(cross_section)}")
+```
+
+```{python}
+#| label: fig-lights-gdp
+#| fig-cap: "Nighttime Luminosity vs. Provincial GDP Across Vietnamese Provinces. Each point represents one province; the regression line has slope ≈ 0.3, consistent with Henderson, Storeygard, and Weil (2012)."
+
+(
+    p9.ggplot(cross_section, p9.aes(x="log_lights", y="log_gdp"))
+    + p9.geom_point(alpha=0.6, color="#2E5090")
+    + p9.geom_smooth(method="lm", color="#C0392B", se=True)
+    + p9.labs(
+        x="log(Sum of Lights)",
+        y="log(Provincial GDP, bn VND)"
+    )
+    + p9.theme_minimal()
+    + p9.theme(figure_size=(10, 6))
+)
+```
+
+```{python}
+#| label: lights-panel-growth
+
+# --- Panel: growth rates ---
+panel = panel.sort_values(["province_code", "year"])
+panel["d_log_lights"] = panel.groupby("province_code")["log_lights"].diff()
+panel["d_log_gdp"] = panel.groupby("province_code")["log_gdp"].diff()
+
+panel_clean = panel.dropna(subset=["d_log_lights", "d_log_gdp"])
+
+if len(panel_clean) > 50:
+    panel_clean = panel_clean.set_index(["province_code", "year"])
+
+    model_panel = PanelOLS(
+        panel_clean["d_log_gdp"],
+        panel_clean[["d_log_lights"]],
+        entity_effects=True,
+        time_effects=True,
+        check_rank=False
+    ).fit(cov_type="clustered", cluster_entity=True)
+
+    elasticity = model_panel.params["d_log_lights"]
+    t_stat = model_panel.tstats["d_log_lights"]
+
+    print(f"Panel (FE + TE): lights-GDP elasticity = "
+          f"{elasticity:.3f} (t = {t_stat:.2f})")
+    print(f"Within R² = {model_panel.rsquared_within:.4f}")
+```
+
+```{python}
+#| label: tbl-lights-summary
+#| tbl-cap: "Nighttime Lights as Provincial GDP Proxy"
+
+nl_summary = pd.DataFrame({
+    "Specification": [
+        "Cross-section: log levels",
+        "Panel: growth rates (FE + TE)"
+    ],
+    "Elasticity": [
+        model_cross.params["log_lights"],
+        elasticity
+    ],
+    "t-statistic": [
+        model_cross.tvalues["log_lights"],
+        t_stat
+    ],
+    "R²": [
+        model_cross.rsquared,
+        model_panel.rsquared_within
+    ],
+    "N": [len(cross_section), len(panel_clean)]
+}).round(3)
+nl_summary
+```
+
+::: callout-note
+## Vietnamese Political Economy Applications
+
+@hodler2014regional show that regions politically aligned with the national leader experience faster luminosity growth. Vietnam's centralized governance structure creates a natural testing ground. Do provinces whose Party secretaries are promoted to the Politburo subsequently experience faster luminosity growth? Does luminosity in special economic zones (Vân Đồn, Phú Quốc, Bắc Vân Phong) increase after designation? These questions require only nighttime lights data and publicly available political appointment records.
+:::
+
+### Application 2: Satellite Imagery for Sector Nowcasting
+
+Beyond luminosity, daytime satellite imagery provides sector-specific signals. We implement three channels relevant to the Vietnamese economy.
+
+**Port activity.** Vietnam's export-oriented economy makes port monitoring valuable. @yu2023eye demonstrate that satellite-derived container counts at 50 major ports predict stock returns in 27 of 33 countries at daily frequency: the mechanism is that container trade volume is a leading indicator of industrial production via the dividend discount model. Cát Lái (Ho Chi Minh City) handles approximately 85% of southern Vietnam's containerized trade; Hải Phòng dominates the north.
+
+**Construction progress.** Real estate and construction constitute a significant fraction of Vietnamese GDP and market capitalization. Change detection algorithms applied to high-resolution optical imagery identify construction starts, completion rates, and land-use conversion.
+
+**Agricultural monitoring.** Vietnam is a leading exporter of rice, coffee, rubber, and seafood. The Normalized Difference Vegetation Index (NDVI), computed from multispectral satellite data, provides crop health assessments:
+
+$$
+\text{NDVI} = \frac{\rho_{\text{NIR}} - \rho_{\text{Red}}}{\rho_{\text{NIR}} + \rho_{\text{Red}}}
+$$ {#eq-ndvi}
+
+where $\rho_{\text{NIR}}$ and $\rho_{\text{Red}}$ are reflectance in the near-infrared and red bands. NDVI ranges from $-1$ to $+1$, with values above 0.3 indicating healthy vegetation. Deviations from seasonal norms proxy for crop yield surprises.
+
+```{python}
+#| label: ndvi-agriculture
+
+ndvi_data = dc.get_ndvi(
+    regions=["mekong_delta", "central_highlands", "red_river_delta"],
+    start_date="2018-01-01",
+    end_date="2024-12-31",
+    frequency="monthly"
+)
+
+ndvi_data["month"] = pd.to_datetime(ndvi_data["date"]).dt.month
+seasonal_mean = ndvi_data.groupby(
+    ["region", "month"]
+)["ndvi"].transform("mean")
+ndvi_data["ndvi_anomaly"] = ndvi_data["ndvi"] - seasonal_mean
+
+# Merge with agricultural firm returns
+agri_firms = dc.get_sector_firms(sector="agriculture")
+agri_returns = dc.get_monthly_returns(
+    tickers=agri_firms["ticker"].tolist(),
+    start_date="2018-01-01",
+    end_date="2024-12-31"
+)
+
+agri_merged = agri_returns.merge(
+    agri_firms[["ticker", "region"]], on="ticker"
+).merge(
+    ndvi_data[["date", "region", "ndvi_anomaly"]],
+    on=["date", "region"],
+    how="inner"
+)
+
+agri_merged = agri_merged.sort_values(["ticker", "date"])
+agri_merged["ndvi_lag1"] = agri_merged.groupby(
+    "ticker"
+)["ndvi_anomaly"].shift(1)
+
+agri_clean = agri_merged.dropna(subset=["ret", "ndvi_lag1"])
+agri_clean = agri_clean.set_index(["ticker", "date"])
+
+model_ndvi = PanelOLS(
+    agri_clean["ret"],
+    agri_clean[["ndvi_lag1"]],
+    entity_effects=True,
+    time_effects=True,
+    check_rank=False
+).fit(cov_type="clustered", cluster_entity=True)
+
+agri_clean = agri_clean.reset_index()
+
+print(f"NDVI Anomaly → Agricultural Firm Returns:")
+print(f"  β(NDVI_lag): {model_ndvi.params['ndvi_lag1']:.4f}")
+print(f"  t-stat:      {model_ndvi.tstats['ndvi_lag1']:.3f}")
+print(f"  R² (within): {model_ndvi.rsquared_within:.4f}")
+```
+
+### Satellite Feature Extraction with CNNs
+
+For raw satellite imagery (rather than pre-computed indices like NDVI), we use transfer learning to extract spatial features. The approach follows @jean2016combining: use a CNN pre-trained on ImageNet to extract feature vectors from satellite tiles, then regress economic outcomes on these features.
+
+```{python}
+#| label: satellite-cnn-pipeline
+
+def satellite_feature_pipeline(image_dir, model_name="resnet50"):
+    """
+    Extract CNN features from satellite image tiles.
+    """
+    image_dir = Path(image_dir)
+    image_paths = sorted(image_dir.glob("*.png")) + sorted(
+        image_dir.glob("*.tif")
+    )
+
+    if not image_paths:
+        print("No images found.")
+        return pd.DataFrame()
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, transform, dim = build_feature_extractor(model_name, device)
+    features = extract_features(image_paths, model, transform, device)
+
+    feature_cols = [f"feat_{i}" for i in range(dim)]
+    df = pd.DataFrame(features, columns=feature_cols)
+    df["image_id"] = [p.stem for p in image_paths[:len(features)]]
+    return df
+
+
+def predict_economic_activity(features_df, labels_df, label_col,
+                              n_components=50):
+    """
+    Predict economic activity from satellite image features.
+    Uses PCA for dimensionality reduction, then ridge regression.
+    """
+    from sklearn.decomposition import PCA
+    from sklearn.linear_model import RidgeCV
+    from sklearn.model_selection import cross_val_score
+
+    merged = features_df.merge(labels_df, on="image_id")
+    feature_cols = [c for c in features_df.columns if c.startswith("feat_")]
+
+    X = merged[feature_cols].values
+    y = merged[label_col].values
+
+    pca = PCA(n_components=n_components)
+    X_pca = pca.fit_transform(X)
+    var_explained = pca.explained_variance_ratio_.sum()
+
+    ridge = RidgeCV(alphas=np.logspace(-3, 3, 20), cv=5)
+    cv_scores = cross_val_score(ridge, X_pca, y, cv=5, scoring="r2")
+    ridge.fit(X_pca, y)
+
+    return {
+        "r2_cv_mean": cv_scores.mean(),
+        "r2_cv_std": cv_scores.std(),
+        "r2_train": ridge.score(X_pca, y),
+        "pca_var_explained": var_explained,
+        "optimal_alpha": ridge.alpha_,
+        "n_images": len(merged)
+    }
+```
+
+## Satellite Imagery in Capital Markets
+
+The preceding sections treated satellite imagery as an input to economic activity measurement. A separate and rapidly growing literature examines the capital market consequences of satellite data---how its availability reshapes price discovery, information asymmetry, and trading strategies. This literature is essential for understanding both the opportunities and the regulatory implications of visual alternative data.
+
+### Parking Lot Traffic and Retail Earnings
+
+The most commercially prominent satellite finance application is parking lot monitoring. @katona2025capital study the staggered introduction of satellite coverage of major US retailers by RS Metrics and Orbital Insight. Using 4.8 million daily observations across 67,120 store locations for 44 retailers (2011-2017), they show that satellite-derived parking lot fill rates predict quarterly retail sales and earnings surprises, generating 4-5% abnormal returns in the three-day earnings announcement window. Critically, unequal access to this data increases information asymmetry: sophisticated hedge funds profit at the expense of individual investors, without immediately enhancing aggregate price discovery.
+
+@zhu2019big confirms that satellite-based car counts in retailer parking lots predict yet-to-be-announced earnings. Beyond the trading application, she frames alternative data as a governance mechanism: firms covered by satellite monitoring exhibit improved price informativeness, because the satellite data generates signals that partially substitute for insider information. @gerken2023value use the same satellite data to show that analysts' geographic proximity creates informational advantages---analysts close to retail locations produce more accurate forecasts---and that the introduction of satellite data partially offsets this geographic bias by democratizing location-specific information.
+
+**Vietnamese adaptation.** Vietnamese retail takes a different physical form---wet markets, street-front shops, and shopping malls rather than standalone big-box stores with dedicated parking lots. The analog signal is vehicle density: motorbike and car counts at retail centers (WinMart, Co.opmart, Big C, AEON Mall) and industrial zones (truck counts entering/leaving manufacturing parks in Binh Duong, Dong Nai, Bac Ninh).
+
+```{python}
+#| label: parking-lot-vietnamese
+
+def vehicle_density_signal(image_features_df, firm_mapping,
+                            quarterly_earnings):
+    """
+    Construct parking-lot-analog signals for Vietnamese retailers.
+
+    Maps satellite features of retail locations to firm-quarter
+    observations, following the Katona et al. (2024) methodology.
+    """
+    firm_signals = (
+        image_features_df.merge(firm_mapping, on="location_id")
+        .groupby(["ticker", "quarter"])
+        .agg(
+            avg_vehicle_count=("vehicle_count", "mean"),
+            vehicle_yoy_change=("vehicle_yoy", "mean"),
+            n_locations=("location_id", "nunique")
+        )
+        .reset_index()
+    )
+
+    signal_data = firm_signals.merge(
+        quarterly_earnings, on=["ticker", "quarter"]
+    )
+
+    if len(signal_data) > 30:
+        model = sm.OLS(
+            signal_data["earnings_surprise"],
+            sm.add_constant(signal_data[["vehicle_yoy_change"]])
+        ).fit(cov_type="HC1")
+
+        return {
+            "beta_vehicle": model.params["vehicle_yoy_change"],
+            "t_stat": model.tvalues["vehicle_yoy_change"],
+            "r2": model.rsquared,
+            "n_obs": len(signal_data)
+        }
+
+    return None
+```
+
+### Oil Storage and Commodity Markets
+
+@mukherjee2021eye exploit satellite imagery of floating-roof oil storage tanks to measure crude oil inventories in near-real time. Their identification strategy is ingenious: cloud cover over oil-producing regions (Cushing, Oklahoma) is plausibly exogenous and prevents satellite observation. On cloudy days---when satellite data is unavailable---the government's weekly oil inventory announcement produces a 30% larger price reaction, demonstrating that satellite data and government statistics are information substitutes. When satellite data is flowing, investors have already partially incorporated the inventory information before the official release.
+
+**Vietnamese adaptation.** Vietnam has substantial petroleum storage and refining capacity (Nghi Son and Dung Quat refineries) and is a significant oil producer. Monitoring tank farm fill rates at these facilities via satellite could inform both commodity trading and the valuation of PetroVietnam-linked equities (PVD, PVS, PLX). The same shadow-measurement technique for floating-roof tanks applies directly.
+
+### Container Ports and Trade Activity
+
+@yu2023eye use 83,672 satellite images of 50 container ports worldwide, applying the U-Net semantic segmentation architecture to identify container areas. They demonstrate that changes in container coverage predict stock index returns in 27 of 33 countries at daily frequency. The economic mechanism follows the dividend discount model: container trade volume is a leading indicator of industrial production, which drives expected cash flows and therefore equity valuations.
+
+**Vietnamese adaptation.** Vietnam's export-oriented economy makes port monitoring especially valuable. Cát Lái processes over 5 million TEUs annually; Hải Phòng handles northern trade. Monitoring container stacking density, vessel counts, and berth utilization provides a real-time trade activity index that can predict both aggregate VN-Index returns and the performance of logistics firms (Gemadept, Saigon Newport).
+
+```{python}
+#| label: port-nowcast
+
+def port_activity_index(satellite_features, port_name,
+                        aggregate_returns):
+    """
+    Construct port activity index from satellite imagery and
+    test predictive power for aggregate stock returns.
+    """
+    port_data = satellite_features[
+        satellite_features["port"] == port_name
+    ].copy().sort_values("date")
+
+    port_data["container_change_5d"] = (
+        port_data["container_density"].pct_change(5)
+    )
+
+    merged = port_data.merge(aggregate_returns, on="date", how="inner")
+    merged["ret_5d_forward"] = merged["ret"].rolling(5).sum().shift(-5)
+    merged = merged.dropna(
+        subset=["container_change_5d", "ret_5d_forward"]
+    )
+
+    if len(merged) > 50:
+        model = sm.OLS(
+            merged["ret_5d_forward"],
+            sm.add_constant(merged[["container_change_5d"]])
+        ).fit(cov_type="HAC", cov_kwds={"maxlags": 10})
+
+        return {
+            "beta": model.params["container_change_5d"],
+            "t_stat": model.tvalues["container_change_5d"],
+            "r2": model.rsquared,
+            "n_weeks": len(merged)
+        }
+    return None
+```
+
+### Information Asymmetry in Emerging Markets
+
+@dai2023neighbors provide evidence directly relevant to Vietnam. They show that cloud cover over Chinese firms' facilities affects the B-share discount---the gap between domestic A-share and foreign-investor B-share prices. When skies are clear and satellite observation is possible, foreign investors (who rely more on satellite data due to geographic distance) can better assess firms, and the B-share discount narrows by 2.94% per one standard deviation decrease in cloud cover. Going from completely cloudy to clear sky alleviates the discount by 16.32%.
+
+This finding has a direct parallel in Vietnam, where foreign investors face language barriers, limited management access, and filings that are often available only in Vietnamese. Satellite monitoring can partially offset these disadvantages, but creates a two-tier information structure: foreign institutions with satellite data subscriptions versus domestic retail investors without. The broader implication, following @goldstein2015information, is that alternative data proliferation does not necessarily democratize information---it can widen asymmetry.
+
+### Literature Summary
+
+| Paper | Journal | Data | Key Finding |
+|----------------|-----------------|----------------|------------------------|
+| Henderson et al. (2012) | AER | DMSP nightlights | Lights proxy GDP; elasticity ≈ 0.3 |
+| Donaldson & Storeygard (2016) | JEP | Survey of satellite applications | Comprehensive review of satellite data in economics |
+| Jean et al. (2016) | Science | Daytime satellite + CNN | R² \> 0.7 for poverty prediction |
+| Hodler & Raschky (2014) | QJE | VIIRS nightlights | Political alignment → more luminosity growth |
+| Henderson et al. (2018) | QJE | Nightlights + trade | Geography, history, trade shape economic activity |
+| Katona et al. (2025) | JFQA | Parking lot fill rates | 4-5% abnormal returns; increases info asymmetry |
+| Mukherjee et al. (2021) | JFE | Oil tank shadows | Cloud cover amplifies govt data price impact 30% |
+| Zhu (2019) | RFS | Parking lot traffic | Alt data as governance mechanism |
+| Gerken & Painter (2023) | RFS | Retail store imagery | Satellite offsets analyst geographic bias |
+| Li et al. (2023) | Nat HSSC | Container port imagery | Predicts returns in 27/33 countries |
+| He et al. (2023) | China Econ Rev | Cloud cover over firms | Clear skies narrow B-share discount 2.94% |
+
+: Key Papers on Satellite Imagery in Finance and Economics {#tbl-satellite-papers}
+
+## CEO Facial Analysis and Visual Corporate Signals
+
+### Faces and Firm Outcomes
+
+A provocative strand of the behavioral finance literature examines whether CEO facial characteristics predict corporate outcomes. @graham2017corporate conduct beauty-contest experiments with nearly 2,000 subjects and find that CEO faces are rated as appearing more "competent" and less "likable" than non-CEO faces. Large-firm CEOs look more competent and likable than small-firm CEOs. Perceived competence ratings are positively associated with executive compensation, and the facial-trait rating can be explained by quantitative scoring of the "maturity" or "baby-facedness" of the CEO---more mature faces receive higher competence scores.
+
+@rule2008face show that naïve observers' ratings of CEO faces from Fortune 500 companies predict actual firm profits, even after controlling for other factors. The effect operates through perceived leadership ability and dominance. Subsequent work on CEO facial width-to-height ratio (fWHR)---a sexually dimorphic trait linked to testosterone and perceived dominance---has produced mixed evidence, with some studies finding positive associations with risk-taking and M&A activity, and others failing to replicate.
+
+@duarte2012trust extend facial analysis to peer-to-peer lending, finding that borrowers whose photographs appear more trustworthy on Prosper.com secure more funding and pay lower interest rates. However, trustworthy-looking borrowers are not less likely to default---consistent with a beauty premium (investor bias) rather than genuine information content. @nekrasov2022visuals show that visual content on financial social media carries attention and sentiment signals beyond text, predicting trading volume around earnings announcements.
+
+### CEO Appearance in Vietnam
+
+Vietnamese annual reports routinely feature high-resolution photographs of the CEO, board chairman, and sometimes the entire board. These images are systematically available from DataCore.vn and represent a ready-made dataset for facial analysis research. The Vietnamese context offers distinctive features for this literature.
+
+**State vs. private CEO selection.** State-owned enterprises appoint CEOs through political processes (Party nomination), while private firms select through market mechanisms. If @graham2017corporate's competence-perception result holds, we would expect private-sector CEOs to score higher on perceived competence, since they face competitive labor markets for executive talent.
+
+**Gender.** Vietnam has one of the highest female labor force participation rates in Asia and more female CEOs than most countries. Extending facial analysis to female executives---rare in the original US-based studies---tests whether appearance-performance associations are gender-specific.
+
+**Cultural context.** Facial perception is culturally conditioned. The competence signals identified by @rule2008face in Western samples may carry different weight in Vietnamese contexts where different facial features carry different social signals. Cross-cultural validation is itself a contribution.
+
+```{python}
+#| label: ceo-facial-features
+
+def extract_ceo_facial_features(image_path):
+    """
+    Extract facial features from a CEO photograph.
+
+    Uses a face landmark detector to compute:
+    - Face width-to-height ratio (fWHR): linked to perceived dominance
+    - Facial symmetry: linked to perceived attractiveness
+    - Maturity score: linked to perceived competence (Graham et al. 2017)
+    """
+    try:
+        import cv2
+        import dlib
+
+        img = cv2.imread(str(image_path))
+        if img is None:
+            return None
+
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        detector = dlib.get_frontal_face_detector()
+        predictor = dlib.shape_predictor(
+            "shape_predictor_68_face_landmarks.dat"
+        )
+
+        faces = detector(gray)
+        if len(faces) == 0:
+            return None
+
+        shape = predictor(gray, faces[0])
+        landmarks = np.array(
+            [(shape.part(i).x, shape.part(i).y) for i in range(68)]
+        )
+
+        # fWHR: bizygomatic width / upper face height
+        face_width = np.linalg.norm(landmarks[16] - landmarks[0])
+        brow_y = np.mean(landmarks[17:27, 1])
+        lip_y = landmarks[51, 1]
+        upper_face_height = lip_y - brow_y
+        fwhr = (face_width / upper_face_height
+                if upper_face_height > 0 else np.nan)
+
+        # Symmetry
+        nose_x = landmarks[30, 0]
+        left_dist = nose_x - landmarks[0, 0]
+        right_dist = landmarks[16, 0] - nose_x
+        symmetry = (min(left_dist, right_dist) /
+                     max(left_dist, right_dist)
+                     if max(left_dist, right_dist) > 0 else np.nan)
+
+        # Jaw width / face width → maturity proxy
+        jaw_width = np.linalg.norm(landmarks[4] - landmarks[12])
+        maturity = jaw_width / face_width if face_width > 0 else np.nan
+
+        return {
+            "fwhr": fwhr,
+            "symmetry": symmetry,
+            "maturity": maturity,
+            "face_width": face_width,
+            "upper_face_height": upper_face_height
+        }
+
+    except (ImportError, Exception):
+        return {"fwhr": np.nan, "symmetry": np.nan, "maturity": np.nan}
+
+
+def ceo_appearance_and_performance(facial_df, firm_df):
+    """
+    Test whether CEO facial features predict firm outcomes.
+    Replicates Graham, Harvey, Puri (2017) for Vietnamese firms.
+    """
+    merged = facial_df.merge(firm_df, on="ticker")
+    merged = merged.dropna(subset=["fwhr", "tobins_q", "log_size"])
+
+    if len(merged) < 30:
+        return None
+
+    controls = ["log_size", "profitability", "leverage", "firm_age"]
+    facial_vars = ["fwhr", "symmetry", "maturity"]
+
+    available = [v for v in controls + facial_vars
+                 if v in merged.columns and merged[v].notna().sum() > 20]
+
+    model = sm.OLS(
+        merged["tobins_q"],
+        sm.add_constant(merged[available])
+    ).fit(cov_type="HC1")
+
+    results = {"r2": model.rsquared, "n_firms": len(merged)}
+    for var in facial_vars:
+        if var in model.params:
+            results[f"beta_{var}"] = model.params[var]
+            results[f"t_{var}"] = model.tvalues[var]
+    return results
+
+
+def beauty_contest_soe_vs_private(facial_df, firm_df):
+    """
+    Compare CEO facial features between SOEs and private firms.
+    """
+    merged = facial_df.merge(firm_df, on="ticker").dropna(
+        subset=["fwhr", "is_soe"]
+    )
+
+    soe = merged[merged["is_soe"] == True]
+    private = merged[merged["is_soe"] == False]
+
+    results = {}
+    for var in ["fwhr", "symmetry", "maturity"]:
+        soe_vals = soe[var].dropna()
+        priv_vals = private[var].dropna()
+        if len(soe_vals) > 5 and len(priv_vals) > 5:
+            t_stat, p_val = stats.ttest_ind(soe_vals, priv_vals)
+            results[var] = {
+                "soe_mean": soe_vals.mean(),
+                "private_mean": priv_vals.mean(),
+                "difference": priv_vals.mean() - soe_vals.mean(),
+                "t_stat": t_stat,
+                "p_value": p_val
+            }
+    return results
+```
+
+## Document Image Analysis
+
+### The Vietnamese Filing Problem
+
+A substantial fraction of Vietnamese corporate disclosures---annual reports, financial statements, board resolutions, shareholder meeting minutes---are distributed as scanned PDF images rather than machine-readable text. Unlike filings in more developed markets (where XBRL mandates ensure machine readability), Vietnamese filings require Optical Character Recognition (OCR) and layout analysis before any quantitative analysis can begin.
+
+Vietnamese presents particular OCR challenges: diacritical marks (à, ả, ã, á, ạ, â, ă, ê, ô, ơ, ư) are essential for meaning but easily confused by standard OCR engines. "Vốn" (capital) vs. "vòn" or "von" are three different words; misrecognizing a single diacritical mark changes the financial meaning entirely.
+
+The document AI pipeline involves four stages: (1) image preprocessing (deskewing, denoising, binarization); (2) text detection and OCR; (3) layout analysis---identifying tables, headers, footnotes; and (4) information extraction---mapping to structured financial fields.
+
+### OCR for Vietnamese Financial Documents
+
+```{python}
+#| label: ocr-pipeline
+
+def ocr_financial_document(image_path, lang="vie"):
+    """
+    OCR pipeline for Vietnamese financial documents.
+    """
+    try:
+        import pytesseract
+        from PIL import ImageEnhance
+
+        img = Image.open(image_path)
+
+        # Preprocessing
+        enhancer = ImageEnhance.Contrast(img)
+        img = enhancer.enhance(1.5)
+        enhancer = ImageEnhance.Sharpness(img)
+        img = enhancer.enhance(2.0)
+
+        gray = img.convert("L")
+        threshold = 128
+        binary = gray.point(lambda x: 255 if x > threshold else 0, "1")
+
+        ocr_data = pytesseract.image_to_data(
+            binary, lang=lang, output_type=pytesseract.Output.DICT
+        )
+
+        results = []
+        for i in range(len(ocr_data["text"])):
+            text = ocr_data["text"][i].strip()
+            conf = int(ocr_data["conf"][i])
+            if text and conf > 40:
+                results.append({
+                    "text": text,
+                    "confidence": conf,
+                    "x": ocr_data["left"][i],
+                    "y": ocr_data["top"][i],
+                    "width": ocr_data["width"][i],
+                    "height": ocr_data["height"][i],
+                    "block_num": ocr_data["block_num"][i],
+                    "line_num": ocr_data["line_num"][i]
+                })
+
+        full_text = pytesseract.image_to_string(binary, lang=lang)
+
+        return {
+            "full_text": full_text,
+            "details": pd.DataFrame(results),
+            "n_words": len(results),
+            "avg_confidence": (
+                np.mean([r["confidence"] for r in results])
+                if results else 0
+            )
+        }
+
+    except ImportError:
+        return {"full_text": "", "details": pd.DataFrame(),
+                "n_words": 0, "avg_confidence": 0}
+```
+
+### Table Extraction from Financial Statements
+
+Financial tables are the most valuable extraction targets. A balance sheet table contains structured data---account names, values, periods---that must be parsed into machine-readable format. The challenge is that table structure varies across firms: merged cells, multi-line headers, Vietnamese account names with varying terminology, and inconsistent number formatting (1.234.567 vs. 1,234,567).
+
+```{python}
+#| label: table-extraction
+
+# Vietnamese financial keywords for table parsing
+VN_FINANCIAL_KEYWORDS = {
+    "balance_sheet": {
+        "total_assets": [
+            "tổng cộng tài sản", "tổng tài sản", "total assets"
+        ],
+        "total_equity": [
+            "vốn chủ sở hữu", "nguồn vốn chủ sở hữu", "total equity"
+        ],
+        "total_liabilities": [
+            "nợ phải trả", "tổng nợ", "total liabilities"
+        ],
+        "cash": [
+            "tiền và tương đương tiền", "tiền mặt",
+            "cash and cash equivalents"
+        ],
+        "inventory": [
+            "hàng tồn kho", "inventories"
+        ],
+    },
+    "income_statement": {
+        "revenue": [
+            "doanh thu thuần", "doanh thu bán hàng", "net revenue"
+        ],
+        "net_income": [
+            "lợi nhuận sau thuế", "lãi ròng", "profit after tax"
+        ],
+        "gross_profit": [
+            "lợi nhuận gộp", "lãi gộp", "gross profit"
+        ],
+    }
+}
+
+
+def extract_financial_table(ocr_results, table_type="balance_sheet"):
+    """
+    Extract structured financial data from OCR results.
+    """
+    import re
+
+    details = ocr_results.get("details", pd.DataFrame())
+    if details.empty:
+        return pd.DataFrame()
+
+    target_keywords = VN_FINANCIAL_KEYWORDS.get(table_type, {})
+    extracted = {}
+    full_text = ocr_results["full_text"].lower()
+
+    for field, patterns in target_keywords.items():
+        for pattern in patterns:
+            if pattern.lower() in full_text:
+                lines = full_text.split("\n")
+                for line in lines:
+                    if pattern.lower() in line.lower():
+                        numbers = re.findall(
+                            r'[\d]+[.,\d]*[\d]+', line
+                        )
+                        for num_str in numbers:
+                            cleaned = num_str.replace(".", "").replace(
+                                ",", ""
+                            )
+                            if len(cleaned) > 2:
+                                try:
+                                    extracted[field] = float(cleaned)
+                                    break
+                                except ValueError:
+                                    continue
+                        break
+                break
+
+    return pd.DataFrame([extracted]) if extracted else pd.DataFrame()
+```
+
+### Layout-Aware Document Understanding
+
+Modern document AI models go beyond OCR by jointly modeling text content, visual features, and spatial layout. @huang2022layoutlmv3 introduce LayoutLMv3, which pre-trains on document images using unified text and image masking---the model simultaneously learns to predict masked text tokens and masked image patches, conditioning on the spatial position of each element. @kim2022ocr propose Donut, an OCR-free document understanding transformer that directly maps images to structured output without an intermediate text recognition step.
+
+```{python}
+#| label: layout-model
+
+class FinancialDocumentEncoder(nn.Module):
+    """
+    Layout-aware document encoder for Vietnamese financial filings.
+    Combines text embeddings, spatial layout information,
+    and image features following the LayoutLM architecture.
+    """
+
+    def __init__(self, vocab_size=50000, max_seq_len=512,
+                 d_model=256, n_heads=8, n_layers=4,
+                 max_position=1000, n_classes=10):
+        super().__init__()
+
+        self.text_emb = nn.Embedding(vocab_size, d_model)
+
+        # Layout embedding (bounding box coordinates)
+        self.x_emb = nn.Embedding(max_position, d_model)
+        self.y_emb = nn.Embedding(max_position, d_model)
+        self.w_emb = nn.Embedding(max_position, d_model)
+        self.h_emb = nn.Embedding(max_position, d_model)
+
+        # Image patch projection
+        self.patch_proj = nn.Conv2d(3, d_model, kernel_size=16, stride=16)
+
+        # Modality type embedding
+        self.type_emb = nn.Embedding(3, d_model)
+
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=d_model, nhead=n_heads,
+            dim_feedforward=d_model * 4, batch_first=True
+        )
+        self.transformer = nn.TransformerEncoder(
+            encoder_layer, num_layers=n_layers
+        )
+
+        self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))
+        self.classifier = nn.Linear(d_model, n_classes)
+
+    def forward(self, token_ids, bbox, image=None):
+        B = token_ids.shape[0]
+
+        text = self.text_emb(token_ids)
+        layout = (
+            self.x_emb(bbox[:, :, 0].clamp(0, 999)) +
+            self.y_emb(bbox[:, :, 1].clamp(0, 999)) +
+            self.w_emb((bbox[:, :, 2] - bbox[:, :, 0]).clamp(0, 999)) +
+            self.h_emb((bbox[:, :, 3] - bbox[:, :, 1]).clamp(0, 999))
+        )
+
+        combined = text + layout + self.type_emb(
+            torch.zeros_like(token_ids)
+        )
+
+        if image is not None:
+            patches = self.patch_proj(image).flatten(2).transpose(1, 2)
+            patches = patches + self.type_emb(
+                torch.ones(B, patches.shape[1],
+                           dtype=torch.long, device=patches.device) * 2
+            )
+            combined = torch.cat([combined, patches], dim=1)
+
+        cls = self.cls_token.expand(B, -1, -1)
+        combined = torch.cat([cls, combined], dim=1)
+
+        encoded = self.transformer(combined)
+        cls_output = encoded[:, 0]
+        logits = self.classifier(cls_output)
+        return cls_output, logits
+```
+
+## Chart and Figure Digitization
+
+### Motivation
+
+Financial charts are ubiquitous---in research reports, regulatory filings, presentations, and news articles---yet the data they visualize is rarely available in machine-readable form. A research analyst's chart showing historical P/E ratios, a central bank's graph of inflation expectations, or a broker's technical analysis pattern are all visual encodings of numerical data inaccessible to quantitative models.
+
+Chart digitization converts visual representations back into numerical time series: (1) classify the chart type (line, bar, scatter, candlestick), (2) detect axes and scales, (3) extract data points, and (4) reconstruct the underlying series.
+
+```{python}
+#| label: chart-classification
+
+class ChartClassifier(nn.Module):
+    """Classify financial chart types using a fine-tuned CNN."""
+
+    def __init__(self, n_classes=6, backbone="resnet50"):
+        super().__init__()
+
+        if backbone == "resnet50":
+            weights = models.ResNet50_Weights.DEFAULT
+            self.backbone = models.resnet50(weights=weights)
+            in_features = self.backbone.fc.in_features
+            self.backbone.fc = nn.Linear(in_features, n_classes)
+        elif backbone == "efficientnet_b0":
+            weights = models.EfficientNet_B0_Weights.DEFAULT
+            self.backbone = models.efficientnet_b0(weights=weights)
+            in_features = self.backbone.classifier[1].in_features
+            self.backbone.classifier = nn.Sequential(
+                nn.Dropout(0.3),
+                nn.Linear(in_features, n_classes)
+            )
+
+    def forward(self, x):
+        return self.backbone(x)
+```
+
+```{python}
+#| label: line-chart-digitizer
+
+def digitize_line_chart(image_path, x_range=None, y_range=None):
+    """
+    Extract data points from a line chart image.
+    """
+    import cv2
+
+    img = cv2.imread(str(image_path))
+    if img is None:
+        return pd.DataFrame()
+
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    h, w = gray.shape
+
+    # Detect plot area
+    edges = cv2.Canny(gray, 50, 150)
+    lines = cv2.HoughLinesP(
+        edges, 1, np.pi / 180,
+        threshold=100, minLineLength=50, maxLineGap=5
+    )
+
+    if lines is None:
+        return pd.DataFrame()
+
+    # Identify axis lines
+    h_lines, v_lines = [], []
+    for line in lines:
+        x1, y1, x2, y2 = line[0]
+        angle = np.arctan2(abs(y2 - y1), abs(x2 - x1))
+        if angle < np.pi / 8:
+            h_lines.append(line[0])
+        elif angle > 3 * np.pi / 8:
+            v_lines.append(line[0])
+
+    if h_lines and v_lines:
+        x_axis_y = max(l[1] for l in h_lines)
+        y_axis_x = min(l[0] for l in v_lines)
+        plot_right = w - 50
+        plot_top = 50
+    else:
+        x_axis_y = int(h * 0.85)
+        y_axis_x = int(w * 0.1)
+        plot_right = int(w * 0.9)
+        plot_top = int(h * 0.1)
+
+    # Extract line from binary plot region
+    plot_region = img[plot_top:x_axis_y, y_axis_x:plot_right]
+    plot_gray = cv2.cvtColor(plot_region, cv2.COLOR_BGR2GRAY)
+    _, binary = cv2.threshold(
+        plot_gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+    )
+
+    data_points = []
+    plot_h, plot_w = binary.shape
+
+    for col in range(0, plot_w, max(1, plot_w // 500)):
+        column = binary[:, col]
+        line_pixels = np.where(column > 0)[0]
+
+        if len(line_pixels) > 0:
+            y_pixel = np.mean(line_pixels)
+            x_frac = col / plot_w
+            y_frac = 1 - (y_pixel / plot_h)
+
+            x_val = (x_range[0] + x_frac * (x_range[1] - x_range[0])
+                     if x_range else x_frac)
+            y_val = (y_range[0] + y_frac * (y_range[1] - y_range[0])
+                     if y_range else y_frac)
+
+            data_points.append({"x": x_val, "y": y_val})
+
+    return pd.DataFrame(data_points)
+```
+
+## Visual Sentiment Analysis
+
+### Image Sentiment in Financial News
+
+News articles are accompanied by images that carry sentiment independent of the text. @obaid2022picture introduce "Photo Pessimism"---a daily market-level investor sentiment index constructed by applying CNN-based image classification to Wall Street Journal photographs. Consistent with behavioral models of noise trading [@baker2006investor], Photo Pessimism predicts market return reversals and trading volume, with the effect strongest among stocks with high limits to arbitrage and during periods of elevated fear.
+
+This visual sentiment channel is distinct from the text-based sentiment measures that dominate the literature. @tetlock2007giving demonstrates that text pessimism in the WSJ column "Abreast of the Market" predicts market returns and volume---the first large-scale evidence that media content carries financially relevant information beyond hard news. @garcia2013sentiment extends this to show that text sentiment is particularly informative during recessions, when investors are more attentive to negative information. @baker2006investor construct the canonical composite sentiment index from economic proxies (NYSE turnover, IPO volume and first-day returns, dividend premium, closed-end fund discount, equity share in new issues). @da2015sum build a FEARS index from Google search volume for anxiety-related terms. @jiang2019manager develop a manager sentiment index from the aggregated tone of corporate financial disclosures.
+
+Critically, @obaid2022picture find that Photo Pessimism and text pessimism act as **substitutes** rather than complements in predicting returns---they capture overlapping but not identical information. For Vietnamese markets, where photojournalism accompanies financial news on VnExpress, CafeF, and Thanh Niên, visual sentiment analysis offers an alternative to text-based NLP that avoids the difficulties of Vietnamese-language processing.
+
+@nekrasov2022visuals extend visual sentiment to social media, showing that visual content of financial tweets (images, GIFs) carries attention and sentiment signals beyond the accompanying text, predicting trading volume around earnings announcements.
+
+### CNN-Based Visual Sentiment
+
+```{python}
+#| label: visual-sentiment
+
+def compute_visual_sentiment(image_paths, model_name="resnet50"):
+    """
+    Compute visual sentiment scores using a fine-tuned CNN.
+    Following Obaid & Pukthuanthong (2022).
+    """
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, transform, dim = build_feature_extractor(model_name, device)
+    features = extract_features(image_paths, model, transform, device)
+
+    if len(features) == 0:
+        return pd.DataFrame()
+
+    # Sentiment head (in practice, fine-tuned on labeled financial images)
+    sentiment_head = nn.Sequential(
+        nn.Linear(dim, 256),
+        nn.ReLU(),
+        nn.Dropout(0.3),
+        nn.Linear(256, 3)  # negative, neutral, positive
+    ).to(device)
+
+    features_tensor = torch.tensor(
+        features, dtype=torch.float32
+    ).to(device)
+
+    with torch.no_grad():
+        logits = sentiment_head(features_tensor)
+        probs = F.softmax(logits, dim=-1).cpu().numpy()
+
+    sentiment_scores = probs[:, 2] - probs[:, 0]
+
+    return pd.DataFrame({
+        "image_path": [str(p) for p in image_paths[:len(sentiment_scores)]],
+        "sentiment_score": sentiment_scores,
+        "prob_negative": probs[:, 0],
+        "prob_neutral": probs[:, 1],
+        "prob_positive": probs[:, 2],
+        "confidence": probs.max(axis=1)
+    })
+
+
+def photo_pessimism_index(daily_image_sentiments, market_returns):
+    """
+    Construct Photo Pessimism index and test return predictability.
+    Replicates Obaid & Pukthuanthong (2022) for Vietnamese markets.
+    """
+    daily_pp = (
+        daily_image_sentiments.groupby("date")
+        .agg(
+            photo_pessimism=("sentiment_score", lambda x: -x.mean()),
+            n_images=("sentiment_score", "count"),
+            pct_negative=("prob_negative", lambda x: (x > 0.5).mean())
+        )
+        .reset_index()
+    )
+
+    merged = daily_pp.merge(
+        market_returns, on="date", how="inner"
+    ).sort_values("date")
+
+    merged["ret_1d"] = merged["ret"].shift(-1)
+    merged["ret_5d"] = merged["ret"].rolling(5).sum().shift(-1)
+    merged["ret_21d"] = merged["ret"].rolling(21).sum().shift(-1)
+
+    results = {}
+    for horizon, col in [("1d", "ret_1d"), ("5d", "ret_5d"),
+                          ("21d", "ret_21d")]:
+        clean = merged.dropna(subset=["photo_pessimism", col])
+        if len(clean) > 50:
+            model = sm.OLS(
+                clean[col],
+                sm.add_constant(clean[["photo_pessimism"]])
+            ).fit(cov_type="HAC", cov_kwds={"maxlags": 5})
+
+            results[horizon] = {
+                "beta": model.params["photo_pessimism"],
+                "t_stat": model.tvalues["photo_pessimism"],
+                "r2": model.rsquared
+            }
+
+    return {"daily_index": daily_pp, "predictability": results}
+```
+
+### Vision-Language Models for Financial Image Understanding
+
+Vision-language models (VLMs) represent the frontier of image understanding. CLIP [@radford2021learning] learns joint representations of images and text from 400 million image-text pairs, enabling zero-shot classification: describe what you want to find in natural language and the model computes similarity. BLIP-2 [@li2023blip] bootstraps language-image pre-training by connecting frozen image encoders to frozen LLMs via a lightweight Querying Transformer.
+
+For financial applications, VLMs enable zero-shot chart reading ("What is the P/E ratio for VCB in Q3 2024?"), document visual QA ("What is total revenue on page 3?"), satellite interpretation ("How many ships are visible at Cát Lái?"), and news image analysis ("Does this image depict positive or negative economic conditions?").
+
+```{python}
+#| label: vlm-finance
+
+def vlm_financial_analysis(image_path, prompt, model_name="clip"):
+    """
+    Use a vision-language model for financial image analysis.
+    """
+    img = Image.open(image_path).convert("RGB")
+
+    if model_name == "clip":
+        from transformers import CLIPProcessor, CLIPModel
+
+        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        processor = CLIPProcessor.from_pretrained(
+            "openai/clip-vit-base-patch32"
+        )
+
+        candidates = [
+            "positive economic activity and growth",
+            "negative economic decline or contraction",
+            "neutral stable economic conditions"
+        ]
+
+        inputs = processor(
+            text=candidates, images=img,
+            return_tensors="pt", padding=True
+        )
+
+        with torch.no_grad():
+            outputs = model(**inputs)
+            probs = outputs.logits_per_image.softmax(dim=-1)
+
+        best_idx = probs.argmax().item()
+        return {
+            "classification": candidates[best_idx],
+            "confidence": probs[0, best_idx].item(),
+            "all_probs": dict(zip(candidates, probs[0].tolist()))
+        }
+
+    elif model_name == "blip2":
+        from transformers import (
+            Blip2Processor, Blip2ForConditionalGeneration
+        )
+
+        processor = Blip2Processor.from_pretrained(
+            "Salesforce/blip2-opt-2.7b"
+        )
+        model = Blip2ForConditionalGeneration.from_pretrained(
+            "Salesforce/blip2-opt-2.7b"
+        )
+
+        inputs = processor(
+            images=img, text=prompt, return_tensors="pt"
+        )
+
+        with torch.no_grad():
+            output = model.generate(**inputs, max_new_tokens=100)
+
+        response = processor.decode(
+            output[0], skip_special_tokens=True
+        )
+        return {"response": response, "prompt": prompt}
+
+    return None
+```
+
+## Multimodal Fusion: Combining Image and Text
+
+### Why Multimodal?
+
+Text and images capture different dimensions of the same underlying economic reality. An earnings report describes financial performance in words and numbers; the accompanying photographs show factories, products, and management. A news article about a port describes trade volumes in text; the satellite image shows actual ship positions. @obaid2022picture demonstrate that visual and textual sentiment are substitutes in US markets---but this may differ in Vietnam where text extraction from Vietnamese-language filings is harder than image processing.
+
+The information-theoretic justification:
+
+$$
+I(Y; X_{\text{text}}, X_{\text{image}}) \geq \max\left(I(Y; X_{\text{text}}), I(Y; X_{\text{image}})\right)
+$$ {#eq-multimodal-info}
+
+We implement three fusion strategies: early fusion (concatenate modality features), late fusion (learn a gating function over modality-specific predictions), and cross-attention fusion (one modality attends to the other).
+
+```{python}
+#| label: multimodal-fusion
+
+class MultimodalFinanceModel(nn.Module):
+    """
+    Multimodal model combining text and image features.
+    Supports early, late, and cross-attention fusion.
+    """
+
+    def __init__(self, text_dim=768, image_dim=2048,
+                 hidden_dim=128, output_dim=1,
+                 fusion="cross_attention"):
+        super().__init__()
+
+        self.fusion = fusion
+
+        self.text_proj = nn.Sequential(
+            nn.Linear(text_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.3)
+        )
+        self.image_proj = nn.Sequential(
+            nn.Linear(image_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.3)
+        )
+
+        if fusion == "early":
+            self.head = nn.Sequential(
+                nn.Linear(hidden_dim * 2, hidden_dim),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                nn.Linear(hidden_dim, output_dim)
+            )
+        elif fusion == "late":
+            self.text_head = nn.Linear(hidden_dim, output_dim)
+            self.image_head = nn.Linear(hidden_dim, output_dim)
+            self.gate = nn.Linear(hidden_dim * 2, 2)
+        elif fusion == "cross_attention":
+            self.cross_attn = nn.MultiheadAttention(
+                embed_dim=hidden_dim, num_heads=4, batch_first=True
+            )
+            self.head = nn.Sequential(
+                nn.Linear(hidden_dim * 2, hidden_dim),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                nn.Linear(hidden_dim, output_dim)
+            )
+
+    def forward(self, text_features, image_features):
+        text_h = self.text_proj(text_features)
+        image_h = self.image_proj(image_features)
+
+        if self.fusion == "early":
+            combined = torch.cat([text_h, image_h], dim=-1)
+            return self.head(combined)
+
+        elif self.fusion == "late":
+            text_pred = self.text_head(text_h)
+            image_pred = self.image_head(image_h)
+            gate_input = torch.cat([text_h, image_h], dim=-1)
+            weights = F.softmax(self.gate(gate_input), dim=-1)
+            return (weights[:, 0:1] * text_pred +
+                    weights[:, 1:2] * image_pred)
+
+        elif self.fusion == "cross_attention":
+            text_seq = text_h.unsqueeze(1)
+            image_seq = image_h.unsqueeze(1)
+            attended, _ = self.cross_attn(
+                text_seq, image_seq, image_seq
+            )
+            combined = torch.cat(
+                [attended.squeeze(1), image_h], dim=-1
+            )
+            return self.head(combined)
+```
+
+## Practical Considerations for Vietnamese Markets
+
+**Label scarcity.** Supervised learning requires labeled data---images annotated with economic outcomes. In Vietnam, ground-truth labels (actual retail sales, crop yields, port throughput) arrive with significant lags and often lack the granularity to match satellite resolution. Semi-supervised and self-supervised approaches are essential.
+
+**Regulatory considerations.** High-resolution satellite imagery of specific commercial or military installations may be restricted. Researchers should verify compliance with Vietnamese regulations on geospatial data (Decree 22/2010/NĐ-CP and subsequent amendments).
+
+**Computational cost.** Processing satellite tiles through CNNs is intensive. A single Sentinel-2 tile at 10m resolution covering Ho Chi Minh City contains \$\sim\$10,980 × 10,980 pixels per band. Tiling into 224 × 224 patches generates \$\sim\$2,400 patches per tile, each requiring a forward pass. Pre-computing and caching features is essential.
+
+**Cloud cover.** Tropical Vietnam has frequent cloud cover, particularly during the monsoon (May--October). This creates systematic missing data in optical satellite imagery. SAR imagery penetrates clouds and provides an alternative. The cloud-cover variation itself can be exploited as an instrument for identification, following the @mukherjee2021eye strategy.
+
+**Vietnamese OCR quality.** Error rates of 5--10% on clean scans and 15--25% on photocopies are typical for Vietnamese diacritical marks. Post-processing with Vietnamese language models improves accuracy, but residual errors must be accounted for in downstream analysis.
+
+## Exercises
+
+1.  **Nighttime Lights and Provincial Stock Market Development.** Merge VIIRS nighttime lights with the geographic distribution of listed firms and trading accounts across provinces. Test whether luminosity growth predicts: (a) new firm listings, (b) growth in trading accounts, and (c) aggregate returns of firms headquartered in the province. Control for official provincial GDP growth.
+
+2.  **Parking Lot Analog for Vietnamese Retail.** Using Google Maps or Planet Labs satellite imagery, manually annotate motorbike counts at 20 WinMart/Co.opmart locations at quarterly intervals (2020--2024). Test whether YoY changes predict Masan quarterly earnings surprises, following @katona2025capital.
+
+3.  **Satellite Nowcasting of Industrial Production.** Using Sentinel-2 imagery of industrial zones (Binh Duong, Dong Nai, Bac Ninh), construct monthly CNN-feature indices. Predict the GSO's Industrial Production Index with a one-month lead. Report out-of-sample $R^2$ vs. autoregressive benchmark.
+
+4.  **OCR Benchmark for Vietnamese Financial Filings.** Collect 200 pages from diverse annual reports. Manually transcribe financial tables. Compare OCR accuracy (character-level and field-level) across Tesseract (vie), VietOCR, PaddleOCR, and fine-tuned LayoutLMv3. Report exact match accuracy for numerical fields.
+
+5.  **Multimodal Earnings Prediction.** For each firm-quarter, construct: (a) tabular financial ratios, (b) PhoBERT textual features from management discussion, (c) satellite features of HQ region. Implement early, late, and cross-attention fusion. Which modality contributes most?
+
+6.  **Photo Pessimism for Vietnamese Markets.** Collect photographs from CafeF and VnExpress financial news (2020--2024). Train a visual sentiment classifier and construct a daily Photo Pessimism index. Test VN-Index return and volume predictability, replicating @obaid2022picture. Compare against text-based sentiment from the same articles.
+
+7.  **CEO Facial Features and Firm Value.** Collect CEO photographs from all HOSE-listed firms' annual reports. Extract fWHR, symmetry, and maturity using dlib landmarks. Regress Tobin's $Q$ on facial features controlling for firm size, profitability, leverage, industry, and SOE status. Do the @graham2017corporate results replicate? Does the effect differ between SOE and private-sector CEOs?
+
+8.  **Port Activity and Export Firms.** Using Sentinel-1 SAR imagery (cloud-penetrating), develop a weekly ship count index for Cát Lái and Hải Phòng. Test predictive power for: (a) next-month trade volumes, (b) logistics firm returns (Gemadept, Saigon Newport), and (c) VN-Index returns, following @yu2023eye.
+
+## Summary
+
+This chapter developed a comprehensive visual data toolkit for Vietnamese financial markets, spanning computer vision foundations, satellite imagery, capital market applications, facial analysis, document AI, chart digitization, visual sentiment, and multimodal fusion.
+
+The central insight from the satellite imagery literature is that visual data provides a temporal advantage: satellite observations arrive before corporate disclosures and government statistics. @henderson2012measuring established that nighttime lights proxy GDP; @katona2025capital showed that parking lot imagery predicts retail earnings; @mukherjee2021eye demonstrated that oil tank monitoring substitutes for government data. In Vietnam, where official statistics arrive with substantial lags and corporate filings are opaque, this temporal advantage is particularly valuable.
+
+The capital market literature adds an important caveat: alternative visual data does not necessarily democratize information. @katona2025capital and @zhu2019big show that satellite data primarily benefits sophisticated investors, potentially widening the information gap with retail participants. @dai2023neighbors demonstrate that satellite monitoring differentially helps geographically distant investors---directly relevant for foreign investors in Vietnamese markets.
+
+The behavioral finance literature on facial analysis [@graham2017corporate; @rule2008face] raises provocative questions about whether appearance-based signals persist in Vietnamese corporate contexts, where CEO selection mechanisms differ systematically between state and private sectors. The visual sentiment work of @obaid2022picture demonstrates that news photographs predict returns independently of the text-based measures of @Tetlock2007, @garcia2013sentiment, and @BakerWurgler2006, and that the two channels are substitutes, not complements.
+
+Document AI [@huang2022layoutlmv3; @kim2022ocr] addresses the practical bottleneck of Vietnamese filings trapped in scanned PDFs. Vision-language models [@radford2021learning; @li2023blip] represent the frontier, enabling zero-shot financial image understanding that could dramatically lower barriers to extracting information from visual data in emerging markets. The machine learning framework of @gu2020empirical provides the broader methodological context for integrating these visual signals into asset pricing models.
