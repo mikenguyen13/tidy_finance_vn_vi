@@ -1,37 +1,22 @@
----
-title: Datacore Data
-format:
-  html:
-    toc: true
-    number-sections: true
-jupyter: python3
-execute:
-  echo: true
-  warning: false
-  message: false
----
+# Dữ liệu Datacore
 
-This chapter introduces [Datacore](https://datacore.vn/), Vietnam's data platform for academic, corporate, and government research. Datacore provides comprehensive financial and economic datasets, including historical trading data, company fundamentals, and macroeconomic indicators essential for reproducible finance research. We use Datacore as the primary data source throughout this book.
+Chương này giới thiệu [Datacore](https://datacore.vn/), nền tảng dữ liệu của Việt Nam dành cho nghiên cứu học thuật, doanh nghiệp và chính phủ. Datacore cung cấp các bộ dữ liệu tài chính và kinh tế toàn diện, bao gồm dữ liệu giao dịch lịch sử, các yếu tố cơ bản của công ty và các chỉ số kinh tế vĩ mô thiết yếu cho nghiên cứu tài chính có thể tái tạo. Chúng ta sử dụng Datacore làm nguồn dữ liệu chính xuyên suốt cuốn sách này.
 
-## Data Access Options
+## Các tùy chọn truy cập dữ liệu
 
-Readers can access the data used in this book through several channels:
+Độc giả có thể truy cập dữ liệu được sử dụng trong cuốn sách này thông qua một số kênh sau:
 
-1. **Institutional subscription**: Many universities and research institutions subscribe to Datacore. Check with your library or research office for access credentials. If your institution does not yet have a subscription, consider requesting one through your library's acquisition process—Datacore offers institutional pricing for academic use.
+1. **Gói đăng ký dành cho tổ chức**: Nhiều trường đại học và viện nghiên cứu đăng ký sử dụng Datacore. Hãy liên hệ với thư viện hoặc văn phòng nghiên cứu của bạn để nhận thông tin đăng nhập. Nếu tổ chức của bạn chưa có gói đăng ký, hãy cân nhắc yêu cầu một gói thông qua quy trình mua sắm của thư viện — Datacore cung cấp giá ưu đãi cho mục đích học thuật.
 
-2. **Demo datasets**: Datacore provides [demo datasets](https://datacore.vn/demo/dataset-groups) that allow you to run the code examples in this book with sample data.
-   
-<!-- 3. **Sample data repository**: To ensure reproducibility, we provide a subset of anonymized data in the book's [GitHub repository](https://github.com/mikenguyen13/tidy_finance_vn). This sample covers a limited number of securities and time periods but is sufficient to execute all code examples. -->
+2. **Bộ dữ liệu demo**: Datacore cung cấp [bộ dữ liệu demo](https://datacore.vn/demo/dataset-groups) cho phép bạn chạy các ví dụ mã trong sách này với dữ liệu mẫu.
 
-<!-- 4. **Alternative data sources**: For readers without Datacore access, we provide guidance on adapting the code to work with publicly available data from sources such as [CafeF](https://cafef.vn/), though coverage and data quality may differ. -->
+## Tổng quan chương
 
-## Chapter Overview
+Chương này được tổ chức như sau. Trước tiên, chúng ta thiết lập kết nối với cơ sở hạ tầng lưu trữ đám mây của Datacore. Sau đó, chúng ta tải xuống và chuẩn bị dữ liệu cơ bản của công ty, bao gồm các khoản mục bảng cân đối kế toán, các biến số báo cáo kết quả kinh doanh và các chỉ số phái sinh cần thiết cho nghiên cứu định giá tài sản. Tiếp theo, chúng ta truy xuất và xử lý dữ liệu giá cổ phiếu, tính toán lợi nhuận, vốn hóa thị trường và lợi nhuận vượt trội. Cuối cùng, chúng ta kết hợp các tập dữ liệu này và cung cấp số liệu thống kê mô tả đặc trưng cho thị trường chứng khoán Việt Nam.
 
-The chapter is organized as follows. We first establish the connection to Datacore's cloud storage infrastructure. Then, we download and prepare company fundamentals data, including balance sheet items, income statement variables, and derived metrics essential for asset pricing research. Next, we retrieve and process stock price data, computing returns, market capitalizations, and excess returns. We conclude by merging these datasets and providing descriptive statistics that characterize the Vietnamese equity market.
+## Thiết lập môi trường
 
-## Setting Up the Environment
-
-We begin by loading the Python packages used throughout this chapter. The core packages include `pandas` for data manipulation, `numpy` for numerical operations, and `sqlite3` for local database management. We also import visualization libraries for creating publication-quality figures.
+Chúng ta bắt đầu bằng cách tải các gói Python được sử dụng xuyên suốt chương này. Các gói cốt lõi bao gồm `pandas` để thao tác dữ liệu, `numpy` cho các phép toán số học và `sqlite3` để quản lý cơ sở dữ liệu cục bộ. Chúng ta cũng nhập các thư viện trực quan hóa để tạo ra các hình ảnh chất lượng cao phục vụ cho việc xuất bản.
 
 ```{python}
 import pandas as pd
@@ -44,24 +29,24 @@ from plotnine import *
 from mizani.formatters import comma_format, percent_format
 ```
 
-We establish a connection to our local SQLite database, which serves as the central repository for all processed data. This database was introduced in the previous chapter and will store the cleaned datasets for use in subsequent analyses.
+Chúng ta thiết lập kết nối đến cơ sở dữ liệu SQLite cục bộ, đóng vai trò là kho lưu trữ trung tâm cho tất cả dữ liệu đã được xử lý. Cơ sở dữ liệu này đã được giới thiệu trong chương trước và sẽ lưu trữ các tập dữ liệu đã được làm sạch để sử dụng trong các phân tích tiếp theo.
 
 ```{python}
 tidy_finance = sqlite3.connect(database="data/tidy_finance_python.sqlite")
 ```
 
-We define the date range for our data collection. The Vietnamese stock market began operations in July 2000 with the establishment of the Ho Chi Minh City Stock Exchange (HOSE), so our sample period starts from 2000 and extends through the end of 2024.
+Chúng ta xác định phạm vi ngày tháng cho việc thu thập dữ liệu. Thị trường chứng khoán Việt Nam bắt đầu hoạt động vào tháng 7 năm 2000 với sự thành lập của Sở Giao dịch Chứng khoán Thành phố Hồ Chí Minh (HOSE), vì vậy giai đoạn mẫu của chúng ta bắt đầu từ năm 2000 và kéo dài đến hết năm 2024.
 
 ```{python}
 start_date = "2000-01-01"
 end_date = "2024-12-31"
 ```
 
-## Connecting to Datacore
+## Kết nối với Datacore
 
-Datacore delivers data through a cloud-based object storage system built on MinIO, an S3-compatible storage infrastructure. This architecture enables efficient, programmatic access to large datasets without the limitations of traditional database connections. To access the data, you need credentials provided by Datacore upon subscription: an endpoint URL, access key, and secret key.
+Datacore cung cấp dữ liệu thông qua hệ thống lưu trữ đối tượng dựa trên đám mây được xây dựng trên MinIO, một cơ sở hạ tầng lưu trữ tương thích với S3. Kiến trúc này cho phép truy cập hiệu quả, lập trình được vào các tập dữ liệu lớn mà không bị hạn chế bởi các kết nối cơ sở dữ liệu truyền thống. Để truy cập dữ liệu, bạn cần thông tin xác thực do Datacore cung cấp khi đăng ký: URL điểm cuối, khóa truy cập và khóa bí mật.
 
-The following class establishes the connection to Datacore's storage system. The credentials are stored as environment variables for security, following best practices for credential management in research computing environments.
+Lớp sau đây thiết lập kết nối với hệ thống lưu trữ của Datacore. Thông tin đăng nhập được lưu trữ dưới dạng biến môi trường để đảm bảo an toàn, tuân theo các thực tiễn tốt nhất về quản lý thông tin đăng nhập trong môi trường điện toán nghiên cứu.
 
 ```{python}
 import os
@@ -123,7 +108,7 @@ class DatacoreConnection:
         return pd.read_csv(BytesIO(obj["Body"].read()), **kwargs)
 ```
 
-With the connection class defined, we can establish a connection and verify access to Datacore's data repositories.
+Sau khi định nghĩa lớp kết nối, chúng ta có thể thiết lập kết nối và xác minh quyền truy cập vào các kho dữ liệu của Datacore.
 
 ```{python}
 # Initialize connection
@@ -134,25 +119,25 @@ conn.test_connection()
 bucket_name = os.environ["MINIO_BUCKET"]
 ```
 
-## Company Fundamentals Data
+## Dữ liệu cơ bản của công ty
 
-Firm accounting data are essential for portfolio analyses, factor construction, and valuation studies. Datacore hosts comprehensive fundamentals data for Vietnamese listed companies, including annual and quarterly financial statements prepared according to Vietnamese Accounting Standards (VAS).
+Dữ liệu kế toán của các công ty là yếu tố thiết yếu cho việc phân tích danh mục đầu tư, xây dựng yếu tố và nghiên cứu định giá. Datacore cung cấp dữ liệu cơ bản toàn diện cho các công ty niêm yết của Việt Nam, bao gồm báo cáo tài chính hàng năm và hàng quý được lập theo Chuẩn mực Kế toán Việt Nam (VAS).
 
-### Understanding Vietnamese Financial Statements
+### Hiểu về Báo cáo Tài chính Việt Nam
 
-Before processing the data, it is important to understand the structure of Vietnamese financial reports. Vietnamese companies follow VAS, which shares similarities with International Financial Reporting Standards (IFRS) but has notable differences:
+Trước khi xử lý dữ liệu, điều quan trọng là phải hiểu cấu trúc của báo cáo tài chính Việt Nam. Các công ty Việt Nam tuân theo Chuẩn mực kế toán Việt Nam (VAS), có nhiều điểm tương đồng với Chuẩn mực báo cáo tài chính quốc tế (IFRS) nhưng cũng có những khác biệt đáng chú ý:
 
-1. **Fiscal Year**: Most Vietnamese companies use a calendar fiscal year ending December 31, though some companies (particularly in retail and agriculture) use different fiscal year-ends.
+1. **Năm tài chính**: Hầu hết các công ty Việt Nam sử dụng năm tài chính theo lịch dương, kết thúc vào ngày 31 tháng 12, mặc dù một số công ty (đặc biệt là trong lĩnh vực bán lẻ và nông nghiệp) sử dụng năm tài chính kết thúc vào ngày khác.
 
-2. **Reporting Frequency**: Listed companies must publish quarterly financial statements within 20 days of quarter-end and annual audited statements within 90 days of fiscal year-end.
+2. **Tần suất báo cáo**: Các công ty niêm yết phải công bố báo cáo tài chính hàng quý trong vòng 20 ngày kể từ ngày kết thúc quý và báo cáo kiểm toán hàng năm trong vòng 90 ngày kể từ ngày kết thúc năm tài chính.
 
-3. **Industry-Specific Formats**: Companies in banking, insurance, and securities sectors follow specialized reporting formats that differ from the standard industrial format.
+3. **Các định dạng đặc thù theo ngành**: Các công ty trong lĩnh vực ngân hàng, bảo hiểm và chứng khoán tuân theo các định dạng báo cáo chuyên biệt, khác với định dạng tiêu chuẩn của ngành.
 
-4. **Currency**: All figures are reported in Vietnamese Dong (VND). Given the large nominal values (millions to trillions of VND), we often scale figures to millions or billions for readability.
+4. **Tiền tệ**: Tất cả các số liệu được báo cáo bằng Đồng Việt Nam (VND). Do giá trị danh nghĩa lớn (hàng triệu đến hàng nghìn tỷ VND), chúng ta thường quy đổi các số liệu thành hàng triệu hoặc hàng tỷ để dễ đọc hơn.
 
-### Downloading Fundamentals Data
+### Tải xuống dữ liệu cơ bản
 
-Datacore organizes fundamentals data in Excel files partitioned by time period for efficient access. We download and concatenate these files to create a comprehensive dataset spanning our sample period.
+Datacore tổ chức dữ liệu cơ bản trong các tệp Excel được phân vùng theo khoảng thời gian để truy cập hiệu quả. Chúng ta tải xuống và ghép nối các tệp này để tạo ra một tập dữ liệu toàn diện bao gồm toàn bộ giai đoạn mẫu của chúng ta.
 
 ```{python}
 # Define paths to fundamentals data files
@@ -173,9 +158,9 @@ df_fundamentals_raw = pd.concat(fundamentals_list, ignore_index=True)
 print(f"\nTotal observations: {len(df_fundamentals_raw):,}")
 ```
 
-### Cleaning and Standardizing Fundamentals
+### Nguyên tắc cơ bản về vệ sinh và tiêu chuẩn hóa
 
-The raw fundamentals data requires several cleaning steps to ensure consistency and usability. We standardize variable names, handle missing values, and create derived variables commonly used in asset pricing research.
+Dữ liệu cơ bản thô cần trải qua nhiều bước làm sạch để đảm bảo tính nhất quán và khả năng sử dụng. Chúng ta chuẩn hóa tên biến, xử lý các giá trị thiếu và tạo ra các biến dẫn xuất thường được sử dụng trong nghiên cứu định giá tài sản.
 
 ```{python}
 def clean_fundamentals(df):
@@ -235,9 +220,9 @@ print(f"After cleaning: {len(df_fundamentals):,} firm-year observations")
 print(f"Unique firms: {df_fundamentals['symbol'].nunique():,}")
 ```
 
-### Creating Standardized Variables
+### Tạo các biến chuẩn hóa
 
-To facilitate comparison with international studies and ensure compatibility with standard asset pricing methodologies, we create variables following conventions established in the academic literature. We map Vietnamese financial statement items to their Compustat equivalents where possible.
+Để tạo điều kiện so sánh với các nghiên cứu quốc tế và đảm bảo tính tương thích với các phương pháp định giá tài sản tiêu chuẩn, chúng ta tạo ra các biến số theo các quy ước đã được thiết lập trong tài liệu học thuật. Chúng ta đối chiếu các khoản mục báo cáo tài chính của Việt Nam với các giá trị tương đương trong Compustat khi có thể.
 
 ```{python}
 def create_standard_variables(df):
@@ -303,9 +288,9 @@ def create_standard_variables(df):
 df_fundamentals = create_standard_variables(df_fundamentals)
 ```
 
-### Computing Book Equity and Profitability
+### Tính toán giá trị sổ sách và lợi nhuận
 
-Book equity is a crucial variable for value investing strategies and the construction of HML (High Minus Low) factor portfolios. We follow the definition from Kenneth French's data library, which accounts for deferred taxes and preferred stock.
+Giá trị sổ sách là một biến số quan trọng đối với các chiến lược đầu tư giá trị và việc xây dựng danh mục đầu tư theo yếu tố HML (Cao Trừ Thấp). Chúng ta tuân theo định nghĩa từ thư viện dữ liệu của Kenneth French, có tính đến thuế hoãn lại và cổ phiếu ưu đãi.
 
 ```{python}
 def compute_book_equity(df):
@@ -367,7 +352,7 @@ print("Book Equity Summary Statistics (in million VND):")
 print(df_fundamentals["be"].describe().round(2))
 ```
 
-Operating profitability, introduced by @FamaFrench2015, measures a firm's profits relative to its book equity. Firms with higher operating profitability tend to have higher expected returns.
+Lợi nhuận hoạt động, được giới thiệu bởi @fama2015five, đo lường lợi nhuận của một công ty so với vốn chủ sở hữu trên sổ sách. Các công ty có lợi nhuận hoạt động cao hơn thường có tỷ suất sinh lời kỳ vọng cao hơn.
 
 ```{python}
 def compute_profitability(df):
@@ -409,9 +394,9 @@ def compute_profitability(df):
 df_fundamentals = compute_profitability(df_fundamentals)
 ```
 
-### Computing Investment
+### Tính toán Đầu tư
 
-Investment, measured as asset growth, captures firms' investment behavior. @FamaFrench2015 document that firms with high asset growth (aggressive investment) tend to have lower future returns.
+Đầu tư, được đo lường bằng sự tăng trưởng tài sản, nắm bắt hành vi đầu tư của các công ty. @fama2015five ghi nhận rằng các công ty có tốc độ tăng trưởng tài sản cao (đầu tư tháo vát) thường có tỷ suất sinh lời trong tương lai thấp hơn.
 
 ```{python}
 def compute_investment(df):
@@ -452,9 +437,9 @@ def compute_investment(df):
 df_fundamentals = compute_investment(df_fundamentals)
 ```
 
-### Computing Total Debt
+### Tính toán tổng nợ
 
-In Vietnamese financial statements, total liabilities include non-interest-bearing items such as accounts payable and tax payables. For leverage analysis, we compute total interest-bearing debt by aggregating loan and lease obligations.
+Trong báo cáo tài chính của Việt Nam, tổng nợ phải trả bao gồm các khoản mục không sinh lãi như khoản phải trả cho nhà cung cấp và thuế phải trả. Để phân tích đòn bẩy, chúng ta tính tổng nợ có lãi bằng cách cộng gộp các khoản vay và nghĩa vụ thuê.
 
 ```{python}
 def compute_total_debt(df):
@@ -490,9 +475,9 @@ def compute_total_debt(df):
 df_fundamentals = compute_total_debt(df_fundamentals)
 ```
 
-### Applying Filters and Final Preparation
+### Áp dụng bộ lọc
 
-We apply standard filters to ensure data quality: requiring positive assets, non-negative sales, and presence of core variables needed for portfolio construction.
+Chúng ta áp dụng các bộ lọc tiêu chuẩn để đảm bảo chất lượng dữ liệu: yêu cầu tài sản dương, doanh số bán hàng không âm và sự hiện diện của các biến cốt lõi cần thiết để xây dựng danh mục đầu tư.
 
 ```{python}
 # Keep only observations with required variables
@@ -517,9 +502,9 @@ print(f"Unique firms: {comp_vn['symbol'].nunique():,}")
 print(f"Sample period: {comp_vn['year'].min()} - {comp_vn['year'].max()}")
 ```
 
-### Storing Fundamentals Data
+### Lưu trữ dữ liệu
 
-We store the prepared fundamentals data in our local SQLite database for use in subsequent chapters.
+Chúng ta lưu trữ dữ liệu cơ bản đã chuẩn bị trong cơ sở dữ liệu SQLite cục bộ để sử dụng trong các chương tiếp theo.
 
 ```{python}
 comp_vn.to_sql(
@@ -532,13 +517,14 @@ comp_vn.to_sql(
 print("Company fundamentals saved to database.")
 ```
 
-## Stock Price Data
+## Dữ liệu giá cổ phiếu
 
-Stock price data forms the foundation of return-based analyses in empirical finance. Datacore provides comprehensive historical price data for all securities traded on HOSE, HNX, and UPCoM, including adjusted prices that account for corporate actions.
+Dữ liệu giá cổ phiếu là nền tảng của các phân tích dựa trên lợi nhuận trong tài chính thực nghiệm. Datacore cung cấp dữ liệu giá lịch sử toàn diện cho tất cả các chứng khoán được giao dịch trên HOSE, HNX và UPCoM, bao gồm cả giá điều chỉnh có tính đến các hành động của công ty.
 
-### Downloading Price Data
+### Tải xuống dữ liệu giá
 
-We download the historical price data from Datacore's storage system. The data includes daily observations with open, high, low, close prices, trading volume, and adjustment factors.
+Chúng ta tải xuống dữ liệu giá lịch sử từ hệ thống lưu trữ của Datacore. Dữ liệu bao gồm các quan sát hàng ngày với giá mở cửa, giá cao nhất, giá thấp nhất, giá đóng cửa, khối lượng giao dịch và các yếu tố điều chỉnh.
+
 
 ```{python}
 # Download historical price data
@@ -552,9 +538,9 @@ print(f"Downloaded {len(prices_raw):,} daily price observations")
 print(f"Date range: {prices_raw['date'].min()} to {prices_raw['date'].max()}")
 ```
 
-### Processing Price Data
+### Xử lý dữ liệu giá
 
-We clean the price data and compute adjusted prices that account for stock splits, stock dividends, and other corporate actions.
+Chúng ta làm sạch dữ liệu giá và tính toán giá điều chỉnh có tính đến việc chia tách cổ phiếu, cổ tức bằng cổ phiếu và các hành động khác của công ty.
 
 ```{python}
 def process_price_data(df):
@@ -594,9 +580,9 @@ prices = process_price_data(prices_raw)
 ```
 
 
-### Computing Shares Outstanding and Market Capitalization
+### Tính toán Số lượng Cổ phiếu Hoạt động và Giá trị Thị trường
 
-Market capitalization is computed as the product of price and shares outstanding. Since Datacore provides earnings per share and net income, we can infer shares outstanding from these variables.
+Giá trị thị trường được tính bằng sản phẩm của giá và số lượng cổ phiếu hoạt động. Vì Datacore cung cấp lợi nhuận trên mỗi cổ phiếu và lợi nhuận sau thuế, chúng ta có thể suy ra số lượng cổ phiếu hoạt động từ các biến số này.
 
 ```{python}
 def compute_shares_outstanding(fundamentals_df):
@@ -632,12 +618,13 @@ prices = add_market_cap(prices, shares_outstanding)
 ```
 
 
-### Computing Returns and Excess Returns
-We compute returns using adjusted closing prices to ensure returns correctly reflect total shareholder returns including dividends and corporate actions.
+### Tính Lợi Nhuận và Lợi Nhuận Kỳ Lượng
+Chúng ta tính toán lợi nhuận sử dụng giá đóng cửa điều chỉnh để đảm bảo lợi nhuận phản ánh chính xác lợi nhuận tổng của cổ đông bao gồm cả cổ tức và các hành động của công ty.
 
-#### Creating Daily Dataset
+#### Tạo Bộ Dữ Liệu Hàng Ngày
 
-1. Sequential version
+1. Phiên bản tuần tự
+
 ```{python}
 #| eval: false
 def create_daily_dataset(df, annual_rf=0.04):
@@ -673,7 +660,7 @@ def create_daily_dataset(df, annual_rf=0.04):
 prices_daily = create_daily_dataset(prices)
 ```
 
-2. Parallel version
+2. Phiên bản song song
 
 ```{python}
 from joblib import Parallel, delayed
@@ -762,11 +749,11 @@ print(prices_daily["ret"].describe().round(4))
 print(f"\nFinal daily sample: {len(prices_daily):,} observations")
 ```
 
-#### Creating Monthly Dataset
+#### Tạo Dữ liệu Tháng
 
-For monthly returns, we compute returns directly from month-end adjusted prices rather than compounding daily returns. This avoids compounding errors from missing days and is the standard approach in empirical finance.
+Đối với lợi nhuận hàng tháng, chúng ta tính toán lợi nhuận trực tiếp từ giá điều chỉnh cuối tháng thay vì lãi kép lợi nhuận hàng ngày. Điều này tránh được sai sót do lãi kép từ các ngày thiếu và là phương pháp tiêu chuẩn trong tài chính thực nghiệm.
 
-1. Sequential version
+1. Phiên bản tuần tự
 
 ```{python}
 #| eval: false
@@ -829,7 +816,7 @@ def create_monthly_dataset(df, annual_rf=0.04):
 prices_monthly = create_monthly_dataset(prices)
 ```
 
-2. Parallel version
+2. Phiên bản song song
 
 ```{python}
 from joblib import Parallel, delayed
@@ -942,7 +929,7 @@ print(prices_monthly["ret"].describe().round(4))
 print(f"\nFinal monthly sample: {len(prices_monthly):,} observations")
 ```
 
-### Storing Price Data
+### Lưu trữ dữ liệu giá
 
 ```{python}
 #| eval: false
@@ -963,13 +950,13 @@ prices_monthly.to_sql(
 print("Monthly price data saved to database.")
 ```
 
-## Descriptive Statistics
+## Thống kê mô tả
 
-Before proceeding to asset pricing analyses, we examine the characteristics of our sample to understand the Vietnamese equity market's evolution and composition.
+Trước khi tiến hành phân tích giá tài sản, chúng ta xem xét các đặc điểm của mẫu để hiểu sự phát triển và thành phần của thị trường chứng khoán Việt Nam.
 
-### Market Evolution Over Time
+### Sự phát triển của thị trường theo thời gian
 
-We first examine how the number of listed securities has grown over time.
+Trước tiên, chúng ta kiểm tra số lượng chứng khoán niêm yết đã tăng lên như thế nào theo thời gian.
 
 ```{python}
 securities_over_time = (prices_monthly
@@ -1001,9 +988,9 @@ securities_figure = (
 securities_figure.show()
 ```
 
-### Market Capitalization Evolution
+### Sự phát triển của Tổng vốn hóa thị trường
 
-The aggregate market capitalization reflects the overall size and development of the Vietnamese equity market.
+Tổng vốn hóa thị trường phản ánh quy mô và sự phát triển chung của thị trường chứng khoán Việt Nam.
 
 ```{python}
 #| label: fig-market-cap-over-time
@@ -1024,9 +1011,9 @@ mktcap_figure = (
 mktcap_figure.show()
 ```
 
-### Return Distribution
+### Phân phối lợi nhuận
 
-Understanding the distribution of monthly returns helps identify potential data quality issues and characterize market risk.
+Việc hiểu rõ sự phân bố lợi nhuận hàng tháng giúp xác định các vấn đề tiềm ẩn về chất lượng dữ liệu và đánh giá rủi ro thị trường.
 
 ```{python}
 #| label: fig-return-distribution
@@ -1051,9 +1038,13 @@ return_distribution = (
 return_distribution.show()
 ```
 
-### Coverage of Book Equity
 
-Book equity is essential for constructing value portfolios. We examine what fraction of our sample has book equity data available over time.
+
+
+### Phạm vi Giá Trị Sổ Sách của Vốn Chủ Sở Hữu
+
+Vốn chủ sở hữu sổ sách là điều cần thiết để xây dựng danh mục đầu tư giá trị. Chúng ta kiểm tra phần nào trong mẫu của chúng ta có dữ liệu vốn chủ sở hữu sổ sách theo thời gian.
+
 
 ```{python}
 #| label: fig-book-equity-coverage
@@ -1094,9 +1085,9 @@ coverage_figure.show()
 ```
 
 
-## Merging Stock and Fundamental Data
+## Hợp nhất cổ phiếu và dữ liệu cơ bản
 
-The final step links price data with fundamental data using the stock symbol as the common identifier. This merged dataset forms the basis for constructing portfolios sorted on firm characteristics.
+Bước cuối cùng liên kết dữ liệu giá với dữ liệu cơ bản bằng cách sử dụng biểu tượng chứng khoán làm mã định danh chung. Bộ dữ liệu hợp nhất này tạo cơ sở để xây dựng danh mục đầu tư được sắp xếp theo đặc điểm của công ty.
 
 ```{python}
 # Example: Create merged dataset for end-of-June each year
@@ -1195,20 +1186,20 @@ scatter_data = (
 )
 ```
 
-## Key Takeaways
+## Những điểm chính cần ghi nhớ
 
-1. **Datacore provides unified access** to Vietnamese financial data through a modern cloud-based infrastructure, eliminating the need to aggregate data from multiple fragmented sources.
+1. **Datacore cung cấp quyền truy cập thống nhất** vào dữ liệu tài chính Việt Nam thông qua cơ sở hạ tầng điện toán đám mây hiện đại, loại bỏ nhu cầu tổng hợp dữ liệu từ nhiều nguồn phân tán.
 
-2. **Company fundamentals** from Datacore include comprehensive balance sheet, income statement, and cash flow data prepared according to Vietnamese Accounting Standards, which we map to standard variables used in international research.
+2. **Các yếu tố cơ bản của công ty** từ Datacore bao gồm bảng cân đối kế toán, báo cáo kết quả kinh doanh và dữ liệu lưu chuyển tiền tệ toàn diện được lập theo Chuẩn mực Kế toán Việt Nam, mà chúng ta đối chiếu với các biến số chuẩn được sử dụng trong nghiên cứu quốc tế.
 
-3. **Book equity computation** follows the Fama-French methodology, accounting for deferred taxes and preferred stock to ensure comparability with US-based studies.
+3. **Cách tính giá trị sổ sách** tuân theo phương pháp Fama-French, có tính đến thuế hoãn lại và cổ phiếu ưu đãi để đảm bảo tính tương đồng với các nghiên cứu tại Hoa Kỳ.
 
-4. **Stock price data** includes adjustment factors for corporate actions, enabling accurate return calculations over long horizons.
+4. **Dữ liệu giá cổ phiếu** bao gồm các yếu tố điều chỉnh cho các hoạt động của công ty, cho phép tính toán lợi nhuận chính xác trong thời gian dài.
 
-5. **Monthly frequency** is standard for asset pricing research, reducing noise while maintaining sufficient observations for statistical inference.
+5. **Tần suất hàng tháng** là tiêu chuẩn trong nghiên cứu định giá tài sản, giúp giảm nhiễu trong khi vẫn duy trì đủ số liệu quan sát để suy luận thống kê.
 
-6. **Risk-free rate approximation** uses Vietnamese government bond yields as a proxy, given the absence of a standardized short-term rate series comparable to US Treasury bills.
+6. **Phương pháp ước tính lãi suất phi rủi ro** sử dụng lợi suất trái phiếu chính phủ Việt Nam làm thước đo thay thế, do không có chuỗi lãi suất ngắn hạn tiêu chuẩn tương đương với tín phiếu kho bạc Mỹ.
 
-7. **Data quality validation** through descriptive statistics and visualization helps identify potential issues before conducting formal analyses.
+7. **Kiểm định chất lượng dữ liệu** thông qua thống kê mô tả và trực quan hóa giúp xác định các vấn đề tiềm ẩn trước khi tiến hành phân tích chính thức.
 
-8. **Batch processing** enables efficient handling of large daily datasets that would otherwise exceed memory constraints.
+8. **Xử lý theo lô** cho phép xử lý hiệu quả các tập dữ liệu lớn hàng ngày mà nếu không sẽ vượt quá giới hạn bộ nhớ.
