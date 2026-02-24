@@ -389,7 +389,7 @@ window.Quarto = {
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Preface</span></a>
+ <span class="menu-text">Lời nói đầu</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -3104,75 +3104,14 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("copyright").textContent = "© " + year;
 });
 </script>
+<!-- Google tag (gtag.js) -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-LG91D0C6RB"></script>
 <script>
-(function () {
-  const GA_ID = "G-LG91D0C6RB";   // your real GA4 ID
-  const CONSENT_KEY = "cookie_consent_v1";
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-  function log(msg) {
-    console.log("[GA Loader]", msg);
-  }
-
-  function loadGtag() {
-    if (window.__gtag_loaded__) {
-      log("GA already loaded, skipping");
-      return;
-    }
-
-    log("Loading Google Analytics...");
-
-    window.__gtag_loaded__ = true;
-
-    const script = document.createElement("script");
-    script.async = true;
-    script.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(GA_ID);
-
-    script.onload = function () {
-      log("gtag.js loaded");
-
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){ dataLayer.push(arguments); }
-      window.gtag = gtag;
-
-      gtag("js", new Date());
-      gtag("config", GA_ID, {
-        anonymize_ip: true,
-        transport_type: "beacon"
-      });
-
-      log("GA initialized successfully");
-    };
-
-    script.onerror = function () {
-      log("FAILED to load gtag.js. Likely blocked by ad blocker or network.");
-    };
-
-    document.head.appendChild(script);
-  }
-
-  function checkConsentAndLoad() {
-    const consent = localStorage.getItem(CONSENT_KEY);
-    log("Stored consent value = " + consent);
-
-    if (consent === "accepted") {
-      loadGtag();
-    } else {
-      log("Analytics blocked due to missing or declined consent");
-    }
-  }
-
-  // Run on page load
-  checkConsentAndLoad();
-
-  // Listen for cookie banner decisions
-  window.addEventListener("cookie-consent-changed", function (e) {
-    log("Consent event received: " + e.detail);
-    if (e.detail === "accepted") {
-      loadGtag();
-    }
-  });
-
-})();
+  gtag('config', 'G-LG91D0C6RB');
 </script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
