@@ -121,6 +121,7 @@ The Vietnamese equity market is predominantly driven by retail investors. While 
 
 ```{python}
 #| label: fig-investor-composition
+#| include: false
 #| fig-cap: "Approximate Investor Composition by Trading Value on HOSE"
 import matplotlib.pyplot as plt
 import numpy as np
@@ -151,17 +152,17 @@ plt.tight_layout()
 plt.show()
 ```
 
-This retail dominance has several consequences for microstructure. First, retail investors tend to submit smaller orders and trade more frequently, generating high message-to-trade ratios but limited depth at each price level. Second, retail order flow is more susceptible to herding and sentiment, which can amplify momentum and generate excess volatility [@barber2009just; @kaniel2012individual]. Third, the limited institutional presence means that sophisticated liquidity provision is scarce, particularly in mid- and small-cap stocks.
+Sự thống trị của nhà đầu tư cá nhân có một số hệ quả đối với cấu trúc thị trường vi mô. Thứ nhất, các nhà đầu tư cá nhân có xu hướng đặt lệnh nhỏ hơn và giao dịch thường xuyên hơn, tạo ra tỷ lệ lệnh trên giao dịch cao nhưng độ sâu thị trường hạn chế ở mỗi mức giá. Thứ hai, dòng lệnh của nhà đầu tư cá nhân dễ bị ảnh hưởng bởi hiệu ứng đám đông và tâm lý thị trường, điều này có thể khuếch đại động lượng và tạo ra sự biến động quá mức [@barber2009just; @kaniel2012individual]. Thứ ba, sự hiện diện hạn chế của các tổ chức đồng nghĩa với việc cung cấp thanh khoản tinh vi rất khan hiếm, đặc biệt là đối với các cổ phiếu vốn hóa trung bình và nhỏ.
 
-## Price Limits and Their Consequences
+## Giới hạn giá và hậu quả của chúng
 
-Vietnam enforces daily price limits on all listed equities. A stock's price cannot move beyond a fixed percentage of the previous day's closing price within a single trading day. The limit bands are $\pm$ 7% on HOSE, $\pm$ 10% on HNX, and $\pm$ 15% on UPCoM.
+Việt Nam thực thi giới hạn giá hàng ngày đối với tất cả các cổ phiếu niêm yết. Giá cổ phiếu không thể vượt quá tỷ lệ phần trăm cố định của giá đóng cửa ngày hôm trước trong một ngày giao dịch. Các dải giới hạn là $\pm$ 7% trên HOSE, $\pm$ 10% trên HNX và $\pm$ 15% trên UPCoM.
 
-### Theoretical Framework
+### Khung lý thuyết
 
-Price limits were introduced with the stated goal of reducing volatility and preventing panic-driven price dislocations. However, the academic literature presents a more nuanced picture. The "magnet effect" hypothesis [@subrahmanyam1994circuit] predicts that price limits actually accelerate price movement toward the limit as traders rush to execute before the limit is hit. The "delayed price discovery" hypothesis [@Fama1989] argues that limits merely postpone inevitable price adjustments, creating volatility spillover into subsequent days.
+Giới hạn giá đã được đưa ra với mục tiêu đã nêu là giảm biến động và ngăn chặn sự xáo trộn giá do hoảng loạn. Tuy nhiên, tài liệu học thuật trình bày một bức tranh sắc thái hơn. Giả thuyết "hiệu ứng nam châm" [@subrahmanyam1994circuit] dự đoán rằng giới hạn giá thực sự đẩy nhanh chuyển động giá về giới hạn khi các nhà giao dịch vội vã thực hiện trước khi đạt đến giới hạn. Giả thuyết "phát hiện giá bị trì hoãn" [@Fama1989] lập luận rằng các giới hạn chỉ đơn thuần trì hoãn các điều chỉnh giá không thể tránh khỏi, tạo ra sự biến động lan tỏa vào những ngày tiếp theo.
 
-Formally, let $P_t^*$ denote the equilibrium price on day $t$ and $P_{t-1}^c$ the previous closing price. The observed return is:
+Về mặt chính thức, giả sử $P_t^*$ biểu thị giá cân bằng vào ngày $t$ và $P_{t-1}^c$ giá đóng cửa trước đó. Lợi nhuận quan sát được là:
 
 $$
 r_t^{obs} = \begin{cases}
@@ -171,19 +172,19 @@ r_t^* & \text{if } \underline{L} < r_t^* < \bar{L} \\
 \end{cases}
 $$ {#eq-price-limit}
 
-where $r_t^* = \ln(P_t^* / P_{t-1}^c)$ is the latent (unconstrained) return, $\bar{L}$ is the upper limit, and $\underline{L}$ is the lower limit. The observed return $r_t^{obs}$ is a censored version of the true return. This censoring has several consequences:
+trong đó $r_t^* = \ln(P_t^* / P_{t-1}^c)$ là lợi nhuận tiềm ẩn (không bị ràng buộc), $\bar{L}$ là giới hạn trên và $\underline{L}$ là giới hạn dưới. Lợi nhuận quan sát được $r_t^{obs}$ là phiên bản bị kiểm duyệt của lợi nhuận thực. Việc kiểm duyệt này có một số hệ quả:
 
-1.  **Truncated moments**: The observed variance $\text{Var}(r_t^{obs}) < \text{Var}(r_t^*)$ because extreme returns are clipped. This biases downward any volatility-based risk measure.
+1. **Các momen bị cắt cụt**: Phương sai quan sát được $\text{Var}(r_t^{obs}) < \text{Var}(r_t^*)$ vì lợi nhuận cực đoan bị cắt bớt. Điều này làm sai lệch xuống dưới bất kỳ thước đo rủi ro nào dựa trên biến động.
 
-2.  **Artificial autocorrelation**: When $r_t^{obs} = \bar{L}$ and $r_{t+1}^{obs} > 0$ (continued adjustment the next day), the return series exhibits positive autocorrelation that is purely mechanical, not informational.
+2. **Tự tương quan nhân tạo**: Khi $r_t^{obs} = \bar{L}$ và $r_{t+1}^{obs} > 0$ (tiếp tục điều chỉnh vào ngày hôm sau), chuỗi lợi nhuận thể hiện tự tương quan dương hoàn toàn mang tính cơ học, không mang tính thông tin.
 
-3.  **Volatility spillover**: Define excess volatility on day $t+1$ as $\sigma_{t+1}^2 - E[\sigma_{t+1}^2 | \text{no limit hit on day } t]$. @kim1997price and @chu2019forecasting document significant positive spillover, where days following limit hits exhibit abnormally high volatility.
+3. **Sự lan tỏa biến động**: Định nghĩa biến động vượt mức vào ngày $t+1$ là $\sigma_{t+1}^2 - E[\sigma_{t+1}^2 | \text{không chạm giới hạn vào ngày } t]$. @kim1997price và @chu2019forecasting đã ghi nhận sự lan tỏa tích cực đáng kể, trong đó những ngày sau khi chạm giới hạn cho thấy biến động cao bất thường.
 
-4.  **Biased extreme value statistics**: Measures such as Value-at-Risk, Expected Shortfall, and maximum drawdown are mechanically bounded by the limit, understating true tail risk.
+4. **Thống kê giá trị cực đoan bị sai lệch**: Các chỉ số như Giá trị rủi ro (Value-at-Risk), Thiếu hụt dự kiến ​​(Expected Shortfall) và mức giảm tối đa (maximum drawdown) bị giới hạn một cách máy móc, đánh giá thấp rủi ro đuôi thực sự.
 
-### Detecting Price Limit Hits
+### Phát hiện khi giá chạm giới hạn
 
-We now implement a diagnostic to detect price limit hits in the daily data.
+Hiện tại, chúng tôi đang triển khai một công cụ chẩn đoán để phát hiện các lần chạm ngưỡng giá trong dữ liệu hàng ngày.
 
 ```{python}
 #| label: detect-limit-hits
@@ -229,7 +230,7 @@ prices_daily["limit_hit"] = (
 )
 ```
 
-### Frequency of Limit Hits
+### Tần suất đạt giới hạn
 
 ```{python}
 #| eval: false
@@ -271,15 +272,15 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Volatility Spillover Test
+### Thử nghiệm tràn biến động
 
-Following @kim1997price, we test whether days following a limit hit exhibit abnormally high volatility. Define the dummy variable $D_t = 1$ if a limit hit occurred on day $t$, and estimate:
+Theo @kim1997price, chúng tôi kiểm tra xem những ngày sau khi chạm mức trần có biểu hiện biến động cao bất thường hay không. Định nghĩa biến giả $D_t = 1$ nếu chạm mức trần xảy ra vào ngày $t$, và ước tính:
 
 $$
 \sigma_{t+1}^2 = \alpha + \beta D_t + \gamma \sigma_t^2 + \varepsilon_{t+1}
 $$ {#eq-vol-spillover}
 
-where $\sigma_t^2$ is the squared return. A positive and significant $\beta$ indicates volatility spillover attributable to the price limit.
+trong đó $\sigma_t^2$ là bình phương lợi nhuận. Hệ số $\beta$ dương và có ý nghĩa thống kê cho thấy sự lan truyền biến động do giới hạn giá gây ra.
 
 ```{python}
 #| eval: false
@@ -309,12 +310,12 @@ print(spillover_results)
 ```
 
 ::: callout-tip
-A significant positive coefficient on the limit hit dummy confirms that Vietnamese price limits do not eliminate volatility, they merely redistribute it across days. This has direct implications for risk management: daily VaR measures computed from censored returns understate true risk exposure.
+Hệ số dương đáng kể của biến giả chạm giới hạn xác nhận rằng giới hạn giá ở Việt Nam không loại bỏ biến động, mà chỉ phân bổ lại biến động đó giữa các ngày. Điều này có tác động trực tiếp đến quản lý rủi ro: các chỉ số VaR hàng ngày được tính toán từ lợi nhuận bị kiểm duyệt đánh giá thấp mức độ rủi ro thực tế.
 :::
 
-### Return Autocorrelation Induced by Price Limits
+### Hệ số tự tương quan lợi nhuận do giới hạn giá gây ra
 
-Price limits mechanically induce positive autocorrelation in returns. To quantify this, we compute the first-order autocorrelation coefficient separately for stocks that hit limits frequently versus those that do not.
+Giới hạn giá tạo ra một cách máy móc hiện tượng tự tương quan dương trong lợi nhuận. Để định lượng điều này, chúng tôi tính toán hệ số tự tương quan bậc nhất riêng biệt cho các cổ phiếu thường xuyên chạm giới hạn giá so với các cổ phiếu không thường xuyên chạm giới hạn giá.
 
 ```{python}
 #| eval: false
@@ -359,29 +360,29 @@ for group in ["Low", "Medium", "High"]:
 pd.DataFrame(autocorr_results).style.hide(axis="index")
 ```
 
-The expected pattern is a monotonically increasing autocorrelation from the Low to High limit-hit group, confirming that the observed serial dependence in returns is at least partly an artifact of price censoring rather than genuine return predictability.
+Mô hình dự kiến ​​là hệ số tự tương quan tăng dần từ nhóm chạm giới hạn thấp đến nhóm chạm giới hạn cao, xác nhận rằng sự phụ thuộc nối tiếp quan sát được trong lợi nhuận ít nhất một phần là do việc kiểm duyệt giá chứ không phải là khả năng dự đoán lợi nhuận thực sự.
 
-## Liquidity, Thin Trading, and Zero Returns
+## Thanh khoản thấp, giao dịch thưa thớt và lợi nhuận bằng không
 
-Liquidity (i.e., the ability to trade quickly at low cost without moving the price) is a first-order concern in Vietnamese equities. A substantial fraction of listed firms, particularly on HNX and UPCoM, experience chronic illiquidity characterized by infrequent trading, wide bid-ask spreads, and frequent zero-return days.
+Tính thanh khoản (tức là khả năng giao dịch nhanh chóng với chi phí thấp mà không làm biến động giá) là mối quan ngại hàng đầu trên thị trường chứng khoán Việt Nam. Một phần đáng kể các công ty niêm yết, đặc biệt là trên HNX và UPCoM, đang phải đối mặt với tình trạng thanh khoản thấp kinh niên, thể hiện qua khối lượng giao dịch ít, chênh lệch giá mua bán lớn và thường xuyên có những ngày không sinh lời.
 
-### Measuring Liquidity
+### Đo lường tính thanh khoản
 
-The academic literature has developed numerous liquidity measures, each capturing a different dimension of market quality. @#tbl-liquidity-measures summarizes the measures most applicable to Vietnamese data, given typical data availability.
+Các tài liệu học thuật đã phát triển nhiều thước đo thanh khoản, mỗi thước đo phản ánh một khía cạnh khác nhau của chất lượng thị trường. @#tbl-liquidity-measures tóm tắt các thước đo phù hợp nhất với dữ liệu Việt Nam, dựa trên tính khả dụng của dữ liệu điển hình.
 
-| Measure | Formula | Interpretation | Data Required |
+| Đo lường | Công thức | Giải thích | Dữ liệu cần thiết |
 |------------------|------------------|------------------|------------------|
-| Turnover ratio | $\text{TO}_{i,t} = \frac{\text{Volume}_{i,t}}{\text{Shares Outstanding}_{i}}$ | Trading intensity relative to float | Volume, shares outstanding |
-| Amihud illiquidity | $\text{ILLIQ}_{i,t} = \frac{1}{D} \sum_{d=1}^{D} \frac{|r_{i,d}|}{V_{i,d}}$ | Price impact per unit of volume | Daily returns, daily volume |
-| Zero-return proportion | $\text{ZR}_{i,t} = \frac{\#\{d : r_{i,d} = 0\}}{D}$ | Frequency of non-trading or stale pricing | Daily returns |
-| Roll spread | $\hat{S}_i = 2\sqrt{-\text{Cov}(r_{i,d}, r_{i,d-1})}$ | Effective bid-ask spread estimate | Daily returns |
-| Bid-ask spread | $\text{BA}_{i,d} = \frac{\text{Ask}_{i,d} - \text{Bid}_{i,d}}{(\text{Ask}_{i,d} + \text{Bid}_{i,d})/2}$ | Direct transaction cost | Quote data |
+| Tỷ lệ vòng quay | $\text{TO}_{i,t} = \frac{\text{Khối lượng}_{i,t}}{\text{Số cổ phiếu đang lưu hành}_{i}}$ | Cường độ giao dịch so với số cổ phiếu tự do lưu hành | Khối lượng, số cổ phiếu đang lưu hành |
+| Thanh khoản thấp của Amihud | $\text{ILLIQ}_{i,t} = \frac{1}{D} \sum_{d=1}^{D} \frac{|r_{i,d}|}{V_{i,d}}$ | Tác động giá trên mỗi đơn vị khối lượng | Lợi nhuận hàng ngày, khối lượng hàng ngày |
+| Tỷ lệ lợi nhuận bằng không | $\text{ZR}_{i,t} = \frac{\#\{d : r_{i,d} = 0\}}{D}$ | Tần suất giá không giao dịch hoặc lỗi thời | Lợi nhuận hàng ngày |
+| Chênh lệch giá mua-bán | $\hat{S}_i = 2\sqrt{-\text{Cov}(r_{i,d}, r_{i,d-1})}$ | Ước tính chênh lệch giá mua-bán hiệu quả | Lợi nhuận hàng ngày |
+| Chênh lệch giá mua-bán | $\text{BA}_{i,d} = \frac{\text{Ask}_{i,d} - \text{Bid}_{i,d}}{(\text{Ask}_{i,d} + \text{Bid}_{i,d})/2}$ | Chi phí giao dịch trực tiếp | Dữ liệu báo giá |
 
-: Liquidity Measures for Vietnamese Equities {#tbl-liquidity-measures}
+: Các biện pháp đảm bảo thanh khoản cho thị trường chứng khoán Việt Nam {#tbl-liquidity-measures}
 
-The Amihud illiquidity ratio [@amihud2002illiquidity] is particularly useful because it requires only daily return and volume data. It captures the price impact of trading (i.e., the return per unit of currency volume) and has been shown to correlate well with more sophisticated microstructure-based measures such as the effective spread [see @goyenko2009liquidity and @goyenko2009stock for a comprehensive comparison].
+Chỉ số thanh khoản thấp Amihud [@amihud2002illiquidity] đặc biệt hữu ích vì nó chỉ yêu cầu dữ liệu lợi nhuận và khối lượng giao dịch hàng ngày. Nó nắm bắt được tác động của giao dịch lên giá (tức là lợi nhuận trên mỗi đơn vị khối lượng tiền tệ) và đã được chứng minh là có mối tương quan tốt với các biện pháp dựa trên cấu trúc vi mô phức tạp hơn như chênh lệch giá hiệu quả [xem @goyenko2009liquidity và @goyenko2009stock để so sánh toàn diện].
 
-### Computing Liquidity Diagnostics
+### Xác định khả năng thanh khoản
 
 ```{python}
 #| label: compute-liquidity
@@ -420,7 +421,7 @@ liquidity_monthly["illiquid_flag"] = (
 )
 ```
 
-### Cross-Sectional Distribution of Liquidity
+### Phân phối thanh khoản theo mặt cắt ngang
 
 ```{python}
 #| label: tbl-liquidity-distribution
@@ -453,7 +454,7 @@ summary_stats.index = [
 summary_stats
 ```
 
-### Liquidity Distribution Across Exchanges
+### Phân phối thanh khoản trên các sàn giao dịch
 
 ```{python}
 #| label: fig-liquidity-by-exchange
@@ -506,11 +507,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-The distributions typically reveal a bimodal pattern: HOSE stocks cluster at low illiquidity values, while HNX and especially UPCoM stocks exhibit a long right tail of extreme illiquidity. This heterogeneity implies that a single liquidity filter or treatment is insufficient for the entire cross-section.
+Các phân bố thường cho thấy mô hình hai đỉnh: cổ phiếu HOSE tập trung ở các giá trị thanh khoản thấp, trong khi cổ phiếu HNX và đặc biệt là cổ phiếu UPCoM thể hiện phần đuôi bên phải dài với thanh khoản cực thấp. Sự không đồng nhất này ngụ ý rằng một bộ lọc hoặc phương pháp xử lý thanh khoản duy nhất là không đủ cho toàn bộ mặt cắt ngang.
 
-### Time Variation in Aggregate Liquidity
+### Biến động theo thời gian của tổng thanh khoản
 
-Market-wide liquidity is not constant. It deteriorates during crises, policy uncertainty, and periods of capital outflow, and improves during bull markets and periods of foreign inflow. The time variation in aggregate liquidity is itself a risk factor [@pastor2003liquidity].
+Tính thanh khoản trên toàn thị trường không ổn định. Nó xấu đi trong các cuộc khủng hoảng, sự bất ổn về chính sách và các giai đoạn dòng vốn chảy ra, và cải thiện trong các thị trường tăng giá và các giai đoạn dòng vốn nước ngoài chảy vào. Sự biến động theo thời gian của tổng thanh khoản tự nó là một yếu tố rủi ro [@pastor2003liquidity].
 
 ```{python}
 #| label: fig-aggregate-liquidity
@@ -554,20 +555,20 @@ plt.show()
 ```
 
 ::: callout-important
-## Practical Recommendation
+## Khuyến nghị thực tế
 
-Before any asset pricing analysis, apply the following liquidity filter: exclude stock-months where the zero-return share exceeds 50%, where fewer than 15 trading days are observed, or where average daily trading value falls below a threshold (e.g., 100 million VND). Document the filter explicitly, and report sensitivity of results to alternative thresholds.
+Trước khi tiến hành bất kỳ phân tích định giá tài sản nào, hãy áp dụng bộ lọc thanh khoản sau: loại trừ các tháng giao dịch có tỷ lệ cổ phiếu không sinh lời vượt quá 50%, có ít hơn 15 ngày giao dịch, hoặc có giá trị giao dịch trung bình hàng ngày thấp hơn một ngưỡng nhất định (ví dụ: 100 triệu VND). Ghi chép rõ ràng bộ lọc này và báo cáo độ nhạy của kết quả đối với các ngưỡng thay thế.
 :::
 
-## Bid-Ask Spread Estimation
+## Ước tính chênh lệch giá mua-bán
 
-In the absence of comprehensive quote data, the effective bid-ask spread can be estimated from transaction data using the method of @roll1984simple. The Roll estimator exploits the fact that if the bid-ask bounce is the sole source of negative serial covariance in returns, then:
+Trong trường hợp thiếu dữ liệu báo giá đầy đủ, chênh lệch giá mua-bán hiệu quả có thể được ước tính từ dữ liệu giao dịch bằng phương pháp của @roll1984simple. Bộ ước tính Roll khai thác thực tế rằng nếu sự dao động giá mua-bán là nguồn duy nhất gây ra hiệp phương sai nối tiếp âm trong lợi nhuận, thì:
 
 $$
 \hat{S}_{\text{Roll}} = 2\sqrt{-\text{Cov}(\Delta p_t, \Delta p_{t-1})}
 $$ {#eq-roll}
 
-where $\Delta p_t = p_t - p_{t-1}$ is the price change. When the autocovariance is positive (which occurs when information-driven serial correlation dominates the bid-ask bounce), the Roll estimator is undefined. @hasbrouck2009trading proposes a Bayesian variant that handles this case by imposing a prior on the spread.
+trong đó $\Delta p_t = p_t - p_{t-1}$ là sự thay đổi giá. Khi hệ số tự tương quan dương (điều này xảy ra khi tương quan chuỗi dựa trên thông tin chi phối sự dao động giá mua-bán), ước lượng Roll không xác định. @hasbrouck2009trading đề xuất một biến thể Bayes xử lý trường hợp này bằng cách áp đặt một phân bố tiên nghiệm lên chênh lệch giá.
 
 ```{python}
 #| label: compute-roll-spread
@@ -627,27 +628,27 @@ print(
 )
 ```
 
-## Non-Synchronous Trading Bias
+## Thiên kiến ​​giao dịch không đồng bộ
 
-When stocks do not trade at the same frequency or at the same times, observed returns are misaligned. This non-synchronous trading bias, first formalized by @scholes1977estimating and @lo1990econometric, is one of the most consequential microstructure effects for asset pricing in thin markets.
+Khi cổ phiếu không được giao dịch với tần suất hoặc thời điểm giống nhau, lợi nhuận quan sát được sẽ không đồng bộ. Sai lệch do giao dịch không đồng bộ này, lần đầu tiên được @scholes1977estimating và @lo1990econometric chính thức hóa, là một trong những hiệu ứng vi mô quan trọng nhất đối với định giá tài sản trong các thị trường có nguồn cung ít.
 
-### The Problem
+### Vấn đề
 
-Suppose the true (unobserved) return process for stock $i$ follows a single-factor model:
+Giả sử quá trình lợi nhuận thực tế (không quan sát được) của cổ phiếu $i$ tuân theo mô hình một yếu tố:
 
 $$
 r_{i,t}^* = \alpha_i + \beta_i r_{m,t}^* + \varepsilon_{i,t}
 $$ {#eq-true-factor}
 
-where $r_{m,t}^*$ is the true market return and $\beta_i$ is the true beta. If stock $i$ last traded $k$ days before the end of day $t$, the observed return incorporates information only up to day $t - k$. @scholes1977estimating show that the OLS estimate of beta from regressing observed returns on observed market returns is:
+trong đó $r_{m,t}^*$ là lợi suất thị trường thực và $\beta_i$ là hệ số beta thực. Nếu cổ phiếu $i$ được giao dịch lần cuối cách ngày $t$ k ngày, thì lợi suất quan sát được chỉ bao gồm thông tin đến ngày $t - k$. @scholes1977estimating cho thấy rằng ước tính OLS của beta từ việc hồi quy lợi suất quan sát được trên lợi suất thị trường quan sát được là:
 
 $$
 \hat{\beta}_i^{OLS} = \beta_i \cdot \pi_i
 $$ {#eq-beta-bias}
 
-where $\pi_i$ is the probability that stock $i$ trades on any given day. For a stock that trades on only 50% of days, the OLS beta is biased downward by 50%. This bias is severe in Vietnam, where many small-cap stocks trade on fewer than half of all trading days.
+trong đó $\pi_i$ là xác suất mà cổ phiếu $i$ giao dịch vào bất kỳ ngày nào. Đối với một cổ phiếu chỉ giao dịch trong 50% ngày, OLS beta bị nghiêng xuống 50%. Sự thiên vị này rất nghiêm trọng ở Việt Nam, nơi nhiều cổ phiếu vốn hóa nhỏ giao dịch ít hơn một nửa số ngày giao dịch.
 
-### Quantifying the Bias
+### Định lượng sai lệch
 
 ```{python}
 #| label: fig-trading-frequency
@@ -695,15 +696,15 @@ plt.tight_layout()
 plt.show()
 ```
 
-### The Dimson Beta Correction
+### Hiệu chỉnh Dimson Beta
 
-@dimson1979risk proposes a simple correction: include lagged and leading market returns in the beta regression:
+@dimson1979risk đề xuất một sự điều chỉnh đơn giản: bao gồm lợi nhuận thị trường trễ và dẫn đầu trong hồi quy beta:
 
 $$
 r_{i,t} = \alpha_i + \sum_{k=-K}^{K} \beta_{i,k} \, r_{m,t-k} + \varepsilon_{i,t}
 $$ {#eq-dimson}
 
-The Dimson-corrected beta is $\hat{\beta}_i^{Dimson} = \sum_{k=-K}^{K} \hat{\beta}_{i,k}$. Typically $K = 1$ or $K = 2$ is sufficient. The summed coefficients capture the full response of the stock's observed return to market information, regardless of when the stock actually trades.
+Hệ số beta hiệu chỉnh Dimson là $\hat{\beta}_i^{Dimson} = \sum_{k=-K}^{K} \hat{\beta}_{i,k}$. Thông thường, $K = 1$ hoặc $K = 2$ là đủ. Tổng các hệ số này thể hiện đầy đủ phản ứng của lợi nhuận quan sát được của cổ phiếu đối với thông tin thị trường, bất kể thời điểm giao dịch thực tế của cổ phiếu.
 
 ```{python}
 #| label: dimson-beta-estimation
@@ -781,7 +782,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-The scatter plot should reveal a systematic pattern: Dimson betas exceed OLS betas for most stocks, with the discrepancy largest for thinly traded stocks. Points above the 45-degree line indicate stocks whose OLS betas are biased downward by non-synchronous trading.
+Biểu đồ phân tán sẽ tiết lộ một mô hình có hệ thống: Dimson beta vượt quá OLS beta đối với hầu hết các cổ phiếu, với sự khác biệt lớn nhất đối với các cổ phiếu được giao dịch mỏng. Các điểm trên đường 45 độ cho biết các cổ phiếu có OLS beta bị lệch xuống do giao dịch không đồng bộ.
 
 ```{python}
 #| label: tbl-beta-bias-by-liquidity
@@ -817,18 +818,18 @@ beta_bias_summary
 ```
 
 ::: callout-warning
-For the thinnest-traded tercile, OLS beta underestimates true systematic risk by 20-40% on average. Using uncorrected betas for cost of equity estimation or factor model tests will produce systematically incorrect results for these stocks.
+Đối với nhóm cổ phiếu có khối lượng giao dịch thấp nhất (phân vị thứ ba), hệ số beta OLS ước tính thấp hơn rủi ro hệ thống thực tế trung bình từ 20-40%. Việc sử dụng hệ số beta chưa hiệu chỉnh để ước tính chi phí vốn chủ sở hữu hoặc kiểm định mô hình nhân tố sẽ dẫn đến kết quả không chính xác một cách có hệ thống đối với các cổ phiếu này.
 :::
 
-### The Scholes-Williams Estimator
+### Công thức ước lượng Scholes-Williams
 
-An alternative correction, proposed by @scholes1977estimating, estimates beta as:
+Một phương pháp hiệu chỉnh khác, được đề xuất bởi @scholes1977estimating, ước tính hệ số beta như sau:
 
 $$
 \hat{\beta}_i^{SW} = \frac{\hat{\beta}_{i,-1} + \hat{\beta}_{i,0} + \hat{\beta}_{i,+1}}{1 + 2\hat{\rho}_m}
 $$ {#eq-sw}
 
-where $\hat{\beta}_{i,k}$ is the slope from regressing $r_{i,t}$ on $r_{m,t-k}$ alone, and $\hat{\rho}_m$ is the first-order autocorrelation of the market return. The Scholes-Williams estimator is consistent under the assumption that non-trading is the sole source of serial cross-correlation, while the Dimson estimator is more robust to additional sources of lead-lag structure.
+trong đó $\hat{\beta}_{i,k}$ là độ dốc thu được từ việc hồi quy $r_{i,t}$ chỉ dựa trên $r_{m,tk}$, và $\hat{\rho}_m$ là hệ số tự tương quan bậc nhất của lợi nhuận thị trường. Ước lượng Scholes-Williams nhất quán với giả định rằng phi giao dịch là nguồn duy nhất của tương quan chéo nối tiếp, trong khi ước lượng Dimson mạnh mẽ hơn đối với các nguồn cấu trúc dẫn-trễ bổ sung.
 
 ```{python}
 #| label: scholes-williams-beta
@@ -858,13 +859,13 @@ beta_comparison["beta_sw"] = (
 )
 ```
 
-## Implications for Portfolio Construction
+## Ý nghĩa đối với việc xây dựng danh mục đầu tư
 
-The microstructure frictions documented above have direct consequences for portfolio construction, particularly for strategies that involve rebalancing across the full cross-section of listed firms.
+Những bất cập trong cấu trúc danh mục đầu tư được nêu trên có ảnh hưởng trực tiếp đến việc xây dựng danh mục đầu tư, đặc biệt là đối với các chiến lược liên quan đến việc tái cân bằng trên toàn bộ các công ty niêm yết.
 
-### Equal-Weighted vs. Value-Weighted Returns
+### Lợi nhuận tính theo trọng số bằng nhau so với lợi nhuận tính theo trọng số giá trị
 
-Equal-weighted portfolio returns give the same weight to each stock, including illiquid small-cap stocks that may contribute stale or noisy prices. Value-weighted returns tilt toward large, liquid stocks and are less susceptible to microstructure contamination.
+Lợi nhuận danh mục đầu tư theo phương pháp trọng số bằng nhau gán trọng số như nhau cho mỗi cổ phiếu, bao gồm cả các cổ phiếu vốn hóa nhỏ kém thanh khoản có thể gây ra biến động giá hoặc lỗi thời. Lợi nhuận theo phương pháp trọng số giá trị nghiêng về các cổ phiếu lớn, có tính thanh khoản cao và ít bị ảnh hưởng bởi cấu trúc thị trường nhỏ.
 
 ```{python}
 #| label: fig-ew-vs-vw
@@ -915,11 +916,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-A persistent divergence between equal-weighted and value-weighted cumulative returns is a hallmark of microstructure effects: the equal-weighted portfolio overstates attainable returns because it implicitly assumes costless trading in illiquid stocks.
+Sự khác biệt dai dẳng giữa lợi nhuận tích lũy được tính theo trọng số bằng nhau và lợi nhuận tích lũy được tính theo trọng số giá trị là đặc điểm nổi bật của các hiệu ứng cấu trúc vi mô: danh mục đầu tư được tính theo trọng số bằng nhau đánh giá quá cao lợi nhuận có thể đạt được vì nó ngầm giả định việc giao dịch không tốn chi phí đối với các cổ phiếu kém thanh khoản.
 
-### Recommended Liquidity Filters
+### Các bộ lọc thanh khoản được đề xuất
 
-Based on the diagnostics developed in this chapter, we recommend the following pre-analysis filters:
+Dựa trên các phương pháp chẩn đoán được phát triển trong chương này, chúng tôi đề xuất các bộ lọc tiền phân tích sau:
 
 ```{python}
 #| label: tbl-recommended-filters
@@ -954,54 +955,54 @@ filters.style.hide(axis="index")
 ```
 
 ::: callout-tip
-Always report results with and without liquidity filters. If results are qualitatively different, the baseline findings may be driven by microstructure artifacts rather than genuine economic effects.
+Luôn báo cáo kết quả có và không có bộ lọc thanh khoản. Nếu kết quả khác nhau về mặt định tính, thì các phát hiện cơ bản có thể bị ảnh hưởng bởi các yếu tố cấu trúc vi mô hơn là các tác động kinh tế thực sự.
 :::
 
-### Monthly vs. Daily Frequency
+### Tần suất hàng tháng so với tần suất hàng ngày
 
-For most asset pricing applications, monthly return aggregation is preferable to daily analysis in Vietnam because:
+Đối với hầu hết các ứng dụng định giá tài sản, việc tổng hợp lợi nhuận hàng tháng được ưu tiên hơn so với phân tích hàng ngày tại Việt Nam vì:
 
-1.  Monthly returns smooth out intraday noise, bid-ask bounce, and price limit effects.
-2.  Stocks that trade infrequently within a month still produce a meaningful monthly return.
-3.  Factor portfolio sorts are conventionally conducted at monthly frequency.
-4.  Statistical tests have better size properties when microstructure noise is reduced.
+1. Lợi nhuận hàng tháng giúp làm giảm bớt sự biến động trong ngày, sự dao động giá mua-bán và hiệu ứng giới hạn giá.
+2. Những cổ phiếu có khối lượng giao dịch không thường xuyên trong một tháng vẫn mang lại lợi nhuận hàng tháng đáng kể.
+3. Việc phân loại danh mục đầu tư theo yếu tố thường được thực hiện hàng tháng.
+4. Các phép thử thống kê có đặc tính kích thước tốt hơn khi nhiễu cấu trúc vi mô được giảm thiểu.
 
-However, monthly aggregation does not eliminate all biases. Stocks with zero returns for an entire month still contribute stale observations. The Dimson and Scholes-Williams corrections should still be applied at monthly frequency for beta estimation.
+Tuy nhiên, việc tổng hợp dữ liệu hàng tháng không loại bỏ được tất cả các sai lệch. Các cổ phiếu có lợi nhuận bằng không trong cả một tháng vẫn đóng góp vào các quan sát lỗi thời. Các hiệu chỉnh Dimson và Scholes-Williams vẫn nên được áp dụng hàng tháng để ước tính hệ số beta.
 
-## Implications for Asset Pricing Tests
+## Ý nghĩa đối với các bài kiểm tra định giá tài sản
 
-### Factor Model Estimation
+### Ước lượng mô hình nhân tố
 
-Standard factor model estimation assumes that returns are observed synchronously and without censoring. In Vietnam, both assumptions are violated. The practical consequences are in @tbl-assumption-violations
+Phương pháp ước lượng mô hình nhân tố tiêu chuẩn giả định rằng lợi nhuận được quan sát đồng bộ và không bị kiểm duyệt. Tại Việt Nam, cả hai giả định này đều bị vi phạm. Hậu quả thực tiễn được nêu trong @tbl-assumption-violations
 
-| Assumption | Violation in Vietnam | Consequence |
+| Giả định | Vi phạm tại Việt Nam | Hậu quả |
 |-------------------|--------------------------------|---------------------|
-| Synchronous observation | Thin trading | Biased betas, attenuated R² |
-| Uncensored returns | Price limits | Truncated distributions, biased moments |
-| Continuous trading | Discrete ticks | Return discreteness, bid-ask bounce |
-| No transaction costs | Wide spreads | Overstated portfolio returns |
+| Quan sát đồng bộ | Giao dịch mỏng | Beta thiên vị, R² suy giảm |
+| Trả lại không kiểm duyệt | Giới hạn giá | Phân phối bị cắt bớt, thời điểm thiên vị |
+| Giao dịch liên tục | Bọ ve rời rạc | Trả lại sự rời rạc, trả lại giá mua-bán |
+| Không có chi phí giao dịch | Chênh lệch rộng | Lợi nhuận danh mục đầu tư bị phóng đại |
 
-: Standard Assumptions and Their Violations {#tbl-assumption-violations}
+: Các giả định tiêu chuẩn và vi phạm của chúng {#tbl-assumption-violations}
 
-### Adjusted Testing Procedure
+### Quy trình kiểm tra được điều chỉnh
 
-We recommend the following adjustments to standard asset pricing tests when applied to Vietnamese data:
+Chúng tôi khuyến nghị điều chỉnh các tiêu chuẩn kiểm định giá tài sản thông thường khi áp dụng cho dữ liệu Việt Nam như sau:
 
-1.  **Beta estimation**: Use Dimson ($K \ge 1$) or Scholes-Williams betas, not OLS betas.
+1. **Ước lượng hệ số Beta**: Sử dụng hệ số beta Dimson ($K \ge 1$) hoặc Scholes-Williams, không sử dụng hệ số beta OLS.
 
-2.  **Factor construction**: When forming size and value portfolios, apply liquidity filters before sorting. Consider excluding the smallest quintile of stocks by market capitalization, which is most affected by thin trading.
+2. **Xây dựng yếu tố**: Khi xây dựng danh mục đầu tư theo quy mô và giá trị, hãy áp dụng các bộ lọc thanh khoản trước khi sắp xếp. Cân nhắc loại trừ nhóm 20% cổ phiếu nhỏ nhất theo vốn hóa thị trường, nhóm này bị ảnh hưởng nhiều nhất bởi giao dịch thưa thớt.
 
-3.  **Return aggregation**: Use monthly frequency. If daily analysis is necessary, include lagged market returns in the time-series regression.
+3. **Tổng hợp lợi nhuận**: Sử dụng tần suất hàng tháng. Nếu cần phân tích hàng ngày, hãy bao gồm lợi nhuận thị trường trễ trong hồi quy chuỗi thời gian.
 
-4.  **Robust inference**: Cluster standard errors by stock to account for persistent microstructure-induced serial correlation. Use Newey-West HAC standard errors with sufficient lags.
+4. **Suy luận mạnh mẽ**: Gom nhóm sai số chuẩn theo cổ phiếu để tính đến tương quan chuỗi do cấu trúc vi mô gây ra. Sử dụng sai số chuẩn HAC của Newey-West với độ trễ đủ lớn.
 
-5.  **Price limit adjustment**: For volatility analysis or risk measurement, consider the @chu2019forecasting approach of modeling the latent (uncensored) return distribution using truncated regression:
+5. **Điều chỉnh giới hạn giá**: Để phân tích biến động hoặc đo lường rủi ro, hãy xem xét phương pháp dự báo của @chu2019forecasting về việc mô hình hóa phân phối lợi nhuận tiềm ẩn (không bị kiểm duyệt) bằng cách sử dụng hồi quy bị cắt cụt:
 
 $$
 r_{i,t}^* \sim N(\mu_i, \sigma_i^2), \quad r_{i,t}^{obs} = \max(\underline{L}, \min(\bar{L}, r_{i,t}^*))
 $$ {#eq-truncated}
 
-Estimate $\mu_i$ and $\sigma_i^2$ via maximum likelihood for the truncated normal.
+Ước tính $\mu_i$ và $\sigma_i^2$ bằng phương pháp hợp lý tối đa cho phân phối chuẩn bị cắt cụt.
 
 ```{python}
 #| label: truncated-volatility
@@ -1040,34 +1041,34 @@ def estimate_true_volatility(returns, limit_band):
     return np.exp(log_sigma)
 ```
 
-6.  **Sensitivity reporting**: Always report key results under alternative specifications: with and without liquidity filters, using OLS vs. Dimson betas, at daily vs. monthly frequency, and using observed vs. truncation-corrected volatility.
+6. **Báo cáo độ nhạy**: Luôn báo cáo các kết quả chính theo các thông số kỹ thuật thay thế: có và không có bộ lọc thanh khoản, sử dụng hệ số beta OLS so với Dimson, ở tần suất hàng ngày so với hàng tháng và sử dụng độ biến động quan sát được so với độ biến động đã được hiệu chỉnh cắt cụt.
 
-## Summary
+## Tổng kết
 
-This chapter has established that Vietnamese equity markets exhibit microstructure characteristics that materially affect observed prices, returns, and risk measures. The key findings are:
+Chương này đã chỉ ra rằng thị trường chứng khoán Việt Nam thể hiện những đặc điểm vi cấu trúc ảnh hưởng đáng kể đến giá cả, lợi nhuận và các chỉ số rủi ro. Những phát hiện chính là:
 
-1.  **Price limits** censor daily returns, inducing positive autocorrelation, volatility spillover, and truncated distributions. The $\pm$ 7% band on HOSE is particularly restrictive for volatile stocks.
+1. **Giới hạn giá** hạn chế lợi nhuận hàng ngày, gây ra tương quan dương, lan truyền biến động và phân phối bị cắt cụt. Giới hạn ±7% trên HOSE đặc biệt hạn chế đối với các cổ phiếu có độ biến động cao.
 
-2.  **Thin trading and zero returns** afflict a substantial fraction of listed firms. Trading probabilities below 50% are common on HNX and UPCoM, generating non-synchronous trading bias that attenuates OLS beta estimates by 20-40%.
+2. **Giao dịch thưa thớt và lợi nhuận bằng không** ảnh hưởng đến một phần đáng kể các công ty niêm yết. Xác suất giao dịch dưới 50% là phổ biến trên HNX và UPCoM, tạo ra sai lệch giao dịch không đồng bộ làm giảm ước tính hệ số beta OLS từ 20-40%.
 
-3.  **Illiquidity** varies dramatically across the cross-section, with Amihud ratios spanning several orders of magnitude. Value-weighted portfolio returns are less contaminated than equal-weighted returns.
+3. **Tính thanh khoản thấp** biến động mạnh mẽ giữa các danh mục đầu tư, với tỷ lệ Amihud trải rộng trên nhiều bậc độ lớn. Lợi nhuận danh mục đầu tư được tính theo giá trị ít bị ảnh hưởng bởi rủi ro hơn so với lợi nhuận được tính theo trọng số bằng nhau.
 
-4.  **The Dimson and Scholes-Williams beta corrections** effectively address non-synchronous trading bias and should be used as the default beta estimator for Vietnamese equities.
+4. **Các phương pháp hiệu chỉnh beta Dimson và Scholes-Williams** giải quyết hiệu quả sai lệch giao dịch không đồng bộ và nên được sử dụng làm phương pháp ước tính beta mặc định cho cổ phiếu Việt Nam.
 
-5.  **Liquidity filters** should be applied before any asset pricing analysis, and results should be reported with and without these filters as a robustness check.
+5. **Các bộ lọc thanh khoản** nên được áp dụng trước bất kỳ phân tích định giá tài sản nào, và kết quả nên được báo cáo cả khi có và không có các bộ lọc này như một bước kiểm tra độ tin cậy.
 
-Ignoring these frictions does not merely add noise to empirical results, it systematically biases estimates in predictable directions. The diagnostics and corrections presented in this chapter provide the foundation for credible empirical asset pricing in Vietnam.
+Việc bỏ qua những trở ngại này không chỉ làm tăng thêm nhiễu cho kết quả thực nghiệm, mà còn làm sai lệch các ước tính một cách có hệ thống theo những hướng có thể dự đoán được. Các chẩn đoán và hiệu chỉnh được trình bày trong chương này cung cấp nền tảng cho việc định giá tài sản thực nghiệm đáng tin cậy tại Việt Nam.
 
-<!-- ## Exercises
+## Bài tập
 
-1.  **Intraday liquidity patterns**: Using intraday data, compute the average bid-ask spread and depth at 15-minute intervals throughout the trading day. Document the U-shaped intraday liquidity pattern and discuss how it relates to the theoretical predictions of @admati1988theory.
+1. **Các mô hình thanh khoản trong ngày**: Sử dụng dữ liệu trong ngày, tính toán chênh lệch giá mua-bán trung bình và độ sâu thị trường theo khoảng thời gian 15 phút trong suốt ngày giao dịch. Ghi lại mô hình thanh khoản trong ngày hình chữ U và thảo luận về mối liên hệ của nó với các dự đoán lý thuyết của @admati1988theory.
 
-2.  **Magnet effect test**: Test the @subrahmanyam1994circuit magnet effect hypothesis. Conditional on a stock hitting a price limit by the end of the day, does price acceleration toward the limit occur in the final 30 minutes of continuous trading? Compare the speed of price approach to the limit on limit-hit days versus non-limit-hit days.
+2. **Thử nghiệm hiệu ứng nam châm**: Kiểm tra giả thuyết hiệu ứng nam châm của @subrahmanyam1994circuit. Giả sử giá cổ phiếu đạt đến ngưỡng giá trần vào cuối ngày, liệu giá có tăng tốc hướng tới ngưỡng này trong 30 phút cuối cùng của giao dịch liên tục hay không? So sánh tốc độ tiếp cận ngưỡng giá vào những ngày đạt ngưỡng so với những ngày không đạt ngưỡng.
 
-3.  **Liquidity-adjusted factor model**: Construct a tradeable liquidity factor (IML: Illiquid-Minus-Liquid) by sorting stocks into liquidity terciles using the Amihud ratio and forming a long-short portfolio. Augment the Fama-French three-factor model with this liquidity factor and test whether it improves the pricing of Vietnamese equities.
+3. **Mô hình yếu tố điều chỉnh theo thanh khoản**: Xây dựng yếu tố thanh khoản có thể giao dịch (IML: Thanh khoản thấp - Thanh khoản cao) bằng cách phân loại cổ phiếu thành ba nhóm thanh khoản dựa trên tỷ lệ Amihud và hình thành danh mục đầu tư mua - bán. Bổ sung yếu tố thanh khoản này vào mô hình ba yếu tố Fama-French và kiểm tra xem liệu nó có cải thiện việc định giá cổ phiếu Việt Nam hay không.
 
-4.  **Multi-day limit hits**: Identify episodes where the same stock hits the price limit on two or more consecutive days. How much cumulative price adjustment occurs over these multi-day limit episodes? Does the total adjustment exceed what would be expected under a one-day price change distribution?
+4. **Các lần chạm ngưỡng giá nhiều ngày liên tiếp**: Xác định các trường hợp cùng một cổ phiếu chạm ngưỡng giá trong hai ngày liên tiếp trở lên. Tổng mức điều chỉnh giá trong các lần chạm ngưỡng giá nhiều ngày này là bao nhiêu? Tổng mức điều chỉnh có vượt quá mức dự kiến ​​trong trường hợp biến động giá một ngày hay không?
 
-5.  **Non-synchronous trading and momentum**: The momentum effect may be partly an artifact of non-synchronous trading: past winners may simply be stocks with more recent prices. Re-examine the momentum premium after replacing OLS returns with Dimson-adjusted returns and after excluding stocks with trading probability below 50%.
+5. **Giao dịch không đồng bộ và động lượng**: Hiệu ứng động lượng có thể một phần là do giao dịch không đồng bộ gây ra: những cổ phiếu thắng lợi trong quá khứ đơn giản chỉ là những cổ phiếu có giá gần đây hơn. Hãy xem xét lại phần bù động lượng sau khi thay thế lợi nhuận OLS bằng lợi nhuận điều chỉnh theo Dimson và sau khi loại trừ các cổ phiếu có xác suất giao dịch dưới 50%.
 
-6.  **Cross-exchange comparison**: Exploit the difference in price limit bands across HOSE ($pm$ 7%), HNX ($pm$ 10%), and UPCoM ($pm$ 15%) to test the causal effect of price limit tightness on volatility spillover, zero-return frequency, and return autocorrelation. Use a difference-in-differences design if any exchange has changed its limit band during the sample period. -->
+6. **So sánh giữa các sàn giao dịch**: Khai thác sự khác biệt về biên độ giá giới hạn giữa HOSE (7% mỗi tháng), HNX (10% mỗi tháng) và UPCoM (15% mỗi tháng) để kiểm tra tác động nhân quả của độ chặt chẽ của biên độ giá giới hạn đến sự lan truyền biến động, tần suất lợi nhuận bằng không và tự tương quan lợi nhuận. Sử dụng thiết kế chênh lệch kép nếu bất kỳ sàn giao dịch nào đã thay đổi biên độ giá giới hạn trong giai đoạn lấy mẫu.
