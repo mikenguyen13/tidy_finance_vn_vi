@@ -37,7 +37,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 1.  **Clone the repository**:
 
     ``` bash
-    git clone https://github.com/mikenguyen13/tidy_finance_vn.git
+    git clone https://github.com/mikenguyen13/tidy_finance_vn_vi.git
     cd tidy_finance_vn
     ```
 
