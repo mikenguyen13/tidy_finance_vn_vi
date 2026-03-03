@@ -97,52 +97,21 @@ Cơ sở hạ tầng tài chính của Việt Nam cung cấp một số công c�
 
 ### Lợi suất trái phiếu chính phủ
 
-Chính phủ Việt Nam phát hành trái phiếu trong một loạt các kỳ hạn thông qua Kho bạc Nhà nước và Thị trường Trái phiếu Việt Nam (VBM). Các đặc điểm chính (tbl-govt-bond-characteristics)
+Chính phủ Việt Nam phát hành trái phiếu trong một loạt các kỳ hạn thông qua Kho bạc Nhà nước và Thị trường Trái phiếu Việt Nam (VBM). Các đặc điểm chính (@tbl-govt-bond-characteristics)
 
-| Feature | Description |
+| Tính năng | Mô tả |
 |---|---|
-| Issuer | State Treasury of Vietnam |
-| Primary market | Auction through HNX |
-| Available maturities | 1, 2, 3, 5, 7, 10, 15, 20, 30 years |
-| Shortest benchmark | 1-year (sometimes shorter tenors via T-bills) |
-| Coupon structure | Fixed, semi-annual |
-| Issuance frequency | Regular weekly/bi-weekly auctions |
-| Secondary market liquidity | Concentrated in 3-5 year segment; short end is thin |
-| Data availability | Available through DataCore.vn |
+| Cơ quan phát hành | Kho bạc Nhà nước Việt Nam |
+| Thị trường sơ cấp | Đấu giá thông qua HNX |
+| Kỳ hạn có sẵn | 1, 2, 3, 5, 7, 10, 15, 20, 30 năm |
+| Kỳ hạn ngắn nhất | 1 năm (đôi khi có kỳ hạn ngắn hơn thông qua tín phiếu kho bạc) |
+| Cơ cấu lãi suất | Cố định, nửa năm một lần |
+| Tần suất phát hành | Đấu giá định kỳ hàng tuần/hai tuần một lần |
+| Thanh khoản thị trường thứ cấp | Tập trung vào phân khúc 3-5 năm; phân khúc ngắn hạn khá ít |
+| Dữ liệu có sẵn | Có thể truy cập qua DataCore.vn |
 
-: Vietnamese Government Bond Characteristics {#tbl-govt-bond-characteristics}
+: Đặc điểm trái phiếu chính phủ Việt Nam {#tbl-govt-bond-characteristics}
 
-```{python}
-#| label: tbl-govt-bond-characteristics
-#| include: false
-#| tbl-cap: "Vietnamese Government Bond Characteristics"
-import pandas as pd
-
-bond_chars = pd.DataFrame({
-    "Feature": [
-        "Issuer",
-        "Primary market",
-        "Available maturities",
-        "Shortest benchmark",
-        "Coupon structure",
-        "Issuance frequency",
-        "Secondary market liquidity",
-        "Data availability"
-    ],
-    "Description": [
-        "State Treasury of Vietnam",
-        "Auction through HNX",
-        "1, 2, 3, 5, 7, 10, 15, 20, 30 years",
-        "1-year (sometimes shorter tenors via T-bills)",
-        "Fixed, semi-annual",
-        "Regular weekly/bi-weekly auctions",
-        "Concentrated in 3-5 year segment; short end is thin",
-        "Available through DataCore.vn"
-    ]
-})
-
-bond_chars.style.hide(axis="index")
-```
 
 Hạn chế chính của lợi suất trái phiếu chính phủ khi được sử dụng như một thước đo lãi suất phi rủi ro là sự khan hiếm các chứng khoán có kỳ hạn ngắn. Trái phiếu kỳ hạn một năm là chuẩn mực được phát hành thường xuyên ngắn nhất, và lợi suất của chúng bao gồm một khoản phí kỳ hạn mà không có trong lãi suất phi rủi ro thực sự. Tín phiếu kho bạc (kỳ hạn < 1 năm) được phát hành không thường xuyên và với số lượng nhỏ, khiến chúng không phù hợp để sử dụng như một chuỗi liên tục.
 
@@ -165,7 +134,7 @@ Ngân hàng Nhà nước Việt Nam quy định một số tỷ giá hối đoá
 | Lãi suất cho vay qua đêm | Mức trần cho vay liên ngân hàng qua đêm | Không thường xuyên |
 | Mức trần lãi suất tiền gửi | Lãi suất tối đa mà ngân hàng có thể trả cho tiền gửi | Không thường xuyên |
 
-Lãi suất chính sách của Ngân hàng Nhà nước (SBV) {#tbl-sbv-rates}
+: Lãi suất chính sách của Ngân hàng Nhà nước (SBV) {#tbl-sbv-rates}
 
 **Ưu điểm**: Ổn định (ít thay đổi), phản ánh lập trường chính sách tiền tệ, có sẵn trong toàn bộ giai đoạn nghiên cứu.
 
@@ -181,63 +150,21 @@ Các ngân hàng thương mại cung cấp tiền gửi có kỳ hạn với lã
 
 ### So sánh tóm tắt
 
-```{python}
-#| label: tbl-proxy-comparison
-#| include: false
-#| tbl-cap: "Comparison of Risk-Free Rate Proxies for Vietnam"
-comparison = pd.DataFrame({
-    "Proxy": [
-        "1-Year Government Bond",
-        "Treasury Bills (< 1Y)",
-        "Interbank Overnight Rate",
-        "SBV Refinancing Rate",
-        "1-Month Bank Deposit Rate"
-    ],
-    "Default Risk": [
-        "Minimal (sovereign)",
-        "Minimal (sovereign)",
-        "Low (interbank)",
-        "None (administered)",
-        "Low-moderate (bank)"
-    ],
-    "Maturity Match": [
-        "Poor (1Y vs 1M)",
-        "Good (when available)",
-        "Very short (overnight)",
-        "N/A (not traded)",
-        "Good (1M)"
-    ],
-    "Continuity": [
-        "Good",
-        "Poor (irregular issuance)",
-        "Excellent",
-        "Excellent",
-        "Good"
-    ],
-    "Liquidity": [
-        "Moderate",
-        "Low",
-        "High (interbank)",
-        "N/A",
-        "N/A"
-    ],
-    "Recommended Use": [
-        "Annual/quarterly analysis",
-        "When available, preferred",
-        "Daily/monthly analysis",
-        "Long-run comparisons only",
-        "Practitioner DCF"
-    ]
-})
+| Ủy quyền | Rủi ro vỡ nợ | Phù hợp kỳ hạn | Tính liên tục | Tính thanh khoản | Khuyến nghị sử dụng |
+|---|---|---|---|---|---|
+| Trái phiếu chính phủ kỳ hạn 1 năm | Tối thiểu (chủ quyền) | Kém (1 năm so với 1 tháng) | Tốt | Trung bình | Phân tích hàng năm/hàng quý |
+| Tín phiếu kho bạc (< 1 năm) | Tối thiểu (chính phủ) | Tốt (khi có sẵn) | Kém (phát hành không thường xuyên) | Thấp | Khi có sẵn, được ưu tiên |
+| Lãi suất qua đêm liên ngân hàng | Thấp (liên ngân hàng) | Rất ngắn (qua đêm) | Xuất sắc | Cao (liên ngân hàng) | Phân tích hàng ngày/hàng tháng |
+| Lãi suất tái cấp vốn SBV | Không có (do chính quyền quản lý) | Không áp dụng (không giao dịch) | Xuất sắc | Không áp dụng | Chỉ so sánh dài hạn |
+| Lãi suất tiền gửi ngân hàng 1 tháng | Thấp-trung bình (ngân hàng) | Tốt (1 tháng) | Tốt | Không áp dụng | DCF của chuyên gia |
 
-comparison.style.hide(axis="index")
-```
+: So sánh các chỉ số lãi suất phi rủi ro tại Việt Nam {#tbl-proxy-comparison}
 
-## Constructing the Risk-Free Rate Series
+## Xây dựng chuỗi lãi suất phi rủi ro
 
-We now construct alternative monthly risk-free rate series and examine their properties.
+Giờ đây, chúng ta sẽ xây dựng các chuỗi lãi suất phi rủi ro hàng tháng thay thế và xem xét các đặc tính của chúng.
 
-### Loading and Cleaning Rate Data
+### Tải và Làm sạch Dữ liệu Lãi suất
 
 ```{python}
 #| label: load-rf-data
@@ -287,15 +214,15 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Frequency Alignment
+### Căn chỉnh tần số
 
-Asset pricing tests require monthly risk-free rates. Raw data may arrive at daily, weekly, or irregular frequencies. We use the following conversion logic:
+Các bài kiểm tra định giá tài sản yêu cầu lãi suất phi rủi ro hàng tháng. Dữ liệu thô có thể được cung cấp hàng ngày, hàng tuần hoặc không đều đặn. Chúng tôi sử dụng logic chuyển đổi sau:
 
-**Daily to monthly**: Take the average of daily rates within each month, then convert from annualized to monthly.
+**Từ hàng ngày sang hàng tháng**: Lấy mức giá trung bình hàng ngày trong mỗi tháng, sau đó chuyển đổi từ giá trị hàng năm sang giá trị hàng tháng.
 
-**Irregular to monthly**: For series with gaps (e.g., treasury bills), forward-fill the most recent observation, then average within each month.
+**Từ không đều đến hàng tháng**: Đối với các chuỗi dữ liệu có khoảng trống (ví dụ: tín phiếu kho bạc), hãy điền dữ liệu quan sát gần nhất vào trước, sau đó tính trung bình trong mỗi tháng.
 
-**Annualized to monthly**: Under simple compounding, $r_f^{monthly} = r_f^{annual} / 12$. Under continuous compounding, $r_f^{monthly} = r_f^{annual} / 12$ (since continuous rates are additive). We use simple compounding for consistency with the convention that stock returns are computed as arithmetic returns.
+**Chuyển đổi từ lãi suất hàng năm sang hàng tháng**: Theo lãi kép đơn giản, $r_f^{hàng tháng} = r_f^{hàng năm} / 12$. Theo lãi kép liên tục, $r_f^{hàng tháng} = r_f^{hàng năm} / 12$ (vì lãi suất liên tục có tính chất cộng). Chúng ta sử dụng lãi kép đơn giản để nhất quán với quy ước rằng lợi nhuận cổ phiếu được tính toán như lợi nhuận trung bình cộng.
 
 ```{python}
 #| label: construct-monthly-rf
@@ -354,9 +281,9 @@ for proxy in ["govt_bond_1y", "interbank_overnight", "sbv_refinancing"]:
 rf_all = pd.concat(rf_proxies.values(), ignore_index=True)
 ```
 
-### Handling Missing Data and Structural Breaks
+### Xử lý dữ liệu bị thiếu và các điểm gián đoạn cấu trúc
 
-Vietnamese rate data may contain gaps due to market closures, reporting changes, or the introduction of new instruments. We handle these systematically:
+Dữ liệu giá cước Việt Nam có thể có khoảng trống do thị trường đóng cửa, báo cáo thay đổi hoặc giới thiệu các công cụ mới. Chúng tôi xử lý những vấn đề này một cách có hệ thống:
 
 ```{python}
 #| label: check-missing
@@ -378,7 +305,7 @@ coverage = (
 print(coverage)
 ```
 
-For periods where the primary proxy is unavailable, we construct a blended series using a priority hierarchy:
+Đối với các khoảng thời gian mà proxy chính không khả dụng, chúng tôi xây dựng một chuỗi kết hợp bằng cách sử dụng hệ thống phân cấp ưu tiên:
 
 ```{python}
 #| label: construct-blended-rf
@@ -450,7 +377,7 @@ source_comp = (
 source_comp
 ```
 
-### Properties of the Constructed Series
+### Các Đặc Điểm Của Dãy Được Xây Dựng
 
 ```{python}
 #| label: tbl-rf-summary-stats
@@ -521,9 +448,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-The spread between proxies is informative. A consistently positive spread (bond yield \> interbank rate) reflects the term premium embedded in the 1-year bond. Periods where the interbank rate spikes above the bond yield typically correspond to liquidity crunches in the banking system.
+Sự chênh lệch giữa các proxy là nhiều thông tin. Chênh lệch dương nhất quán (lợi suất trái phiếu \> lãi suất liên ngân hàng) phản ánh phí bảo hiểm kỳ hạn được nhúng trong trái phiếu kỳ hạn 1 năm. Các giai đoạn mà lãi suất liên ngân hàng tăng vọt trên lợi suất trái phiếu thường tương ứng với cuộc khủng hoảng thanh khoản trong hệ thống ngân hàng.
 
-### Correlation Across Proxies
+### Tương quan giữa các proxy
 
 ```{python}
 #| label: tbl-rf-correlation
@@ -536,23 +463,23 @@ rf_corr.columns = [x.replace("_", " ").title() for x in rf_corr.columns]
 rf_corr
 ```
 
-High correlation (\> 0.8) between proxies suggests that the level and direction of interest rate movements are captured similarly by all proxies. Low correlation would indicate that the choice of proxy introduces substantial idiosyncratic variation into excess returns.
+Mối tương quan cao (\> 0,8) giữa các proxy cho thấy mức độ và hướng của biến động lãi suất được nắm bắt tương tự bởi tất cả các proxy. Tương quan thấp sẽ chỉ ra rằng việc lựa chọn proxy tạo ra sự thay đổi đặc thù đáng kể thành lợi nhuận vượt mức.
 
-## Excess Return Construction
+## Xây dựng lợi nhuận dư thừa
 
-With the risk-free rate series in hand, we now construct excess returns for individual stocks and for the market portfolio.
+Với chuỗi tỷ giá không rủi ro trong tay, giờ đây chúng tôi xây dựng lợi nhuận vượt mức cho các cổ phiếu riêng lẻ và cho danh mục đầu tư thị trường.
 
-### Matching Conventions
+### Quy ước phù hợp
 
-Excess return construction requires strict consistency across three dimensions (@tbl-rf-consistency).
+Xây dựng lại lợi nhuận vượt trội đòi hỏi tính nhất quán chặt chẽ trên ba chiều kích (@tbl-rf-consistency).
 
-| Dimension | Requirement | Common Error |
+| Chiều kích | Yêu cầu | Lỗi phổ biến |
 |----------------------|------------------------|--------------------------|
-| Currency | Same currency for $r_i$ and $r_f$ | Using USD rate for VND-denominated returns |
-| Frequency | Same holding period | Using annualized $r_f$ with monthly $r_i$ |
-| Compounding | Same convention | Mixing log and arithmetic returns |
+| Tỷ giá | Cùng một loại tiền tệ cho $r_i$ và $r_f$ | Sử dụng tỷ giá USD cho lợi nhuận định danh bằng VND |
+| Tần suất | Cùng kỳ hạn nắm giữ | Sử dụng $r_f$ định danh hàng năm với $r_i$ hàng tháng |
+| Tích lũy | Cùng quy ước | Trộn kết quả lôg và toán |
 
-: Consistency Requirements for Excess Returns {#tbl-rf-consistency}
+: Yêu cầu nhất quán cho lợi nhuận vượt trội {#tbl-rf-consistency}
 
 ```{python}
 #| label: construct-excess-returns
@@ -573,7 +500,7 @@ stock_returns = stock_returns.merge(rf_for_merge, on="date", how="left")
 stock_returns["ret_excess"] = stock_returns["ret"] - stock_returns["rf"]
 ```
 
-### Market Excess Return
+### Lợi nhuận dư thừa thị trường
 
 ```{python}
 #| label: compute-mktrf
@@ -617,11 +544,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Sensitivity Analysis: How Much Does the Proxy Choice Matter?
+## Phân tích độ nhạy: Lựa chọn proxy quan trọng như thế nào?
 
-This is the central empirical question of the chapter. If different risk-free proxies produce essentially the same downstream results, the choice is inconsequential. If they produce different results, researchers must justify their choice and report robustness.
+Đây là câu hỏi thực nghiệm trung tâm của chương. Nếu các proxy không rủi ro khác nhau về cơ bản tạo ra cùng một kết quả xuôi dòng, thì sự lựa chọn là không quan trọng. Nếu chúng tạo ra các kết quả khác nhau, các nhà nghiên cứu phải biện minh cho sự lựa chọn của họ và báo cáo tính mạnh mẽ.
 
-### Effect on the Equity Premium
+### Ảnh hưởng đến phí bảo hiểm vốn chủ sở hữu
 
 ```{python}
 #| label: tbl-equity-premium-sensitivity
@@ -654,7 +581,7 @@ for proxy_name, proxy_df in rf_proxies.items():
 pd.DataFrame(results).style.hide(axis="index")
 ```
 
-### Effect on Factor Premiums
+### Ảnh hưởng đến phí bảo hiểm yếu tố
 
 ```{python}
 #| label: tbl-factor-premium-sensitivity
@@ -689,11 +616,11 @@ for proxy_name, proxy_df in rf_proxies.items():
     )
 ```
 
-Note that SMB and HML are constructed as long-short portfolio returns and should be identical regardless of the risk-free proxy. Only MKTRF differs. However, if the researcher uses the risk-free rate to compute individual stock excess returns before sorting into factor portfolios, small differences in sorting may arise.
+Lưu ý rằng SMB và HML được xây dựng dưới dạng lợi nhuận danh mục đầu tư dài hạn và phải giống hệt nhau bất kể proxy không có rủi ro. Chỉ có MKTRF khác nhau. Tuy nhiên, nếu nhà nghiên cứu sử dụng tỷ lệ không rủi ro để tính toán lợi nhuận vượt mức cổ phiếu riêng lẻ trước khi sắp xếp thành danh mục yếu tố, sự khác biệt nhỏ trong việc sắp xếp có thể phát sinh.
 
-### Effect on Alpha Estimates
+### Ảnh hưởng đến ước tính alpha
 
-The choice of risk-free proxy affects alpha estimates for any portfolio evaluated against a factor model. We illustrate this by estimating the alpha of a momentum portfolio under each proxy.
+Việc lựa chọn proxy không rủi ro ảnh hưởng đến ước tính alpha cho bất kỳ danh mục đầu tư nào được đánh giá dựa trên mô hình yếu tố. Chúng tôi minh họa điều này bằng cách ước tính alpha của danh mục đầu tư động lượng theo mỗi proxy.
 
 ```{python}
 #| label: tbl-alpha-sensitivity
@@ -734,9 +661,9 @@ for proxy_name, proxy_df in rf_proxies.items():
 pd.DataFrame(alpha_results).style.hide(axis="index")
 ```
 
-### Effect on Valuation
+### Ảnh hưởng đến định giá
 
-To illustrate the valuation impact, consider a simple DCF exercise where the cost of equity is estimated via the CAPM.
+Để minh họa tác động định giá, hãy xem xét một bài tập DCF đơn giản trong đó chi phí vốn chủ sở hữu được ước tính thông qua CAPM.
 
 ```{python}
 #| label: tbl-valuation-sensitivity
@@ -776,26 +703,27 @@ pd.DataFrame(valuation_results).style.hide(axis="index")
 ```
 
 ::: callout-important
-## Key Finding
+## Phát hiện quan trọng
 
-Even modest differences in the risk-free rate (50-150 basis points across proxies) can produce terminal value differences of 10-30%. Researchers and practitioners must document their risk-free rate choice explicitly and report sensitivity to alternatives.
+Ngay cả những khác biệt nhỏ về lãi suất phi rủi ro (50-150 điểm cơ bản giữa các chỉ số thay thế) cũng có thể tạo ra sự khác biệt về giá trị cuối kỳ từ 10-30%. Các nhà nghiên cứu và chuyên gia thực hành phải ghi chép rõ ràng lựa chọn lãi suất phi rủi ro của mình và báo cáo độ nhạy cảm đối với các lựa chọn thay thế.
 :::
 
-## Term Structure Considerations
+## Các yếu tố cần xem xét về cấu trúc
 
-When longer-horizon discount rates are needed (e.g., for multi-year DCF or cost of capital estimation), the risk-free rate should be maturity-matched. This requires constructing a yield curve from available government bond data.
+Khi cần tỷ lệ chiết khấu dài hạn hơn (ví dụ: để ước tính dòng tiền chiết khấu hoặc chi phí vốn trong nhiều năm), tỷ lệ lãi suất phi rủi ro cần phải phù hợp với kỳ hạn. Điều này đòi hỏi phải xây dựng đường cong lợi suất từ ​​dữ liệu trái phiếu chính phủ hiện có.
 
-### Yield Curve Estimation
+### Ước tính đường cong lợi suất
 
-@gurkaynak2007us develop a parametric approach to yield curve estimation using the @nelson1987parsimonious and @svensson1994estimating models. The Nelson-Siegel model parameterizes the instantaneous forward rate as:
+@gurkaynak2007us phát triển một phương pháp tham số để ước tính đường cong lợi suất bằng cách sử dụng các mô hình @nelson1987parsimonious và @svensson1994estimating. Mô hình Nelson-Siegel tham số hóa lãi suất kỳ hạn tức thời như sau:
+
 
 $$
 f(\tau) = \beta_0 + \beta_1 \exp\left(-\frac{\tau}{\lambda}\right) + \beta_2 \frac{\tau}{\lambda} \exp\left(-\frac{\tau}{\lambda}\right)
 $$ {#eq-nelson-siegel}
 
-where $\tau$ is the maturity, $\beta_0$ is the long-run level, $\beta_1$ determines the slope, $\beta_2$ determines the curvature, and $\lambda$ controls the location of the hump.
+trong đó $\tau$ là độ chín, $\beta_0$ là mức dài hạn, $\beta_1$ xác định độ dốc, $\beta_2$ xác định độ cong và $\lambda$ kiểm soát vị trí của bướu.
 
-The corresponding yield is:
+Lợi nhuận tương ứng là:
 
 $$
 y(\tau) = \beta_0 + \beta_1 \frac{1 - \exp(-\tau/\lambda)}{\tau/\lambda} + \beta_2 \left[\frac{1 - \exp(-\tau/\lambda)}{\tau/\lambda} - \exp(-\tau/\lambda)\right]
@@ -877,10 +805,10 @@ print(f"  λ (decay)      = {lam:.4f}")
 ```
 
 ::: callout-tip
-The Nelson-Siegel yield curve allows extraction of a risk-free rate at any maturity. For monthly asset pricing, evaluate the curve at $\tau = 1/12$ (one month). For DCF valuation with a 10-year horizon, evaluate at $\tau = 10$. This maturity-matching approach is superior to using a single proxy for all purposes.
+Đường cong lợi suất Nelson-Siegel cho phép khai thác tỷ lệ không rủi ro ở bất kỳ kỳ hạn nào. Đối với định giá tài sản hàng tháng, hãy đánh giá đường cong ở mức $\tau = 1/12$ (một tháng). Đối với định giá DCF với thời hạn 10 năm, hãy đánh giá ở mức $\tau = 10$. Phương pháp đối sánh độ tuổi này vượt trội hơn so với việc sử dụng một proxy duy nhất cho mọi mục đích.
 :::
 
-### Extracting the Short-Rate from the Yield Curve
+### Trích xuất lãi suất ngắn hạn từ đường cong lợi suất
 
 ```{python}
 #| label: extract-short-rate
@@ -915,15 +843,15 @@ def extract_ns_short_rate(govt_yields, target_maturity=1/12):
 ns_short_rates = extract_ns_short_rate(govt_yields)
 ```
 
-## Real vs. Nominal Risk-Free Rates
+## Lãi suất phi rủi ro thực tế so với lãi suất phi rủi ro danh nghĩa
 
-For certain applications, particularly long-horizon valuation and real return analysis, the real (inflation-adjusted) risk-free rate is more appropriate than the nominal rate. The Fisher equation relates them:
+Đối với một số ứng dụng nhất định, đặc biệt là định giá dài hạn và phân tích lợi suất thực, lãi suất phi rủi ro thực (đã điều chỉnh lạm phát) phù hợp hơn lãi suất danh nghĩa. Phương trình Fisher liên hệ chúng như sau:
 
 $$
 r_f^{real} \approx r_f^{nominal} - \pi^{e}
 $$ {#eq-fisher}
 
-where $\pi^e$ is expected inflation. In practice, we can use realized CPI inflation as a proxy for expected inflation (under the assumption of rational expectations, or as an ex-post adjustment).
+trong đó $\pi^e$ là lạm phát dự kiến. Trên thực tế, chúng ta có thể sử dụng lạm phát CPI thực tế làm thước đo gần đúng cho lạm phát dự kiến ​​(với giả định về kỳ vọng hợp lý, hoặc như một điều chỉnh sau đó).
 
 ```{python}
 #| label: compute-real-rf
@@ -965,104 +893,58 @@ plt.show()
 ```
 
 ::: callout-note
-In periods of high inflation, the real risk-free rate can be substantially negative. This has implications for real excess return computation and for interpreting the equity premium in real terms. A negative real risk-free rate implies that nominal government securities do not preserve purchasing power, which strengthens the case for equity investment from a real-return perspective.
+Trong thời kỳ lạm phát cao, lãi suất phi rủi ro thực tế có thể âm đáng kể. Điều này có tác động đến việc tính toán lợi suất vượt trội thực tế và đến việc giải thích phần bù rủi ro cổ phiếu theo giá trị thực. Lãi suất phi rủi ro thực tế âm ngụ ý rằng trái phiếu chính phủ danh nghĩa không giữ được sức mua, điều này củng cố lập luận cho việc đầu tư vào cổ phiếu từ góc độ lợi suất thực tế.
 :::
 
-## International Comparison
+## So sánh quốc tế
 
-It is instructive to compare Vietnam's risk-free rate environment with that of other emerging and developed markets to contextualize the magnitudes involved.
-
-```{python}
-#| label: tbl-international-comparison
-#| include: false
-#| tbl-cap: "Risk-Free Rate Proxies: International Comparison"
-
-intl_comparison = pd.DataFrame({
-    "Country": [
-        "Vietnam",
-        "Thailand",
-        "Indonesia",
-        "Philippines",
-        "India",
-        "South Korea",
-        "Japan"
-    ],
-    "Typical Proxy": [
-        "Interbank overnight / 1Y govt bond",
-        "1-day bilateral repurchase rate",
-        "Bank Indonesia 7-day reverse repo rate",
-        "91-day T-bill",
-        "91-day T-bill",
-        "91-day CD rate",
-        "Uncollateralized overnight call rate"
-    ],
-    "Short-Term Maturity Available": [
-        "Limited (<1Y sparse)",
-        "Yes (1-day repo)",
-        "Yes (7-day, 1M)",
-        "Yes (91-day T-bill)",
-        "Yes (91-day T-bill)",
-        "Yes (91-day CD)",
-        "Yes (overnight)"
-    ],
-    "Typical Level (%, 2020-2024)": [
-        "2.5-6.0",
-        "0.5-2.5",
-        "3.5-6.0",
-        "1.5-6.0",
-        "3.5-7.0",
-        "1.0-3.5",
-        "-0.1-0.1"
-    ]
-})
-
-intl_comparison.style.hide(axis="index")
-```
-
-Vietnam's risk-free rate environment is characterized by relatively high nominal rates (reflecting inflation and growth dynamics), limited availability of very-short-maturity sovereign instruments, and greater reliance on interbank rates as the operational proxy. This is broadly similar to other ASEAN frontier markets but contrasts sharply with developed Asian markets, where deep government securities markets provide clean short-term benchmarks.
-
-## Best Practices Checklist
-
-Based on the analysis in this chapter, we summarize the recommended practices for risk-free rate construction in Vietnamese financial research:
+Việc so sánh môi trường lãi suất phi rủi ro của Việt Nam với các thị trường mới nổi và phát triển khác sẽ giúp hiểu rõ hơn về quy mô của vấn đề (@tbl-international-comparison).
 
 ```{python}
-#| label: tbl-best-practices
-#| include: false
-#| tbl-cap: "Best Practices for Risk-Free Rate Construction"
-
-practices = pd.DataFrame({
-    "Practice": [
-        "Use the shortest available maturity",
-        "Match frequency to return data",
-        "Use the same compounding convention",
-        "Document the proxy and source explicitly",
-        "Report sensitivity to alternative proxies",
-        "Avoid forward-looking policy rates",
-        "Handle gaps with documented interpolation",
-        "Use Nelson-Siegel for maturity matching",
-        "Consider real rates for long-horizon analysis",
-        "Maintain a single consistent series per study"
-    ],
-    "Rationale": [
-        "Minimizes term premium contamination",
-        "Avoids compounding mismatches between rf and stock returns",
-        "Arithmetic returns require arithmetic rf conversion",
-        "Enables replication; different proxies give different results",
-        "Demonstrates robustness of conclusions",
-        "Policy rates are not investable returns",
-        "Forward-fill, then average within month; document procedure",
-        "Enables extraction of any-maturity rate from sparse data",
-        "Nominal rates overstate real compensation in high-inflation periods",
-        "Mixing proxies across periods introduces structural breaks"
-    ]
-})
-
-practices.style.hide(axis="index")
+# get the risk-free rate of Asian markets
 ```
 
-## Saving the Risk-Free Rate for Downstream Use
 
-The final step is to save the constructed risk-free rate series for use in subsequent chapters.
+
+| Quốc gia | Chỉ số đại diện tiêu biểu | Kỳ hạn ngắn hạn | Mức độ tiêu biểu (%, 2020-2024) |
+|---|---|---|---|
+| Việt Nam | Lãi suất liên ngân hàng qua đêm / Trái phiếu chính phủ kỳ hạn 1 năm | Hạn chế (ít trái phiếu kỳ hạn dưới 1 năm) | 2,5-6,0 |
+| Thái Lan | Lãi suất mua lại song phương 1 ngày | Có (repo 1 ngày) | 0,5-2,5 |
+| Indonesia | Lãi suất repo ngược 7 ngày của Ngân hàng Trung ương Indonesia | Có (7 ngày, 1 tháng) | 3,5-6,0 |
+| Philippines | Tín phiếu kho bạc 91 ngày | Có (Tín phiếu kho bạc 91 ngày) | 1,5-6,0 |
+| Ấn Độ | Tín phiếu kho bạc 91 ngày | Có (Tín phiếu kho bạc 91 ngày) | 3,5-7,0 |
+| Hàn Quốc | Tỷ lệ trả lãi trong 91 ngày | Có (trả lãi trong 91 ngày) | 1.0-3.5 |
+| Nhật Bản | Lãi suất cho vay qua đêm không thế chấp | Có (qua đêm) | -0,1-0,1 |
+
+: Các chỉ số thay thế lãi suất phi rủi ro: So sánh quốc tế {#tbl-international-comparison}
+
+Môi trường lãi suất phi rủi ro của Việt Nam được đặc trưng bởi lãi suất danh nghĩa tương đối cao (phản ánh lạm phát và động lực tăng trưởng), hạn chế khả năng cung cấp các công cụ có chủ quyền kỳ hạn rất ngắn và phụ thuộc nhiều hơn vào lãi suất liên ngân hàng làm đại diện hoạt động. Điều này tương tự như các thị trường biên giới ASEAN khác nhưng tương phản rõ rệt với các thị trường châu Á phát triển, nơi thị trường chứng khoán chính phủ sâu cung cấp các tiêu chuẩn ngắn hạn rõ ràng.
+
+
+
+## Danh sách kiểm tra các phương pháp hay nhất
+
+Dựa trên phân tích trong chương này, chúng tôi tóm tắt các thực tiễn được khuyến nghị để xây dựng lãi suất phi rủi ro trong nghiên cứu tài chính Việt Nam (@tbl-best-practices).
+
+| Thực hành | Lý do |
+|---|---|
+| Sử dụng kỳ hạn ngắn nhất có thể | Giảm thiểu sự ảnh hưởng của phí bảo hiểm kỳ hạn |
+| Đối khớp tần số với dữ liệu trả về | Tránh tích lũy sai lệch giữa tần số vô tuyến và lợi nhuận từ cổ phiếu |
+| Sử dụng cùng một quy ước tính lãi kép | Tính toán trả về số học yêu cầu chuyển đổi số học sang số thực |
+| Ghi rõ thông tin về máy chủ proxy và nguồn | Cho phép sao chép; các máy chủ proxy khác nhau cho kết quả khác nhau |
+| Báo cáo về độ nhạy cảm đối với các chỉ số thay thế | Chứng minh tính vững chắc của các kết luận |
+| Tránh các mức lãi suất chính sách dự báo tương lai | Lãi suất chính sách không phải là lợi nhuận đầu tư |
+| Xử lý các khoảng trống bằng phương pháp nội suy đã được ghi chép | Điền dữ liệu về phía trước, sau đó tính trung bình trong tháng; ghi lại quy trình |
+| Sử dụng thuật toán Nelson-Siegel để khớp kỳ hạn | Cho phép trích xuất lãi suất bất kỳ kỳ hạn nào từ dữ liệu thưa thớt |
+| Cần xem xét lãi suất thực cho phân tích dài hạn | Lãi suất danh nghĩa phóng đại mức lương thực tế trong thời kỳ lạm phát cao |
+| Duy trì một chuỗi dữ liệu nhất quán cho mỗi nghiên cứu | Việc trộn lẫn các chỉ số thay thế giữa các giai đoạn sẽ tạo ra sự gián đoạn về cấu trúc |
+
+: Các phương pháp tốt nhất để xây dựng tỷ lệ lãi suất không rủi ro {#tbl-best-practices}
+
+
+## Giữ lại lãi suất phi rủi ro để sử dụng cho các khâu tiếp theo.
+
+Bước cuối cùng là lưu chuỗi lãi suất phi rủi ro đã xây dựng để sử dụng trong các chương tiếp theo.
 
 ```{python}
 #| label: save-rf-series
@@ -1091,33 +973,33 @@ print(f"\nColumns: {list(rf_output.columns)}")
 ```
 
 ::: callout-tip
-By saving the risk-free rate as a separate, well-documented file, all downstream chapters can merge it consistently. This avoids the common pitfall of reconstructing the risk-free rate differently in different analyses within the same study.
+Bằng cách lưu trữ tỷ lệ lãi suất phi rủi ro dưới dạng một tệp riêng biệt, được ghi chép đầy đủ, tất cả các chương tiếp theo có thể hợp nhất nó một cách nhất quán. Điều này tránh được lỗi thường gặp là tái tạo tỷ lệ lãi suất phi rủi ro khác nhau trong các phân tích khác nhau trong cùng một nghiên cứu.
 :::
 
-## Summary
+## Tóm tắt
 
-This chapter has established that risk-free rate construction is a first-order modeling decision in Vietnamese financial research, not a technical afterthought. The key takeaways are:
+Chương này đã chứng minh rằng việc xây dựng lãi suất phi rủi ro là một quyết định mô hình hóa hàng đầu trong nghiên cứu tài chính Việt Nam, chứ không phải là một yếu tố kỹ thuật được xem xét sau đó. Những điểm chính cần ghi nhớ là:
 
-1.  **No perfect proxy exists** in Vietnam. The interbank overnight rate, 1-year government bond yield, and SBV policy rate each have distinct strengths and limitations. A blended series using a documented priority hierarchy provides the most robust baseline.
+1. **Không có chỉ số thay thế hoàn hảo nào** ở Việt Nam. Lãi suất liên ngân hàng qua đêm, lợi suất trái phiếu chính phủ kỳ hạn 1 năm và lãi suất chính sách của Ngân hàng Nhà nước Việt Nam đều có những ưu điểm và hạn chế riêng. Chuỗi kết hợp sử dụng thứ tự ưu tiên được ghi chép đầy đủ sẽ cung cấp chỉ số cơ sở đáng tin cậy nhất.
 
-2.  **The choice of proxy matters quantitatively**. Different proxies can shift the estimated equity premium by 50-200 basis points annually, alter portfolio alphas, and change DCF terminal values by 10-30%.
+2. **Việc lựa chọn chỉ số đại diện có ảnh hưởng định lượng**. Các chỉ số đại diện khác nhau có thể làm thay đổi mức chênh lệch giá cổ phiếu ước tính từ 50-200 điểm cơ bản hàng năm, làm thay đổi hệ số alpha của danh mục đầu tư và thay đổi giá trị cuối kỳ của phương pháp chiết khấu dòng tiền (DCF) từ 10-30%.
 
-3.  **Frequency alignment and compounding conventions** must be handled with care. Converting annualized rates to monthly requires specifying the compounding convention. Gaps in the data require documented interpolation.
+3. **Việc điều chỉnh tần suất và các quy ước tính lãi kép** phải được xử lý cẩn thận. Việc chuyển đổi lãi suất hàng năm sang lãi suất hàng tháng yêu cầu phải chỉ rõ quy ước tính lãi kép. Các khoảng trống trong dữ liệu cần được nội suy và ghi chép lại.
 
-4.  **The Nelson-Siegel yield curve model** enables the extraction of any-maturity risk-free rate from sparse government bond data, which is particularly valuable for maturity-matched discount rate estimation.
+4. **Mô hình đường cong lợi suất Nelson-Siegel** cho phép trích xuất lãi suất phi rủi ro cho mọi kỳ hạn từ dữ liệu trái phiếu chính phủ thưa thớt, điều này đặc biệt có giá trị đối với việc ước tính lãi suất chiết khấu phù hợp với kỳ hạn.
 
-5.  **Sensitivity analysis is mandatory**. Any study that reports results under a single risk-free proxy without reporting robustness to alternatives has an unquantified source of specification uncertainty.
+5. **Phân tích độ nhạy là bắt buộc**. Bất kỳ nghiên cứu nào báo cáo kết quả dựa trên một chỉ số thay thế không rủi ro duy nhất mà không báo cáo tính ổn định đối với các chỉ số thay thế đều tiềm ẩn nguồn gốc của sự không chắc chắn trong việc xác định mô hình.
 
-<!-- ## Exercises
+<!-- ## Bài tập
 
-1.  **Proxy substitution test**: Re-estimate the Fama-French three-factor model for the Vietnamese market using each of the three risk-free proxies. Report the market premium, SMB, and HML under each specification. Are the cross-sectional patterns in factor loadings sensitive to the proxy choice?
+1. **Kiểm tra thay thế chỉ số đại diện**: Ước lượng lại mô hình ba yếu tố Fama-French cho thị trường Việt Nam bằng cách sử dụng từng chỉ số đại diện phi rủi ro trong ba mô hình. Báo cáo mức chênh lệch thị trường, SMB và HML theo từng mô hình. Liệu các mô hình phân bố chéo trong hệ số tải trọng yếu tố có nhạy cảm với việc lựa chọn chỉ số đại diện hay không?
 
-2.  **Breakpoint analysis**: Identify structural breaks in the interbank overnight rate series using the @bai2003critical sequential break detection procedure. Do these breaks correspond to known monetary policy regime changes (e.g., SBV rate adjustments, regulatory changes)?
+2. **Phân tích điểm đột phá**: Xác định các điểm đột phá cấu trúc trong chuỗi lãi suất qua đêm liên ngân hàng bằng cách sử dụng quy trình phát hiện điểm đột phá tuần tự @bai2003critical. Liệu các điểm đột phá này có tương ứng với các thay đổi chế độ chính sách tiền tệ đã biết (ví dụ: điều chỉnh lãi suất của Ngân hàng Nhà nước, thay đổi quy định)?
 
-3.  **Inflation-adjusted equity premium**: Compute the real equity premium by subtracting realized CPI inflation from both the market return and the nominal risk-free rate. Compare the Sharpe ratio of the market portfolio in nominal vs. real terms.
+3. **Phần bù rủi ro cổ phiếu điều chỉnh theo lạm phát**: Tính phần bù rủi ro cổ phiếu thực bằng cách trừ lạm phát CPI thực tế khỏi cả lợi suất thị trường và lãi suất phi rủi ro danh nghĩa. So sánh tỷ lệ Sharpe của danh mục đầu tư thị trường theo giá trị danh nghĩa so với giá trị thực.
 
-4.  **Yield curve dynamics**: Estimate the Nelson-Siegel model at monthly frequency and track the time series of $\beta_0$ (level), $\beta_1$ (slope), and $\beta_2$ (curvature). Do these factors predict future stock market returns or macroeconomic variables, following @Ang2006 @ang2006does?
+4. **Động lực đường cong lợi suất**: Ước tính mô hình Nelson-Siegel ở tần suất hàng tháng và theo dõi chuỗi thời gian của $\beta_0$ (mức độ), $\beta_1$ (độ dốc) và $\beta_2$ (độ cong). Liệu các yếu tố này có dự đoán được lợi nhuận thị trường chứng khoán trong tương lai hoặc các biến số kinh tế vĩ mô, theo @Ang2006 @ang2006does?
 
-5.  **Currency-adjusted risk-free rate**: For foreign investors, the relevant risk-free rate includes currency hedging costs. Construct a USD-hedged risk-free rate using the VND/USD forward premium (covered interest parity) and compare it to the local-currency risk-free rate. How does this affect the equity premium from a foreign investor's perspective?
+5. **Lãi suất phi rủi ro điều chỉnh theo tỷ giá**: Đối với nhà đầu tư nước ngoài, lãi suất phi rủi ro liên quan bao gồm chi phí phòng ngừa rủi ro tỷ giá. Hãy xây dựng lãi suất phi rủi ro được phòng ngừa rủi ro bằng USD bằng cách sử dụng chênh lệch tỷ giá kỳ hạn VND/USD (ngang giá lãi suất có bảo hiểm) và so sánh nó với lãi suất phi rủi ro bằng đồng nội tệ. Điều này ảnh hưởng như thế nào đến phần bù rủi ro vốn chủ sở hữu từ góc nhìn của nhà đầu tư nước ngoài?
 
-6.  **Deposit rate ceiling effects**: During periods when the SBV imposes binding deposit rate ceilings, the observed deposit rate may be below the market-clearing rate. Identify such periods and test whether the deposit-rate-based risk-free proxy produces systematically different excess returns compared to the interbank rate during ceiling-binding vs. non-binding periods. -->
+6. **Ảnh hưởng của trần lãi suất tiền gửi**: Trong các giai đoạn Ngân hàng Nhà nước Việt Nam (SBV) áp đặt trần lãi suất tiền gửi có tính ràng buộc, lãi suất tiền gửi thực tế có thể thấp hơn lãi suất cân bằng thị trường. Hãy xác định các giai đoạn này và kiểm tra xem chỉ số thay thế phi rủi ro dựa trên lãi suất tiền gửi có tạo ra lợi nhuận vượt trội khác biệt một cách có hệ thống so với lãi suất liên ngân hàng trong các giai đoạn áp dụng trần lãi suất có tính ràng buộc so với các giai đoạn không áp dụng trần lãi suất hay không. -->

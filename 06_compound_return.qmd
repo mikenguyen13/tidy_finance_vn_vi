@@ -1,8 +1,8 @@
-# Compound Returns
+# Lợi nhuận kép
 
-In this chapter, we provide a treatment of compound returns. Whether constructing buy-and-hold portfolios, evaluating fund performance, computing cumulative wealth indices, or estimating long-horizon risk measures, the ability to correctly compound returns over arbitrary horizons is indispensable. We begin with the mathematical foundations: the distinction between simple and log returns, the relationship between arithmetic and geometric means, and the properties of continuously compounded returns. Along the way, we address practical complications that arise in real-world equity data, such as trading halts, price limit mechanisms, partial-period returns, and delisting events, and show how to handle them in the Vietnamese context.
+Trong chương này, chúng tôi trình bày về lợi nhuận kép. Cho dù là xây dựng danh mục đầu tư mua và nắm giữ, đánh giá hiệu suất quỹ, tính toán chỉ số tài sản tích lũy hay ước tính các thước đo rủi ro dài hạn, khả năng tính toán chính xác lợi nhuận kép trong các khoảng thời gian bất kỳ là điều không thể thiếu. Chúng tôi bắt đầu với nền tảng toán học: sự khác biệt giữa lợi nhuận đơn giản và lợi nhuận logarit, mối quan hệ giữa trung bình cộng và trung bình hình học, và các đặc tính của lợi nhuận kép liên tục. Trên đường đi, chúng tôi đề cập đến các vấn đề phức tạp thực tiễn phát sinh trong dữ liệu chứng khoán thực tế, chẳng hạn như tạm ngừng giao dịch, cơ chế giới hạn giá, lợi nhuận trong một phần kỳ và các sự kiện hủy niêm yết, và chỉ ra cách xử lý chúng trong bối cảnh Việt Nam.
 
-The chapter proceeds to rolling compound returns over standard horizons (3, 6, 9, and 12 months), compound returns aligned to fiscal period ends, forward-looking cumulative returns for event studies, and rolling volatility estimation.
+Chương này tiếp tục trình bày về lợi suất kép luân chuyển trong các kỳ hạn tiêu chuẩn (3, 6, 9 và 12 tháng), lợi suất kép phù hợp với thời điểm kết thúc kỳ kế toán, lợi suất tích lũy hướng tới tương lai cho các nghiên cứu sự kiện và ước tính biến động luân chuyển.
 
 ```{python}
 import pandas as pd
@@ -15,57 +15,57 @@ from itertools import product
 from datetime import datetime, timedelta
 ```
 
-## Simple Returns versus Log Returns
+## Lợi nhuận cơ bản so với lợi nhuận logarit
 
-Before discussing compounding, we must distinguish between the two fundamental return conventions used in finance.
+Trước khi thảo luận về lãi kép, chúng ta cần phân biệt giữa hai quy ước lợi nhuận cơ bản được sử dụng trong tài chính.
 
-### Simple (Arithmetic) Returns
+### Lợi nhuận cơ bản (số học)
 
-The simple gross return on an asset from period $t-1$ to $t$ is defined as
+Lợi nhuận gộp cơ bản trên một tài sản từ kỳ $t-1$ đến $t$ được định nghĩa như sau:
 
 $$
 1 + R_t = \frac{P_t + D_t}{P_{t-1}},
 $$ {#eq-simple-return}
 
-where $P_t$ denotes the price at the end of period $t$ and $D_t$ denotes any cash distributions (dividends, coupons) paid during period $t$. The simple net return is $R_t$ itself. When we speak of "returns" without qualification, we typically mean simple net returns.
+Trong đó, $P_t$ biểu thị giá vào cuối kỳ $t$ và $D_t$ biểu thị bất kỳ khoản phân phối tiền mặt nào (cổ tức, lãi suất) được trả trong kỳ $t$. Lợi nhuận ròng đơn giản chính là $R_t$. Khi chúng ta nói về "lợi nhuận" mà không có sự giải thích rõ ràng, chúng ta thường muốn nói đến lợi nhuận ròng đơn giản.
 
-The key property of simple returns is that **multi-period compounding is multiplicative**:
+Đặc tính quan trọng của lợi nhuận đơn giản là **lãi kép nhiều kỳ có tính chất nhân**:
 
 $$
 1 + R_t(k) = \prod_{j=0}^{k-1} (1 + R_{t-j}) = (1 + R_t)(1 + R_{t-1}) \cdots (1 + R_{t-k+1}),
 $$ {#eq-compound-simple}
 
-where $R_t(k)$ is the $k$-period compound return ending at time $t$. This multiplicative structure is the foundation of all compounding methods discussed in this chapter.
+trong đó $R_t(k)$ là lợi nhuận kép kỳ $k$ kết thúc tại thời điểm $t$. Cấu trúc nhân này là nền tảng của tất cả các phương pháp tính lãi kép được thảo luận trong chương này.
 
-### Continuously Compounded (Log) Returns
+### Lợi nhuận kép liên tục (Log)
 
-The continuously compounded return, or log return, is defined as
+Lợi tức kép liên tục, hay lợi tức logarit, được định nghĩa là
 
 $$
 r_t = \ln(1 + R_t) = \ln\!\left(\frac{P_t + D_t}{P_{t-1}}\right).
 $$ {#eq-log-return}
 
-The central advantage of log returns for compounding is that **multi-period compounding becomes additive**:
+Ưu điểm trung tâm của lợi nhuận log để cộng gộp là **lãi kép nhiều kỳ trở thành cộng **:
 
 $$
 r_t(k) = \ln(1 + R_t(k)) = \sum_{j=0}^{k-1} r_{t-j} = r_t + r_{t-1} + \cdots + r_{t-k+1}.
 $$ {#eq-compound-log}
 
-This additive property follows directly from the logarithmic identity $\ln(ab) = \ln(a) + \ln(b)$. It is computationally convenient because summation is numerically more stable than iterated multiplication, and because many statistical procedures (means, variances, regressions) operate naturally on additive quantities.
+Tính chất cộng này xuất phát trực tiếp từ đẳng thức logarit $\ln(ab) = \ln(a) + \ln(b)$. Nó thuận tiện về mặt tính toán vì phép cộng ổn định hơn về mặt số học so với phép nhân lặp lại, và vì nhiều thủ tục thống kê (trung bình, phương sai, hồi quy) hoạt động một cách tự nhiên trên các đại lượng có tính chất cộng.
 
-To recover the simple compound return from the sum of log returns, we apply the exponential function:
+Để thu được lợi nhuận kép đơn giản từ tổng lợi nhuận logarit, chúng ta áp dụng hàm mũ:
 
 $$
 R_t(k) = \exp\!\left(\sum_{j=0}^{k-1} r_{t-j}\right) - 1.
 $$ {#eq-recover-simple}
 
-### When Do They Diverge?
+### Khi nào thì chúng bắt đầu khác biệt?
 
-For small returns, the approximation $r_t \approx R_t$ holds to first order (via the Taylor expansion $\ln(1+x) \approx x$ for $|x| \ll 1$). However, for large returns, which is common in emerging markets, small-cap stocks, or crisis periods, the two can diverge substantially. Consider a stock that doubles in price ($R_t = 1.0$): the log return is $r_t = \ln(2) \approx 0.693$, a 31% discrepancy. Conversely, for a stock that loses half its value ($R_t = -0.5$): the log return is $r_t = \ln(0.5) \approx -0.693$, which is 39% larger in magnitude.
+Đối với lợi nhuận nhỏ, phép xấp xỉ $r_t \approx R_t$ đúng ở bậc nhất (thông qua khai triển Taylor $\ln(1+x) \approx x$ với $|x| \ll 1$). Tuy nhiên, đối với lợi nhuận lớn, thường thấy ở các thị trường mới nổi, cổ phiếu vốn hóa nhỏ hoặc trong thời kỳ khủng hoảng, hai giá trị này có thể khác biệt đáng kể. Hãy xem xét một cổ phiếu có giá tăng gấp đôi ($R_t = 1,0$): lợi nhuận logarit là $r_t = \ln(2) \approx 0,693$, chênh lệch 31%. Ngược lại, đối với một cổ phiếu mất một nửa giá trị ($R_t = -0,5$): lợi nhuận logarit là $r_t = \ln(0,5) \approx -0,693$, lớn hơn 39%.
 
-This divergence is especially relevant in Vietnam, where daily price limits of $\pm 7\%$ on HOSE, $\pm 10\%$ on HNX, and $\pm 15\%$ on UPCoM can produce sequences of limit-up or limit-down days. Over a week of consecutive limit-up days on HOSE, the simple return is $(1.07)^5 - 1 = 40.3\%$ while the log return is $5 \times \ln(1.07) = 33.8\%$, which is a meaningful gap.
+Sự khác biệt này đặc biệt đáng chú ý ở Việt Nam, nơi giới hạn giá hàng ngày là ±7% trên HOSE, ±10% trên HNX và ±15% trên UPCoM có thể tạo ra chuỗi ngày tăng hoặc giảm kịch trần. Trong một tuần liên tiếp tăng kịch trần trên HOSE, lợi nhuận đơn giản là $(1,07)^5 - 1 = 40,3%$ trong khi lợi nhuận logarit là $5 \times \ln(1,07) = 33,8%$, đây là một khoảng cách đáng kể.
 
-@tbl-return-comparison illustrates this divergence across a range of return magnitudes.
+@tbl-return-comparison minh họa sự khác biệt này trên một dải các giá trị trên nhiều mức độ lợi nhuận khác nhau.
 
 ```{python}
 #| label: tbl-return-comparison
@@ -84,63 +84,63 @@ comparison_df = pd.DataFrame({
 comparison_df
 ```
 
-> **Key takeaway**: log returns are convenient for compounding (additive aggregation), but portfolio returns aggregate cross-sectionally in simple return space. In practice, we often transform to log returns for temporal compounding, then convert back to simple returns for reporting.
+> **Điểm mấu chốt**: Lợi nhuận theo logarit rất thuận tiện cho việc tính lãi kép (tổng hợp cộng), nhưng lợi nhuận danh mục đầu tư được tổng hợp theo chiều ngang trong không gian lợi nhuận đơn giản. Trên thực tế, chúng ta thường chuyển đổi sang lợi nhuận theo logarit để tính lãi kép theo thời gian, sau đó chuyển đổi lại thành lợi nhuận đơn giản để báo cáo.
 
-## Mathematical Foundations of Compounding
+## Cơ sở toán học của tính lãi kép
 
-### Geometric Mean Return
+### Lợi tức trung bình hình học
 
-The geometric mean return over $T$ periods is
+Lợi tức trung bình hình học trong $T$ kỳ là
 
 $$
 \bar{R}_g = \left(\prod_{t=1}^{T} (1 + R_t)\right)^{1/T} - 1,
 $$ {#eq-geometric-mean}
 
-which represents the constant per-period return that would yield the same terminal wealth as the actual return sequence. It is always less than or equal to the arithmetic mean $\bar{R}_a = \frac{1}{T}\sum_{t=1}^{T} R_t$, with equality only when all returns are identical. The relationship between the two is approximately:
+Giá trị này thể hiện tỷ suất lợi nhuận không đổi mỗi kỳ, tạo ra cùng một mức tài sản cuối kỳ như chuỗi lợi nhuận thực tế. Nó luôn nhỏ hơn hoặc bằng trung bình cộng $\bar{R}_a = \frac{1}{T}\sum_{t=1}^{T} R_t$, và chỉ bằng nhau khi tất cả các tỷ suất lợi nhuận đều giống nhau. Mối quan hệ giữa hai giá trị này xấp xỉ như sau:
 
 $$
 \bar{R}_g \approx \bar{R}_a - \frac{\sigma^2}{2},
 $$ {#eq-arithmetic-geometric}
 
-where $\sigma^2$ is the variance of returns. This approximation, sometimes called the "volatility drag," has important implications: high-volatility assets have a larger wedge between their arithmetic and geometric means, meaning their actual compound growth understates what a naive average would suggest. In a market like Vietnam's, where individual stock volatility is often two to three times that of developed-market equities, the volatility drag can be substantial.
+trong đó $\sigma^2$ là phương sai của lợi nhuận. Sự xấp xỉ này, đôi khi được gọi là "lực cản biến động", có ý nghĩa quan trọng: các tài sản có độ biến động cao có khoảng cách lớn hơn giữa các phương tiện số học và hình học của chúng, có nghĩa là sự tăng trưởng kép thực tế của chúng đánh giá thấp những gì một mức trung bình ngây thơ sẽ gợi ý. Trong một thị trường như Việt Nam, nơi biến động cổ phiếu riêng lẻ thường gấp hai đến ba lần so với chứng khoán các thị trường phát triển, lực cản biến động có thể là đáng kể.
 
-### Wealth Index and Drawdowns
+### Chỉ số tài sản và sụt giảm
 
-Given an initial investment of $W_0$, the wealth at time $T$ is
+Với khoản đầu tư ban đầu là $W_0$, tài sản tại thời điểm $T$ là
 
 $$
 W_T = W_0 \prod_{t=1}^{T} (1 + R_t).
 $$ {#eq-wealth-index}
 
-The cumulative return (net) is simply $W_T / W_0 - 1$. The maximum drawdown, a widely used risk measure, is defined as
+Lợi nhuận tích lũy (ròng) đơn giản là $W_T / W_0 - 1$. Mức giảm tối đa, một thước đo rủi ro được sử dụng rộng rãi, được định nghĩa là
 
 $$
 \text{MDD} = \max_{0 \le s \le t \le T} \left(\frac{W_s - W_t}{W_s}\right),
 $$ {#eq-max-drawdown}
 
-which measures the largest peak-to-trough decline in the wealth index. We will compute this quantity alongside compound returns below. Drawdowns are particularly informative in emerging markets that experience sharp corrections, as occurred during the global financial crisis of 2008 when the VN-Index fell roughly 66% from its 2007 peak.
+đo lường mức giảm từ đỉnh đến đáy lớn nhất trong chỉ số tài sản. Chúng tôi sẽ tính toán số lượng này cùng với lợi nhuận kép bên dưới. Sự sụt giảm đặc biệt có nhiều thông tin ở các thị trường mới nổi trải qua những đợt điều chỉnh mạnh, như đã xảy ra trong cuộc khủng hoảng tài chính toàn cầu năm 2008 khi VN-Index giảm khoảng 66% so với mức đỉnh năm 2007.
 
 <!--# Show the data here -->
 
-### Annualization
+### Tính toán hàng năm
 
-For a $k$-period compound return $R_t(k)$ where each period has length $\Delta$ (e.g., $\Delta = 1/12$ for monthly data), the annualized return is
+Đối với lợi suất kép trong $k$ kỳ $R_t(k)$, trong đó mỗi kỳ có độ dài $\Delta$ (ví dụ, $\Delta = 1/12$ cho dữ liệu hàng tháng), lợi suất hàng năm là
 
 $$
 R_{\text{ann}} = (1 + R_t(k))^{1/(k\Delta)} - 1.
 $$ {#eq-annualize}
 
-Similarly, for volatility estimated from $k$-period returns with period length $\Delta$:
+Tương tự, đối với độ biến động được ước tính từ lợi nhuận $k$ kỳ với độ dài kỳ $\Delta$:
 
 $$
 \sigma_{\text{ann}} = \sigma / \sqrt{\Delta},
 $$ {#eq-annualize-vol}
 
-so monthly volatility is annualized by multiplying by $\sqrt{12}$ and daily volatility by approximately $\sqrt{252}$ (assuming 252 trading days per year). For Vietnam specifically, the HOSE typically has around 245–250 trading days per year after accounting for Vietnamese public holidays, which is close enough that the $\sqrt{252}$ convention is standard.
+Vì vậy, độ biến động hàng tháng được tính theo năm bằng cách nhân với $\sqrt{12}$ và độ biến động hàng ngày được tính bằng khoảng $\sqrt{252}$ (giả sử có 252 ngày giao dịch mỗi năm). Riêng đối với Việt Nam, Sở Giao dịch Chứng khoán Hà Nội (HOSE) thường có khoảng 245-250 ngày giao dịch mỗi năm sau khi tính cả các ngày lễ của Việt Nam, con số này đủ gần để quy ước $\sqrt{252}$ trở thành tiêu chuẩn.
 
-## Data Preparation
+## Chuẩn bị dữ liệu
 
-We start by loading monthly stock return data from our SQLite database. As prepared in previous chapters, this database contains monthly returns sourced from [DataCore.vn](https://datacore.vn/) for all securities listed on the Ho Chi Minh Stock Exchange (HOSE), Hanoi Stock Exchange (HNX), and the Unlisted Public Company Market (UPCoM). Returns are adjusted for stock splits, bonus issues, and rights offerings, and include reinvested cash dividends.
+Chúng ta bắt đầu bằng cách tải dữ liệu lợi nhuận cổ phiếu hàng tháng từ cơ sở dữ liệu SQLite. Như đã chuẩn bị trong các chương trước, cơ sở dữ liệu này chứa lợi nhuận hàng tháng được lấy từ [DataCore.vn](https://datacore.vn/) cho tất cả các chứng khoán niêm yết trên Sở Giao dịch Chứng khoán Thành phố Hồ Chí Minh (HOSE), Sở Giao dịch Chứng khoán Hà Nội (HNX) và Thị trường Công ty Đại chúng Chưa niêm yết (UPCoM). Lợi nhuận được điều chỉnh cho việc chia tách cổ phiếu, phát hành cổ phiếu thưởng và chào bán quyền mua cổ phiếu, và bao gồm cả cổ tức tiền mặt được tái đầu tư.
 
 ```{python}
 tidy_finance = sqlite3.connect(database="data/tidy_finance_python.sqlite")
@@ -173,7 +173,7 @@ prices_monthly["mkt_total"] = (
 
 ```
 
-Let us inspect the sample:
+Chúng ta hãy cùng xem xét mẫu:
 
 ```{python}
 print(f"Sample period: {prices_monthly['date'].min()} to "
@@ -183,7 +183,7 @@ print(f"Total observations: {len(prices_monthly):,}")
 # print(f"Exchanges: {prices_monthly['exchange'].unique()}")
 ```
 
-@tbl-sample-overview provides summary statistics for the raw monthly returns, broken down by exchange. Differences across exchanges reflect the size and liquidity gradient: HOSE lists the largest and most liquid firms, HNX covers mid-cap companies, and UPCoM hosts smaller and more thinly traded securities.
+@tbl-sample-overview cung cấp số liệu thống kê tóm tắt về lợi nhuận thô hàng tháng, được chia nhỏ theo sàn giao dịch. Sự khác biệt giữa các sàn giao dịch phản ánh quy mô và độ dốc thanh khoản: HOSE liệt kê các công ty lớn nhất và có tính thanh khoản cao nhất, HNX bao gồm các công ty vốn hóa trung bình và UPCoM lưu trữ các chứng khoán nhỏ hơn và được giao dịch mỏng hơn.
 
 ```{python}
 #| label: tbl-sample-overview
@@ -198,9 +198,9 @@ sample_stats = (
 sample_stats
 ```
 
-## Method 1: Cumulative Product via GroupBy
+## Phương pháp 1: Tích lũy thông qua GroupBy
 
-The most direct approach to compound returns uses the multiplicative property in @eq-compound-simple. For each security, we compute the cumulative product of gross returns $(1 + R_t)$ over the desired window.
+Cách tiếp cận trực tiếp nhất đối với lợi nhuận kép sử dụng tính chất nhân trong @eq-compound-simple. Đối với mỗi chứng khoán, chúng ta tính tích lũy của lợi nhuận gộp $(1 + R_t)$ trong khoảng thời gian mong muốn.
 
 ```{python}
 def compute_cumret_cumprod(df, ret_col="ret_total",
@@ -232,7 +232,7 @@ def compute_cumret_cumprod(df, ret_col="ret_total",
     return df
 ```
 
-Let us apply this to the full sample and examine the resulting wealth indices for a few selected stocks:
+Chúng ta hãy áp dụng điều này cho toàn bộ mẫu và xem xét các chỉ số tài sản thu được đối với một vài cổ phiếu được chọn:
 
 ```{python}
 stock_cumret = compute_cumret_cumprod(prices_monthly)
@@ -252,7 +252,7 @@ sample_wealth = stock_cumret[
 ]
 ```
 
-@fig-wealth-index plots the wealth indices (value of 1 VND invested) for these five securities over the full sample period.
+@fig-wealth-index vẽ các chỉ số tài sản (giá trị 1 đồng đầu tư) cho năm chứng khoán này trong toàn bộ thời gian lấy mẫu.
 
 ```{python}
 #| label: fig-wealth-index
@@ -274,11 +274,11 @@ plot_wealth = (
 plot_wealth.draw()
 ```
 
-### Handling Missing Returns
+### Xử lý các khoản trả về bị thiếu
 
-The cumulative product approach propagates missing values: if any $R_t$ is `NaN`, the entire cumulative product from that point onward becomes `NaN`. This is conservative because it effectively assumes that a missing return renders the subsequent wealth index undefined. In many applications, this is the desired behavior because a missing return may indicate a data error or a period during which the stock was not trading.
+Phương pháp tích lũy giá trị lan truyền các giá trị thiếu: nếu bất kỳ $R_t$ nào là `NaN`, toàn bộ tích lũy giá trị từ điểm đó trở đi sẽ trở thành `NaN`. Điều này mang tính thận trọng vì nó giả định rằng việc thiếu lợi nhuận sẽ khiến chỉ số tài sản tiếp theo không xác định. Trong nhiều ứng dụng, đây là hành vi mong muốn vì việc thiếu lợi nhuận có thể cho thấy lỗi dữ liệu hoặc khoảng thời gian cổ phiếu không được giao dịch.
 
-However, in the Vietnamese market, missing returns can arise from extended trading halts. The State Securities Commission (SSC) and exchanges may suspend trading in a stock for various regulatory reasons, such as financial reporting delays, pending corporate restructuring announcements, or suspected market manipulation. These halts can last days, weeks, or even months. During such halts, the stock's value has not changed (the last traded price remains the reference), so treating the missing return as zero (i.e., no price change) may be more appropriate than propagating `NaN`.
+Tuy nhiên, tại thị trường Việt Nam, việc thiếu lợi nhuận có thể phát sinh do tạm ngừng giao dịch kéo dài. Ủy ban Chứng khoán Nhà nước (SSC) và các sở giao dịch có thể tạm ngừng giao dịch cổ phiếu vì nhiều lý do pháp lý khác nhau, chẳng hạn như chậm trễ báo cáo tài chính, thông báo tái cấu trúc doanh nghiệp đang chờ xử lý hoặc nghi ngờ thao túng thị trường. Việc tạm ngừng này có thể kéo dài nhiều ngày, nhiều tuần, thậm chí nhiều tháng. Trong thời gian tạm ngừng như vậy, giá trị cổ phiếu không thay đổi (giá giao dịch cuối cùng vẫn được dùng làm giá tham chiếu), vì vậy việc coi lợi nhuận thiếu là bằng không (tức là không có sự thay đổi giá) có thể phù hợp hơn là sử dụng giá trị `NaN`.
 
 ```{python}
 def compute_cumret_skipna(df, ret_col="ret_total",
@@ -296,14 +296,14 @@ def compute_cumret_skipna(df, ret_col="ret_total",
 ```
 
 ::: callout-warning
-Treating missing returns as zero is an assumption that may or may not be appropriate. If returns are missing because the stock was halted, zero may be reasonable. If returns are missing due to data errors or because the stock was genuinely not trading (e.g., awaiting relisting after a corporate event), imputing zero can introduce bias. Always investigate the reason for missing values before deciding on a treatment.
+Việc coi các giá trị lợi nhuận bị thiếu là bằng không là một giả định có thể phù hợp hoặc không. Nếu lợi nhuận bị thiếu do cổ phiếu bị tạm ngừng giao dịch, thì việc gán giá trị bằng không có thể hợp lý. Nếu lợi nhuận bị thiếu do lỗi dữ liệu hoặc do cổ phiếu thực sự không được giao dịch (ví dụ: đang chờ niêm yết lại sau một sự kiện của công ty), việc gán giá trị bằng không có thể gây ra sai lệch. Luôn luôn điều tra lý do thiếu giá trị trước khi quyết định phương pháp xử lý.
 :::
 
 <!--# The DataCore.vn documentation provides flags for different types of trading suspensions that can guide this decision. -->
 
-## Method 2: Log-Sum-Exp Approach
+## Phương pháp 2: Phương pháp tiếp cận Log-Sum-Exp
 
-The log-sum-exp method exploits the additive property of log returns (@eq-compound-log). This approach is particularly useful when computing compound returns over fixed windows (e.g., annual returns from monthly data) because summation is both computationally efficient and numerically stable.
+Phương thức log-sum-exp khai thác thuộc tính cộng của log return (@eq-compound-log). Cách tiếp cận này đặc biệt hữu ích khi tính toán lợi nhuận kép qua các cửa sổ cố định (ví dụ: lợi nhuận hàng năm từ dữ liệu hàng tháng) vì tính tổng vừa hiệu quả về mặt tính toán vừa ổn định về mặt số.
 
 ```{python}
 def compute_cumret_logsum(df, ret_col="ret_total",
@@ -338,7 +338,7 @@ def compute_cumret_logsum(df, ret_col="ret_total",
     return df
 ```
 
-Let us verify that the two methods produce identical results (up to floating-point precision):
+Chúng ta hãy kiểm tra xem hai phương pháp này có cho ra kết quả giống hệt nhau hay không (đến độ chính xác dấu phẩy động):
 
 ```{python}
 stock_both = compute_cumret_cumprod(prices_monthly)
@@ -352,11 +352,11 @@ max_diff = (stock_both.loc[mask, "cumret"] -
 print(f"Maximum absolute difference between methods: {max_diff:.2e}")
 ```
 
-The difference is at the level of machine epsilon ($\approx 10^{-15}$), confirming numerical equivalence.
+Sự khác biệt là ở cấp độ epsilon của máy ($\approx 10^{-15}$), xác nhận sự tương đương về số.
 
-### Period-Specific Compound Returns
+### Lợi nhuận kép cụ thể theo khoảng thời gian
 
-A common task is to compute compound returns within calendar periods (months, quarters, years). The log-sum-exp approach lends itself naturally to grouped aggregation:
+Một nhiệm vụ phổ biến là tính toán lợi nhuận kép trong các khoảng thời gian dương lịch (tháng, quý, năm). Cách tiếp cận log-sum-exp tự nhiên cho phép tổng hợp nhóm:
 
 ```{python}
 def compound_return_by_period(df, ret_col="ret_total",
