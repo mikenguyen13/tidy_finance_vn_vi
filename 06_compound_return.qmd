@@ -401,7 +401,7 @@ def compound_return_by_period(df, ret_col="ret_total",
     return result
 ```
 
-@tbl-annual-returns shows annual compound returns for a subset of securities.
+@tbl-annual-returns hiển thị tỷ suất lợi nhuận kép hàng năm cho một tập hợp con các chứng khoán.
 
 ```{python}
 #| label: tbl-annual-returns
@@ -424,12 +424,12 @@ recent_annual.head(20)
 ```
 
 ::: callout-important
-When the number of non-missing observations (`n_obs`) is less than 12 for an annual return, the compound return represents only a partial year. This commonly occurs in the first and last years of a security's listing on HOSE, HNX, or UPCoM, or when a stock transfers between exchanges (e.g., from UPCoM to HOSE upon meeting listing requirements). Users should decide whether to retain or exclude such partial-year observations depending on their research design.
+Khi số lượng quan sát không bị thiếu (`n_obs`) nhỏ hơn 12 đối với lợi nhuận hàng năm, lợi nhuận kép chỉ thể hiện một phần của năm. Điều này thường xảy ra trong năm đầu tiên và năm cuối cùng khi một chứng khoán được niêm yết trên HOSE, HNX hoặc UPCoM, hoặc khi một cổ phiếu được chuyển đổi giữa các sàn giao dịch (ví dụ: từ UPCoM sang HOSE sau khi đáp ứng các yêu cầu niêm yết). Người dùng nên quyết định giữ lại hay loại bỏ các quan sát không đầy đủ như vậy tùy thuộc vào thiết kế nghiên cứu của họ.
 :::
 
-## Method 3: Iterative Compounding with Retain Logic
+## Phương pháp 3: Kết hợp lặp đi lặp lại với logic giữ nguyên
 
-In some applications, we need fine-grained control over how missing values, delisting events, or other special conditions affect the compounding process. The iterative approach processes each observation sequentially, carrying forward the cumulative return and applying conditional logic at each step.
+Trong một số ứng dụng, chúng ta cần kiểm soát chi tiết cách các giá trị thiếu, sự kiện loại bỏ khỏi danh sách hoặc các điều kiện đặc biệt khác ảnh hưởng đến quá trình tính lãi kép. Phương pháp lặp xử lý từng quan sát một cách tuần tự, chuyển tiếp lợi nhuận tích lũy và áp dụng logic điều kiện ở mỗi bước.
 
 ```{python}
 def compute_cumret_iterative(df, ret_col="ret_total",
@@ -478,12 +478,12 @@ def compute_cumret_iterative(df, ret_col="ret_total",
 ```
 
 ::: callout-note
-The iterative method is the slowest of the four approaches because it cannot leverage NumPy's vectorized operations. For large datasets, prefer Method 1 or 2 unless the conditional logic in Method 3 is essential. On a dataset with 1 million observations, Method 1 runs in approximately 0.1 seconds versus 10+ seconds for Method 3.
+Phương pháp lặp là phương pháp chậm nhất trong bốn phương pháp vì nó không thể tận dụng các phép toán vector hóa của NumPy. Đối với các tập dữ liệu lớn, nên ưu tiên Phương pháp 1 hoặc 2 trừ khi logic điều kiện trong Phương pháp 3 là cần thiết. Trên tập dữ liệu có 1 triệu quan sát, Phương pháp 1 chạy trong khoảng 0,1 giây so với hơn 10 giây đối với Phương pháp 3.
 :::
 
-### Comparison of Missing Value Treatments
+### So sánh các phương pháp xử lý giá trị thiếu
 
-To illustrate how the three missing-value strategies differ, consider a hypothetical stock with one missing return in the middle of its history:
+Để minh họa sự khác biệt giữa ba chiến lược xử lý giá trị thiếu, hãy xem xét một cổ phiếu giả định có một lợi nhuận bị thiếu ở giữa lịch sử giao dịch của nó:
 
 ```{python}
 #| label: tbl-missing-comparison
@@ -510,13 +510,13 @@ comparison = pd.DataFrame({
 comparison
 ```
 
-## Method 4: Rolling Compound Returns
+## Phương pháp 4: Lợi nhuận kép tích lũy
 
-For many empirical applications, including momentum strategies, performance evaluation, and risk estimation, we need compound returns over rolling windows of fixed length. This section implements efficient rolling compounding using pandas.
+Đối với nhiều ứng dụng thực nghiệm, bao gồm các chiến lược dựa trên động lượng, đánh giá hiệu suất và ước tính rủi ro, chúng ta cần lợi nhuận kép trên các cửa sổ trượt có độ dài cố định. Phần này trình bày cách tính lợi nhuận kép trượt hiệu quả bằng thư viện pandas.
 
-### Rolling Window via Log Returns
+### Cửa sổ trượt thông qua lợi nhuận từ nhật ký
 
-The most efficient approach combines the log-sum-exp method with rolling sums:
+Phương pháp hiệu quả nhất là kết hợp phương pháp logarit tổng lũy ​​thừa với tổng tích lũy:
 
 ```{python}
 def rolling_compound_return(df, ret_col="ret_total",
@@ -555,7 +555,7 @@ def rolling_compound_return(df, ret_col="ret_total",
     return df
 ```
 
-We apply this to our full sample to compute 3-, 6-, 9-, and 12-month trailing compound returns:
+Chúng ta áp dụng điều này cho toàn bộ mẫu dữ liệu để tính toán tỷ suất lợi nhuận kép trong 3, 6, 9 và 12 tháng:
 
 ```{python}
 stock_rolling = rolling_compound_return(
@@ -564,7 +564,7 @@ stock_rolling = rolling_compound_return(
 )
 ```
 
-Let us also compute the same rolling returns for the market index, which serves as a benchmark for excess return calculations:
+Chúng ta cũng hãy tính toán lợi nhuận luân chuyển tương tự cho chỉ số thị trường, vốn được dùng làm chuẩn mực để tính toán lợi nhuận vượt trội:
 
 ```{python}
 # Compute market rolling returns
@@ -597,7 +597,7 @@ stock_rolling = stock_rolling.merge(
 )
 ```
 
-@fig-rolling-returns displays the distribution of 12-month rolling compound returns over time.
+@fig-rolling-returns hiển thị sự phân bố lợi nhuận kép tích lũy trong 12 tháng theo thời gian.
 
 ```{python}
 #| label: fig-rolling-returns
@@ -628,9 +628,9 @@ plot_rolling = (
 plot_rolling.draw()
 ```
 
-### Verifying Rolling Returns
+### Xác minh lợi nhuận luân chuyển
 
-It is prudent to verify rolling compound returns against a direct calculation. We select one stock and recompute its 12-month return manually:
+Nên kiểm tra lại tỷ suất lợi nhuận kép so với phép tính trực tiếp. Chúng tôi chọn một cổ phiếu và tính toán lại tỷ suất lợi nhuận 12 tháng của nó theo cách thủ công:
 
 ```{python}
 #| label: tbl-rolling-verify
@@ -665,29 +665,29 @@ verify["difference"] = (
 verify.round(8)
 ```
 
-## Delisting Returns and Survivorship Bias
+## Việc hủy niêm yết và thiên kiến ​​sống sót
 
-A critical practical concern when computing compound returns is the treatment of securities that are removed from an exchange. Delisting occurs for various reasons: mergers and acquisitions, bankruptcy, failure to meet listing requirements, voluntary withdrawal, or transfer to another exchange. If delisting returns are not incorporated, the resulting compound returns suffer from survivorship bias: they overstate performance because the worst outcomes (bankruptcies, forced delistings) are excluded [@shumway1997delisting].
+Một vấn đề thực tiễn quan trọng khi tính toán lợi nhuận kép là cách xử lý các chứng khoán bị loại khỏi sàn giao dịch. Việc hủy niêm yết xảy ra vì nhiều lý do: sáp nhập và mua lại, phá sản, không đáp ứng yêu cầu niêm yết, rút ​​lui tự nguyện hoặc chuyển sang sàn giao dịch khác. Nếu lợi nhuận từ việc hủy niêm yết không được tính vào, lợi nhuận kép thu được sẽ bị sai lệch do chọn lọc dữ liệu: chúng đánh giá quá cao hiệu suất vì các kết quả xấu nhất (phá sản, hủy niêm yết bắt buộc) bị loại trừ [@shumway1997delisting].
 
-### The Vietnamese Context
+### Bối cảnh Việt Nam
 
-In Vietnam, securities can be removed from their exchange listing for several reasons as specified by the SSC and exchange regulations:
+Tại Việt Nam, chứng khoán có thể bị hủy niêm yết vì nhiều lý do khác nhau theo quy định của Ủy ban Chứng khoán và các quy định của sàn giao dịch:
 
--   **Mandatory delisting**: when a firm has accumulated losses exceeding its charter capital, fails to meet financial reporting obligations for three consecutive years, or has its business license revoked.
--   **Voluntary delisting**: when a firm's shareholders vote to withdraw from the exchange.
--   **Transfer**: when a firm moves from UPCoM to HOSE/HNX (upgrade) or from HOSE/HNX to UPCoM (downgrade). These transfers are not true delistings in the economic sense but require careful handling in return calculations.
+- **Hủy niêm yết bắt buộc**: khi một công ty tích lũy lỗ vượt quá vốn điều lệ, không đáp ứng nghĩa vụ báo cáo tài chính trong ba năm liên tiếp hoặc bị thu hồi giấy phép kinh doanh.
+- **Hủy niêm yết tự nguyện**: khi các cổ đông của một công ty bỏ phiếu rút khỏi sàn giao dịch.
+- **Chuyển đổi**: khi một công ty chuyển từ UPCoM sang HOSE/HNX (nâng hạng) hoặc từ HOSE/HNX sang UPCoM (hạ hạng). Những chuyển đổi này không phải là hủy niêm yết thực sự về mặt kinh tế mà cần được xử lý cẩn thận trong việc tính toán lợi nhuận.
 
-Unlike more developed markets where detailed delisting return data is systematically compiled, Vietnamese market data may not always provide an explicit delisting return. When a stock is delisted for cause (e.g., bankruptcy), the last traded price may significantly overstate the security's recovery value. Researchers should be aware of this limitation and consider imputing delisting returns based on the delisting reason, following the methodology of @shumway1997delisting.
+Không giống như các thị trường phát triển hơn, nơi dữ liệu về lợi nhuận từ việc hủy niêm yết được biên soạn một cách có hệ thống, dữ liệu thị trường Việt Nam không phải lúc nào cũng cung cấp lợi nhuận rõ ràng từ việc hủy niêm yết. Khi một cổ phiếu bị hủy niêm yết vì lý do chính đáng (ví dụ: phá sản), giá giao dịch cuối cùng có thể đánh giá quá cao giá trị thu hồi của chứng khoán. Các nhà nghiên cứu nên nhận thức được hạn chế này và xem xét việc ước tính lợi nhuận từ việc hủy niêm yết dựa trên lý do hủy niêm yết, theo phương pháp của @shumway1997delisting.
 
-### Incorporating Delisting Returns
+### Tích hợp Lợi nhuận Khi Gỡ Bỏ Niêm yết
 
-When a security is delisted, a final "delisting return" captures the value change between the last regular trading day and the realization of value after delisting. This return must be combined with the regular return in the delisting month:
+Khi một chứng khoán bị gỡ bỏ niêm yết, một "lợi nhuận khi gỡ bỏ niêm yết" cuối cùng sẽ ghi nhận sự thay đổi giá giữa ngày giao dịch thường xuyên cuối cùng và việc thực hiện giá sau khi gỡ bỏ niêm yết. Lợi nhuận này phải được kết hợp với lợi nhuận thông thường trong tháng gỡ bỏ:
 
 $$
 R_t^{\text{adj}} = (1 + R_t)(1 + R_t^{\text{delist}}) - 1,
 $$ {#eq-delisting-adj}
 
-where $R_t$ is the regular return and $R_t^{\text{delist}}$ is the delisting return. If the regular return is missing (the stock ceased trading before month end), we use the delisting return alone.
+trong đó $R_t$ là lợi nhuận thông thường và $R_t^{\text{delist}}$ là lợi nhuận hủy niêm yết. Nếu thiếu lợi nhuận thông thường (cổ phiếu ngừng giao dịch trước cuối tháng), chúng tôi chỉ sử dụng lợi nhuận hủy niêm yết.
 
 ```{python}
 def adjust_for_delisting(df, ret_col="ret_total",
@@ -724,23 +724,23 @@ def adjust_for_delisting(df, ret_col="ret_total",
     return df
 ```
 
-### Impact of Delisting Adjustment
+### Tác động của việc điều chỉnh hủy niêm yết
 
-The magnitude of the delisting bias depends on the frequency and severity of delisting events. @shumway1997delisting showed that, in developed markets, ignoring delisting returns introduces an upward bias of approximately 1% per year in equal-weighted portfolio returns. The bias is larger for small-cap stocks and value stocks, which are more prone to financial distress. In Vietnam, where smaller firms on HNX and UPCoM face tighter liquidity constraints and higher default risk, the bias may be even more pronounced. In emerging market delistings, mandatory delistings often involve firms with severe financial distress where residual equity value is near zero, implying delisting returns close to $-100\%$ in the worst cases.
+Mức độ sai lệch do hủy niêm yết phụ thuộc vào tần suất và mức độ nghiêm trọng của các sự kiện hủy niêm yết. @shumway1997delisting đã chỉ ra rằng, tại các thị trường phát triển, việc bỏ qua lợi nhuận từ hủy niêm yết sẽ tạo ra sai lệch tăng khoảng 1% mỗi năm trong lợi nhuận danh mục đầu tư bình quân gia quyền. Sai lệch này lớn hơn đối với cổ phiếu vốn hóa nhỏ và cổ phiếu giá trị, những loại cổ phiếu dễ gặp khó khăn tài chính hơn. Tại Việt Nam, nơi các công ty nhỏ hơn trên HNX và UPCoM phải đối mặt với những hạn chế thanh khoản chặt chẽ hơn và rủi ro vỡ nợ cao hơn, sai lệch này thậm chí còn rõ rệt hơn. Trong các vụ hủy niêm yết ở thị trường mới nổi, việc hủy niêm yết bắt buộc thường liên quan đến các công ty gặp khó khăn tài chính nghiêm trọng, trong đó giá trị vốn chủ sở hữu còn lại gần bằng không, ngụ ý lợi nhuận từ hủy niêm yết có thể lên tới gần -100% trong trường hợp xấu nhất.
 
-## Rolling Volatility Estimation
+## Ước tính biến động luân chuyển
 
-Stock return volatility is a key input for risk management, option pricing, and many empirical asset pricing models. A common approach is to estimate rolling standard deviations of returns over a trailing window.
+Biến động lợi nhuận cổ phiếu là yếu tố đầu vào quan trọng đối với quản lý rủi ro, định giá quyền chọn và nhiều mô hình định giá tài sản thực nghiệm. Một phương pháp phổ biến là ước tính độ lệch chuẩn trượt của lợi nhuận trong một khoảng thời gian nhất định.
 
-### 24-Month Rolling Volatility
+### Biến động luân chuyển 24 tháng
 
-Following @ben2012hedge, we compute the total stock return volatility as the rolling standard deviation of monthly returns over a 24-month window:
+Theo @ben2012hedge, chúng tôi tính toán độ biến động lợi nhuận tổng thể của cổ phiếu bằng độ lệch chuẩn luân chuyển của lợi nhuận hàng tháng trong khoảng thời gian 24 tháng:
 
 $$
 \hat{\sigma}_{i,t}^{24} = \sqrt{\frac{1}{23}\sum_{j=0}^{23}(R_{i,t-j} - \bar{R}_{i,t}^{24})^2},
 $$ {#eq-rolling-vol}
 
-where $\bar{R}_{i,t}^{24} = \frac{1}{24}\sum_{j=0}^{23} R_{i,t-j}$ is the trailing 24-month mean return.
+trong đó  $\bar{R}_{i,t}^{24} = \frac{1}{24}\sum_{j=0}^{23} R_{i,t-j}$ là lợi nhuận trung bình trong 24 tháng gần nhất.
 
 ```{python}
 def rolling_volatility(df, ret_col="ret_total",
@@ -778,7 +778,7 @@ def rolling_volatility(df, ret_col="ret_total",
 stock_vol = rolling_volatility(stock_rolling)
 ```
 
-@fig-vol-distribution shows the cross-sectional distribution of annualized 24-month volatility over time.
+@fig-vol-distribution thể hiện sự phân bố theo mặt cắt ngang của độ biến động hàng năm trong 24 tháng theo thời gian.
 
 ```{python}
 #| label: fig-vol-distribution
@@ -808,11 +808,11 @@ plot_vol = (
 plot_vol.draw()
 ```
 
-### Volatility and Compound Returns: The Variance Drain
+### Biến động và lợi nhuận kép: Sự hao hụt phương sai
 
-As noted in @eq-arithmetic-geometric, the geometric mean return falls below the arithmetic mean by approximately $\sigma^2/2$. This "variance drain" or "volatility drag" means that two portfolios with the same arithmetic mean return but different volatilities will have different compound returns: the lower-volatility portfolio will compound to greater terminal wealth.
+Như đã lưu ý trong @eq-arithmetic-geometric, lợi nhuận trung bình hình học thấp hơn lợi nhuận trung bình số học khoảng $\sigma^2/2$. Hiện tượng "giảm phương sai" hay "sức cản biến động" này có nghĩa là hai danh mục đầu tư có cùng lợi nhuận trung bình số học nhưng độ biến động khác nhau sẽ có lợi nhuận kép khác nhau: danh mục đầu tư có độ biến động thấp hơn sẽ tích lũy được nhiều tài sản hơn ở giai đoạn cuối kỳ.
 
-This effect is quantitatively important in Vietnam. A stock with an arithmetic mean monthly return of 1.5% and a monthly standard deviation of 10% suffers a volatility drag of approximately $0.10^2/2 = 0.5\%$ per month, or roughly 6% per year. This is consistent with the observation that Vietnamese investors face substantial erosion of compound wealth from the high idiosyncratic volatility of individual stocks. We can verify this empirically by sorting stocks into volatility quintiles and comparing compound returns:
+Hiệu ứng này có ý nghĩa quan trọng về mặt định lượng ở Việt Nam. Một cổ phiếu có lợi nhuận trung bình hàng tháng là 1,5% và độ lệch chuẩn hàng tháng là 10% sẽ chịu ảnh hưởng bởi sự biến động khoảng 0,10^2/2 = 0,5% mỗi tháng, hoặc khoảng 6% mỗi năm. Điều này phù hợp với quan sát cho thấy các nhà đầu tư Việt Nam đang phải đối mặt với sự suy giảm đáng kể về giá trị tài sản tích lũy do sự biến động cao của từng cổ phiếu riêng lẻ. Chúng ta có thể kiểm chứng điều này bằng thực nghiệm bằng cách phân loại cổ phiếu theo nhóm biến động và so sánh lợi nhuận tích lũy:
 
 ```{python}
 #| label: tbl-vol-drag
@@ -864,17 +864,17 @@ vol_summary = (
 vol_summary
 ```
 
-## Compound Returns Around Fiscal Year Ends
+## Lợi nhuận kép vào thời điểm kết thúc năm tài chính
 
-A widely used approach in accounting and finance research aligns compound returns to firm-specific fiscal period end dates. This is essential for computing buy-and-hold abnormal returns (BHARs) for event studies, post-earnings-announcement drift, and other studies where the event date varies by firm.
+Một phương pháp được sử dụng rộng rãi trong nghiên cứu kế toán và tài chính là liên kết lợi nhuận kép với ngày kết thúc kỳ kế toán cụ thể của từng công ty. Điều này rất cần thiết để tính toán lợi nhuận bất thường khi mua và nắm giữ (BHAR) cho các nghiên cứu sự kiện, sự biến động sau khi công bố lợi nhuận và các nghiên cứu khác mà ngày xảy ra sự kiện khác nhau tùy thuộc vào từng công ty.
 
-In Vietnam, the majority of listed firms follow a calendar fiscal year (January–December), as required by the Law on Accounting unless the Ministry of Finance grants an exemption. However, firms in certain industries (e.g., agriculture, tourism) may use non-standard fiscal years ending in March, June, or September.
+Tại Việt Nam, đa số các công ty niêm yết tuân theo năm tài chính dương lịch (tháng 1 – tháng 12), theo quy định của Luật Kế toán, trừ trường hợp được Bộ Tài chính miễn trừ. Tuy nhiên, các công ty trong một số ngành (ví dụ: nông nghiệp, du lịch) có thể sử dụng năm tài chính không theo chuẩn, kết thúc vào tháng 3, tháng 6 hoặc tháng 9.
 
 <!--# The DataCore.vn financial statements database records the firm-specific fiscal year end for each firm-year. -->
 
-### Aligning Returns to Fiscal Periods
+### Điều chỉnh lợi nhuận phù hợp với các kỳ kế toán
 
-The key challenge is that fiscal year ends differ across firms. We need to compute compound returns over windows anchored at these firm-specific dates.
+Thách thức chính là thời điểm kết thúc năm tài chính khác nhau giữa các công ty. Chúng ta cần tính toán lợi nhuận kép trong các khoảng thời gian được xác định dựa trên các ngày cụ thể của từng công ty.
 
 ```{python}
 def compound_returns_around_event(
@@ -966,21 +966,21 @@ def compound_returns_around_event(
     return pd.DataFrame(results)
 ```
 
-### Buy-and-Hold Abnormal Returns versus Cumulative Abnormal Returns
+### Lợi nhuận bất thường khi mua và nắm giữ so với lợi nhuận bất thường tích lũy
 
-For event studies and performance evaluation, we often want the **excess** compound return, which is the stock's compound return minus a benchmark's compound return over the same window. The buy-and-hold abnormal return (BHAR) is defined as
+Đối với các nghiên cứu sự kiện và đánh giá hiệu suất, chúng ta thường muốn có lợi nhuận kép **vượt trội**, tức là lợi nhuận kép của cổ phiếu trừ đi lợi nhuận kép của chỉ số tham chiếu trong cùng khoảng thời gian. Lợi nhuận bất thường khi mua và nắm giữ (BHAR) được định nghĩa là
 
 $$
 \text{BHAR}_{i,t}(k) = \prod_{j=1}^{k}(1 + R_{i,t+j}) - \prod_{j=1}^{k}(1 + R_{b,t+j}),
 $$ {#eq-bhar}
 
-where $R_{b,t}$ is the benchmark return (market index, size-matched portfolio, etc.). This differs from the cumulative abnormal return (CAR), which sums simple abnormal returns:
+trong đó $R_{b,t}$ là lợi suất chuẩn (chỉ số thị trường, danh mục đầu tư phù hợp quy mô, v.v.). Điều này khác với lợi suất bất thường tích lũy (CAR), là tổng của các lợi suất bất thường đơn giản:
 
 $$
 \text{CAR}_{i,t}(k) = \sum_{j=1}^{k}(R_{i,t+j} - R_{b,t+j}).
 $$ {#eq-car}
 
-The BHAR better captures the actual investor experience because it reflects the compounding of returns, whereas the CAR implicitly assumes daily rebalancing to maintain equal dollar positions in the stock and benchmark [@barber1997detecting]. The distinction is particularly important in Vietnam, where individual stock returns can be highly volatile and the compounding effect is therefore magnified. @lyon1999improved provide further analysis of the statistical properties of BHARs and recommend bootstrapped critical values for inference.
+BHAR phản ánh tốt hơn trải nghiệm thực tế của nhà đầu tư vì nó thể hiện sự tích lũy lợi nhuận, trong khi CAR ngầm giả định việc tái cân bằng hàng ngày để duy trì vị thế bằng nhau về giá trị đô la trong cổ phiếu và chỉ số tham chiếu [@barber1997detecting]. Sự khác biệt này đặc biệt quan trọng ở Việt Nam, nơi lợi nhuận của từng cổ phiếu có thể biến động mạnh và do đó hiệu ứng tích lũy được khuếch đại. @lyon1999improved cung cấp thêm phân tích về các đặc tính thống kê của BHAR và đề xuất các giá trị tới hạn được lấy mẫu bằng phương pháp bootstrap để suy luận.
 
 ```{python}
 def compute_bhar(stock_returns, benchmark_returns):
@@ -1006,17 +1006,17 @@ def compute_bhar(stock_returns, benchmark_returns):
     return stock_cumret - bench_cumret
 ```
 
-## Book Value of Equity
+## Giá trị sổ sách của vốn chủ sở hữu
 
-Many empirical applications that use compound returns also require firm-level accounting variables. A commonly used variable is the book value of equity, computed following @daniel1997evidence:
+Nhiều ứng dụng thực nghiệm sử dụng lợi nhuận kép cũng yêu cầu các biến kế toán cấp doanh nghiệp. Một biến thường được sử dụng là giá trị sổ sách của vốn chủ sở hữu, được tính toán theo @daniel1997evidence:
 
 $$
 \text{BE} = \text{SE} + \text{DT} + \text{ITC} - \text{PS},
 $$ {#eq-book-equity}
 
-where SE is stockholders' equity, DT is deferred taxes, ITC is investment tax credit, and PS is the preferred stock value. For preferred stock, the hierarchy is: redemption value if available, then liquidating value, then carrying value.
+Trong đó, SE là vốn chủ sở hữu, DT là thuế hoãn lại, ITC là tín dụng thuế đầu tư và PS là giá trị cổ phiếu ưu đãi. Đối với cổ phiếu ưu đãi, thứ tự ưu tiên là: giá trị mua lại (nếu có), sau đó là giá trị thanh lý, rồi đến giá trị ghi sổ.
 
-In Vietnam, the accounting standards (Vietnamese Accounting Standards, VAS, and increasingly IFRS adoption) provide a somewhat different chart of accounts. Stockholders' equity is reported on the balance sheet as *Vốn chủ sở hữu*, which includes contributed capital (*Vốn góp của chủ sở hữu*), share premium (*Thặng dư vốn cổ phần*), treasury stock adjustments, retained earnings (*Lợi nhuận sau thuế chưa phân phối*), and other reserves. Deferred tax assets and liabilities are reported separately. Preferred stock is rare among Vietnamese listed firms (most issue only common shares), but when present, its book value should be subtracted from total equity.
+Tại Việt Nam, các chuẩn mực kế toán (Chuẩn mực kế toán Việt Nam, VAS, và ngày càng nhiều trường hợp áp dụng IFRS) đưa ra một hệ thống tài khoản hơi khác. Vốn chủ sở hữu được báo cáo trên bảng cân đối kế toán là *Vốn chủ sở hữu*, bao gồm vốn góp của chủ sở hữu, thặng dư vốn cổ phần, điều chỉnh cổ phiếu quỹ, lợi nhuận giữ lại chưa phân phối và các khoản dự trữ khác. Tài sản và nợ thuế hoãn lại được báo cáo riêng. Cổ phiếu ưu đãi khá hiếm gặp ở các công ty niêm yết của Việt Nam (hầu hết chỉ phát hành cổ phiếu phổ thông), nhưng khi có, giá trị sổ sách của nó cần được trừ khỏi tổng vốn chủ sở hữu.
 
 ```{python}
 def compute_book_equity(df):
@@ -1050,9 +1050,9 @@ def compute_book_equity(df):
     return df
 ```
 
-## Maximum Drawdown
+## Mức giảm tối đa
 
-The maximum drawdown is a key risk metric that complements volatility. While volatility measures the dispersion of returns symmetrically, the maximum drawdown captures the worst cumulative loss an investor could experience: a measure that aligns more closely with how investors psychologically experience risk [@kahneman2013prospect].
+Mức sụt giảm tối đa là một chỉ số rủi ro quan trọng bổ sung cho biến động. Trong khi biến động đo lường sự phân tán lợi nhuận một cách đối xứng, mức sụt giảm tối đa thể hiện mức lỗ tích lũy tồi tệ nhất mà nhà đầu tư có thể gặp phải: một thước đo phù hợp hơn với cách nhà đầu tư cảm nhận rủi ro về mặt tâm lý [@kahneman2013prospect].
 
 ```{python}
 def compute_max_drawdown(df, ret_col="ret_total",
@@ -1089,7 +1089,7 @@ def compute_max_drawdown(df, ret_col="ret_total",
     return df
 ```
 
-@fig-drawdown illustrates the drawdown profile for a selected stock.
+@fig-drawdown minh họa biểu đồ giảm giá trị cổ phiếu đã chọn.
 
 ```{python}
 #| label: fig-drawdown
@@ -1116,9 +1116,9 @@ plot_dd = (
 plot_dd.draw()
 ```
 
-## Putting It All Together: A Comprehensive Pipeline
+## Kết hợp tất cả lại với nhau: Một quy trình toàn diện
 
-We now combine all the methods into a single pipeline that produces a research-ready dataset with rolling compound returns, market returns, volatility, and drawdown measures.
+Giờ đây, chúng tôi kết hợp tất cả các phương pháp vào một quy trình duy nhất để tạo ra một tập dữ liệu sẵn sàng nghiên cứu với lợi nhuận kép luân phiên, lợi nhuận thị trường, biến động và các biện pháp sụt giảm.
 
 ```{python}
 def build_compound_return_dataset(
@@ -1199,7 +1199,7 @@ def build_compound_return_dataset(
 compound_dataset = build_compound_return_dataset(prices_monthly)
 ```
 
-@tbl-summary-stats provides summary statistics for the key variables in our compound return dataset.
+@tbl-summary-stats cung cấp số liệu thống kê tóm tắt cho các biến chính trong tập dữ liệu lợi nhuận kép.
 
 ```{python}
 #| label: tbl-summary-stats
@@ -1218,9 +1218,9 @@ summary = (
 summary
 ```
 
-## Cross-Sectional Distribution of Compound Returns
+## Phân bố theo mặt cắt ngang của lợi nhuận kép
 
-To understand how compound returns vary across securities, we examine the cross-sectional distribution at different horizons.
+Để hiểu rõ sự khác biệt về lợi nhuận kép giữa các loại chứng khoán, chúng tôi xem xét phân bố theo mặt cắt ngang ở các khoảng thời gian khác nhau.
 
 ```{python}
 #| label: fig-horizon-comparison
@@ -1254,37 +1254,37 @@ plot_horizons = (
 plot_horizons.draw()
 ```
 
-## Vietnam-Specific Considerations
+## Cân nhắc cụ thể tại Việt Nam
 
-### Price Limits and Their Effect on Compounding
+### Giới hạn giá và ảnh hưởng của chúng đối với lãi kép
 
-Vietnam's stock exchanges impose daily price limits that cap the maximum price change from the reference price. As of the latest regulations:
+Các sàn giao dịch chứng khoán Việt Nam áp đặt giới hạn giá hàng ngày giới hạn sự thay đổi giá tối đa so với giá tham chiếu. Theo quy định mới nhất:
 
--   **HOSE**: $\pm 7\%$
--   **HNX**: $\pm 10\%$
--   **UPCoM**: $\pm 15\%$
+- **HOSE**: $\pm 7\%$
+- **HNX**: $\pm 10\%$
+- **UPCoM**: $\pm 15\%$
 
-These limits truncate the daily return distribution and can create sequences of limit-hit days when large information events occur. For compound return computation, this means that the adjustment to new information may be spread over multiple days rather than occurring instantaneously. When computing monthly compound returns from daily data, this is handled correctly because the compound return accumulates the full adjustment regardless of how many days it takes.
+Các giới hạn này cắt bớt phân phối lợi nhuận hàng ngày và có thể tạo ra chuỗi các ngày đạt giới hạn khi các sự kiện thông tin lớn xảy ra. Đối với tính toán lợi nhuận kép, điều này có nghĩa là việc điều chỉnh thông tin mới có thể được trải rộng trong nhiều ngày thay vì xảy ra ngay lập tức. Khi tính toán lợi nhuận kép hàng tháng từ dữ liệu hàng ngày, điều này được xử lý chính xác vì lợi nhuận kép tích lũy toàn bộ điều chỉnh bất kể mất bao nhiêu ngày.
 
-However, price limits can introduce bias in short-horizon return computations. If a large positive event occurs and the stock hits the limit-up ceiling for several consecutive days, the 1-day or 1-week compound return will understate the true information content of the event [@kim2013reconsidering]. For event study applications, researchers should verify that the event window is long enough to accommodate the price-limit-induced delay in price adjustment.
+Tuy nhiên, giới hạn giá có thể gây ra sai lệch trong các tính toán lợi nhuận ngắn hạn. Nếu một sự kiện tích cực lớn xảy ra và cổ phiếu chạm mức trần giới hạn trong vài ngày liên tiếp, lợi nhuận kép trong 1 ngày hoặc 1 tuần sẽ đánh giá thấp nội dung thông tin thực sự của sự kiện [@kim2013reconsidering]. Đối với các ứng dụng nghiên cứu sự kiện, các nhà nghiên cứu nên xác minh rằng cửa sổ sự kiện đủ dài để phù hợp với sự chậm trễ do giới hạn giá gây ra trong việc điều chỉnh giá.
 
-### Foreign Ownership Limits
+### Giới hạn sở hữu nước ngoài
 
-Vietnam imposes foreign ownership limits (FOL) on listed companies, typically capped at 49% for most industries and lower (30% or less) for certain restricted sectors such as banking and telecommunications. When a stock reaches its FOL, foreign investors can only purchase shares from other foreign sellers, creating a parallel premium market for foreign-board shares. This does not directly affect the computation of compound returns (which use official traded prices), but researchers studying cross-border portfolio returns should be aware that the effective price paid by foreign investors may differ from the board price [@vo2017foreign].
+Việt Nam áp đặt giới hạn sở hữu nước ngoài (FOL) đối với các công ty niêm yết, thường giới hạn ở mức 49% đối với hầu hết các ngành và thấp hơn (30% hoặc ít hơn) đối với một số lĩnh vực bị hạn chế như ngân hàng và viễn thông. Khi một cổ phiếu đạt đến FOL, các nhà đầu tư nước ngoài chỉ có thể mua cổ phiếu từ những người bán nước ngoài khác, tạo ra một thị trường cao cấp song song cho cổ phiếu hội đồng quản trị nước ngoài. Điều này không ảnh hưởng trực tiếp đến việc tính toán lợi nhuận kép (sử dụng giá giao dịch chính thức), nhưng các nhà nghiên cứu nghiên cứu lợi nhuận danh mục đầu tư xuyên biên giới nên lưu ý rằng giá hiệu quả mà các nhà đầu tư nước ngoài trả có thể khác với giá bảng [@vo2017foreign].
 
-### The VN-Index and Market Benchmarks
+### Chỉ số VN-Index và các điểm chuẩn thị trường
 
-For benchmark compound returns, Vietnam's primary indices are:
+Đối với lợi nhuận kép chuẩn, các chỉ số chính của Việt Nam là:
 
--   **VN-Index**: The capitalization-weighted index of all HOSE-listed stocks.
--   **VN30**: The 30 largest and most liquid stocks on HOSE, reviewed semi-annually.
--   **HNX-Index**: The capitalization-weighted index of HNX-listed stocks.
+- **VN-Index**: Chỉ số tính theo giá trị vốn hóa của tất cả các cổ phiếu niêm yết trên HOSE.
+- **VN30**: 30 cổ phiếu lớn nhất và có tính thanh khoản cao nhất trên HOSE, được soát xét nửa năm.
+- **HNX-Index**: Chỉ số tính theo giá trị vốn hóa của các cổ phiếu niêm yết trên HNX.
 
-The VN-Index is the most widely used benchmark and is the default market return in our dataset.
+VN-Index là điểm chuẩn được sử dụng rộng rãi nhất và là lợi nhuận thị trường mặc định trong bộ dữ liệu của chúng tôi.
 
-## Performance Considerations
+## Cân nhắc hiệu suất
 
-When working with large datasets, computational efficiency matters. @tbl-performance-benchmark compares the execution time of our four compounding methods on a standardized dataset.
+Khi làm việc với các tập dữ liệu lớn, hiệu quả tính toán rất quan trọng. @tbl-performance-benchmark so sánh thời gian thực hiện của bốn phương pháp tổng hợp của chúng tôi trên một tập dữ liệu được tiêu chuẩn hóa.
 
 ```{python}
 #| label: tbl-performance-benchmark
@@ -1335,34 +1335,34 @@ perf_df = pd.DataFrame({
 perf_df
 ```
 
-## Common Pitfalls and Best Practices
+## Những lỗi thường gặp và cách làm tốt nhất
 
-Several subtle issues can lead to incorrect compound return calculations. We summarize the most important ones:
+Một số vấn đề nhỏ có thể dẫn đến tính toán lợi nhuận kép không chính xác. Chúng tôi tóm tắt những vấn đề quan trọng nhất như sau:
 
-**Gaps in the time series.** If a security has months with no observations (not even a missing return flag), rolling window calculations based on positional indexing will produce incorrect results. The rolling window will span the wrong calendar period. Always ensure that the time series is complete, fill gaps with explicit missing values before computing rolling statistics. This is particularly relevant in Vietnam, where trading suspensions can create gaps.
+**Khoảng trống trong chuỗi thời gian.** Nếu một chứng khoán có những tháng không có dữ liệu quan sát (thậm chí không có cờ báo lợi nhuận bị thiếu), các phép tính cửa sổ trượt dựa trên chỉ số vị thế sẽ cho ra kết quả không chính xác. Cửa sổ trượt sẽ bao phủ khoảng thời gian không đúng. Luôn đảm bảo chuỗi thời gian đầy đủ, điền vào các khoảng trống bằng các giá trị bị thiếu rõ ràng trước khi tính toán số liệu thống kê trượt. Điều này đặc biệt quan trọng ở Việt Nam, nơi việc tạm ngừng giao dịch có thể tạo ra các khoảng trống.
 
-**Survivorship bias.** As discussed in the delisting returns section, excluding securities that cease trading biases compound returns upward. Always incorporate delisting returns when available. When delisting returns are unavailable (as is sometimes the case in Vietnamese data), consider using imputed values based on the delisting reason.
+**Sai lệch do chọn lọc chứng khoán còn tồn tại.** Như đã thảo luận trong phần lợi nhuận từ việc hủy niêm yết, việc loại trừ các chứng khoán ngừng giao dịch sẽ làm sai lệch lợi nhuận kép theo hướng tăng lên. Luôn luôn kết hợp lợi nhuận từ việc hủy niêm yết khi có sẵn. Khi không có lợi nhuận từ việc hủy niêm yết (như đôi khi xảy ra với dữ liệu của Việt Nam), hãy xem xét sử dụng các giá trị ước tính dựa trên lý do hủy niêm yết.
 
-**Look-ahead bias.** When aligning compound returns to fiscal year ends for cross-sectional analysis, be careful not to use returns from before the fiscal year end to predict post-announcement returns. Vietnamese firms are required to publish audited annual financial statements within 90 days of the fiscal year end, so a buffer of at least 3 months is advisable when constructing forward-looking compound returns.
+**Thiên kiến ​​nhìn xa trông rộng.** Khi điều chỉnh lợi nhuận kép theo cuối năm tài chính cho phân tích chéo, cần thận trọng không sử dụng lợi nhuận trước khi kết thúc năm tài chính để dự đoán lợi nhuận sau khi công bố kết quả. Các doanh nghiệp Việt Nam bắt buộc phải công bố báo cáo tài chính thường niên đã được kiểm toán trong vòng 90 ngày kể từ ngày kết thúc năm tài chính, vì vậy nên có khoảng thời gian đệm ít nhất 3 tháng khi xây dựng lợi nhuận kép hướng tới tương lai.
 
-**Numerical overflow and underflow.** For very long compounding horizons or extreme returns, the cumulative product can overflow (`inf`) or underflow (0). The log-sum-exp approach is more robust to such numerical issues because it operates in log space where the range is compressed.
+**Lỗi tràn và thiếu số liệu.** Đối với các kỳ tính lãi kép rất dài hoặc lợi nhuận cực đoan, tích lũy có thể bị tràn (vô cực) hoặc thiếu (0). Phương pháp log-sum-exp mạnh mẽ hơn đối với các vấn đề số học như vậy vì nó hoạt động trong không gian logarit, nơi phạm vi được thu hẹp.
 
-**Annualization of partial periods.** When computing annualized returns from partial-period data (e.g., 7 months of data annualized to 12), the annualization formula $(1+R)^{12/k} - 1$ assumes that the observed return rate will persist. This assumption is stronger for short partial periods and can produce misleading results. Report the actual compound return and the number of periods alongside any annualized figures.
+**Tính toán lợi nhuận hàng năm từ các kỳ không đầy đủ.** Khi tính toán lợi nhuận hàng năm từ dữ liệu của các kỳ không đầy đủ (ví dụ: dữ liệu 7 tháng được tính toán hàng năm thành 12 tháng), công thức tính toán lợi nhuận hàng năm $(1+R)^{12/k} - 1$ giả định rằng tỷ suất lợi nhuận quan sát được sẽ không thay đổi. Giả định này càng mạnh mẽ hơn đối với các kỳ không đầy đủ ngắn và có thể dẫn đến kết quả sai lệch. Hãy báo cáo tỷ suất lợi nhuận kép thực tế và số kỳ cùng với bất kỳ con số lợi nhuận hàng năm nào.
 
-**Exchange transfers.** In Vietnam, stocks sometimes transfer between UPCoM, HNX, and HOSE. These transfers may involve temporary trading halts and can cause apparent gaps in the return series. When computing compound returns that span an exchange transfer, ensure that the return series is continuous across the transfer date.
+**Chuyển nhượng cổ phiếu.** Tại Việt Nam, cổ phiếu đôi khi được chuyển nhượng giữa các sàn UPCoM, HNX và HOSE. Việc chuyển nhượng này có thể dẫn đến việc tạm ngừng giao dịch và gây ra những khoảng trống rõ ràng trong chuỗi lợi nhuận. Khi tính toán lợi nhuận kép trải qua quá trình chuyển nhượng, cần đảm bảo chuỗi lợi nhuận liên tục kể từ ngày chuyển nhượng.
 
-<!-- ## Exercises
+<!-- ## Bài tập
 
-1.  Compute the annual compound return for the VN-Index for each year in the sample. How does it compare to the simple sum of monthly returns? In which years is the difference largest, and why?
+1. Tính toán tỷ suất lợi nhuận kép hàng năm của chỉ số VN-Index cho mỗi năm trong mẫu. So sánh tỷ suất này với tổng lợi nhuận hàng tháng đơn giản như thế nào? Sự khác biệt lớn nhất ở những năm nào và tại sao?
 
-2.  Implement a function that computes the **Calmar ratio** (annualized return divided by the absolute value of maximum drawdown) for each security. Which securities have the highest Calmar ratios over the most recent 5-year period? Do they tend to be on HOSE, HNX, or UPCoM?
+2. Hãy lập trình một hàm tính toán **tỷ lệ Calmar** (lợi nhuận hàng năm chia cho giá trị tuyệt đối của mức giảm tối đa) cho mỗi chứng khoán. Chứng khoán nào có tỷ lệ Calmar cao nhất trong 5 năm gần đây nhất? Chúng có xu hướng nằm trên sàn HOSE, HNX hay UPCoM?
 
-3.  Sort stocks into quintiles based on their 12-month trailing compound return (the momentum signal) and compute the equal-weighted average return of each quintile in the subsequent month. Does the momentum effect appear in Vietnamese data? Compare your findings with evidence from @vo2018does.
+3. Phân loại cổ phiếu thành năm nhóm dựa trên tỷ suất lợi nhuận kép trong 12 tháng gần nhất (tín hiệu động lượng) và tính toán tỷ suất lợi nhuận bình quân gia quyền của mỗi nhóm trong tháng tiếp theo. Hiệu ứng động lượng có xuất hiện trong dữ liệu của Việt Nam không? So sánh kết quả của bạn với bằng chứng từ @vo2018does.
 
-4.  Extend the `rolling_compound_return` function to handle overlapping fiscal years, where the compounding window is aligned to each firm's fiscal year end rather than calendar months.
+4. Mở rộng chức năng `rolling_compound_return` để xử lý các năm tài chính chồng chéo, trong đó cửa sổ tính lãi kép được căn chỉnh theo ngày kết thúc năm tài chính của mỗi công ty thay vì theo tháng dương lịch.
 
-5.  Compare the BHAR and CAR measures for a set of randomly chosen event dates. Under what conditions do they diverge most? Relate your findings to the theoretical discussion of @barber1997detecting.
+5. So sánh các chỉ số BHAR và CAR cho một tập hợp các ngày sự kiện được chọn ngẫu nhiên. Trong điều kiện nào chúng khác biệt nhiều nhất? Liên hệ kết quả của bạn với cuộc thảo luận lý thuyết của @barber1997detecting.
 
-6.  Compute the cross-sectional correlation between 24-month rolling volatility and subsequent 12-month compound returns. Is there a risk-return tradeoff in the Vietnamese equity market cross section? How does this compare to the positive risk-return relationship documented in developed markets by @ghysels2005there?
+6. Tính toán hệ số tương quan chéo giữa biến động luân chuyển 24 tháng và lợi nhuận kép 12 tháng tiếp theo. Có sự đánh đổi giữa rủi ro và lợi nhuận trong thị trường chứng khoán Việt Nam hay không? Điều này so với mối quan hệ tích cực giữa rủi ro và lợi nhuận được ghi nhận ở các thị trường phát triển bởi @ghysels2005there như thế nào?
 
-7.  Examine how daily price limits affect the computation of weekly compound returns. Select stocks that hit the limit-up or limit-down ceiling on at least one day, and compare their weekly compound return to similar-magnitude events in stocks that did not hit the limit. -->
+7. Kiểm tra xem các giới hạn giá hàng ngày ảnh hưởng như thế nào đến việc tính toán lợi nhuận kép hàng tuần. Chọn các cổ phiếu đạt mức giá trần tăng hoặc trần giảm ít nhất một ngày, và so sánh lợi nhuận kép hàng tuần của chúng với các sự kiện có quy mô tương tự ở các cổ phiếu không đạt mức giá trần. -->
