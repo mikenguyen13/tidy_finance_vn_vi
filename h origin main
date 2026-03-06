@@ -1,0 +1,31 @@
+[1mdiff --git a/01_accessing_and_managing_financial_data.qmd b/01_accessing_and_managing_financial_data.qmd[m
+[1mindex 9b146e5..7528d36 100644[m
+[1m--- a/01_accessing_and_managing_financial_data.qmd[m
+[1m+++ b/01_accessing_and_managing_financial_data.qmd[m
+[36m@@ -29,7 +29,7 @@[m [mend_date = "2024-12-31"[m
+ [m
+ Trước khi đi sâu vào triển khai kỹ thuật, điều quan trọng là phải hiểu rõ bức tranh tổng quan về các nhà cung cấp dữ liệu tài chính phục vụ thị trường Việt Nam. Không giống như các thị trường phát triển, nơi một vài nhà cung cấp hàng đầu (Bloomberg, Refinitiv, FactSet) cung cấp phạm vi phủ sóng toàn diện, dữ liệu tài chính Việt Nam từ trước đến nay vẫn phân tán trên nhiều nguồn khác nhau, mỗi nguồn đều có những điểm mạnh và hạn chế riêng.[m
+ [m
+[31m-Các nguồn dữ liệu tài chính chính của Việt Nam bao gồm dữ liệu giao dịch chính thức từ HOSE và HNX, cung cấp dữ liệu giao dịch thời gian thực và lịch sử. Ủy ban Chứng khoán Nhà nước Việt Nam (SSC) công bố các báo cáo quản lý, thông báo của doanh nghiệp và số liệu thống kê thị trường. Các nhà cung cấp dữ liệu thương mại như FiinGroup, StoxPlus (nay thuộc FiinGroup) và VNDirect cung cấp các bộ dữ liệu được chọn lọc với mức độ bao phủ và chất lượng dữ liệu khác nhau. Ngoài ra, Ngân hàng Nhà nước Việt Nam (SBV) và Tổng cục Thống kê (GSO) cung cấp các chỉ số kinh tế vĩ mô cần thiết cho nghiên cứu định giá tài sản.[m
+[32m+[m[32mCác nguồn dữ liệu tài chính của Việt Nam bao gồm dữ liệu giao dịch chính thức từ HOSE và HNX, cung cấp dữ liệu giao dịch thời gian thực và lịch sử. Ủy ban Chứng khoán Nhà nước Việt Nam (SSC) công bố các báo cáo quản lý, thông báo của doanh nghiệp và số liệu thống kê thị trường. Các nhà cung cấp dữ liệu thương mại như FiinGroup, StoxPlus (nay thuộc FiinGroup) và VNDirect cung cấp các bộ dữ liệu được chọn lọc với mức độ bao phủ và chất lượng dữ liệu khác nhau. Ngoài ra, Ngân hàng Nhà nước Việt Nam (SBV) và Tổng cục Thống kê (GSO) cung cấp các chỉ số kinh tế vĩ mô cần thiết cho nghiên cứu định giá tài sản.[m
+ [m
+ Đối với các nhà nghiên cứu học thuật, sự phân mảnh này theo truyền thống liên quan đến những sự đánh đổi khó khăn giữa chi phí, phạm vi bao phủ, chất lượng dữ liệu và tính dễ tiếp cận. Các nhà cung cấp thương mại như FiinGroup cung cấp dữ liệu sạch, được chuẩn hóa nhưng yêu cầu phí đăng ký có thể là rào cản đối với các nhà nghiên cứu cá nhân và các tổ chức nhỏ hơn. Các giải pháp thay thế mã nguồn mở cung cấp quyền truy cập miễn phí nhưng thường yêu cầu nỗ lực làm sạch và xác thực dữ liệu đáng kể. Việc thu thập dữ liệu thủ công từ các trang web của chính phủ tốn thời gian và dễ xảy ra sai sót.[m
+ [m
+[36m@@ -156,7 +156,7 @@[m [mCác biến số kinh tế vĩ mô sau đây đặc biệt quan trọng đối v[m
+ [m
+ 4. **Tăng trưởng tín dụng**: Tăng trưởng cho vay của ngân hàng, một động lực chính của hoạt động kinh tế trong hệ thống tài chính do ngân hàng chi phối tại Việt Nam.[m
+ [m
+[31m-5. Tỷ giá hối đoái USD/VND: Rất quan trọng đối với các nhà đầu tư quốc tế và các công ty có rủi ro ngoại tệ.[m
+[32m+[m[32m5. **Tỷ giá hối đoái USD/VND**: Rất quan trọng đối với các nhà đầu tư quốc tế và các công ty có rủi ro ngoại tệ.[m
+ [m
+ 6. **Đầu tư trực tiếp nước ngoài (FDI)**: Chỉ số về dòng vốn quốc tế và niềm tin kinh tế.[m
+ [m
+[36m@@ -172,7 +172,7 @@[m [mCác biến số kinh tế vĩ mô sau đây đặc biệt quan trọng đối v[m
+ [m
+ ### Xấp xỉ lãi suất phi rủi ro[m
+ [m
+[31m-Việc xác định lãi suất phi rủi ro phù hợp cho Việt Nam đặt ra những thách thức không gặp phải ở các thị trường phát triển. Không giống như thị trường trái phiếu kho bạc Mỹ, thị trường trái phiếu chính phủ Việt Nam tương đối kém thanh khoản với giao dịch thứ cấp hạn chế. Có một số phương án thay thế:[m
+[32m+[m[32mViệc xác định lãi suất phi rủi ro phù hợp cho Việt Nam đặt ra những thách thức không gặp phải ở các thị trường phát triển. Không giống như thị trường trái phiếu kho bạc Mỹ, thị trường trái phiếu chính phủ Việt Nam có mức thanh khoản tương đối thấp và giao dịch thứ cấp còn hạn chế. Do đó, cần xem xét một số phương án thay thế:[m
+ [m
+ 1. **Lãi suất tái cấp vốn của Ngân hàng Nhà nước Việt Nam**: Lãi suất chính sách do Ngân hàng Nhà nước Việt Nam quy định. Không dùng để đầu tư trực tiếp nhưng phản ánh lập trường chính sách tiền tệ.[m
+ [m

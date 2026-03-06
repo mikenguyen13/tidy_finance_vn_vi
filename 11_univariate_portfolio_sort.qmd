@@ -1,19 +1,8 @@
----
-title: Univariate Portfolio Sorts
-format:
-  html:
-    toc: true
-    number-sections: true
-jupyter: python3
-execute:
-  echo: true
-  warning: false
-  message: false
----
+# Phân loại danh mục đầu tư đơn biến
 
-In this chapter, we dive into portfolio sorts, one of the most widely used statistical methodologies in empirical asset pricing [e.g., @BaliEngleMurray2016]. The key application of portfolio sorts is to examine whether one or more variables can predict future excess returns. In general, the idea is to sort individual stocks into portfolios, where the stocks within each portfolio are similar with respect to a sorting variable, such as firm size. The different portfolios then represent well-diversified investments that differ in the level of the sorting variable. You can then attribute the differences in the return distribution to the impact of the sorting variable. We start by introducing univariate portfolio sorts (which sort based on only one characteristic) and tackle bivariate sorting in Value and Bivariate Sorts. 
+Trong chương này, chúng ta sẽ đi sâu vào phân loại danh mục đầu tư, một trong những phương pháp thống kê được sử dụng rộng rãi nhất trong định giá tài sản thực nghiệm [ví dụ: @BaliEngleMurray2016]. Ứng dụng chính của phân loại danh mục đầu tư là để kiểm tra xem một hoặc nhiều biến số có thể dự đoán lợi nhuận vượt trội trong tương lai hay không. Nói chung, ý tưởng là phân loại các cổ phiếu riêng lẻ vào các danh mục đầu tư, trong đó các cổ phiếu trong mỗi danh mục đầu tư tương tự nhau về một biến số phân loại, chẳng hạn như quy mô công ty. Các danh mục đầu tư khác nhau sau đó đại diện cho các khoản đầu tư đa dạng tốt, khác nhau về mức độ của biến số phân loại. Sau đó, bạn có thể quy kết sự khác biệt trong phân phối lợi nhuận cho tác động của biến số phân loại. Chúng ta bắt đầu bằng cách giới thiệu phân loại danh mục đầu tư đơn biến (phân loại chỉ dựa trên một đặc điểm) và giải quyết phân loại hai biến trong phần Giá trị và Phân loại Hai biến.
 
-A univariate portfolio sort considers only one sorting variable $x_{i,t-1}$. Here, $i$ denotes the stock and $t-1$ indicates that the characteristic is observable by investors at time $t$. The objective is to assess the cross-sectional relation between $x_{i,t-1}$ and, typically, stock excess returns $r_{i,t}$ at time $t$ as the outcome variable. To illustrate how portfolio sorts work, we use estimates for market betas from the previous chapter as our sorting variable.
+Phân loại danh mục đầu tư đơn biến chỉ xem xét một biến phân loại duy nhất là $x_{i,t-1}$. Ở đây, $i$ biểu thị cổ phiếu và $t-1$ cho biết đặc điểm này có thể quan sát được bởi các nhà đầu tư tại thời điểm $t$. Mục tiêu là đánh giá mối quan hệ chéo giữa $x_{i,t-1}$ và, thông thường, lợi nhuận vượt trội của cổ phiếu $r_{i,t}$ tại thời điểm $t$ như là biến kết quả. Để minh họa cách thức hoạt động của phân loại danh mục đầu tư, chúng ta sử dụng các ước tính về hệ số beta thị trường từ chương trước làm biến phân loại của mình.
 
 ```{python}
 import pandas as pd
@@ -26,9 +15,9 @@ from mizani.formatters import percent_format
 from regtabletotext import prettify_result
 ```
 
-## Data Preparation
+## Chuẩn bị dữ liệu
 
-We start with loading the required data from our SQLite database introduced in Accessing and Managing Financial Data and DataCore Data. In particular, we use the monthly stock price data as our asset universe. Once we form our portfolios, we use the market factor returns to compute the risk-adjusted performance (i.e., alpha). `beta` is the dataframe with market betas computed in the previous chapter.
+Chúng ta bắt đầu bằng việc tải dữ liệu cần thiết từ cơ sở dữ liệu SQLite đã được giới thiệu trong phần Truy cập và Quản lý Dữ liệu Tài chính và Dữ liệu DataCore. Cụ thể, chúng ta sử dụng dữ liệu giá cổ phiếu hàng tháng làm tập hợp tài sản. Sau khi hình thành các danh mục đầu tư, chúng ta sử dụng lợi nhuận của các yếu tố thị trường để tính toán hiệu suất điều chỉnh rủi ro (tức là alpha). `beta` là khung dữ liệu chứa các hệ số beta thị trường được tính toán trong chương trước.
 
 ```{python}
 tidy_finance = sqlite3.connect(database="data/tidy_finance_python.sqlite")
