@@ -15,6 +15,8 @@ from datetime import datetime, timedelta
 import json
 import sqlite3
 import requests
+from dotenv import load_dotenv
+load_dotenv(".env")
 
 ```
 
@@ -74,15 +76,18 @@ Nguồn dữ liệu tài chính Việt Nam {#tbl-data-sources}
 
 ```
 
-DataFrame kết quả chứa các mã định danh an toàn thiết yếu bao gồm mã chứng khoán, tên công ty bằng cả tiếng Việt và tiếng Anh, thị trường giao dịch, phân loại ngành theo Hệ thống Phân loại ngành công nghiệp Việt Nam (VSIC), và nhiều cờ chỉ thị trạng thái đặc biệt như hạn chế sở hữu nước ngoài hoặc đình chỉ giao dịch.
+DataFrame chứa các mã định danh an toàn thiết yếu bao gồm mã chứng khoán, tên công ty bằng cả tiếng Việt và tiếng Anh, thị trường giao dịch, phân loại ngành theo Hệ thống Phân loại ngành công nghiệp Việt Nam (VSIC) và nhiều cờ chỉ thị trạng thái đặc biệt như hạn chế sở hữu nước ngoài hoặc đình chỉ giao dịch.
 
 ### Dữ liệu giá lịch sử
 
 ```{python}
+
+your_key = os.getenv("X_API_KEY")
+print(your_key)
 url = "https://gateway.datacore.vn/data/ds/search"
 
 headers = {
-    "x-api-key": "Your_key",
+    "x-api-key": "your_key",
     "Content-Type": "application/json"
 }
 
@@ -93,7 +98,12 @@ payload = {
     "page": 1,
     "limit": 10}
 res = requests.post(url, headers=headers, json=payload)
+print(res)
+
+
+
 data = res.json()
+print(data)
 
 df_stock_price = pd.DataFrame(
     data["data"]["dataDetail"],
@@ -115,10 +125,11 @@ Những điểm khác biệt chính giữa VAS và IFRS ảnh hưởng đến ph
 4. **Lợi thế thương mại**: VAS yêu cầu khấu hao trong khi IFRS chỉ yêu cầu kiểm tra suy giảm giá trị.
 
 ```{python}
+your_key = os.getenv("X_API_KEY")
 url = "https://gateway.datacore.vn/data/ds/search"
 
 headers = {
-    "x-api-key": "Your_key",
+    "x-api-key": your_key,
     "Content-Type": "application/json"
 }
 
@@ -212,6 +223,7 @@ Các biến số kinh tế vĩ mô sau đây đặc biệt quan trọng đối v
 ```{python}
 #| eval: false
 # Structure for Vietnamese macroeconomic data
+
 
 ```
 
