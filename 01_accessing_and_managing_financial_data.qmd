@@ -14,6 +14,10 @@ import requests
 from datetime import datetime, timedelta
 import json
 import sqlite3
+import requests
+from dotenv import load_dotenv
+load_dotenv(".env")
+
 ```
 
 Chúng tôi cũng xác định khoảng thời gian thu thập dữ liệu của mình, kéo dài từ những ngày đầu của thị trường chứng khoán Việt Nam đến hiện tại. Thời gian kéo dài này cho phép chúng tôi nắm bắt sự phát triển của thị trường qua nhiều chu kỳ kinh tế khác nhau, bao gồm cuộc khủng hoảng tài chính toàn cầu năm 2008, cuộc khủng hoảng ngân hàng trong nước năm 2011-2012 và giai đoạn đại dịch COVID-19.
@@ -69,15 +73,45 @@ Nguồn dữ liệu tài chính Việt Nam {#tbl-data-sources}
 ```{python}
 #| eval: false
 
+
+
 ```
 
-DataFrame kết quả chứa các mã định danh an toàn thiết yếu bao gồm mã chứng khoán, tên công ty bằng cả tiếng Việt và tiếng Anh, thị trường giao dịch, phân loại ngành theo Hệ thống Phân loại ngành công nghiệp Việt Nam (VSIC), và nhiều cờ chỉ thị trạng thái đặc biệt như hạn chế sở hữu nước ngoài hoặc đình chỉ giao dịch.
+DataFrame chứa các mã định danh an toàn thiết yếu bao gồm mã chứng khoán, tên công ty bằng cả tiếng Việt và tiếng Anh, thị trường giao dịch, phân loại ngành theo Hệ thống Phân loại ngành công nghiệp Việt Nam (VSIC) và nhiều cờ chỉ thị trạng thái đặc biệt như hạn chế sở hữu nước ngoài hoặc đình chỉ giao dịch.
 
 ### Dữ liệu giá lịch sử
 
 ```{python}
-#| eval: false
 
+your_key = os.getenv("X_API_KEY")
+print(your_key)
+url = "https://gateway.datacore.vn/data/ds/search"
+
+headers = {
+    "x-api-key": your_key,
+    "Content-Type": "application/json"
+}
+
+payload = {
+    "dataSetCode": "dataset_historical_price",
+    "conditions": [],
+    "selectFields": [],
+    "page": 1,
+    "limit": 10}
+res = requests.post(url, headers=headers, json=payload)
+print(res)
+
+
+
+data = res.json()
+print(data)
+
+df_stock_price = pd.DataFrame(
+    data["data"]["dataDetail"],
+    columns=data["data"]["fields"]
+)
+
+display(df_stock_price.head())
 ```
 
 ### Thông tin cơ bản và Báo cáo tài chính
@@ -92,7 +126,29 @@ Những điểm khác biệt chính giữa VAS và IFRS ảnh hưởng đến ph
 4. **Lợi thế thương mại**: VAS yêu cầu khấu hao trong khi IFRS chỉ yêu cầu kiểm tra suy giảm giá trị.
 
 ```{python}
-#| eval: false
+your_key = os.getenv("X_API_KEY")
+url = "https://gateway.datacore.vn/data/ds/search"
+
+headers = {
+    "x-api-key": your_key,
+    "Content-Type": "application/json"
+}
+
+payload = {
+    "dataSetCode": "company_information",
+    "conditions": [],
+    "selectFields": [],
+    "page": 1,
+    "limit": 10}
+res = requests.post(url, headers=headers, json=payload)
+data = res.json()
+
+df_company_infor = pd.DataFrame(
+    data["data"]["dataDetail"],
+    columns=data["data"]["fields"]
+)
+
+display(df_company_infor.head())
 
 ```
 
@@ -102,6 +158,7 @@ Việc xử lý chính xác các hành động của công ty là rất quan tr�
 
 ```{python}
 #| eval: false
+
 
 ```
 
@@ -167,6 +224,7 @@ Các biến số kinh tế vĩ mô sau đây đặc biệt quan trọng đối v
 ```{python}
 #| eval: false
 # Structure for Vietnamese macroeconomic data
+
 
 ```
 
