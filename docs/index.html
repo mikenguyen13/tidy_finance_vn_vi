@@ -2,12 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.26">
+<meta name="generator" content="quarto-1.7.33">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Mike">
 <meta name="dcterms.date" content="2026-02-01">
+<meta name="description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 
 <title>Tài Chính Ứng Dụng với Python</title>
 <style>
@@ -91,19 +92,18 @@ div.csl-indent {
 <link href="./favicon.ico" rel="icon">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-bc185b5c5bdbcb35c2eb49d8a876ef70.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-72097b8a1e3a3da1d7b8bbfaaf81c3d8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-5ee5e5a16e06a4aa31defda297eed821.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -131,12 +131,38 @@ div.csl-indent {
     "search-label": "Search"
   }
 }</script>
+<!-- =====================================================================
+     SEO: schema.org Book JSON-LD, injected into the <head> of every page
+     via format.html include-in-header. The plain meta description and the
+     og:/twitter: descriptions come from the book `description:` key in
+     _quarto.yml - don't repeat them here (duplicate meta description).
+     ===================================================================== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": "Tài Chính Ứng Dụng với Python",
+  "url": "https://mikenguyen13.github.io/tidy_finance_vn_vi/",
+  "inLanguage": "vi",
+  "bookFormat": "https://schema.org/EBook",
+  "genre": "Empirical Finance",
+  "description": "Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: truy cập và quản lý dữ liệu tài chính, xây dựng danh mục đầu tư, mô hình định giá tài sản, kiểm định chéo, phân tích cơ bản và định giá doanh nghiệp.",
+  "keywords": "tài chính định lượng, thị trường chứng khoán Việt Nam, tài chính thực nghiệm, định giá tài sản, Fama-French, danh mục đầu tư, Python, VN30, HOSE",
+  "author": {
+    "@type": "Person",
+    "name": "Mike Nguyen"
+  },
+  "isAccessibleForFree": true
+}
+</script>
 
 
 <link rel="stylesheet" href="styles.css">
 <meta property="og:title" content="Tài Chính Ứng Dụng với Python">
+<meta property="og:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta property="og:site_name" content="Tài Chính Ứng Dụng với Python">
 <meta name="twitter:title" content="Tài Chính Ứng Dụng với Python">
+<meta name="twitter:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta name="twitter:card" content="summary">
 </head>
 
@@ -433,7 +459,7 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./11_univariate_portfolio_sort.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Univariate Portfolio Sorts</span></span></a>
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Phân loại danh mục đầu tư đơn biến</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -765,6 +791,11 @@ div.csl-indent {
 <div class="quarto-title-block"><div><h1 class="title">Tài Chính Ứng Dụng với Python</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
 </div>
 
+<div>
+  <div class="description">
+    Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.
+  </div>
+</div>
 
 
 <div class="quarto-title-meta">
@@ -799,7 +830,7 @@ div.csl-indent {
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Ghi công
+Ghi công
 </div>
 </div>
 <div class="callout-body-container callout-body">
@@ -880,19 +911,33 @@ Vilhuber, Lars. 2020. <span>“Reproducibility and Replicability in Economics.�
 
 </main> <!-- /main -->
 <script>
+
 document.addEventListener("DOMContentLoaded", function () {
+
   const year = new Date().getFullYear();
+
   document.getElementById("copyright").textContent = "© " + year;
+
 });
+
 </script>
+
 <!-- Google tag (gtag.js) -->
+
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-LG91D0C6RB"></script>
+
 <script>
+
   window.dataLayer = window.dataLayer || [];
+
   function gtag(){dataLayer.push(arguments);}
+
   gtag('js', new Date());
 
+
+
   gtag('config', 'G-LG91D0C6RB');
+
 </script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
@@ -958,14 +1003,13 @@ document.addEventListener("DOMContentLoaded", function () {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-      const outerScaffold = trigger.parentElement.cloneNode(true);
-      const codeEl = outerScaffold.querySelector('code');
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
         }
-      }
-      return codeEl.innerText;
+        return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
@@ -1367,7 +1411,7 @@ document.addEventListener("DOMContentLoaded", function () {
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Lời nói đầu {.unnumbered}</span></span>
+<div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Lời nói đầu {.unnumbered}</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">## Ghi công</span></span>
@@ -1439,7 +1483,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>Các chương tiếp theo sẽ trình bày tiến trình từ cơ sở hạ tầng dữ liệu đến ứng dụng thực nghiệm. Cuốn sách bắt đầu với phần giới thiệu về các nguồn dữ liệu và cơ sở hạ tầng được sử dụng xuyên suốt, tiếp theo là các chương về bối cảnh thể chế, xây dựng dữ liệu và thiết kế quy trình làm việc có thể tái tạo. Các chương tiếp theo phát triển các bài kiểm tra định giá tài sản, các biện pháp thanh khoản và phân tích cấu trúc vi mô thị trường được điều chỉnh phù hợp với thị trường chứng khoán Việt Nam. Mỗi chương được thiết kế để độc lập, nhưng tất cả đều được liên kết thông qua một kiến ​​trúc dữ liệu và mã nguồn chung để đảm bảo tính nhất quán nội bộ.</span>
 <span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>Cuốn sách kết thúc bằng việc suy ngẫm về những hàm ý rộng hơn của tài chính thực nghiệm có thể tái tạo đối với nghiên cứu thị trường mới nổi và vạch ra những hướng đi cho công việc phương pháp luận và thực nghiệm trong tương lai.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>Cuốn sách kết thúc bằng việc suy ngẫm về những hàm ý rộng hơn của tài chính thực nghiệm có thể tái tạo đối với nghiên cứu thị trường mới nổi và vạch ra những hướng đi cho công việc phương pháp luận và thực nghiệm trong tương lai.</span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
