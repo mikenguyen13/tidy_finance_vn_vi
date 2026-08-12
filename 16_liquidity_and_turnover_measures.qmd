@@ -555,6 +555,260 @@ print(f"\nLog Kyle lambda distribution:")
 print(kyle_monthly['log_kyle'].describe().round(3))
 ```
 
+## Kém Thanh khoản Thực hiện: Một Cải tiến Tần suất Cao cho Thước đo Amihud {#sec-liquidity-realized}
+
+### Động cơ
+
+Trong bảy thước đo được xây dựng ở trên, tỷ số @amihud2002illiquidity trong @eq-amihud là thước đo mà cuốn sách này dựa vào nhiều nhất: nó là biến phân nhóm trong các phân nhóm danh mục và hồi quy Fama-MacBeth ở phần sau, là đầu vào cho các hồi quy về tính đồng biến của thanh khoản, và là cơ sở của nhân tố thanh khoản có thể giao dịch được xây dựng ở cuối chương. Đây cũng chính là thước đo mà @fong2017best khuyến nghị riêng cho các thị trường mới nổi. Vì vậy, rất đáng để đặt câu hỏi: nó đo lường chính xác đến mức nào điều mà nó tuyên bố đo lường?
+
+Câu trả lời là: kém chính xác hơn nhiều so với mức độ phổ biến của nó gợi ý, và vì một lý do không hề liên quan đến mẫu số khối lượng. Tử số $|R_{i,d}|$ là một *quan sát đơn lẻ* được dùng để tóm tắt toàn bộ biến động giá trong ngày. Xét như một thống kê, nó gần như không chệch đối với độ biến động của ngày nhưng lại nhiễu một cách phi thường — chúng ta sẽ định lượng điều này dưới đây ở mức khoảng 76% độ lệch chuẩn tương đối *mỗi ngày*. Mỗi đơn vị nhiễu đó lan truyền vào các phân nhóm danh mục dưới dạng suy giảm do sai số trong biến (errors-in-variables) cổ điển, làm phẳng phần bù thanh khoản đo được về phía không.
+
+@lacava2026realized giải quyết đúng vấn đề này. Họ định nghĩa *kém thanh khoản thực hiện* là tỷ số giữa độ biến động thực hiện và khối lượng giao dịch, và giới thiệu **thước đo Amihud thực hiện**, thay thế giá trị tuyệt đối của lợi suất ngày đơn lẻ bằng một ước lượng tần suất cao của cùng đại lượng đó. Họ chỉ ra rằng nó nắm bắt một cách vững chắc độ nhạy tích lũy của giá trong phiên đối với hoạt động giao dịch, ngay cả khi có độ biến động ngẫu nhiên, nhiễu vi cấu trúc và các bước nhảy thông tin; ghi nhận hiện tượng phân cụm không đồng nhất và hiệu ứng đòn bẩy trong chuỗi kết quả; và tìm thấy rằng nó dự báo được lợi suất ngắn hạn. Phần này phát triển ước lượng theo ký hiệu của cuốn sách, dẫn giải vì sao mức cải thiện độ chính xác lại lớn đến vậy, và trình bày cái giá phải trả để triển khai nó trên HOSE.
+
+### Thiết lập và Ký hiệu
+
+Gọi $p_{i,t}$ là log giá hiệu quả của cổ phiếu $i$ tại thời điểm $t$, diễn biến trong ngày giao dịch $d$ theo một nửa martingale Itô:
+
+$$
+dp_{i,t} = \mu_{i,t}\,dt + \sigma_{i,t}\,dW_{i,t} + dJ_{i,t}
+$$ {#eq-semimartingale}
+
+trong đó $\sigma_{i,t}$ là quá trình độ biến động ngẫu nhiên càdlàg, $W_{i,t}$ là chuyển động Brown chuẩn, và $J_{i,t}$ là quá trình bước nhảy hữu hạn hoạt độ, thể hiện các lần thông tin đến rời rạc. Đại lượng tóm tắt biến động giá của ngày là **phương sai tích hợp**
+
+$$
+\text{IV}_{i,d} = \int_{d-1}^{d} \sigma_{i,s}^2\,ds
+$$ {#eq-integrated-variance}
+
+Chia ngày giao dịch liên tục thành $M$ khoảng và ký hiệu log lợi suất trong phiên là $r_{i,d,j}$, $j = 1,\dots,M$, sao cho lợi suất ngày thỏa mãn $R_{i,d} = \sum_{j=1}^{M} r_{i,d,j}$. Như trước, $\text{DVOL}_{i,d}$ là khối lượng giao dịch tính bằng VND trong ngày $d$ và $D_{i,m}$ là số ngày có khối lượng dương trong tháng $m$.
+
+**Phương sai thực hiện** và **biến phân song lũy thừa** được định nghĩa là
+
+$$
+\text{RV}_{i,d} = \sum_{j=1}^{M} r_{i,d,j}^2,
+\qquad
+\text{BV}_{i,d} = \frac{\pi}{2}\sum_{j=2}^{M} \left| r_{i,d,j} \right|\left| r_{i,d,j-1} \right|
+$$ {#eq-rv-bv}
+
+Cả hai đều vững đối với $\text{IV}_{i,d}$ khi $M \to \infty$ trong trường hợp không có bước nhảy [@barndorff2002econometric; @andersen2003modeling]; $\text{BV}_{i,d}$ vẫn vững *ngay cả khi* có bước nhảy, và đó chính là điều khiến nó hữu ích ở phần dưới [@barndorff2004power].
+
+### Các Giả định
+
+**(A1) Giá hiệu quả là nửa martingale.** Log giá hiệu quả tuân theo @eq-semimartingale với $\int_{d-1}^{d}\sigma_{i,s}^4\,ds < \infty$.
+
+*Diễn giải.* Giá được dẫn dắt bởi một quá trình khuếch tán với độ biến động có thể ngẫu nhiên và dai dẳng, cộng với các bước nhảy không thường xuyên. Đây là giả định yếu và nhìn chung không gây tranh cãi. Nó sẽ bị vi phạm bởi một quá trình giá có bước nhảy hoạt độ vô hạn với cường độ đủ lớn, hoặc bởi một thị trường mỏng đến mức không một xấp xỉ thời gian liên tục nào còn có ý nghĩa — trường hợp sau là mối lo thực tế đối với các cổ phiếu vốn hóa nhỏ trên HOSE.
+
+**(A2) Nhiễu vi cấu trúc không đáng kể tại tần suất lấy mẫu.** Giá quan sát được thỏa mãn $\tilde{p}_{i,t} = p_{i,t} + u_{i,t}$, và khoảng lấy mẫu đủ thô để $2M\,\mathbb{V}[u_{i,t}]$ là nhỏ so với $\text{IV}_{i,d}$.
+
+*Diễn giải.* Dao động giữa giá mua và giá bán, tính rời rạc của bước giá, và giá cũ không cập nhật đều bơm nhiễu vào giá quan sát được. Vì $\text{RV}$ cộng dồn *bình phương* lợi suất, nhiễu này tích lũy theo $M$ thay vì triệt tiêu — lấy mẫu quá dày làm ước lượng tệ đi chứ không tốt lên. Trên HOSE, bước giá thô so với mặt bằng giá khiến ràng buộc này phát huy tác dụng sớm hơn so với dữ liệu Mỹ. Đây là giả định dễ bị vi phạm nhất trong thực tế, và chúng ta sẽ chỉ ra điều gì xảy ra khi nó bị vi phạm.
+
+**(A3) Không có bước nhảy, đối với thước đo Amihud thực hiện dạng thuần.** $J_{i,t} \equiv 0$ trong ngày $d$.
+
+*Diễn giải.* Một bất ngờ về lợi nhuận hay một phiên chạm biên độ là một thay đổi giá lớn *không phải* do tác động giá của khối lượng giao dịch, nhưng $\text{RV}$ vẫn tính nó như thể đúng là như vậy. Với tần suất cổ phiếu Việt Nam chạm biên độ $\pm7\%$ của HOSE (xem thảo luận về biên độ giá trong chương vi cấu trúc thị trường), (A3) không hề vô hại ở đây. Nới lỏng giả định này chính là lý do chúng ta duy trì song song $\text{BV}_{i,d}$.
+
+**(A4) Khối lượng đồng thời.** $\text{DVOL}_{i,d}$ được đo trên cùng cửa sổ thời gian với các lợi suất trong phiên.
+
+*Diễn giải.* Nếu lợi suất được tính trên các phiên khớp lệnh liên tục nhưng khối lượng lại bao gồm cả các giao dịch thỏa thuận sau giờ đóng cửa, thì tử số và mẫu số đang nói về hai hoạt động giao dịch khác nhau. Trên HOSE, phiên thỏa thuận 14:45–15:00 khiến đây là một vấn đề hạch toán thực sự chứ không phải chi tiết kỹ thuật.
+
+### Ước lượng
+
+Thước đo Amihud thực hiện thay $|R_{i,d}|$ bằng một ước lượng tần suất cao đã được chuẩn hóa tỷ lệ cho chính biến động giá của ngày đó:
+
+$$
+\text{RILLIQ}_{i,m} = \frac{1}{D_{i,m}}\sum_{d=1}^{D_{i,m}} \sqrt{\frac{2}{\pi}}\,\frac{\sqrt{\text{RV}_{i,d}}}{\text{DVOL}_{i,d}}
+$$ {#eq-realized-amihud}
+
+và phiên bản vững với bước nhảy thay $\text{RV}_{i,d}$ bằng $\text{BV}_{i,d}$:
+
+$$
+\text{RILLIQ}^{\text{BV}}_{i,m} = \frac{1}{D_{i,m}}\sum_{d=1}^{D_{i,m}} \sqrt{\frac{2}{\pi}}\,\frac{\sqrt{\text{BV}_{i,d}}}{\text{DVOL}_{i,d}}
+$$ {#eq-realized-amihud-bv}
+
+Hằng số $\sqrt{2/\pi} \approx 0.7979$ không phải để cho đẹp: nó đưa @eq-realized-amihud về đúng cùng thang đo với @eq-amihud, nhờ đó hai thước đo có thể so sánh trực tiếp về mặt số học và phiên bản thực hiện có thể thay thế trực tiếp ở mọi nơi cuốn sách đang dùng $\text{ILLIQ}$.
+
+### Dẫn giải
+
+**Bước 1: $|R_{i,d}|$ thực chất ước lượng cái gì.** Điều kiện theo quỹ đạo độ biến động và bỏ qua xu hướng cùng bước nhảy, ta có $R_{i,d} \mid \text{IV}_{i,d} \sim N(0, \text{IV}_{i,d})$. Đối với một biến bán chuẩn (half-normal),
+
+$$
+\mathbb{E}\!\left[|R_{i,d}| \,\middle|\, \text{IV}_{i,d}\right] = \sqrt{\tfrac{2}{\pi}}\sqrt{\text{IV}_{i,d}},
+\qquad
+\mathbb{V}\!\left[|R_{i,d}| \,\middle|\, \text{IV}_{i,d}\right] = \left(1 - \tfrac{2}{\pi}\right)\text{IV}_{i,d}
+$$ {#eq-halfnormal}
+
+Vậy $|R_{i,d}|$ là ước lượng không chệch cho $\sqrt{2/\pi}\sqrt{\text{IV}_{i,d}}$ — tử số của Amihud nhắm đúng mục tiêu. Tuy nhiên, độ lệch chuẩn *tương đối* của nó là
+
+$$
+\frac{\text{sd}\!\left(|R_{i,d}|\right)}{\mathbb{E}\!\left[|R_{i,d}|\right]}
+= \sqrt{\frac{1 - 2/\pi}{2/\pi}}
+= \sqrt{\frac{\pi}{2} - 1} \approx 0.7555
+$$ {#eq-abs-relsd}
+
+Tử số Amihud của một ngày đơn lẻ mang theo khoảng **76% sai số đo lường tương đối**. Đây là tính chất của phân phối bán chuẩn, không phải của một thị trường cụ thể nào — nó không thể giảm được nếu chỉ có một quan sát mỗi ngày.
+
+**Bước 2: $\sqrt{\text{RV}_{i,d}}$ ước lượng cái gì.** Dưới (A1)–(A3), phương sai thực hiện tuân theo định lý giới hạn trung tâm của @barndorff2002econometric,
+
+$$
+\sqrt{M}\left(\text{RV}_{i,d} - \text{IV}_{i,d}\right) \;\xrightarrow{d}\; N\!\left(0,\; 2\,\text{IQ}_{i,d}\right),
+\qquad \text{IQ}_{i,d} = \int_{d-1}^{d}\sigma_{i,s}^4\,ds
+$$ {#eq-rv-clt}
+
+Áp dụng phương pháp delta cho $g(x) = \sqrt{x}$, với $g'(\text{IV}) = 1/(2\sqrt{\text{IV}})$,
+
+$$
+\sqrt{M}\left(\sqrt{\text{RV}_{i,d}} - \sqrt{\text{IV}_{i,d}}\right) \;\xrightarrow{d}\; N\!\left(0,\; \frac{\text{IQ}_{i,d}}{2\,\text{IV}_{i,d}}\right)
+$$ {#eq-sqrt-rv-clt}
+
+Xét trường hợp riêng độ biến động không đổi cục bộ trong ngày ($\text{IV} = \sigma^2$, $\text{IQ} = \sigma^4$), ta được độ lệch chuẩn tương đối
+
+$$
+\frac{\text{sd}\!\left(\sqrt{\text{RV}_{i,d}}\right)}{\mathbb{E}\!\left[\sqrt{\text{RV}_{i,d}}\right]} \approx \frac{1}{\sqrt{2M}}
+$$ {#eq-rv-relsd}
+
+**Bước 3: So sánh.** Chia @eq-abs-relsd cho @eq-rv-relsd, tử số thực hiện chính xác hơn theo hệ số $\sqrt{2M\left(\pi/2 - 1\right)}$. Các phiên khớp lệnh liên tục của HOSE diễn ra từ 09:15–11:30 và 13:00–14:30, tức **225 phút**, nên lấy mẫu năm phút cho $M = 45$:
+
+| Tần suất lấy mẫu | $M$ | Độ lệch chuẩn tương đối của tử số | Cải thiện so với $\lvert R_d\rvert$ |
+|:---|---:|---:|---:|
+| Đóng cửa sang đóng cửa theo ngày ($\lvert R_d \rvert$) | 1 | 0.7555 | — |
+| 15 phút | 15 | 0.1826 | 4.1$\times$ |
+| 5 phút | 45 | 0.1054 | 7.2$\times$ |
+| 1 phút | 225 | 0.0471 | 16.0$\times$ |
+
+: Sai số đo lường giải tích của tử số Amihud theo tần suất lấy mẫu, từ @eq-abs-relsd và @eq-rv-relsd. Dòng 1 phút *không* phải là khuyến nghị — xem giả định (A2) và phần mô phỏng bên dưới. {#tbl-realized-precision}
+
+Ở tần suất lấy mẫu năm phút, *phương sai* nhiễu trong tử số giảm khoảng 51 lần.
+
+**Bước 4: Vì sao điều này quan trọng đối với các kết quả của cuốn sách.** Viết biến phân nhóm theo tháng dưới dạng giá trị thật cộng sai số, $\widehat{x}_{i,m} = x_{i,m} + \eta_{i,m}$. Trong các phân nhóm thanh khoản đơn biến và các hồi quy Fama-MacBeth ở phần sau của chương, sai số trong biến cổ điển làm suy giảm hệ số góc ước lượng theo tỷ số tin cậy
+
+$$
+\text{plim}\;\frac{\widehat{\gamma}}{\gamma} = \frac{\mathbb{V}[x]}{\mathbb{V}[x] + \mathbb{V}[\eta]}
+$$ {#eq-attenuation}
+
+Giảm $\mathbb{V}[\eta]$ khoảng 51 lần sẽ đẩy tỷ số tin cậy tiến về một, điều này *làm tăng* phần bù thanh khoản đo được cùng thống kê $t$ của nó. Hệ quả thực tiễn khá khó chịu và đáng nói thẳng: phần bù thanh khoản ước lượng bằng tỷ số Amihud theo ngày là một **cận dưới**. Một phần bù yếu hoặc không có ý nghĩa thống kê trong dữ liệu Việt Nam có thể phản ánh một biến phân nhóm nhiều nhiễu chứ không phải sự vắng mặt của phần bù.
+
+### Trực giác
+
+Tỷ số Amihud đặt câu hỏi "giá đã dịch chuyển bao nhiêu trên mỗi đồng VND được giao dịch?" và trả lời bằng đúng một con số mà ngày hôm đó tình cờ mang lại — mức dịch chuyển từ mở cửa đến đóng cửa. Nhưng một ngày mà giá đi lên 4%, quay đầu giảm 5%, rồi đóng cửa thấp hơn 1% là một ngày có độ nhạy giá đáng kể đối với giao dịch, trong khi $|R_d| = 1\%$ hầu như không ghi nhận được điều đó. Độ biến động thực hiện đo *cả quỹ đạo* thay vì chỉ hai đầu mút, nhờ vậy nắm bắt được đúng độ nhạy tích lũy của giá trong phiên mà Amihud đang cố gắng xấp xỉ. Lấy trung bình $M$ bình phương lợi suất trong phiên thay vì lấy một giá trị tuyệt đối của lợi suất ngày, xét về mặt thống kê, chính là khác biệt giữa một quan sát và $M$ quan sát.
+
+Điểm vướng là quỹ đạo chỉ quan sát được thông qua lớp vi cấu trúc. Đẩy $M$ lên đủ cao thì ta không còn đo quỹ đạo giá hiệu quả nữa mà bắt đầu đo dao động giữa giá mua và giá bán. Toàn bộ nghệ thuật của ước lượng này nằm ở việc chọn $M$ đủ lớn để có thêm độ chính xác và đủ nhỏ để giữ (A2) còn hiệu lực.
+
+### Thiết kế Mô phỏng {#sec-liquidity-realized-sim}
+
+Thí nghiệm dưới đây so sánh @eq-realized-amihud với @eq-amihud trên cùng một quá trình sinh dữ liệu, sau đó lần lượt phá vỡ (A2) và (A3) để làm lộ ra các dạng thất bại. Đại lượng mục tiêu là mức kém thanh khoản thật theo ngày đã chuẩn hóa tỷ lệ $\sqrt{2/\pi}\sqrt{\text{IV}_{i,d}}/\text{DVOL}_{i,d}$, nhờ đó độ chệch và RMSE được đo so với một đại lượng đã biết.
+
+```{python}
+#| label: realized-amihud-simulation
+#| eval: false
+#| code-summary: "Monte Carlo: realized vs. classic Amihud under noise and jumps"
+rng = np.random.default_rng(20260812)
+
+M_HOSE = 45  # 225 continuous minutes on HOSE / 5-minute sampling
+
+
+def simulate_days(n_days, M, noise_sd=0.0, jump_prob=0.0, jump_sd=0.0):
+    """
+    Simulate intraday paths with stochastic volatility, optional iid
+    microstructure noise in observed log prices, and optional information
+    jumps. Returns the ingredients of both illiquidity estimators.
+    """
+    # Integrated variance: gamma-distributed, mean daily vol about 2.5%
+    IV = rng.gamma(shape=4.0, scale=(0.025 ** 2) / 4.0, size=n_days)
+
+    # Efficient intraday returns
+    eff = rng.normal(0.0, 1.0, size=(n_days, M)) * np.sqrt(IV / M)[:, None]
+
+    # Information jumps (violates A3)
+    if jump_prob > 0:
+        hit = rng.binomial(1, jump_prob / M, size=(n_days, M))
+        eff = eff + hit * rng.normal(0.0, jump_sd, size=(n_days, M))
+
+    # Efficient log-price path, then contaminate with noise (violates A2)
+    P = np.cumsum(eff, axis=1)
+    P_obs = P + rng.normal(0.0, noise_sd, size=(n_days, M)) if noise_sd > 0 else P
+
+    # Observed intraday returns and the daily open-to-close return
+    r = np.diff(P_obs, axis=1, prepend=0.0)
+    R_d = P_obs[:, -1]
+
+    RV = np.sum(r ** 2, axis=1)
+    BV = (np.pi / 2) * np.sum(np.abs(r[:, 1:]) * np.abs(r[:, :-1]), axis=1)
+
+    # VND turnover, lognormal around 5 billion VND
+    DVOL = np.exp(rng.normal(np.log(5e9), 1.0, size=n_days))
+
+    return dict(IV=IV, R_d=R_d, RV=RV, BV=BV, DVOL=DVOL)
+
+
+def score(sim, label):
+    """Bias, RMSE (both relative to mean truth) and rank correlation."""
+    k = np.sqrt(2.0 / np.pi)
+    truth = k * np.sqrt(sim['IV']) / sim['DVOL']
+
+    estimators = {
+        'Amihud |R|/DVOL': np.abs(sim['R_d']) / sim['DVOL'],
+        'Realized Amihud': k * np.sqrt(sim['RV']) / sim['DVOL'],
+        'Bipower Amihud': k * np.sqrt(np.maximum(sim['BV'], 0)) / sim['DVOL'],
+    }
+
+    rows = []
+    for name, est in estimators.items():
+        rows.append({
+            'estimator': name,
+            'rel_bias': (est - truth).mean() / truth.mean(),
+            'rel_rmse': np.sqrt(((est - truth) ** 2).mean()) / truth.mean(),
+            'rank_corr': stats.spearmanr(est, truth).statistic,
+        })
+
+    out = pd.DataFrame(rows).set_index('estimator')
+    print(f"\n--- {label}")
+    print(out.round(4))
+    return out
+
+
+# Baseline: assumptions hold
+score(simulate_days(30_000, M_HOSE), "Baseline (A1-A4 hold), M=45")
+
+# Failure case A: microstructure noise, and what oversampling does to it
+score(simulate_days(30_000, M_HOSE, noise_sd=0.0015),
+      "Noise sd=0.15%, 5-minute sampling (M=45)")
+score(simulate_days(30_000, 225, noise_sd=0.0015),
+      "Noise sd=0.15%, 1-minute sampling (M=225) -- oversampled")
+
+# Failure case B: information jumps
+score(simulate_days(30_000, M_HOSE, jump_prob=0.2, jump_sd=0.03),
+      "Information jumps (~1 per 5 days, 3% size)")
+```
+
+Ba kết quả sẽ xuất hiện, và mỗi kết quả đều có đối chiếu trực tiếp với phần giải tích ở trên. Thứ nhất, dưới (A1)–(A4), thước đo Amihud thực hiện sẽ giảm RMSE tương đối khoảng đúng hệ số trong @tbl-realized-precision và nâng tương quan hạng với mức kém thanh khoản thật từ khoảng 0.7 lên trên 0.99 — chính tương quan hạng này quyết định việc phân nhóm danh mục có xếp cổ phiếu vào đúng nhóm hay không. Thứ hai, việc phá vỡ (A2) sẽ làm thước đo Amihud thực hiện chệch *lên trên*, và lấy mẫu ở một phút thay vì năm phút sẽ khiến độ chệch tệ hơn gấp nhiều lần chứ không tốt hơn — đây là bài học không hiển nhiên: khi có nhiễu, nhiều dữ liệu hơn được lấy mẫu dày hơn lại gây hại. Thứ ba, khi có bước nhảy, thước đo Amihud thực hiện dạng thuần sẽ mang độ chệch lên trên rõ rệt, trong khi phiên bản song lũy thừa trong @eq-realized-amihud-bv vẫn gần như không chệch.
+
+::: callout-warning
+## Khối lệnh này chưa được thực thi
+
+Giống như mọi khối lệnh trong chương này, phần mô phỏng ở trên được đánh dấu `eval: false` và kết quả của nó không được tái hiện tại đây. Các con số giải tích trong @tbl-realized-precision là kết quả dạng đóng từ @eq-abs-relsd và @eq-rv-relsd, không phụ thuộc vào việc chạy khối lệnh. Hãy chạy khối lệnh để tạo ra bảng Monte Carlo.
+:::
+
+### Tái lập trên Dữ liệu Việt Nam
+
+@lacava2026realized sử dụng dữ liệu tần suất cao của Mỹ, nên không thể tái lập trực tiếp bằng bảng dữ liệu theo ngày đã lắp ráp ở phần trước của chương. Quan điểm trung thực cho cuốn sách này là thước đo Amihud thực hiện hiện **nằm ngoài tầm với đối với phần lớn mặt cắt ngang HOSE**, vì một lý do đáng nói rõ: độ chính xác của ước lượng được dẫn dắt bởi $M$, tức số lượng lợi suất trong phiên *không tầm thường*. Một cổ phiếu chỉ khớp lệnh vài lần mỗi phiên không có 45 lợi suất năm phút mang thông tin — nó có một lưới năm phút phần lớn được lấp đầy bằng giá cũ và các số không mang tính cơ học, điều này làm $\text{RV}$ chệch *xuống dưới* và khiến cổ phiếu trông thanh khoản một cách giả tạo. Đây chính là vấn đề giao dịch mỏng đã thúc đẩy thước đo lợi suất bằng không trong @eq-zero-return, và nó tác động lên thước đo Amihud thực hiện mạnh hơn so với phiên bản theo ngày.
+
+Hệ quả thực tiễn là ước lượng này là một cải tiến dành cho nhóm thanh khoản cao của thị trường — đại khái là các cổ phiếu thuộc VN30 và các mã vốn hóa trung bình lớn hơn — chứ không phải vật thay thế cho @eq-amihud trên toàn bộ bảng dữ liệu. Việc xây dựng nó cho Việt Nam đòi hỏi dữ liệu khớp lệnh trong phiên từ HOSE, vốn không nằm trong quy trình dữ liệu theo ngày được sử dụng ở những phần khác của chương.
+
+### Hướng dẫn Thực hành
+
+1.  **Lấy mẫu ở năm phút, không dày hơn.** Với 225 phút khớp lệnh liên tục của HOSE, điều này cho $M = 45$ và mức tăng độ chính xác 7.2$\times$. Nên cưỡng lại cám dỗ hạ xuống một phút: @tbl-realized-precision cho thấy mức cải thiện *lý thuyết*, nhưng (A2) sẽ đổ vỡ từ lâu trước khi bạn thu được nó.
+2.  **Sàng lọc theo tần suất giao dịch trước khi tính.** Yêu cầu một số lượng tối thiểu các khoảng có giao dịch thực sự xảy ra — chứ không đơn thuần là có giá — và quay về @eq-amihud khi dưới ngưỡng đó. Hãy báo cáo những cổ phiếu nào phải dùng phương án dự phòng.
+3.  **Xử lý giờ nghỉ trưa và các phiên khớp lệnh định kỳ một cách tường minh.** Khoảng 11:30–13:00 không phải là một khoảng tính lợi suất, và giá ATO cùng ATC đến từ khớp lệnh định kỳ chứ không phải khớp lệnh liên tục. Hãy tính $\text{RV}$ trong từng phiên liên tục rồi cộng lại, thay vì lấy sai phân xuyên qua giờ nghỉ hoặc xuyên qua các phiên định kỳ.
+4.  **Loại giao dịch thỏa thuận khỏi mẫu số**, theo (A4), để phiên thỏa thuận 14:45–15:00 không thổi phồng $\text{DVOL}$ so với một tử số chỉ được đo trên phần khớp lệnh liên tục.
+5.  **Ưu tiên phiên bản song lũy thừa trong các ngày chạm biên độ.** Biên độ giá theo ngày của Việt Nam khiến các bước dịch chuyển rời rạc lớn trở nên phổ biến, và @eq-realized-amihud-bv là phiên bản trụ được trước chúng.
+6.  **Phần mềm.** Không có gói chuyên dụng nào; $\text{RV}$ và $\text{BV}$ chỉ là vài dòng `pandas` như ở trên. Đối với các phương án vững với nhiễu khi thực sự cần lấy mẫu dày hơn, ước lượng hai thang thời gian của @zhang2005tale là tài liệu tham chiếu chuẩn để triển khai.
+
+### Những Sai lầm Thường gặp
+
+-   **Lấy mẫu quá dày.** Đây là lỗi phổ biến nhất. Nhiều quan sát hơn trông có vẻ là nhiều thông tin hơn, nhưng @eq-rv-clt giả định rằng thứ đang được lấy mẫu là giá hiệu quả. Quá vài phút trên HOSE thì điều đó không còn đúng nữa.
+-   **Coi lợi suất bằng không trong phiên là thông tin.** Trên lưới năm phút, một mức giá cũ tạo ra lợi suất bằng không mà $\text{RV}$ đọc thành độ biến động bằng không. Nếu không sàng lọc, điều này khiến những cổ phiếu kém thanh khoản nhất trông thanh khoản nhất — dấu của sai số ngược lại với phỏng đoán trực giác.
+-   **Nhầm lẫn thang đo.** Bỏ đi hằng số $\sqrt{2/\pi}$ sẽ làm @eq-realized-amihud lớn hơn @eq-amihud khoảng 25%, và điều đó âm thầm phá vỡ mọi so sánh với các mức Amihud đã công bố trước đây hoặc với các phân nhóm ở những phần khác của chương.
+-   **Cho rằng mức cải thiện chuyển thành phần bù theo tỷ lệ một-đổi-một.** @eq-attenuation nói rằng một biến phân nhóm sạch hơn sẽ nâng phần bù *đo được* tiến về phần bù thật. Nó không tạo ra một phần bù vốn không tồn tại, và nó cũng không khắc phục các vấn đề sống sót và hủy niêm yết vốn quyết định những quan sát công ty-tháng nào được đưa vào bảng dữ liệu ngay từ đầu.
+-   **Quên rằng mẫu số không thay đổi.** Tất cả những điều trên chỉ cải thiện tử số. Khối lượng vẫn chịu ảnh hưởng của các quy ước báo cáo và các phức tạp liên quan đến giao dịch thỏa thuận đã thảo luận trong chương vi cấu trúc.
+
 ## Assembling the Liquidity Panel {#sec-liquidity-panel}
 
 We merge all seven measures into a single firm-month panel for comparative analysis.
