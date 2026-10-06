@@ -1,22 +1,24 @@
-# Factor Zoo and Multiple Testing
+# Vườn thú nhân tố và kiểm định đa giả thuyết
 
 ::: callout-note
-In this chapter, we confront the multiple testing problem in empirical asset pricing. We replicate a broad set of published anomalies in the Vietnamese market, apply formal corrections for the number of tests conducted, estimate the proportion of false discoveries, and develop a framework for deciding which factors deserve credence.
+Trong chương này, chúng ta đối mặt với vấn đề kiểm định đa giả thuyết trong định giá tài sản thực nghiệm. Chúng ta tái lập một tập hợp rộng các hiện tượng bất thường (anomaly) đã được công bố trên thị trường Việt Nam, áp dụng các hiệu chỉnh chính thức theo số lượng kiểm định đã thực hiện, ước lượng tỷ lệ các phát hiện sai, và xây dựng một khung phân tích để quyết định nhân tố nào xứng đáng được tin cậy.
 :::
 
-By 2016, academic finance had documented over 300 variables that purportedly predict the cross-section of stock returns. @cochrane2011presidential memorably called this proliferation a "zoo of factors." @harvey2016and cataloged over 300 published factors and argued that the standard significance threshold of $t > 2.0$ was far too low given the sheer number of hypotheses tested, either explicitly or implicitly, across decades of research. Their proposed threshold of $t > 3.0$ (and in some cases $t > 3.78$) would eliminate the majority of published anomalies.
+Đến năm 2016, tài chính học thuật đã ghi nhận hơn 300 biến được cho là dự báo được mặt cắt ngang của lợi nhuận cổ phiếu. @cochrane2011presidential đã gọi sự sinh sôi này bằng một cụm từ đáng nhớ là "vườn thú nhân tố" (zoo of factors). @harvey2016and thống kê hơn 300 nhân tố đã công bố và lập luận rằng ngưỡng ý nghĩa thống kê thông thường $t > 2.0$ là quá thấp so với số lượng giả thuyết đã được kiểm định, dù là công khai hay ngầm định, qua nhiều thập kỷ nghiên cứu. Ngưỡng $t > 3.0$ (và trong một số trường hợp $t > 3.78$) mà họ đề xuất sẽ loại bỏ phần lớn các hiện tượng bất thường đã công bố.
 
-The problem is not merely academic. Every researcher who sorts stocks on a new variable and finds $t > 2$ is implicitly testing a hypothesis that has already been tested hundreds of times with different variables. The probability that *at least one* of 300 independent tests produces $t > 2$ by chance (even when no true effect exists) is essentially 1.0. This is the multiple testing problem, and failing to account for it means that a substantial fraction of the "factor zoo" consists of false discoveries.
+Vấn đề này không chỉ mang tính học thuật. Mỗi nhà nghiên cứu sắp xếp cổ phiếu theo một biến mới và thấy $t > 2$ đều đang ngầm kiểm định một giả thuyết đã được kiểm định hàng trăm lần với các biến khác. Xác suất để *ít nhất một* trong 300 kiểm định độc lập cho ra $t > 2$ do ngẫu nhiên (ngay cả khi không tồn tại hiệu ứng thực) về cơ bản bằng 1,0. Đây chính là vấn đề kiểm định đa giả thuyết, và việc không tính đến nó có nghĩa là một phần đáng kể của "vườn thú nhân tố" là các phát hiện sai.
 
-For Vietnamese equity research, the problem is arguably worse. The cross-section is smaller (600-800 stocks vs. 4,000+ in the U.S.), the time series is shorter (2008- vs. 1963-), and the data are noisier (illiquidity, zero-trading days, accounting irregularities). All of these amplify the risk of both Type I errors (finding something that isn't there) and Type II errors (missing something that is). This chapter provides the statistical tools to navigate this landscape rigorously.
+Đối với nghiên cứu cổ phiếu Việt Nam, vấn đề có lẽ còn nghiêm trọng hơn. Mặt cắt ngang nhỏ hơn (600-800 cổ phiếu so với hơn 4.000 ở Mỹ), chuỗi thời gian ngắn hơn (từ 2008 so với từ 1963), và dữ liệu nhiễu hơn (kém thanh khoản, các ngày không giao dịch, những bất thường về kế toán). Tất cả các yếu tố này làm tăng rủi ro của cả sai lầm loại I (tìm thấy điều không tồn tại) lẫn sai lầm loại II (bỏ sót điều có thật). Chương này cung cấp các công cụ thống kê để xử lý bức tranh đó một cách chặt chẽ.
 
-## The Scale of the Problem {#sec-factor-zoo-scale}
+## Quy mô của vấn đề {#sec-factor-zoo-scale}
 
-### How Many Factors Exist?
+### Có bao nhiêu nhân tố?
 
-@harvey2016and counted over 300 factors published in top journals through 2012. @chen2022open constructed and made publicly available over 300 "clearly significant" anomalies from the U.S. literature. @hou2020replicating attempted to replicate 452 anomalies and found that 64% (with VW returns) failed to achieve $t > 1.96$ in their sample. @jensen2023there took a more optimistic view, finding that most factors replicate in direction if not always in magnitude.
+@harvey2016and đếm được hơn 300 nhân tố được công bố trên các tạp chí hàng đầu đến năm 2012. @chen2022open xây dựng và công bố công khai hơn 300 hiện tượng bất thường "có ý nghĩa rõ ràng" từ các tài liệu của Mỹ. @hou2020replicating cố gắng tái lập 452 hiện tượng bất thường và thấy rằng 64% (với lợi nhuận theo trọng số vốn hóa, VW) không đạt $t > 1.96$ trong mẫu của họ. @jensen2023there có cái nhìn lạc quan hơn, khi thấy rằng phần lớn các nhân tố được tái lập về hướng, dù không phải lúc nào cũng về độ lớn.
 
-The key insight is that the number of factors *tested* far exceeds the number *published*. For every published factor with $t > 2$, there may be dozens of unpublished tests with $t < 2$ that never saw print, which is the classic file drawer problem. The true number of tests conducted collectively by the profession is unknowable, but certainly in the thousands.
+Điểm mấu chốt là số nhân tố được *kiểm định* vượt xa số được *công bố*. Với mỗi nhân tố được công bố có $t > 2$, có thể có hàng chục kiểm định không được công bố với $t < 2$ chưa bao giờ được in ra, đó là vấn đề "ngăn kéo hồ sơ" (file drawer) kinh điển. Tổng số kiểm định mà giới nghiên cứu đã thực hiện là không thể biết, nhưng chắc chắn lên tới hàng nghìn.
+
+Việc đếm các *tín hiệu* ($|t| > 1.96$ theo cả hai định nghĩa) cũng đánh giá thấp vấn đề, vì mỗi tín hiệu có thể được đo lường theo nhiều cách hợp lý. @binsbergen2026factor nhấn mạnh điểm này rất rõ. Họ giữ nguyên các biến dùng để sắp xếp nhưng thay đổi một quy ước tưởng chừng vô hại: thay vì trừ đi lãi suất tín phiếu kho bạc kỳ hạn một tháng, họ trừ đi lợi nhuận của một danh mục trái phiếu chính phủ zero-coupon có kỳ hạn bình quân tương ứng, để một nhân tố được đánh giá so với một kịch bản dòng tiền cố định cùng kỳ hạn thay vì so với tiền mặt. Chạy lại 153 hiện tượng bất thường đã công bố trong các giai đoạn mẫu gốc, họ thấy 66 hiện tượng vẫn vững ($|t| > 1.96$ theo cả hai định nghĩa) trong khi 20 hiện tượng đổi trạng thái, với khoảng 0,30 phát hiện sai trên mỗi phát hiện đúng. Mở rộng bài tập sang 1.395 cách sắp xếp giả định xây dựng từ các tỷ số Compustat, tỷ lệ giữa phát hiện sai và phát hiện đúng tăng lên khoảng 1,0 và ổn định qua các cửa sổ trượt. Ngay cả nhân tố thị trường cũng bị ảnh hưởng: nhân tố tương ứng đã điều chỉnh theo kỳ hạn có tương quan dưới 0,5 với lợi nhuận vượt mức thị trường thông thường, và phần bù cổ phiếu không còn khác không một cách có ý nghĩa thống kê. Cơ chế là sự sụt giảm dài hạn của lãi suất trong bốn thập kỷ, vốn mang lại một khoản lợi bất ngờ mang tính cơ học cho các vị thế kỳ hạn dài của danh mục mua–bán khống. Kết quả của họ không khẳng định định nghĩa truyền thống là sai, mà cho thấy quá trình phát hiện nhạy cảm với một lựa chọn mà hầu hết các bài báo không bao giờ báo cáo, đó chính là "đa vũ trụ" (multiverse) các bậc tự do của nhà nghiên cứu mà các hiệu chỉnh kiểm định đa giả thuyết không nắm bắt được.
 
 ```{python}
 #| label: setup
@@ -85,11 +87,11 @@ print(f"Characteristics: {characteristics.shape}")
 print(f"Available signals: {[c for c in characteristics.columns if c not in ['ticker', 'month_end']]}")
 ```
 
-## Building the Anomaly Zoo {#sec-factor-zoo-zoo}
+## Xây dựng vườn thú các hiện tượng bất thường {#sec-factor-zoo-zoo}
 
-### Signal Definitions
+### Định nghĩa tín hiệu
 
-We construct a comprehensive set of anomaly variables spanning the major categories from the literature. Each signal is lagged appropriately to avoid look-ahead bias (accounting signals use point-in-time alignment; price signals use the prior month's value).
+Chúng ta xây dựng một tập hợp toàn diện các biến bất thường bao quát các nhóm chính trong tài liệu nghiên cứu. Mỗi tín hiệu được lấy độ trễ phù hợp để tránh thiên lệch nhìn trước (các tín hiệu kế toán dùng cách căn chỉnh theo thời điểm công bố thực tế; các tín hiệu giá dùng giá trị của tháng trước).
 
 ```{python}
 #| label: signal-construction
@@ -196,9 +198,9 @@ for cat_name, sigs in [
     print(f"  {cat_name:<15}: {n_valid}/{len(sigs)}")
 ```
 
-### Mass Factor Construction
+### Xây dựng nhân tố hàng loạt
 
-We run the factor construction engine (from the previous chapter) across all valid signals to produce a "zoo" of factor returns:
+Chúng ta chạy bộ máy xây dựng nhân tố (từ chương trước) trên tất cả các tín hiệu hợp lệ để tạo ra một "vườn thú" lợi nhuận nhân tố:
 
 ```{python}
 #| label: mass-construction
@@ -337,7 +339,7 @@ print(f"Factors with |t| > 3.0: {(zoo_df['abs_t'] > 3.0).sum()} "
 ```{python}
 #| label: fig-t-stat-distribution
 #| eval: false
-#| fig-cap: "Distribution of t-statistics across all tested anomalies in the Vietnamese market. Panel A shows the histogram with conventional (|t| > 1.96) and Harvey-Liu-Zhu (|t| > 3.0) thresholds. Panel B ranks anomalies by absolute t-statistic with color-coding by category. A substantial fraction of anomalies with |t| > 2 may be false discoveries given the number of simultaneous tests."
+#| fig-cap: "Phân phối của thống kê t trên tất cả các hiện tượng bất thường được kiểm định trên thị trường Việt Nam. Panel A hiển thị biểu đồ tần suất cùng các ngưỡng thông thường (|t| > 1.96) và ngưỡng Harvey-Liu-Zhu (|t| > 3.0). Panel B xếp hạng các hiện tượng bất thường theo giá trị tuyệt đối của thống kê t, với màu sắc theo nhóm. Một phần đáng kể các hiện tượng bất thường có |t| > 2 có thể là phát hiện sai do số lượng kiểm định đồng thời."
 #| code-summary: "Visualize the distribution of t-statistics across all anomalies"
 fig, axes = plt.subplots(1, 2, figsize=(16, 6))
 
@@ -396,34 +398,34 @@ plt.tight_layout()
 plt.show()
 ```
 
-## The Multiple Testing Problem {#sec-factor-zoo-multiple-testing}
+## Vấn đề kiểm định đa giả thuyết {#sec-factor-zoo-multiple-testing}
 
-### Why Single-Test p-Values Are Misleading
+### Vì sao giá trị p của một kiểm định đơn lẻ gây hiểu lầm
 
-Suppose you test $M$ independent hypotheses, each at significance level $\alpha = 0.05$. Under the global null (no true effects), the expected number of false rejections is $M \times \alpha$. For $M = 50$ anomalies, you expect 2.5 "significant" results by pure chance.
+Giả sử bạn kiểm định $M$ giả thuyết độc lập, mỗi giả thuyết ở mức ý nghĩa $\alpha = 0.05$. Dưới giả thuyết không toàn cục (không có hiệu ứng thực), số lần bác bỏ sai kỳ vọng là $M \times \alpha$. Với $M = 50$ hiện tượng bất thường, bạn kỳ vọng có 2,5 kết quả "có ý nghĩa" hoàn toàn do ngẫu nhiên.
 
-The probability of *at least one* false rejection is:
+Xác suất có *ít nhất một* lần bác bỏ sai là:
 
 $$
 P(\text{at least one false discovery}) = 1 - (1 - \alpha)^M
 $$ {#eq-family-error}
 
-For $M = 50$ and $\alpha = 0.05$, this is $1 - 0.95^{50} = 0.923$. For $M = 300$, it is essentially 1. The single-test p-value is useless for deciding which of many tested factors are genuine.
+Với $M = 50$ và $\alpha = 0.05$, giá trị này là $1 - 0.95^{50} = 0.923$. Với $M = 300$, nó về cơ bản bằng 1. Giá trị p của một kiểm định đơn lẻ vô dụng trong việc quyết định nhân tố nào trong số nhiều nhân tố được kiểm định là thật.
 
-### Two Error Rate Concepts
+### Hai khái niệm về tỷ lệ sai sót
 
-Multiple testing corrections control one of two error rates:
+Các hiệu chỉnh kiểm định đa giả thuyết kiểm soát một trong hai tỷ lệ sai sót:
 
-**Family-Wise Error Rate (FWER).** The probability of making *at least one* Type I error across all tests. This is the most conservative criterion. If FWER = 0.05, you can be 95% confident that *every* rejected null is a true discovery. Methods: @bonferroni1936teoria correction, Holm step-down, @romano2005exact.
+**Tỷ lệ sai sót theo họ giả thuyết (FWER).** Xác suất mắc *ít nhất một* sai lầm loại I trên toàn bộ các kiểm định. Đây là tiêu chí thận trọng nhất. Nếu FWER = 0,05, bạn có thể tin chắc 95% rằng *mọi* giả thuyết không đã bị bác bỏ đều là phát hiện đúng. Các phương pháp: hiệu chỉnh @bonferroni1936teoria, Holm step-down, @romano2005exact.
 
-**False Discovery Rate (FDR).** The expected *proportion* of rejected hypotheses that are false. This is less conservative. If FDR = 0.05, you expect that 5% of your discoveries are false, but the other 95% are real. Methods: @benjamini1995controlling (BH), @storey2003positive.
+**Tỷ lệ phát hiện sai (FDR).** *Tỷ lệ* kỳ vọng các lần bác bỏ sai trong số các giả thuyết bị bác bỏ. Tiêu chí này ít thận trọng hơn. Nếu FDR = 0,05, bạn kỳ vọng 5% số phát hiện của mình là sai, còn 95% còn lại là thật. Các phương pháp: @benjamini1995controlling (BH), @storey2003positive.
 
-In asset pricing, FDR control is generally more appropriate than FWER because we are not trying to guarantee zero false discoveries, we are trying to identify a set of factors where *most* are genuine. A researcher who controls FDR at 5% and discovers 10 factors expects approximately 0.5 of them to be false, which is acceptable for building a factor model.
+Trong định giá tài sản, kiểm soát FDR nhìn chung phù hợp hơn FWER vì chúng ta không cố đảm bảo không có phát hiện sai nào, mà cố xác định một tập các nhân tố trong đó *phần lớn* là thật. Một nhà nghiên cứu kiểm soát FDR ở mức 5% và phát hiện 10 nhân tố sẽ kỳ vọng khoảng 0,5 nhân tố trong số đó là sai, điều này chấp nhận được khi xây dựng một mô hình nhân tố.
 
 ```{python}
 #| label: fig-error-rates
 #| eval: false
-#| fig-cap: "Illustration of FWER and FDR concepts. As the number of tests grows, the probability of at least one false discovery (FWER) approaches 1 rapidly unless the per-test threshold is adjusted. The FDR—the expected proportion of false discoveries among rejections—is a less stringent but more practical criterion for factor selection."
+#| fig-cap: "Minh họa các khái niệm FWER và FDR. Khi số kiểm định tăng lên, xác suất có ít nhất một phát hiện sai (FWER) tiến nhanh về 1 trừ khi ngưỡng cho mỗi kiểm định được điều chỉnh. FDR, tức tỷ lệ kỳ vọng của các phát hiện sai trong số các giả thuyết bị bác bỏ, là một tiêu chí ít nghiêm ngặt hơn nhưng thực tế hơn để lựa chọn nhân tố."
 #| code-summary: "Visualize how error rates scale with number of tests"
 M_range = np.arange(1, 301)
 alpha = 0.05
@@ -456,17 +458,17 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Correction Methods {#sec-factor-zoo-corrections}
+## Các phương pháp hiệu chỉnh {#sec-factor-zoo-corrections}
 
-### Bonferroni Correction (FWER Control)
+### Hiệu chỉnh Bonferroni (kiểm soát FWER)
 
-The simplest and most conservative correction: reject hypothesis $i$ only if its p-value is below $\alpha / M$, where $M$ is the total number of tests:
+Hiệu chỉnh đơn giản nhất và thận trọng nhất: chỉ bác bỏ giả thuyết $i$ nếu giá trị p của nó thấp hơn $\alpha / M$, trong đó $M$ là tổng số kiểm định:
 
 $$
 \text{Reject } H_{0,i} \text{ if } p_i < \frac{\alpha}{M}
 $$ {#eq-bonferroni}
 
-This controls FWER at $\alpha$ regardless of the dependence structure among tests. The cost is severe loss of power: for $M = 50$ tests at $\alpha = 0.05$, the per-test threshold becomes $0.001$, requiring $|t| > 3.29$.
+Phương pháp này kiểm soát FWER ở mức $\alpha$ bất kể cấu trúc phụ thuộc giữa các kiểm định. Cái giá phải trả là mất rất nhiều sức mạnh kiểm định: với $M = 50$ kiểm định ở $\alpha = 0.05$, ngưỡng cho mỗi kiểm định trở thành $0.001$, đòi hỏi $|t| > 3.29$.
 
 ```{python}
 #| label: bonferroni
@@ -493,13 +495,13 @@ else:
     print("  None survive Bonferroni correction")
 ```
 
-### Holm Step-Down Procedure (FWER Control)
+### Thủ tục Holm step-down (kiểm soát FWER)
 
-The Holm procedure is uniformly more powerful than Bonferroni while still controlling FWER. It ranks p-values from smallest to largest and applies progressively less stringent thresholds:
+Thủ tục Holm luôn mạnh hơn Bonferroni mà vẫn kiểm soát FWER. Nó xếp hạng các giá trị p từ nhỏ nhất đến lớn nhất và áp dụng các ngưỡng nới lỏng dần:
 
-1.  Sort p-values: $p_{(1)} \leq p_{(2)} \leq \ldots \leq p_{(M)}$
-2.  For $i = 1, 2, \ldots$, reject $H_{0,(i)}$ if $p_{(i)} < \alpha / (M - i + 1)$
-3.  Stop at the first $i$ where $H_{0,(i)}$ is not rejected
+1.  Sắp xếp các giá trị p: $p_{(1)} \leq p_{(2)} \leq \ldots \leq p_{(M)}$
+2.  Với $i = 1, 2, \ldots$, bác bỏ $H_{0,(i)}$ nếu $p_{(i)} < \alpha / (M - i + 1)$
+3.  Dừng tại $i$ đầu tiên mà $H_{0,(i)}$ không bị bác bỏ
 
 ```{python}
 #| label: holm
@@ -524,15 +526,15 @@ if len(holm_survivors) > 0:
                            'category']].to_string())
 ```
 
-### Benjamini-Hochberg Procedure (FDR Control)
+### Thủ tục Benjamini-Hochberg (kiểm soát FDR)
 
-The @benjamini1995controlling (BH) procedure controls the False Discovery Rate (i.e., the expected proportion of rejections that are false) at level $q$:
+Thủ tục @benjamini1995controlling (BH) kiểm soát tỷ lệ phát hiện sai (tức tỷ lệ kỳ vọng các lần bác bỏ sai trong số các giả thuyết bị bác bỏ) ở mức $q$:
 
-1.  Sort p-values: $p_{(1)} \leq p_{(2)} \leq \ldots \leq p_{(M)}$
-2.  Find the largest $k$ such that $p_{(k)} \leq \frac{k}{M} q$
-3.  Reject all $H_{0,(i)}$ for $i = 1, \ldots, k$
+1.  Sắp xếp các giá trị p: $p_{(1)} \leq p_{(2)} \leq \ldots \leq p_{(M)}$
+2.  Tìm $k$ lớn nhất sao cho $p_{(k)} \leq \frac{k}{M} q$
+3.  Bác bỏ tất cả $H_{0,(i)}$ với $i = 1, \ldots, k$
 
-The BH procedure is valid under independence or positive dependence (PRDS), a condition that is generally satisfied for financial factor tests where factors tend to be positively correlated under the null.
+Thủ tục BH hợp lệ khi các kiểm định độc lập hoặc phụ thuộc dương (PRDS), một điều kiện nhìn chung được thỏa mãn đối với các kiểm định nhân tố tài chính, vì các nhân tố có xu hướng tương quan dương dưới giả thuyết không.
 
 ```{python}
 #| label: bh-fdr
@@ -565,7 +567,7 @@ if len(bh_survivors) > 0:
 ```{python}
 #| label: fig-bh-procedure
 #| eval: false
-#| fig-cap: "Visual representation of the Benjamini-Hochberg procedure. Sorted p-values are compared to the BH threshold line (slope = q/M). All p-values below the line up to the largest crossing point are rejected. The procedure is less conservative than Bonferroni because later thresholds are progressively more lenient."
+#| fig-cap: "Biểu diễn trực quan thủ tục Benjamini-Hochberg. Các giá trị p đã sắp xếp được so với đường ngưỡng BH (độ dốc = q/M). Tất cả các giá trị p nằm dưới đường này, cho đến điểm cắt lớn nhất, đều bị bác bỏ. Thủ tục này ít thận trọng hơn Bonferroni vì các ngưỡng về sau nới lỏng dần."
 #| code-summary: "Plot the BH procedure graphically"
 sorted_pvals = np.sort(p_values)
 k = np.arange(1, M + 1)
@@ -598,16 +600,16 @@ plt.tight_layout()
 plt.show()
 ```
 
-### The Harvey-Liu-Zhu Threshold
+### Ngưỡng Harvey-Liu-Zhu
 
-@harvey2016and take a different approach: rather than applying a formal multiple-testing correction to a specific set of tests, they estimate the hurdle t-statistic that accounts for the *cumulative* number of factors tested by the entire profession. Using a Bayesian framework calibrated to the 316 published factors, they derive:
+@harvey2016and tiếp cận theo cách khác: thay vì áp dụng một hiệu chỉnh kiểm định đa giả thuyết chính thức cho một tập kiểm định cụ thể, họ ước lượng thống kê t ngưỡng có tính đến số lượng nhân tố *tích lũy* đã được toàn giới nghiên cứu kiểm định. Sử dụng khung Bayes được hiệu chỉnh theo 316 nhân tố đã công bố, họ suy ra:
 
--   For a single new factor tested in isolation: $|t| > 2.0$ (conventional)
--   Accounting for 100 prior tests: $|t| > 2.8$
--   Accounting for 316 prior tests: $|t| > 3.0$
--   Accounting for all conceivable tests: $|t| > 3.78$
+-   Với một nhân tố mới được kiểm định riêng lẻ: $|t| > 2.0$ (thông thường)
+-   Tính đến 100 kiểm định trước đó: $|t| > 2.8$
+-   Tính đến 316 kiểm định trước đó: $|t| > 3.0$
+-   Tính đến mọi kiểm định có thể hình dung: $|t| > 3.78$
 
-The logic is that even if *your* study tests only one factor, the fact that hundreds of researchers have tested hundreds of signals before you means the prior probability that your specific signal is a true predictor is low.
+Logic ở đây là ngay cả khi nghiên cứu của *bạn* chỉ kiểm định một nhân tố, việc hàng trăm nhà nghiên cứu đã kiểm định hàng trăm tín hiệu trước bạn có nghĩa là xác suất tiên nghiệm để tín hiệu cụ thể của bạn là một biến dự báo thực sự là thấp.
 
 ```{python}
 #| label: hlz-threshold
@@ -630,12 +632,12 @@ for name, thresh in hlz_thresholds.items():
     print(f"{name:<35} {n_survive:>10} {pct:>10.1f}%")
 ```
 
-## Comparison of Methods {#sec-factor-zoo-comparison}
+## So sánh các phương pháp {#sec-factor-zoo-comparison}
 
 ```{python}
 #| label: fig-correction-comparison
 #| eval: false
-#| fig-cap: "Number of anomalies surviving each multiple testing correction. Bonferroni and Holm (FWER control) are the most conservative, while BH (FDR control) retains more discoveries. The HLZ threshold of |t| > 3.0 falls between the two. The gap between BH and Bonferroni represents anomalies that are likely real (low FDR) but cannot be guaranteed individually (FWER not controlled)."
+#| fig-cap: "Số hiện tượng bất thường vượt qua từng hiệu chỉnh kiểm định đa giả thuyết. Bonferroni và Holm (kiểm soát FWER) thận trọng nhất, trong khi BH (kiểm soát FDR) giữ lại nhiều phát hiện hơn. Ngưỡng HLZ |t| > 3.0 nằm giữa hai nhóm này. Khoảng cách giữa BH và Bonferroni biểu thị các hiện tượng bất thường có khả năng là thật (FDR thấp) nhưng không thể đảm bảo cho từng hiện tượng riêng lẻ (FWER không được kiểm soát)."
 #| code-summary: "Compare all correction methods side by side"
 comparison = {
     'Unadjusted (|t| > 2)': (zoo_df['abs_t'] > 2.0).sum(),
@@ -672,7 +674,7 @@ plt.show()
 ```{python}
 #| label: fig-survival-by-category
 #| eval: false
-#| fig-cap: "Anomaly survival rates by category under the BH procedure (q=0.05). Categories with high survival rates (e.g., momentum, profitability) contain more robust signals. Categories with low survival rates may contain predominantly spurious associations. The total height of each bar shows the number of anomalies tested in that category."
+#| fig-cap: "Tỷ lệ sống sót của các hiện tượng bất thường theo nhóm dưới thủ tục BH (q=0.05). Các nhóm có tỷ lệ sống sót cao (chẳng hạn động lượng, khả năng sinh lời) chứa nhiều tín hiệu vững hơn. Các nhóm có tỷ lệ sống sót thấp có thể chủ yếu chứa các mối liên hệ giả. Tổng chiều cao của mỗi cột cho biết số hiện tượng bất thường được kiểm định trong nhóm đó."
 #| code-summary: "Plot survival rates by anomaly category"
 cat_survival = (
     zoo_df.groupby('category')
@@ -713,17 +715,17 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Estimating the False Discovery Proportion {#sec-factor-zoo-fdp}
+## Ước lượng tỷ lệ phát hiện sai {#sec-factor-zoo-fdp}
 
-### The Storey Approach
+### Cách tiếp cận của Storey
 
-Rather than controlling FDR at a pre-specified level, we can *estimate* the proportion of tested hypotheses that are truly null ($\pi_0$) and the implied false discovery proportion (FDP) at any given threshold. @storey2003positive proposes estimating $\pi_0$ from the distribution of p-values: under the null, p-values are uniformly distributed on $[0, 1]$, so the density of p-values in the "flat" region (away from zero) reveals $\pi_0$.
+Thay vì kiểm soát FDR ở một mức định trước, chúng ta có thể *ước lượng* tỷ lệ các giả thuyết được kiểm định thực sự là giả thuyết không ($\pi_0$) và tỷ lệ phát hiện sai hàm ý (FDP) tại một ngưỡng bất kỳ. @storey2003positive đề xuất ước lượng $\pi_0$ từ phân phối của các giá trị p: dưới giả thuyết không, các giá trị p phân phối đều trên $[0, 1]$, nên mật độ của các giá trị p trong vùng "phẳng" (xa số không) cho biết $\pi_0$.
 
 $$
 \hat{\pi}_0(\lambda) = \frac{\#\{p_i > \lambda\}}{M(1 - \lambda)}
 $$ {#eq-pi0}
 
-for a tuning parameter $\lambda$. The estimated false discovery proportion at threshold $t^*$ is then:
+với một tham số điều chỉnh $\lambda$. Tỷ lệ phát hiện sai ước lượng tại ngưỡng $t^*$ khi đó là:
 
 $$
 \widehat{\text{FDP}}(t^*) = \frac{\hat{\pi}_0 \cdot M \cdot P(|t| > t^* | H_0)}{\#\{|t_i| > t^*\}}
@@ -765,7 +767,7 @@ print(f"Estimated number of true factors: {(1 - pi0_hat) * len(zoo_df):.0f} "
 ```{python}
 #| label: fig-pvalue-distribution
 #| eval: false
-#| fig-cap: "Distribution of p-values across the anomaly zoo. Panel A shows the histogram with the estimated null proportion (π₀ = horizontal line). The excess density near zero represents true discoveries. Panel B shows the estimated π₀ as a function of the tuning parameter λ. The relatively flat region at higher λ values provides the most stable estimate."
+#| fig-cap: "Phân phối của các giá trị p trên toàn bộ vườn thú các hiện tượng bất thường. Panel A hiển thị biểu đồ tần suất cùng tỷ lệ giả thuyết không ước lượng (π₀ = đường ngang). Phần mật độ dôi ra gần số không biểu thị các phát hiện thật. Panel B hiển thị π₀ ước lượng như một hàm của tham số điều chỉnh λ. Vùng tương đối phẳng ở các giá trị λ cao hơn cho ước lượng ổn định nhất."
 #| code-summary: "Plot p-value distribution and pi_0 estimation"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -796,14 +798,14 @@ plt.tight_layout()
 plt.show()
 ```
 
-### FDP Curve
+### Đường cong FDP
 
-Using $\hat{\pi}_0$, we compute the estimated FDP at every possible t-threshold:
+Sử dụng $\hat{\pi}_0$, chúng ta tính FDP ước lượng tại mọi ngưỡng t có thể:
 
 ```{python}
 #| label: fig-fdp-curve
 #| eval: false
-#| fig-cap: "Estimated false discovery proportion as a function of the t-statistic threshold. At the conventional |t| > 2.0, a substantial fraction of discoveries may be false. The FDP drops below 5% around |t| > 3.0, roughly consistent with the Harvey-Liu-Zhu recommendation."
+#| fig-cap: "Tỷ lệ phát hiện sai ước lượng như một hàm của ngưỡng thống kê t. Tại ngưỡng thông thường |t| > 2.0, một phần đáng kể các phát hiện có thể là sai. FDP giảm xuống dưới 5% quanh mức |t| > 3.0, gần khớp với khuyến nghị của Harvey-Liu-Zhu."
 #| code-summary: "Compute and plot the FDP curve"
 t_thresholds = np.arange(1.0, 5.01, 0.1)
 fdp_curve = []
@@ -855,17 +857,17 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Bootstrap-Based Multiple Testing {#sec-factor-zoo-bootstrap}
+## Kiểm định đa giả thuyết dựa trên bootstrap {#sec-factor-zoo-bootstrap}
 
-### The White Reality Check
+### White Reality Check
 
-Analytical corrections assume known distributions. When return distributions are non-normal (heavy tails, skewness, serial correlation), as they are in Vietnam, bootstrap methods provide more reliable inference.
+Các hiệu chỉnh giải tích giả định các phân phối đã biết. Khi phân phối lợi nhuận không chuẩn (đuôi dày, lệch, tự tương quan chuỗi), như trường hợp ở Việt Nam, các phương pháp bootstrap cho suy luận đáng tin cậy hơn.
 
-@white2000reality proposes a bootstrap reality check that accounts for data snooping across multiple strategies. The null hypothesis is that the best strategy has zero expected return. The procedure:
+@white2000reality đề xuất một kiểm tra thực tế bằng bootstrap (reality check) có tính đến việc khai thác dữ liệu (data snooping) trên nhiều chiến lược. Giả thuyết không là chiến lược tốt nhất có lợi nhuận kỳ vọng bằng không. Thủ tục như sau:
 
-1.  Generate $B$ bootstrap samples of the time series (block bootstrap to preserve serial dependence).
-2.  For each bootstrap sample, compute the t-statistic for every factor.
-3.  The p-value for factor $i$ is the proportion of bootstrap samples in which the maximum t-statistic across all factors exceeds the observed t-statistic of factor $i$.
+1.  Tạo $B$ mẫu bootstrap của chuỗi thời gian (bootstrap theo khối để bảo toàn sự phụ thuộc chuỗi).
+2.  Với mỗi mẫu bootstrap, tính thống kê t cho mọi nhân tố.
+3.  Giá trị p của nhân tố $i$ là tỷ lệ các mẫu bootstrap trong đó thống kê t lớn nhất trên tất cả các nhân tố vượt quá thống kê t quan sát được của nhân tố $i$.
 
 ```{python}
 #| label: bootstrap-rc
@@ -972,7 +974,7 @@ print(f"\nFactors surviving (boot p < 0.05): "
 ```{python}
 #| label: fig-bootstrap-distribution
 #| eval: false
-#| fig-cap: "Bootstrap distribution of the maximum t-statistic across all factors under the null hypothesis of no true effects. The vertical lines mark the observed t-statistics of the top anomalies. Only anomalies whose observed t exceeds the 95th percentile of this distribution survive the data-snooping correction."
+#| fig-cap: "Phân phối bootstrap của thống kê t lớn nhất trên tất cả các nhân tố dưới giả thuyết không là không có hiệu ứng thực. Các đường thẳng đứng đánh dấu các thống kê t quan sát được của các hiện tượng bất thường hàng đầu. Chỉ những hiện tượng bất thường có t quan sát được vượt phân vị thứ 95 của phân phối này mới vượt qua hiệu chỉnh khai thác dữ liệu."
 #| code-summary: "Plot the bootstrap null distribution"
 fig, ax = plt.subplots(figsize=(12, 5))
 
@@ -999,9 +1001,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Romano-Wolf Step-Down Bootstrap
+### Bootstrap step-down Romano-Wolf
 
-The @romano2005exact step-down procedure improves on the White Reality Check by iteratively removing rejected hypotheses and re-testing the remaining ones, gaining power at each step:
+Thủ tục step-down của @romano2005exact cải tiến White Reality Check bằng cách lần lượt loại bỏ các giả thuyết đã bị bác bỏ và kiểm định lại các giả thuyết còn lại, nhờ đó tăng sức mạnh ở mỗi bước:
 
 ```{python}
 #| label: romano-wolf
@@ -1099,11 +1101,11 @@ print("\nRejected factors:")
 print(rw_results[rw_results['rejected']][['factor', 't_stat']].to_string())
 ```
 
-## Out-of-Sample Validation {#sec-factor-zoo-oos}
+## Kiểm định ngoài mẫu {#sec-factor-zoo-oos}
 
-### Pre-Publication vs. Post-Publication Decay
+### Suy giảm trước và sau khi công bố
 
-@mclean2016does find that anomaly returns decline by 32% after publication in the U.S. market, suggesting that roughly one-third of the premium was due to mispricing that was corrected by informed trading. For Vietnam, we use a time-series split as a proxy for out-of-sample testing:
+@mclean2016does thấy rằng lợi nhuận của các hiện tượng bất thường giảm 32% sau khi công bố trên thị trường Mỹ, gợi ý rằng khoảng một phần ba phần bù là do định giá sai được điều chỉnh nhờ giao dịch của các nhà đầu tư có thông tin. Với Việt Nam, chúng ta dùng cách chia theo chuỗi thời gian làm phép xấp xỉ cho kiểm định ngoài mẫu:
 
 ```{python}
 #| label: oos-split
@@ -1152,7 +1154,7 @@ print(f"Average OOS decay: {oos_df['decay_pct'].median():.1f}%")
 ```{python}
 #| label: fig-is-oos
 #| eval: false
-#| fig-cap: "In-sample vs out-of-sample factor returns. Panel A is a scatter plot where each point is an anomaly; points above the 45-degree line strengthened out-of-sample, while points below weakened. Panel B shows the average decay rate by category. Factors that replicate out-of-sample with similar magnitude are most credible. A general decay pattern consistent with McLean-Pontiff (2016) is evidence of past mispricing being corrected."
+#| fig-cap: "Lợi nhuận nhân tố trong mẫu so với ngoài mẫu. Panel A là biểu đồ phân tán trong đó mỗi điểm là một hiện tượng bất thường; các điểm nằm trên đường 45 độ mạnh lên ngoài mẫu, còn các điểm nằm dưới thì yếu đi. Panel B hiển thị tốc độ suy giảm trung bình theo nhóm. Các nhân tố được tái lập ngoài mẫu với độ lớn tương tự là đáng tin cậy nhất. Một mẫu hình suy giảm chung phù hợp với McLean-Pontiff (2016) là bằng chứng cho việc định giá sai trong quá khứ đang được điều chỉnh."
 #| code-summary: "Scatter in-sample vs out-of-sample returns"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -1202,11 +1204,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Which Factors Survive? {#sec-factor-zoo-survivors}
+## Những nhân tố nào còn tồn tại? {#sec-factor-zoo-survivors}
 
-### A Multi-Hurdle Filter
+### Bộ lọc đa ngưỡng
 
-We now combine all the evidence, including multiple testing corrections, out-of-sample performance, and economic plausibility, to identify the factors that deserve credence in the Vietnamese market.
+Bây giờ chúng ta kết hợp mọi bằng chứng, gồm các hiệu chỉnh kiểm định đa giả thuyết, hiệu quả ngoài mẫu và tính hợp lý về mặt kinh tế, để xác định những nhân tố xứng đáng được tin cậy trên thị trường Việt Nam.
 
 ```{python}
 #| label: multi-hurdle
@@ -1266,7 +1268,7 @@ if len(robust_factors) > 0:
 ```{python}
 #| label: fig-hurdle-heatmap
 #| eval: false
-#| fig-cap: "Multi-hurdle test results for the top 25 anomalies ranked by in-sample t-statistic. Each column represents a statistical hurdle; green cells indicate passage, red cells indicate failure. Only anomalies that survive multiple independent tests deserve serious consideration. The rightmost column tallies hurdles passed."
+#| fig-cap: "Kết quả kiểm định đa ngưỡng cho 25 hiện tượng bất thường hàng đầu, xếp hạng theo thống kê t trong mẫu. Mỗi cột đại diện cho một ngưỡng thống kê; ô màu xanh lá cho biết vượt qua, ô màu đỏ cho biết không đạt. Chỉ những hiện tượng bất thường vượt qua nhiều kiểm định độc lập mới đáng được xem xét nghiêm túc. Cột ngoài cùng bên phải tổng hợp số ngưỡng đã vượt qua."
 #| code-summary: "Heatmap of multi-hurdle results"
 top25 = final.sort_values('abs_t', ascending=False).head(25)
 
@@ -1295,53 +1297,55 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Implications for Vietnamese Factor Research {#sec-factor-zoo-implications}
+## Hàm ý cho nghiên cứu nhân tố ở Việt Nam {#sec-factor-zoo-implications}
 
-The analysis in this chapter yields several practical implications:
+Phân tích trong chương này đưa ra một số hàm ý thực tiễn:
 
-**The conventional threshold is insufficient.** With $M \approx 50$ anomalies tested simultaneously, requiring only $|t| > 2.0$ virtually guarantees false discoveries. Vietnamese researchers should adopt a minimum threshold of $|t| > 3.0$ for individual factors, consistent with @harvey2016and, and should report BH-adjusted p-values for any study testing multiple signals.
+**Ngưỡng thông thường là không đủ.** Với $M \approx 50$ hiện tượng bất thường được kiểm định đồng thời, chỉ yêu cầu $|t| > 2.0$ gần như chắc chắn dẫn đến các phát hiện sai. Các nhà nghiên cứu Việt Nam nên áp dụng ngưỡng tối thiểu $|t| > 3.0$ cho từng nhân tố, nhất quán với @harvey2016and, và nên báo cáo các giá trị p đã điều chỉnh theo BH cho mọi nghiên cứu kiểm định nhiều tín hiệu.
 
-**The small cross-section amplifies noise.** With 600-800 stocks, quintile portfolios contain only 120-160 stocks each. This creates noisier portfolio returns and wider confidence intervals than in U.S. studies with 4,000+ stocks. Strategies that appear significant in the U.S. at $|t| = 2.5$ may have $|t| < 1.5$ in Vietnam simply due to the smaller sample. This is not evidence that the factor doesn't exist in Vietnam, it is evidence that the Vietnamese data lack power to detect it.
+**Mặt cắt ngang nhỏ làm khuếch đại nhiễu.** Với 600-800 cổ phiếu, các danh mục ngũ phân vị chỉ chứa 120-160 cổ phiếu mỗi danh mục. Điều này tạo ra lợi nhuận danh mục nhiễu hơn và khoảng tin cậy rộng hơn so với các nghiên cứu ở Mỹ với hơn 4.000 cổ phiếu. Những chiến lược có vẻ có ý nghĩa ở Mỹ với $|t| = 2.5$ có thể chỉ có $|t| < 1.5$ ở Việt Nam đơn giản vì mẫu nhỏ hơn. Đây không phải là bằng chứng cho thấy nhân tố không tồn tại ở Việt Nam, mà là bằng chứng cho thấy dữ liệu Việt Nam thiếu sức mạnh để phát hiện ra nó.
 
-**Out-of-sample validation is essential.** The time-series split reveals substantial decay for many anomalies, consistent with @mclean2016does. Factors that survive both in-sample and out-of-sample with consistent sign and magnitude are rare and valuable.
+**Kiểm định ngoài mẫu là thiết yếu.** Cách chia theo chuỗi thời gian cho thấy sự suy giảm đáng kể ở nhiều hiện tượng bất thường, nhất quán với @mclean2016does. Những nhân tố vượt qua cả trong mẫu lẫn ngoài mẫu với dấu và độ lớn nhất quán là hiếm và có giá trị.
 
-**Category matters.** Momentum and profitability signals tend to have the highest replication rates across markets [@fama2012size; @jacobs2020anomalies]. Value and investment signals are more country-specific [@griffin2002fama]. Liquidity signals are likely to be strongest in emerging markets like Vietnam, where trading frictions are largest.
+**Nhóm tín hiệu đóng vai trò quan trọng.** Các tín hiệu động lượng và khả năng sinh lời có xu hướng có tỷ lệ tái lập cao nhất giữa các thị trường [@fama2012size; @jacobs2020anomalies]. Các tín hiệu giá trị và đầu tư mang tính đặc thù theo quốc gia nhiều hơn [@griffin2002fama]. Các tín hiệu thanh khoản có khả năng mạnh nhất ở các thị trường mới nổi như Việt Nam, nơi các ma sát giao dịch lớn nhất.
 
-**Report the full battery.** Any study that presents a new factor for the Vietnamese market should report: (i) the raw t-statistic, (ii) the BH-adjusted p-value given the number of tests in the study, (iii) out-of-sample performance in a held-out period, and (iv) sensitivity to construction choices (from the previous chapter). This reporting standard would dramatically improve the credibility of Vietnamese factor research.
+**Đường đi của lãi suất là một phần của mẫu.** Giai đoạn mẫu của Việt Nam bị chi phối bởi một biến động một chiều của lãi suất: lãi suất chính sách đạt đỉnh gần 14% năm 2011 và giảm xuống khoảng 4,5% vào năm 2023, và lợi suất trái phiếu chính phủ cũng giảm theo. @binsbergen2026factor chỉ ra rằng ở Mỹ, một sự sụt giảm dài hạn tương tự đủ để phân loại lại một tỷ lệ đáng kể các hiện tượng bất thường khi lợi nhuận vượt mức được đo so với một danh mục trái phiếu có kỳ hạn bình quân tương ứng thay vì lãi suất ngắn hạn. Vì sự sụt giảm ở Việt Nam diễn ra trong một khoảng thời gian ngắn hơn nhiều, bất kỳ danh mục mua–bán khống nào có các vị thế khác nhau về kỳ hạn (giá trị so với tăng trưởng, tỷ suất cổ tức cao so với thấp, đòn bẩy cao so với thấp) có thể đang nắm bắt sự định giá lại đó thay vì một phần bù rủi ro mặt cắt ngang. Tối thiểu, các nhà nghiên cứu nên báo cáo tỷ suất cổ tức hoặc chênh lệch kỳ hạn giữa các vị thế mua và bán, và thận trọng với những nhân tố có phần bù tập trung trong giai đoạn lãi suất sụt giảm 2011-2015.
 
-## Summary {#sec-factor-zoo-summary}
+**Báo cáo đầy đủ bộ chỉ tiêu.** Mọi nghiên cứu đưa ra một nhân tố mới cho thị trường Việt Nam nên báo cáo: (i) thống kê t thô, (ii) giá trị p đã điều chỉnh theo BH với số kiểm định trong nghiên cứu, (iii) hiệu quả ngoài mẫu trong một giai đoạn được giữ lại, và (iv) độ nhạy với các lựa chọn xây dựng (từ chương trước). Chuẩn báo cáo này sẽ cải thiện đáng kể độ tin cậy của nghiên cứu nhân tố ở Việt Nam.
 
-| Method | Controls | Threshold (approx.) | Surviving | Philosophy |
+## Tóm tắt {#sec-factor-zoo-summary}
+
+| Phương pháp | Kiểm soát | Ngưỡng (xấp xỉ) | Số còn lại | Triết lý |
 |---------------|---------------|---------------|---------------|---------------|
-| Unadjusted | Single test | \|t\| \> 2.0 | Many | No correction |
-| Bonferroni | FWER | \|t\| \> 3.3--4.0 | Few | Zero false positives |
-| Holm | FWER | Stepwise | Few | Slightly less conservative |
-| BH | FDR at q | Adaptive | Moderate | Tolerates some false positives |
-| HLZ | Profession-wide | \|t\| \> 3.0--3.78 | Moderate | Prior over all tested factors |
-| White/RW Bootstrap | FWER (data-driven) | Bootstrap CV | Few | Accounts for non-normality |
-| Storey FDP | FDP estimate | Continuous | Diagnostic | Estimates true null proportion |
-| Multi-hurdle | Combined | Multiple tests | Most robust | Requires convergent evidence |
+| Không điều chỉnh | Kiểm định đơn | \|t\| \> 2.0 | Nhiều | Không hiệu chỉnh |
+| Bonferroni | FWER | \|t\| \> 3.3--4.0 | Ít | Không có dương tính giả |
+| Holm | FWER | Theo từng bước | Ít | Ít thận trọng hơn một chút |
+| BH | FDR ở mức q | Thích ứng | Trung bình | Chấp nhận một số dương tính giả |
+| HLZ | Toàn giới nghiên cứu | \|t\| \> 3.0--3.78 | Trung bình | Phân phối tiên nghiệm trên mọi nhân tố đã kiểm định |
+| Bootstrap White/RW | FWER (theo dữ liệu) | Giá trị tới hạn bootstrap | Ít | Tính đến phân phối không chuẩn |
+| Storey FDP | Ước lượng FDP | Liên tục | Chẩn đoán | Ước lượng tỷ lệ giả thuyết không thực sự đúng |
+| Đa ngưỡng | Kết hợp | Nhiều kiểm định | Vững nhất | Đòi hỏi bằng chứng hội tụ |
 
-: Summary of multiple testing methods and their properties. {#tbl-summary}
+: Tóm tắt các phương pháp kiểm định đa giả thuyết và đặc tính của chúng. {#tbl-summary}
 
-The factor zoo is not a uniquely American phenomenon. The temptation to test many signals and report the best-performing ones exists in every market. In Vietnam, where the data are shorter, noisier, and the academic community is growing rapidly, the risk of false discovery is high. The tools developed in this chapter, including BH adjustment, bootstrap reality checks, Storey's $\pi_0$ estimation, out-of-sample splits, and the multi-hurdle filter, provide a principled framework for separating genuine factors from statistical noise.
+Vườn thú nhân tố không phải là hiện tượng riêng của nước Mỹ. Cám dỗ kiểm định nhiều tín hiệu và chỉ báo cáo những tín hiệu cho kết quả tốt nhất tồn tại ở mọi thị trường. Ở Việt Nam, nơi dữ liệu ngắn hơn, nhiễu hơn và cộng đồng học thuật đang phát triển nhanh, rủi ro phát hiện sai là cao. Các công cụ được phát triển trong chương này, gồm điều chỉnh BH, kiểm tra thực tế bằng bootstrap, ước lượng $\pi_0$ của Storey, cách chia ngoài mẫu và bộ lọc đa ngưỡng, cung cấp một khung nguyên tắc để phân tách các nhân tố thực sự khỏi nhiễu thống kê.
 
-The honest conclusion is likely to be humbling: of the dozens of anomalies documented in developed markets, only a handful survive rigorous multiple testing in Vietnamese data. Those survivors (probably concentrated in momentum, profitability, and liquidity) form the foundation for credible asset pricing research in this market.
+Kết luận trung thực có lẽ sẽ khiêm tốn: trong số hàng chục hiện tượng bất thường được ghi nhận ở các thị trường phát triển, chỉ một số ít vượt qua kiểm định đa giả thuyết nghiêm ngặt trên dữ liệu Việt Nam. Những nhân tố sống sót đó (có thể tập trung ở động lượng, khả năng sinh lời và thanh khoản) tạo nền tảng cho nghiên cứu định giá tài sản đáng tin cậy ở thị trường này.
 
-<!-- ## Exercises {#sec-factor-zoo-exercises}
+<!-- ## Bài tập {#sec-factor-zoo-exercises}
 
-1.  **Bayesian approach.** Implement the @harvey2021lucky Bayesian framework for distinguishing lucky factors from genuine ones. Assign a prior probability $\pi$ that any given factor is a true predictor, and compute the posterior probability of being genuine given its t-statistic and the number of tests. How does varying $\pi$ affect which factors survive?
+1.  **Cách tiếp cận Bayes.** Triển khai khung Bayes của @harvey2021lucky để phân biệt các nhân tố may mắn với các nhân tố thực sự. Gán một xác suất tiên nghiệm $\pi$ rằng một nhân tố bất kỳ là biến dự báo thực sự, và tính xác suất hậu nghiệm để nó là nhân tố thật, dựa trên thống kê t và số kiểm định. Việc thay đổi $\pi$ ảnh hưởng thế nào đến việc nhân tố nào còn tồn tại?
 
-2.  **Dependence-adjusted BH.** The standard BH procedure assumes independent (or PRDS) test statistics. Estimate the correlation structure of factor returns and implement the Benjamini-Yekutieli (BY) procedure, which controls FDR under arbitrary dependence. How many fewer factors survive compared to BH?
+2.  **BH điều chỉnh theo phụ thuộc.** Thủ tục BH tiêu chuẩn giả định các thống kê kiểm định độc lập (hoặc PRDS). Hãy ước lượng cấu trúc tương quan của lợi nhuận nhân tố và triển khai thủ tục Benjamini-Yekutieli (BY), vốn kiểm soát FDR dưới sự phụ thuộc bất kỳ. So với BH, số nhân tố còn tồn tại ít hơn bao nhiêu?
 
-3.  **Publication bias simulation.** Simulate a researcher who tests 100 random signals on Vietnamese data, publishes only those with $|t| > 2$, and reports the average published t-statistic. Repeat 1,000 times. What is the distribution of the "published" t-statistic? How does it compare to the true effect size (which is zero by construction)?
+3.  **Mô phỏng thiên lệch công bố.** Mô phỏng một nhà nghiên cứu kiểm định 100 tín hiệu ngẫu nhiên trên dữ liệu Việt Nam, chỉ công bố những tín hiệu có $|t| > 2$, và báo cáo thống kê t trung bình của các tín hiệu được công bố. Lặp lại 1.000 lần. Phân phối của thống kê t "được công bố" như thế nào? So sánh với độ lớn hiệu ứng thực (bằng không theo cách xây dựng) ra sao?
 
-4.  **Replication across exchanges.** Test whether factors that are significant on HOSE also replicate on HNX. If the same factor is significant on both exchanges independently, the probability of a false discovery is substantially lower (because the two samples are partially independent).
+4.  **Tái lập giữa các sàn giao dịch.** Kiểm định xem các nhân tố có ý nghĩa trên HOSE có được tái lập trên HNX hay không. Nếu cùng một nhân tố có ý nghĩa một cách độc lập trên cả hai sàn, xác suất phát hiện sai thấp hơn đáng kể (vì hai mẫu độc lập một phần).
 
-5.  **Transaction cost hurdle.** For each factor that survives the multi-hurdle filter, compute the minimum round-trip trading cost that would eliminate the net-of-cost premium. Factors whose breakeven costs are below realistic Vietnamese transaction costs are not implementable, regardless of their statistical significance.
+5.  **Ngưỡng chi phí giao dịch.** Với mỗi nhân tố vượt qua bộ lọc đa ngưỡng, hãy tính chi phí giao dịch khứ hồi tối thiểu sẽ triệt tiêu phần bù sau chi phí. Những nhân tố có chi phí hòa vốn thấp hơn chi phí giao dịch thực tế ở Việt Nam là không thể triển khai, bất kể ý nghĩa thống kê của chúng.
 
-6.  **Machine learning feature importance.** Use a random forest or gradient-boosted tree model to predict next-month returns from all available signals simultaneously. Extract feature importance measures. Compare the machine learning ranking of signals to the univariate t-statistic ranking. Do they agree?
+6.  **Tầm quan trọng của đặc trưng trong học máy.** Sử dụng mô hình rừng ngẫu nhiên (random forest) hoặc cây tăng cường độ dốc (gradient-boosted tree) để dự báo lợi nhuận tháng tiếp theo từ tất cả các tín hiệu có sẵn đồng thời. Trích xuất các thước đo tầm quan trọng của đặc trưng. So sánh xếp hạng tín hiệu theo học máy với xếp hạng theo thống kê t đơn biến. Chúng có nhất quán không?
 
-7.  **International replication.** Select the top 10 factors from the Vietnamese zoo. Test whether the same factors are significant in Thailand (SET), Indonesia (IDX), or the Philippines (PSE) using equivalent data. Factors that replicate across multiple ASEAN markets are less likely to be country-specific data artifacts.
+7.  **Tái lập quốc tế.** Chọn 10 nhân tố hàng đầu từ vườn thú nhân tố của Việt Nam. Kiểm định xem cùng các nhân tố đó có ý nghĩa ở Thái Lan (SET), Indonesia (IDX) hoặc Philippines (PSE) hay không, sử dụng dữ liệu tương đương. Những nhân tố được tái lập qua nhiều thị trường ASEAN ít có khả năng là kết quả giả tạo do dữ liệu đặc thù theo quốc gia.
 
-8.  **Rolling FDP monitoring.** Implement a rolling-window version of the Storey $\pi_0$ estimator. Compute $\hat{\pi}_0$ for each 60-month window. Does the proportion of true factors change over time? An increasing $\pi_0$ (more true nulls) might indicate that anomalies are being arbitraged away as the Vietnamese market matures. -->
+8.  **Giám sát FDP theo cửa sổ trượt.** Triển khai phiên bản cửa sổ trượt của ước lượng $\pi_0$ của Storey. Tính $\hat{\pi}_0$ cho mỗi cửa sổ 60 tháng. Tỷ lệ các nhân tố thực có thay đổi theo thời gian không? Một $\pi_0$ tăng dần (nhiều giả thuyết không thực sự đúng hơn) có thể cho thấy các hiện tượng bất thường đang bị kinh doanh chênh lệch giá triệt tiêu dần khi thị trường Việt Nam trưởng thành. -->

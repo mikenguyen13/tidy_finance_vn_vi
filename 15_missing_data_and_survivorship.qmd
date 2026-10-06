@@ -1,37 +1,37 @@
-# Missing Data and Survivorship Bias
+# Dữ liệu bị thiếu và thiên kiến sống sót
 
 ::: callout-note
-In this chapter, we document the patterns of missing data, survivorship bias, and delisting bias in Vietnamese equity markets, develop diagnostic tools to detect these problems, and implement correction methods that yield more reliable empirical results.
+Trong chương này, chúng ta ghi nhận các dạng dữ liệu bị thiếu, thiên kiến sống sót và thiên kiến hủy niêm yết trên thị trường chứng khoán Việt Nam, xây dựng các công cụ chẩn đoán để phát hiện những vấn đề này, và triển khai các phương pháp hiệu chỉnh nhằm cho ra kết quả thực nghiệm đáng tin cậy hơn.
 :::
 
-Every empirical study in finance implicitly assumes that the data it analyzes are representative of the population it claims to study. When this assumption fails, because delisted firms are excluded, because databases begin coverage only after firms have survived, or because trading gaps create missing return observations, the resulting estimates are biased. In the U.S. context, @shumway1997delisting showed that ignoring delisting returns biases average returns upward by approximately 1% per year for NYSE stocks and substantially more for Nasdaq stocks, with severe consequences for anomaly-based strategies that overweight small, distressed firms.
+Mọi nghiên cứu thực nghiệm trong tài chính đều ngầm giả định rằng dữ liệu được phân tích đại diện cho tổng thể mà nghiên cứu tuyên bố khảo sát. Khi giả định này không còn đúng, vì các doanh nghiệp bị hủy niêm yết bị loại bỏ, vì cơ sở dữ liệu chỉ bắt đầu bao phủ sau khi doanh nghiệp đã sống sót, hoặc vì các khoảng trống giao dịch tạo ra các quan sát lợi nhuận bị thiếu, thì các ước lượng thu được sẽ bị chệch. Trong bối cảnh Hoa Kỳ, @shumway1997delisting đã chỉ ra rằng việc bỏ qua lợi nhuận hủy niêm yết làm chệch lợi nhuận trung bình lên khoảng 1% mỗi năm đối với cổ phiếu NYSE và cao hơn đáng kể đối với cổ phiếu Nasdaq, với những hệ quả nghiêm trọng cho các chiến lược dựa trên hiện tượng bất thường vốn đặt tỷ trọng lớn vào các doanh nghiệp nhỏ, gặp khó khăn tài chính.
 
-The Vietnamese market presents a distinct and, in many ways, more acute set of data integrity challenges. The market is young. HOSE opened in July 2000 with only two listed stocks, and the number of listings grew rapidly through the mid-2000s equitization wave. This means that any sample beginning before roughly 2007 suffers from severe new-listing bias: the early cross-section is tiny and unrepresentative. Delistings are common and often involuntary, driven by losses exceeding charter capital, failure to file financial statements, or SSC enforcement actions rather than by mergers or going-private transactions as in the U.S. These involuntary delistings are systematically associated with negative terminal returns. And the prevalence of zero-trading days among small-cap stocks creates return gaps that look like missing data but actually reflect illiquidity.
+Thị trường Việt Nam đặt ra một loạt thách thức về tính toàn vẹn dữ liệu rất đặc thù và, theo nhiều khía cạnh, gay gắt hơn. Thị trường còn non trẻ. HOSE khai trương vào tháng 7 năm 2000 chỉ với hai cổ phiếu niêm yết, và số lượng niêm yết tăng nhanh qua làn sóng cổ phần hóa giữa những năm 2000. Điều này có nghĩa là bất kỳ mẫu nào bắt đầu trước khoảng năm 2007 đều chịu thiên kiến niêm yết mới nghiêm trọng: mặt cắt ngang ban đầu rất nhỏ và không mang tính đại diện. Việc hủy niêm yết diễn ra phổ biến và thường là không tự nguyện, do thua lỗ vượt quá vốn điều lệ, không nộp báo cáo tài chính, hoặc do các biện pháp cưỡng chế của UBCKNN thay vì do sáp nhập hay chuyển sang sở hữu tư nhân như ở Hoa Kỳ. Những vụ hủy niêm yết không tự nguyện này gắn với lợi nhuận cuối kỳ âm một cách có hệ thống. Và tình trạng phổ biến của các ngày không giao dịch ở nhóm cổ phiếu vốn hóa nhỏ tạo ra các khoảng trống lợi nhuận trông giống dữ liệu bị thiếu nhưng thực chất phản ánh tính kém thanh khoản.
 
-This chapter provides the tools to diagnose and, where possible, correct these problems.
+Chương này cung cấp các công cụ để chẩn đoán và, khi có thể, hiệu chỉnh những vấn đề này.
 
-## Taxonomy of Data Problems {#sec-missing-taxonomy}
+## Phân loại các vấn đề dữ liệu {#sec-missing-taxonomy}
 
-Missing data in financial research is not monolithic. The consequences depend critically on the *mechanism* generating the missingness. @rubin1976inference and @little2019statistical classify missing data into three types:
+Dữ liệu bị thiếu trong nghiên cứu tài chính không phải là một khối đồng nhất. Hệ quả phụ thuộc rất lớn vào *cơ chế* tạo ra sự thiếu hụt. @rubin1976inference và @little2019statistical phân loại dữ liệu bị thiếu thành ba loại:
 
-1.  **Missing Completely at Random (MCAR).** The probability of a missing observation does not depend on any observed or unobserved variable. Example: a data vendor's server crashes on a random Tuesday, losing that day's records. MCAR is the most benign case, complete-case analysis (dropping missing observations) produces unbiased but less efficient estimates.
-2.  **Missing at Random (MAR).** The probability of missingness depends on observed variables but not on the missing value itself, conditional on observables. Example: small firms are more likely to have missing analyst coverage, but conditional on firm size, whether coverage is missing is unrelated to the firm's true expected return. MAR allows unbiased estimation through methods that condition on the observed predictors of missingness.
-3.  **Missing Not at Random (MNAR).** The probability of missingness depends on the missing value itself. Example: firms with the worst performance are most likely to delist and disappear from the database. MNAR is a pathological case and, unfortunately, the most common in financial data. Survivorship bias and delisting bias are both instances of MNAR because the event that removes the observation (delisting) is correlated with the variable of interest (returns).
+1.  **Thiếu hoàn toàn ngẫu nhiên (MCAR).** Xác suất một quan sát bị thiếu không phụ thuộc vào bất kỳ biến quan sát được hay không quan sát được nào. Ví dụ: máy chủ của nhà cung cấp dữ liệu gặp sự cố vào một ngày thứ Ba ngẫu nhiên, làm mất các bản ghi của ngày đó. MCAR là trường hợp lành tính nhất, phân tích trên các quan sát đầy đủ (loại bỏ các quan sát bị thiếu) cho ước lượng không chệch nhưng kém hiệu quả hơn.
+2.  **Thiếu ngẫu nhiên (MAR).** Xác suất thiếu phụ thuộc vào các biến quan sát được nhưng không phụ thuộc vào chính giá trị bị thiếu, khi đã điều kiện hóa theo các biến quan sát được. Ví dụ: các doanh nghiệp nhỏ có nhiều khả năng thiếu sự theo dõi của các nhà phân tích hơn, nhưng khi điều kiện hóa theo quy mô doanh nghiệp, việc thiếu sự theo dõi hay không không liên quan đến lợi nhuận kỳ vọng thực sự của doanh nghiệp. MAR cho phép ước lượng không chệch thông qua các phương pháp điều kiện hóa theo các biến dự báo quan sát được của sự thiếu hụt.
+3.  **Thiếu không ngẫu nhiên (MNAR).** Xác suất thiếu phụ thuộc vào chính giá trị bị thiếu. Ví dụ: các doanh nghiệp có kết quả kém nhất có nhiều khả năng bị hủy niêm yết và biến mất khỏi cơ sở dữ liệu nhất. MNAR là một trường hợp bệnh lý và, đáng tiếc, là phổ biến nhất trong dữ liệu tài chính. Thiên kiến sống sót và thiên kiến hủy niêm yết đều là các trường hợp của MNAR vì sự kiện loại bỏ quan sát (hủy niêm yết) tương quan với biến quan tâm (lợi nhuận).
 
-In the Vietnamese context, we encounter all three types, often simultaneously (@tbl-missing-taxonomy).
+Trong bối cảnh Việt Nam, chúng ta gặp cả ba loại, thường là đồng thời (@tbl-missing-taxonomy).
 
-| Data Problem | Missingness Type | Mechanism in Vietnam |
+| Vấn đề dữ liệu | Loại thiếu hụt | Cơ chế ở Việt Nam |
 |------------------------|------------------------|------------------------|
-| Zero-trading days | MAR/MNAR | Small/illiquid stocks; correlated with returns |
-| Price limit hits | MNAR | True return truncated at limit; observed return censored |
-| Delisting | MNAR | Worst-performing firms exit; returns disappear |
-| Late listing coverage | Selection bias | Database begins after firm survives initial period |
-| Exchange transfers | Administrative | HOSE→HNX or UPCoM transfers break ticker continuity |
-| Suspended trading | MNAR | Suspension precedes negative events; returns missing |
+| Ngày không giao dịch | MAR/MNAR | Cổ phiếu nhỏ/kém thanh khoản; tương quan với lợi nhuận |
+| Chạm biên độ giá | MNAR | Lợi nhuận thực bị cắt tại biên độ; lợi nhuận quan sát bị kiểm duyệt |
+| Hủy niêm yết | MNAR | Các doanh nghiệp kém nhất rời thị trường; lợi nhuận biến mất |
+| Bao phủ niêm yết muộn | Thiên kiến chọn mẫu | Cơ sở dữ liệu bắt đầu sau khi doanh nghiệp đã sống sót qua giai đoạn đầu |
+| Chuyển sàn | Hành chính | Chuyển HOSE→HNX hoặc UPCoM làm gián đoạn tính liên tục của mã chứng khoán |
+| Đình chỉ giao dịch | MNAR | Đình chỉ đi trước các sự kiện tiêu cực; lợi nhuận bị thiếu |
 
-: Taxonomy of missing data in Vietnamese equity databases {#tbl-missing-taxonomy}
+: Phân loại dữ liệu bị thiếu trong các cơ sở dữ liệu chứng khoán Việt Nam {#tbl-missing-taxonomy}
 
-## Data Construction {#sec-missing-data}
+## Xây dựng dữ liệu {#sec-missing-data}
 
 ```{python}
 #| label: setup
@@ -108,16 +108,16 @@ print(f"Daily observations: {daily_returns.shape[0]:,}")
 print(f"Monthly observations: {monthly_returns.shape[0]:,}")
 ```
 
-## Listing Dynamics in Vietnam {#sec-missing-listing-dynamics}
+## Diễn biến niêm yết ở Việt Nam {#sec-missing-listing-dynamics}
 
-### The Growth of the Vietnamese Market
+### Sự tăng trưởng của thị trường Việt Nam
 
-The Vietnamese stock market's short history creates a distinctive pattern: the investable universe has grown from near-zero to over 1,500 listed firms in approximately two decades. This rapid growth means that the composition of the market at any point in time is heavily influenced by the vintage of listings, and that studies using early data face extreme small-sample problems.
+Lịch sử ngắn của thị trường chứng khoán Việt Nam tạo ra một dạng thức đặc trưng: tập hợp đầu tư tăng từ gần bằng không lên hơn 1,500 doanh nghiệp niêm yết trong khoảng hai thập kỷ. Sự tăng trưởng nhanh này có nghĩa là cấu thành của thị trường tại bất kỳ thời điểm nào cũng chịu ảnh hưởng nặng nề của thời điểm niêm yết, và các nghiên cứu dùng dữ liệu ban đầu phải đối mặt với các vấn đề mẫu nhỏ cực đoan.
 
 ```{python}
 #| label: fig-listing-growth
 #| eval: false
-#| fig-cap: "Evolution of the Vietnamese listed equity universe. Panel A shows the number of active listings on each exchange over time. Panel B shows the annual flow of new listings and delistings. The equitization wave of 2006--2009 produced a surge of IPOs, many of which subsequently delisted during the market downturn."
+#| fig-cap: "Diễn biến của tập hợp cổ phiếu niêm yết Việt Nam. Panel A cho thấy số lượng niêm yết đang hoạt động trên mỗi sàn theo thời gian. Panel B cho thấy dòng niêm yết mới và hủy niêm yết hằng năm. Làn sóng cổ phần hóa giai đoạn 2006--2009 tạo ra một đợt IPO dồn dập, nhiều doanh nghiệp trong số đó sau đó bị hủy niêm yết trong giai đoạn thị trường suy thoái."
 #| code-summary: "Plot the growth of the Vietnamese listed universe"
 listing_history['listing_date'] = pd.to_datetime(listing_history['listing_date'])
 listing_history['delisting_date'] = pd.to_datetime(listing_history['delisting_date'])
@@ -188,9 +188,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Delisting Reasons
+### Các lý do hủy niêm yết
 
-Vietnamese delistings are not homogeneous. The SSC mandates delisting for specific regulatory violations, but firms may also voluntarily delist, merge, or transfer between exchanges. The reason for delisting matters because it determines the likely terminal return.
+Các vụ hủy niêm yết ở Việt Nam không đồng nhất. UBCKNN bắt buộc hủy niêm yết đối với các vi phạm quy định cụ thể, nhưng doanh nghiệp cũng có thể tự nguyện hủy niêm yết, sáp nhập hoặc chuyển giữa các sàn. Lý do hủy niêm yết quan trọng vì nó quyết định lợi nhuận cuối kỳ có khả năng xảy ra.
 
 ```{python}
 #| label: delisting-reasons
@@ -234,7 +234,7 @@ print(reason_counts.round(1).to_string())
 ```{python}
 #| label: fig-delisting-reasons
 #| eval: false
-#| fig-cap: "Distribution of delisting reasons for Vietnamese listed firms. Unlike the U.S. market where M&A-driven delistings dominate, Vietnamese delistings are disproportionately involuntary, driven by financial distress and regulatory enforcement. This composition makes delisting bias more severe because involuntary delistings are associated with large negative terminal returns."
+#| fig-cap: "Phân phối các lý do hủy niêm yết của các doanh nghiệp niêm yết Việt Nam. Khác với thị trường Hoa Kỳ nơi các vụ hủy niêm yết do M&A chiếm ưu thế, các vụ hủy niêm yết ở Việt Nam chủ yếu là không tự nguyện, do khó khăn tài chính và việc thực thi quy định. Cơ cấu này làm thiên kiến hủy niêm yết nghiêm trọng hơn vì các vụ hủy niêm yết không tự nguyện gắn với lợi nhuận cuối kỳ âm lớn."
 #| code-summary: "Visualize delisting reasons"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -262,14 +262,14 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Firm Characteristics at Delisting
+### Đặc điểm doanh nghiệp tại thời điểm hủy niêm yết
 
-Do delisted firms differ systematically from survivors? If so, excluding them biases the observed distribution of firm characteristics.
+Các doanh nghiệp bị hủy niêm yết có khác biệt một cách có hệ thống so với các doanh nghiệp sống sót hay không? Nếu có, việc loại bỏ chúng làm chệch phân phối quan sát được của các đặc điểm doanh nghiệp.
 
 ```{python}
 #| label: fig-delisting-characteristics
 #| eval: false
-#| fig-cap: "Firm characteristics in the year before delisting versus all active firms. Delisted firms are systematically smaller, less profitable, more leveraged, and more illiquid. These differences confirm that delisting is not random (MCAR) but is correlated with the variables used in empirical asset pricing tests."
+#| fig-cap: "Đặc điểm doanh nghiệp trong năm trước khi hủy niêm yết so với tất cả các doanh nghiệp đang hoạt động. Các doanh nghiệp bị hủy niêm yết nhỏ hơn, kém sinh lời hơn, có đòn bẩy cao hơn và kém thanh khoản hơn một cách có hệ thống. Những khác biệt này xác nhận rằng việc hủy niêm yết không ngẫu nhiên (MCAR) mà tương quan với các biến được dùng trong các kiểm định định giá tài sản thực nghiệm."
 #| code-summary: "Compare characteristics of delisted vs surviving firms"
 # Get fundamentals in the last available year before delisting
 last_year_delisted = (
@@ -362,13 +362,13 @@ for col in ['log_assets', 'roa', 'leverage']:
           f"Active = {a.mean():.3f}, t = {t:.2f}, p = {p:.4f}")
 ```
 
-## Survivorship Bias {#sec-missing-survivorship}
+## Thiên kiến sống sót {#sec-missing-survivorship}
 
-### Definition and Magnitude
+### Định nghĩa và mức độ
 
-Survivorship bias arises when a study uses only firms that are currently listed (or listed at the end of the sample), excluding firms that delisted during the sample period. Because delisted firms disproportionately experienced negative returns before delisting, their exclusion inflates average returns, understates risk, and distorts cross-sectional patterns.
+Thiên kiến sống sót phát sinh khi một nghiên cứu chỉ sử dụng các doanh nghiệp hiện đang niêm yết (hoặc đang niêm yết vào cuối mẫu), loại trừ các doanh nghiệp đã bị hủy niêm yết trong giai đoạn mẫu. Vì các doanh nghiệp bị hủy niêm yết trước đó chịu lợi nhuận âm một cách không cân xứng, việc loại bỏ chúng làm thổi phồng lợi nhuận trung bình, đánh giá thấp rủi ro và bóp méo các dạng thức mặt cắt ngang.
 
-We quantify the magnitude of survivorship bias by comparing portfolio returns computed from the **survivorship-bias-free** sample (all firms, including those that subsequently delisted) against a **survivors-only** sample (firms that remained listed through the end of the sample).
+Chúng ta định lượng mức độ của thiên kiến sống sót bằng cách so sánh lợi nhuận danh mục tính từ mẫu **không có thiên kiến sống sót** (mọi doanh nghiệp, kể cả những doanh nghiệp sau đó bị hủy niêm yết) với mẫu **chỉ gồm doanh nghiệp sống sót** (các doanh nghiệp vẫn niêm yết đến cuối mẫu).
 
 ```{python}
 #| label: survivorship-magnitude
@@ -436,7 +436,7 @@ print(f"  VW: {bias_vw['bias'].mean() * 12:.4f} "
 ```{python}
 #| label: fig-survivorship-bias
 #| eval: false
-#| fig-cap: "Cumulative returns of the full sample versus survivors-only portfolio. Panel A shows equal-weighted portfolios, where the bias is larger because delisted (and pre-delisting poor-performing) small firms receive equal weight. Panel B shows value-weighted portfolios, where the bias is smaller because delisted firms are typically small and contribute little to VW returns."
+#| fig-cap: "Lợi nhuận tích lũy của mẫu đầy đủ so với danh mục chỉ gồm doanh nghiệp sống sót. Panel A cho thấy các danh mục trọng số bằng nhau, nơi thiên kiến lớn hơn vì các doanh nghiệp nhỏ bị hủy niêm yết (và hoạt động kém trước khi hủy niêm yết) nhận trọng số bằng nhau. Panel B cho thấy các danh mục trọng số theo vốn hóa, nơi thiên kiến nhỏ hơn vì các doanh nghiệp bị hủy niêm yết thường nhỏ và đóng góp ít vào lợi nhuận VW."
 #| code-summary: "Plot cumulative returns: full sample vs survivors only"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -468,14 +468,14 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Time-Varying Survivorship Bias
+### Thiên kiến sống sót biến đổi theo thời gian
 
-The magnitude of survivorship bias is not constant. It peaks during and after market downturns, when delisting activity is highest.
+Mức độ của thiên kiến sống sót không cố định. Nó đạt đỉnh trong và sau các giai đoạn thị trường suy thoái, khi hoạt động hủy niêm yết cao nhất.
 
 ```{python}
 #| label: fig-rolling-bias
 #| eval: false
-#| fig-cap: "Rolling 12-month survivorship bias for equal-weighted portfolios. The bias spikes during periods of high delisting activity (post-2008 crisis, 2011--2012 downturn). During bull markets, few firms delist and the bias approaches zero."
+#| fig-cap: "Thiên kiến sống sót trượt 12 tháng đối với các danh mục trọng số bằng nhau. Thiên kiến tăng vọt trong các giai đoạn hoạt động hủy niêm yết cao (sau khủng hoảng 2008, suy thoái 2011--2012). Trong các thị trường tăng giá, ít doanh nghiệp bị hủy niêm yết và thiên kiến tiến gần về không."
 #| code-summary: "Compute rolling survivorship bias"
 bias_ew['rolling_bias_12m'] = bias_ew['bias'].rolling(12).mean() * 12
 
@@ -510,9 +510,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Survivorship Bias in Cross-Sectional Anomalies
+### Thiên kiến sống sót trong các hiện tượng bất thường mặt cắt ngang
 
-The bias is not uniform across strategies. Anomalies that overweight small, distressed, or low-quality firms, precisely the firms most likely to delist, are most severely affected. We test this for the size, value, and momentum anomalies.
+Thiên kiến không đồng đều giữa các chiến lược. Các hiện tượng bất thường đặt tỷ trọng lớn vào các doanh nghiệp nhỏ, gặp khó khăn hoặc chất lượng thấp, chính xác là những doanh nghiệp có nhiều khả năng bị hủy niêm yết nhất, chịu ảnh hưởng nghiêm trọng nhất. Chúng ta kiểm định điều này cho các hiện tượng bất thường về quy mô, giá trị và động lượng.
 
 ```{python}
 #| label: anomaly-bias
@@ -600,29 +600,29 @@ print("Survivorship Bias by Anomaly:")
 print(anomaly_bias_df.round(4).to_string())
 ```
 
-## Delisting Bias and Return Imputation {#sec-missing-delisting}
+## Thiên kiến hủy niêm yết và điền khuyết lợi nhuận {#sec-missing-delisting}
 
-### The Shumway Correction
+### Hiệu chỉnh Shumway
 
-@shumway1997delisting showed that CRSP's treatment of delisting returns, often recording them as missing or zero, creates a systematic upward bias in average returns. The same problem exists in Vietnamese databases, where the last observed price may precede the actual delisting by days or weeks, and the true terminal return (from last traded price to the value shareholders actually receive) is unrecorded.
+@shumway1997delisting đã chỉ ra rằng cách CRSP xử lý lợi nhuận hủy niêm yết, thường ghi nhận chúng là thiếu hoặc bằng không, tạo ra một độ chệch lên có hệ thống trong lợi nhuận trung bình. Vấn đề tương tự tồn tại trong các cơ sở dữ liệu của Việt Nam, nơi mức giá quan sát được cuối cùng có thể đi trước thời điểm hủy niêm yết thực tế vài ngày hoặc vài tuần, và lợi nhuận cuối kỳ thực sự (từ giá giao dịch cuối cùng đến giá trị mà cổ đông thực sự nhận được) không được ghi lại.
 
-We implement a delisting return imputation procedure adapted for Vietnam:
+Chúng ta triển khai một quy trình điền khuyết lợi nhuận hủy niêm yết được điều chỉnh cho Việt Nam:
 
-**Step 1.** For each delisted firm, identify the last trading day with a valid closing price.
+**Bước 1.** Với mỗi doanh nghiệp bị hủy niêm yết, xác định ngày giao dịch cuối cùng có giá đóng cửa hợp lệ.
 
-**Step 2.** Classify the delisting reason to determine the appropriate imputation (@tbl-missing-imputation).
+**Bước 2.** Phân loại lý do hủy niêm yết để xác định cách điền khuyết phù hợp (@tbl-missing-imputation).
 
-| Delisting Reason | Imputed Return | Rationale |
+| Lý do hủy niêm yết | Lợi nhuận điền khuyết | Cơ sở lập luận |
 |------------------------|------------------------|------------------------|
-| M&A / Acquisition | Actual tender offer premium (if available) | Acquisition at premium |
-| Going private | 0% (or actual buyout price) | Negotiated exit |
-| Financial distress | −30% to −100% | Substantial loss of value |
-| Regulatory violation | −50% | Partial loss; some recovery possible |
-| Exchange transfer | 0% (link to new ticker) | No economic event |
+| M&A / Mua lại | Phần bù chào mua công khai thực tế (nếu có) | Mua lại với phần bù |
+| Chuyển sang sở hữu tư nhân | 0% (hoặc giá mua lại thực tế) | Thoái vốn theo thương lượng |
+| Khó khăn tài chính | −30% đến −100% | Mất giá trị đáng kể |
+| Vi phạm quy định | −50% | Mất một phần; có thể thu hồi được một phần |
+| Chuyển sàn | 0% (liên kết với mã mới) | Không có sự kiện kinh tế |
 
-: Delisting return imputation rules. {#tbl-missing-imputation}
+: Các quy tắc điền khuyết lợi nhuận hủy niêm yết. {#tbl-missing-imputation}
 
-**Step 3.** Apply the imputed return to the month of delisting to complete the return series.
+**Bước 3.** Áp dụng lợi nhuận đã điền khuyết vào tháng hủy niêm yết để hoàn chỉnh chuỗi lợi nhuận.
 
 ```{python}
 #| label: delisting-imputation
@@ -697,7 +697,7 @@ print(f"\nImputed return distribution:")
 print(imputed_returns['monthly_return'].value_counts().sort_index())
 ```
 
-### Impact of Delisting Return Imputation
+### Tác động của việc điền khuyết lợi nhuận hủy niêm yết
 
 ```{python}
 #| label: delisting-impact
@@ -732,16 +732,16 @@ print(f"  EW with imputation:    {ann_augmented:.4f} ({ann_augmented*100:.2f}%/y
 print(f"  Difference:            {ann_effect:.4f} ({ann_effect*100:.2f}%/yr)")
 ```
 
-## Zero-Trading Days and Illiquidity Gaps {#sec-missing-zero-trading}
+## Ngày không giao dịch và khoảng trống thanh khoản {#sec-missing-zero-trading}
 
-### Prevalence of Zero-Trading Days
+### Mức độ phổ biến của ngày không giao dịch
 
-A distinctive feature of Vietnamese equity data is the high frequency of zero-volume days (i.e., days on which a listed stock records no trades). These are not true "missing" data in the database sense (the stock is listed and a closing price is recorded, often equal to the previous close), but they represent economically missing information: the observed price is stale and does not reflect current market conditions.
+Một đặc điểm nổi bật của dữ liệu chứng khoán Việt Nam là tần suất cao của các ngày không có khối lượng giao dịch (tức là những ngày một cổ phiếu niêm yết không ghi nhận giao dịch nào). Đây không phải dữ liệu "bị thiếu" thực sự theo nghĩa cơ sở dữ liệu (cổ phiếu vẫn niêm yết và giá đóng cửa vẫn được ghi nhận, thường bằng giá đóng cửa trước đó), nhưng chúng đại diện cho thông tin bị thiếu về mặt kinh tế: giá quan sát được đã lỗi thời và không phản ánh điều kiện thị trường hiện tại.
 
 ```{python}
 #| label: fig-zero-trading
 #| eval: false
-#| fig-cap: "Prevalence of zero-trading days across Vietnamese listed firms. Panel A shows the cross-sectional distribution of the zero-volume fraction (proportion of trading days with no volume) by year. Panel B shows the zero-volume fraction by market cap decile. Small-cap firms have zero-volume fractions exceeding 30%, creating severe return measurement problems."
+#| fig-cap: "Mức độ phổ biến của ngày không giao dịch trên các doanh nghiệp niêm yết Việt Nam. Panel A cho thấy phân phối chéo của tỷ lệ ngày không có khối lượng (tỷ trọng các ngày giao dịch không có khối lượng) theo năm. Panel B cho thấy tỷ lệ ngày không có khối lượng theo thập phân vị vốn hóa thị trường. Các doanh nghiệp vốn hóa nhỏ có tỷ lệ ngày không có khối lượng vượt quá 30%, tạo ra các vấn đề nghiêm trọng trong đo lường lợi nhuận."
 #| code-summary: "Analyze the prevalence of zero-trading days"
 # Compute zero-volume fraction per firm-year
 daily_returns['year'] = pd.to_datetime(daily_returns['date']).dt.year
@@ -800,17 +800,17 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Return Measurement During Zero-Trading Periods
+### Đo lường lợi nhuận trong các giai đoạn không giao dịch
 
-When a stock does not trade, the standard approach, using the last available closing price, produces a stale price that understates true volatility and biases returns toward zero. Several approaches exist to handle this:
+Khi một cổ phiếu không giao dịch, cách tiếp cận tiêu chuẩn, dùng giá đóng cửa gần nhất có sẵn, tạo ra một mức giá lỗi thời làm đánh giá thấp biến động thực và làm chệch lợi nhuận về phía không. Có một số cách tiếp cận để xử lý vấn đề này:
 
-**Approach 1: Drop zero-volume observations.** Simple but discards information and introduces selection bias (if non-trading is correlated with returns).
+**Cách tiếp cận 1: Loại bỏ các quan sát không có khối lượng.** Đơn giản nhưng loại bỏ thông tin và gây ra thiên kiến chọn mẫu (nếu việc không giao dịch tương quan với lợi nhuận).
 
-**Approach 2: Multi-day compounding.** Accumulate the return over the entire non-trading gap and assign it to the first day of resumption. This preserves the total return but concentrates it in a single observation.
+**Cách tiếp cận 2: Gộp lãi kép nhiều ngày.** Tích lũy lợi nhuận trên toàn bộ khoảng trống không giao dịch và gán nó cho ngày đầu tiên giao dịch trở lại. Cách này bảo toàn tổng lợi nhuận nhưng dồn nó vào một quan sát duy nhất.
 
-**Approach 3: Distribute uniformly.** Spread the accumulated return evenly across zero-volume days. This is economically unrealistic, but it reduces the impact of single-day outliers.
+**Cách tiếp cận 3: Phân bổ đều.** Phân bổ đều lợi nhuận tích lũy cho các ngày không có khối lượng. Điều này không thực tế về mặt kinh tế, nhưng làm giảm tác động của các giá trị ngoại lai trong một ngày.
 
-**Approach 4: Treat as missing and model.** Treat zero-volume days as genuinely missing returns and use the @lesmond2005liquidity zero-return measure as a liquidity proxy.
+**Cách tiếp cận 4: Coi là thiếu và mô hình hóa.** Coi các ngày không có khối lượng là lợi nhuận thực sự bị thiếu và dùng thước đo lợi nhuận bằng không của @lesmond2005liquidity làm đại diện cho thanh khoản.
 
 ```{python}
 #| label: zero-vol-correction
@@ -911,20 +911,20 @@ for method in ['drop', 'compound', 'distribute']:
           f"Ann. Vol = {vol:.4f}, N = {len(corrected):,}")
 ```
 
-## Look-Ahead Bias {#sec-missing-lookahead}
+## Thiên kiến nhìn trước {#sec-missing-lookahead}
 
-### Definition
+### Định nghĩa
 
-Look-ahead bias occurs when a study uses information that was not available at the time the investment decision would have been made. In the Vietnamese context, the most common sources are:
+Thiên kiến nhìn trước xảy ra khi một nghiên cứu sử dụng thông tin chưa có sẵn tại thời điểm đưa ra quyết định đầu tư. Trong bối cảnh Việt Nam, các nguồn phổ biến nhất là:
 
-1.  **Conditioning on survival.** Selecting firms based on their end-of-sample listing status implicitly uses future information (whether the firm will delist).
-2.  **Using revised financial data.** Vietnamese firms often restate financial statements after audit. Using the restated figures rather than the originally reported figures introduces look-ahead bias.
-3.  **Backfill bias.** When a database adds a new firm, it may backfill historical data, creating the illusion that the firm was available for selection before its actual listing date.
-4.  **Point-in-time accounting data.** Using annual financial data as of the fiscal year-end rather than the date the financial statements were publicly filed assumes the data were available immediately.
+1.  **Điều kiện hóa theo sự sống sót.** Chọn các doanh nghiệp dựa trên trạng thái niêm yết vào cuối mẫu ngầm sử dụng thông tin tương lai (liệu doanh nghiệp có bị hủy niêm yết hay không).
+2.  **Sử dụng dữ liệu tài chính đã điều chỉnh.** Các doanh nghiệp Việt Nam thường điều chỉnh lại báo cáo tài chính sau kiểm toán. Dùng các số liệu đã điều chỉnh thay vì các số liệu công bố ban đầu gây ra thiên kiến nhìn trước.
+3.  **Thiên kiến điền lùi.** Khi một cơ sở dữ liệu bổ sung một doanh nghiệp mới, nó có thể điền lùi dữ liệu lịch sử, tạo ra ảo giác rằng doanh nghiệp đã có thể được chọn trước ngày niêm yết thực tế của nó.
+4.  **Dữ liệu kế toán theo thời điểm công bố.** Dùng dữ liệu tài chính hằng năm tại thời điểm kết thúc năm tài chính thay vì ngày báo cáo tài chính được công bố công khai là giả định rằng dữ liệu có sẵn ngay lập tức.
 
-### Point-in-Time Adjustment
+### Điều chỉnh theo thời điểm công bố
 
-We implement a point-in-time adjustment for accounting data that respects the actual reporting lag:
+Chúng ta triển khai một phép điều chỉnh theo thời điểm công bố đối với dữ liệu kế toán, tôn trọng độ trễ báo cáo thực tế:
 
 ```{python}
 #| label: point-in-time
@@ -1004,9 +1004,9 @@ print("  Naive: use fiscal year directly (introduces look-ahead bias)")
 print("  PIT: use only data available as of the portfolio formation date")
 ```
 
-### Quantifying Look-Ahead Bias in Value Strategies
+### Định lượng thiên kiến nhìn trước trong các chiến lược giá trị
 
-Value strategies sort stocks on book-to-market ratios computed from accounting data. Using end-of-fiscal-year data without respecting reporting lags inflates the value premium because it implicitly uses information that was not yet publicly available.
+Các chiến lược giá trị phân loại cổ phiếu theo tỷ số giá trị sổ sách trên giá trị thị trường tính từ dữ liệu kế toán. Việc dùng dữ liệu cuối năm tài chính mà không tôn trọng độ trễ báo cáo làm thổi phồng phần bù giá trị vì nó ngầm sử dụng thông tin chưa được công bố công khai.
 
 ```{python}
 #| label: lookahead-value
@@ -1055,11 +1055,11 @@ print(f"  Point-in-time:          {ann_pit:.4f} ({ann_pit*100:.2f}%/yr)")
 print(f"  Look-ahead inflation:   {(ann_naive - ann_pit)*100:.2f}%/yr")
 ```
 
-## Exchange Transfers and Ticker Discontinuities {#sec-missing-transfers}
+## Chuyển sàn và sự gián đoạn mã chứng khoán {#sec-missing-transfers}
 
-### The Transfer Problem
+### Vấn đề chuyển sàn
 
-Vietnamese firms frequently transfer between exchanges (e.g., from HNX to HOSE upon meeting HOSE's listing requirements, or from HOSE to UPCoM/HNX following regulatory issues). These transfers can break the continuity of return series if the database treats each exchange listing as a separate entity.
+Các doanh nghiệp Việt Nam thường xuyên chuyển giữa các sàn (ví dụ: từ HNX sang HOSE khi đáp ứng điều kiện niêm yết của HOSE, hoặc từ HOSE sang UPCoM/HNX sau các vấn đề về quy định). Những lần chuyển sàn này có thể làm gián đoạn tính liên tục của chuỗi lợi nhuận nếu cơ sở dữ liệu coi mỗi lần niêm yết trên một sàn là một thực thể riêng biệt.
 
 ```{python}
 #| label: transfers
@@ -1118,11 +1118,11 @@ def link_transfer_returns(monthly_df, transfers_df):
 linked = link_transfer_returns(monthly_returns, transfers)
 ```
 
-## Sensitivity Analysis Framework {#sec-missing-sensitivity}
+## Khung phân tích độ nhạy {#sec-missing-sensitivity}
 
-### How Fragile Are Your Results?
+### Kết quả của bạn mong manh đến mức nào?
 
-Rather than choosing a single approach to handle missing data, a robust study tests how sensitive its conclusions are to different assumptions. We implement a systematic sensitivity framework that re-runs a given analysis under multiple data treatment assumptions.
+Thay vì chọn một cách tiếp cận duy nhất để xử lý dữ liệu bị thiếu, một nghiên cứu vững chắc kiểm tra mức độ nhạy của các kết luận với các giả định khác nhau. Chúng ta triển khai một khung phân tích độ nhạy có hệ thống, chạy lại một phân tích cho trước dưới nhiều giả định xử lý dữ liệu.
 
 ```{python}
 #| label: sensitivity-framework
@@ -1217,7 +1217,7 @@ def compute_size_premium(df, sort_var):
 ```{python}
 #| label: fig-sensitivity
 #| eval: false
-#| fig-cap: "Sensitivity of anomaly premia to data treatment assumptions. Each bar represents the annualized long-short return under a different assumption about survivorship, delisting imputation, and liquidity filtering. Results that are robust to these choices are more credible; results that vary dramatically signal a fragile finding."
+#| fig-cap: "Độ nhạy của các phần bù hiện tượng bất thường với các giả định xử lý dữ liệu. Mỗi cột biểu diễn lợi nhuận mua–bán khống quy năm dưới một giả định khác nhau về thiên kiến sống sót, điền khuyết lợi nhuận hủy niêm yết và lọc thanh khoản. Các kết quả vững với những lựa chọn này đáng tin cậy hơn; các kết quả thay đổi mạnh báo hiệu một phát hiện mong manh."
 #| code-summary: "Visualize sensitivity of anomaly premia to data treatment"
 # Illustrative: create synthetic sensitivity results for plotting
 assumptions = [
@@ -1256,39 +1256,39 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Practical Recommendations {#sec-missing-recommendations}
+## Khuyến nghị thực tiễn {#sec-missing-recommendations}
 
-Based on the analysis in this chapter, we offer the following recommendations for researchers working with Vietnamese equity data:
+Dựa trên phân tích trong chương này, chúng tôi đưa ra các khuyến nghị sau cho các nhà nghiên cứu làm việc với dữ liệu chứng khoán Việt Nam:
 
-**1. Always use survivorship-bias-free databases.** When querying DataCore.vn (or any database), explicitly request `include_delisted=True`. Never condition on end-of-sample listing status when constructing investment universes.
+**1. Luôn sử dụng cơ sở dữ liệu không có thiên kiến sống sót.** Khi truy vấn DataCore.vn (hoặc bất kỳ cơ sở dữ liệu nào), hãy yêu cầu tường minh `include_delisted=True`. Không bao giờ điều kiện hóa theo trạng thái niêm yết cuối mẫu khi xây dựng các tập hợp đầu tư.
 
-**2. Impute delisting returns.** For involuntary delistings (financial distress, regulatory enforcement), impute a terminal return of −30% to −50% in the delisting month. Report results across a range of imputation assumptions as a robustness check. For voluntary delistings and exchange transfers, impute 0%.
+**2. Điền khuyết lợi nhuận hủy niêm yết.** Với các vụ hủy niêm yết không tự nguyện (khó khăn tài chính, cưỡng chế quy định), hãy điền khuyết lợi nhuận cuối kỳ từ −30% đến −50% vào tháng hủy niêm yết. Báo cáo kết quả trên một dải các giả định điền khuyết như một kiểm tra độ vững. Với các vụ hủy niêm yết tự nguyện và chuyển sàn, điền khuyết 0%.
 
-**3. Respect point-in-time data availability.** Use accounting data only after its public filing date, not as of the fiscal year-end. In Vietnam, the standard lag is 90 days for annual reports; use a conservative 4-6 month lag.
+**3. Tôn trọng tính sẵn có của dữ liệu theo thời điểm công bố.** Chỉ sử dụng dữ liệu kế toán sau ngày công bố công khai, không phải tại thời điểm kết thúc năm tài chính. Ở Việt Nam, độ trễ chuẩn là 90 ngày đối với báo cáo thường niên; hãy dùng độ trễ thận trọng 4-6 tháng.
 
-**4. Handle zero-volume days explicitly.** Document the prevalence of zero-volume days in your sample. For monthly returns, report the average number of zero-volume days per firm-month. Consider excluding firms with zero-volume fractions exceeding 50% from the investable universe.
+**4. Xử lý tường minh các ngày không có khối lượng.** Ghi nhận mức độ phổ biến của các ngày không có khối lượng trong mẫu của bạn. Với lợi nhuận hằng tháng, hãy báo cáo số ngày không có khối lượng trung bình trên mỗi cặp doanh nghiệp–tháng. Cân nhắc loại các doanh nghiệp có tỷ lệ ngày không có khối lượng vượt quá 50% khỏi tập hợp đầu tư.
 
-**5. Link exchange transfers.** Use unified tickers that link pre-transfer and post-transfer series. Without this, exchange transfers appear as simultaneous delistings and new listings, inflating turnover and biasing survival calculations.
+**5. Liên kết các lần chuyển sàn.** Sử dụng các mã chứng khoán thống nhất để liên kết chuỗi trước và sau khi chuyển sàn. Nếu không, các lần chuyển sàn sẽ xuất hiện như những vụ hủy niêm yết và niêm yết mới đồng thời, làm thổi phồng số lượt niêm yết mới và hủy niêm yết và làm chệch các phép tính sống sót.
 
-**6. Report sensitivity analysis.** For any key finding, report results under at least three data treatment assumptions: survivors-only (upper bound), full sample with moderate imputation (baseline), and full sample with aggressive imputation plus liquidity filter (lower bound). If the finding survives all three, it is robust.
+**6. Báo cáo phân tích độ nhạy.** Với bất kỳ phát hiện chính nào, hãy báo cáo kết quả dưới ít nhất ba giả định xử lý dữ liệu: chỉ gồm doanh nghiệp sống sót (cận trên), mẫu đầy đủ với điền khuyết vừa phải (cơ sở), và mẫu đầy đủ với điền khuyết mạnh cộng bộ lọc thanh khoản (cận dưới). Nếu phát hiện đứng vững trong cả ba trường hợp, thì đó là một phát hiện vững.
 
-**7. Be especially cautious with pre-2007 data.** The Vietnamese market had fewer than 100 listings before 2006, and the equitization wave of 2006-2009 produced a cohort of firms with systematically different characteristics than earlier listings. Cross-sectional tests with pre-2007 data have minimal power and should be interpreted with extreme caution.
+**7. Đặc biệt thận trọng với dữ liệu trước năm 2007.** Thị trường Việt Nam có chưa đến 100 cổ phiếu niêm yết trước năm 2006, và làn sóng cổ phần hóa 2006-2009 tạo ra một nhóm doanh nghiệp có đặc điểm khác biệt một cách có hệ thống so với các doanh nghiệp niêm yết trước đó. Các kiểm định mặt cắt ngang với dữ liệu trước năm 2007 có sức mạnh kiểm định rất thấp và cần được diễn giải hết sức thận trọng.
 
-## Summary {#sec-missing-summary}
+## Tóm tắt {#sec-missing-summary}
 
-| Data Problem | Bias Direction | Magnitude (Vietnam) | Recommended Fix |
+| Vấn đề dữ liệu | Hướng thiên kiến | Mức độ (Việt Nam) | Cách khắc phục khuyến nghị |
 |------------------|------------------|------------------|------------------|
-| Survivorship bias (EW) | Upward on returns | \~1-3% per year | Include all delisted firms |
-| Survivorship bias (VW) | Upward (smaller) | \~0.2-0.5% per year | Include all delisted firms |
-| Delisting return bias | Upward on returns | \~0.5--2% per year (EW) | Impute terminal returns |
-| Look-ahead bias | Inflates predictability | Varies by strategy | Point-in-time data alignment |
-| Zero-trading days | Understates volatility | Severe for small caps | Compound or drop; document |
-| Exchange transfers | Creates false delistings | \~50-100 firms | Link unified tickers |
-| New-listing bias | Early sample unrepresentative | Extreme pre-2007 | Start sample after 2007 |
+| Thiên kiến sống sót (EW) | Chệch lên đối với lợi nhuận | \~1-3% mỗi năm | Đưa vào mọi doanh nghiệp bị hủy niêm yết |
+| Thiên kiến sống sót (VW) | Chệch lên (nhỏ hơn) | \~0.2-0.5% mỗi năm | Đưa vào mọi doanh nghiệp bị hủy niêm yết |
+| Thiên kiến lợi nhuận hủy niêm yết | Chệch lên đối với lợi nhuận | \~0.5--2% mỗi năm (EW) | Điền khuyết lợi nhuận cuối kỳ |
+| Thiên kiến nhìn trước | Thổi phồng khả năng dự báo | Thay đổi theo chiến lược | Căn chỉnh dữ liệu theo thời điểm công bố |
+| Ngày không giao dịch | Đánh giá thấp biến động | Nghiêm trọng với cổ phiếu vốn hóa nhỏ | Gộp lãi kép hoặc loại bỏ; ghi nhận |
+| Chuyển sàn | Tạo ra các vụ hủy niêm yết giả | \~50-100 doanh nghiệp | Liên kết các mã chứng khoán thống nhất |
+| Thiên kiến niêm yết mới | Giai đoạn đầu của mẫu không mang tính đại diện | Cực đoan trước năm 2007 | Bắt đầu mẫu sau năm 2007 |
 
-: Summary of data problems, their effects, and recommended corrections. {#tbl-missing-summary}
+: Tóm tắt các vấn đề dữ liệu, tác động của chúng và các hiệu chỉnh khuyến nghị. {#tbl-missing-summary}
 
-The central message is that data problems in Vietnamese equity research are not merely a nuisance--they can create economically significant biases that alter the conclusions of empirical studies. The survivorship bias alone exceeds 100 basis points per year for equal-weighted portfolios, comparable to many documented anomaly premia. Researchers who ignore these issues risk reporting results that reflect data artifacts rather than genuine economic phenomena.
+Thông điệp trung tâm là các vấn đề dữ liệu trong nghiên cứu chứng khoán Việt Nam không chỉ là phiền toái--chúng có thể tạo ra các thiên kiến có ý nghĩa kinh tế, làm thay đổi kết luận của các nghiên cứu thực nghiệm. Riêng thiên kiến sống sót đã vượt quá 100 điểm cơ bản mỗi năm đối với các danh mục trọng số bằng nhau, tương đương với nhiều phần bù hiện tượng bất thường đã được ghi nhận. Những nhà nghiên cứu bỏ qua các vấn đề này có nguy cơ báo cáo những kết quả phản ánh các đặc điểm giả tạo do dữ liệu thay vì các hiện tượng kinh tế thực sự.
 
 ```{=html}
 <!-- ## Exercises {#sec-missing-exercises}

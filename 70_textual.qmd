@@ -1,60 +1,64 @@
-# Textual Analysis
+# Phân tích văn bản
 
-Textual analysis has emerged as one of the most productive research frontiers in empirical finance over the past two decades. The insight that unstructured text, such as corporate filings, earnings calls, analyst reports, and news articles, contains economically meaningful information beyond what is captured in structured numerical data has reshaped how researchers and practitioners understand financial markets. This chapter introduces the full pipeline of textual analysis methods as applied to Vietnamese listed firms, progressing from classical bag-of-words approaches through modern transformer-based language models.
+Phân tích văn bản đã nổi lên như một trong những hướng nghiên cứu hiệu quả nhất của tài chính thực nghiệm trong hai thập kỷ qua. Nhận định rằng văn bản phi cấu trúc, chẳng hạn như hồ sơ công bố thông tin của doanh nghiệp, các cuộc họp công bố kết quả kinh doanh, báo cáo phân tích và bài báo tin tức, chứa đựng thông tin có ý nghĩa kinh tế vượt ra ngoài những gì dữ liệu số có cấu trúc nắm bắt được đã làm thay đổi cách các nhà nghiên cứu và nhà thực hành hiểu về thị trường tài chính. Chương này giới thiệu toàn bộ quy trình các phương pháp phân tích văn bản áp dụng cho các doanh nghiệp niêm yết Việt Nam, đi từ các cách tiếp cận túi từ (bag-of-words) cổ điển đến các mô hình ngôn ngữ dựa trên transformer hiện đại.
 
-The Vietnamese equity market presents unique opportunities and challenges for textual analysis. As of 2024, the Ho Chi Minh Stock Exchange (HOSE) and the Hanoi Stock Exchange (HNX) together list over 1,600 securities with a combined market capitalization exceeding VND 6,000 trillion (approximately USD 240 billion). Corporate disclosures are filed in Vietnamese, a tonal language with compound-word morphology that demands specialized natural language processing (NLP) tools.
+Thị trường chứng khoán Việt Nam mang lại cả cơ hội lẫn thách thức đặc thù cho phân tích văn bản. Tính đến năm 2024, Sở Giao dịch Chứng khoán Thành phố Hồ Chí Minh (HOSE) và Sở Giao dịch Chứng khoán Hà Nội (HNX) cùng niêm yết hơn 1.600 chứng khoán với tổng vốn hóa thị trường vượt 6.000 nghìn tỷ VND (khoảng 240 tỷ USD). Các bản công bố thông tin của doanh nghiệp được lập bằng tiếng Việt, một ngôn ngữ có thanh điệu với cấu tạo từ ghép, đòi hỏi các công cụ xử lý ngôn ngữ tự nhiên (NLP) chuyên biệt.
 
-We build on the seminal contributions of @loughran2011liability in domain-specific sentiment lexicons, @hoberg2016text in text-based industry classification, and the modern deep learning revolution initiated by @devlin2019bert. This chapter covers the following topics:
+Chúng ta xây dựng dựa trên những đóng góp nền tảng của @loughran2011liability về từ điển cảm xúc theo lĩnh vực chuyên biệt, của @hoberg2016text về phân loại ngành dựa trên văn bản, và cuộc cách mạng học sâu hiện đại do @devlin2019bert khởi xướng. Chương này bao gồm các chủ đề sau:
 
-1.  Constructing the universe of HOSE/HNX listed firms and retrieving their business descriptions and annual report text.
-2.  Vietnamese-specific text preprocessing, including word segmentation using VnCoreNLP and underthesea.
-3.  Classical document representation via bag-of-words, TF-IDF, and LDA topic models.
-4.  Financial sentiment analysis using both dictionary-based and machine learning approaches adapted for Vietnamese.
-5.  Text-based firm similarity and peer identification using cosine similarity.
-6.  Modern deep learning approaches including Word2Vec, Doc2Vec, PhoBERT embeddings, and sentence transformers.
-7.  Large language model (LLM) applications, including zero-shot classification, named entity recognition, and information extraction using Vietnamese-capable models.
-8.  Empirical applications linking textual measures to stock returns, volatility, and corporate events.
+1.  Xây dựng tập hợp các doanh nghiệp niêm yết trên HOSE/HNX và thu thập phần mô tả hoạt động kinh doanh cùng văn bản báo cáo thường niên của họ.
+2.  Tiền xử lý văn bản đặc thù cho tiếng Việt, bao gồm tách từ bằng VnCoreNLP và underthesea.
+3.  Biểu diễn tài liệu cổ điển bằng bag-of-words, TF-IDF và các mô hình chủ đề LDA.
+4.  Phân tích cảm xúc tài chính bằng cả hai cách tiếp cận dựa trên từ điển và học máy được điều chỉnh cho tiếng Việt.
+5.  Đo lường mức độ tương đồng giữa các doanh nghiệp dựa trên văn bản và xác định nhóm doanh nghiệp cùng ngành bằng độ tương đồng cosine.
+6.  Các cách tiếp cận học sâu hiện đại, bao gồm Word2Vec, Doc2Vec, vector nhúng PhoBERT và sentence transformer.
+7.  Các ứng dụng của mô hình ngôn ngữ lớn (LLM), bao gồm phân loại zero-shot, nhận dạng thực thể có tên và trích xuất thông tin bằng các mô hình hỗ trợ tiếng Việt.
+8.  Các ứng dụng thực nghiệm liên kết các thước đo văn bản với lợi nhuận cổ phiếu, biến động và các sự kiện doanh nghiệp.
 
-## Why Textual Analysis for Vietnamese Finance? {#sec-textual-why-vietnam}
+## Vì sao cần phân tích văn bản cho tài chính Việt Nam? {#sec-textual-why-vietnam}
 
-The Vietnamese financial market has several characteristics that make textual analysis particularly valuable. First, analyst coverage is sparse (fewer than 30% of listed firms receive regular coverage from sell-side analysts), making alternative information sources critical. Second, the regulatory environment is evolving rapidly, with the State Securities Commission (SSC) continuously updating disclosure requirements, creating rich variation in information environments across firms and time. Third, the market is dominated by retail investors (accounting for roughly 80% of trading volume), who may process textual information differently than institutional investors, creating potential mispricings that text-based strategies could exploit.
+Thị trường tài chính Việt Nam có một số đặc điểm khiến phân tích văn bản đặc biệt có giá trị. Thứ nhất, mức độ bao phủ của các nhà phân tích còn thưa thớt (dưới 30% số doanh nghiệp niêm yết được các nhà phân tích bên bán theo dõi thường xuyên), khiến các nguồn thông tin thay thế trở nên then chốt. Thứ hai, môi trường pháp lý đang thay đổi nhanh chóng, với việc Ủy ban Chứng khoán Nhà nước (SSC) liên tục cập nhật các yêu cầu công bố thông tin, tạo ra sự biến thiên phong phú của môi trường thông tin giữa các doanh nghiệp và theo thời gian. Thứ ba, thị trường chịu sự chi phối của nhà đầu tư cá nhân (chiếm khoảng 80% khối lượng giao dịch), những người có thể xử lý thông tin văn bản khác với nhà đầu tư tổ chức, từ đó tạo ra khả năng định giá sai mà các chiến lược dựa trên văn bản có thể khai thác.
 
 From a methodological standpoint, Vietnamese poses interesting NLP challenges. Unlike English, Vietnamese is an isolating language where word boundaries are not always delimited by spaces. A single Vietnamese "word" may consist of multiple syllables separated by spaces (e.g., "công ty" for "company," "thị trường" for "market"). This requires a word segmentation step before standard NLP pipelines can be applied.[^60_textual-1]
 
 [^60_textual-1]: Vietnamese text requires specialized tokenization due to compound words (e.g., "công ty" = company, "thị trường" = market).
 
-# Literature Review {#sec-textual-literature}
+# Tổng quan tài liệu {#sec-textual-literature}
 
-## Textual Analysis in Finance {#sec-textual-lit-finance}
+## Phân tích văn bản trong tài chính {#sec-textual-lit-finance}
 
-The application of textual analysis to financial data has a rich history. @tetlock2007giving demonstrated that the pessimism content of a Wall Street Journal column predicts aggregate market activity, providing early evidence that textual content moves prices. @loughran2011liability showed that the widely-used Harvard General Inquirer sentiment dictionary produces misleading results when applied to financial text because words like "liability," "tax," and "capital" are classified as negative in general English but carry neutral or even positive connotations in finance. Their domain-specific word lists have become the standard for financial sentiment analysis.[^60_textual-2]
+Việc áp dụng phân tích văn bản vào dữ liệu tài chính có một lịch sử phong phú. @tetlock2007giving chứng minh rằng mức độ bi quan trong một chuyên mục của Wall Street Journal dự báo hoạt động của thị trường nói chung, cung cấp bằng chứng sớm cho thấy nội dung văn bản làm dịch chuyển giá. @loughran2011liability cho thấy từ điển cảm xúc Harvard General Inquirer được sử dụng rộng rãi cho ra kết quả sai lệch khi áp dụng vào văn bản tài chính, vì những từ như "liability" (nợ phải trả), "tax" (thuế) và "capital" (vốn) được xếp vào nhóm tiêu cực trong tiếng Anh thông thường nhưng lại mang sắc thái trung tính, thậm chí tích cực trong tài chính. Các danh sách từ theo lĩnh vực chuyên biệt của họ đã trở thành chuẩn mực cho phân tích cảm xúc tài chính.[^60_textual-2]
 
-[^60_textual-2]: @loughran2011liability show that general-purpose dictionaries misclassify up to 73% of negative words in financial text.
+[^60_textual-2]: @loughran2011liability cho thấy các từ điển đa dụng phân loại sai tới 73% số từ tiêu cực trong văn bản tài chính.
 
-@hoberg2010product and @hoberg2016text pioneered the use of product descriptions from 10-K filings to construct text-based industry classifications (TNIC), demonstrating that these dynamic, firm-specific industry definitions outperform static SIC and NAICS codes in explaining firm behavior, including profitability, stock returns, and M&A activity. Subsequent work by @hoberg2018text extended this to assess competitive threats and product-market fluidity.
+@hoberg2010product và @hoberg2016text là những người tiên phong sử dụng phần mô tả sản phẩm trong báo cáo 10-K để xây dựng các phân loại ngành dựa trên văn bản (TNIC), chứng minh rằng các định nghĩa ngành động, riêng cho từng doanh nghiệp này giải thích hành vi doanh nghiệp tốt hơn các mã SIC và NAICS tĩnh, bao gồm khả năng sinh lời, lợi nhuận cổ phiếu và hoạt động M&A. Công trình tiếp theo của @hoberg2018text mở rộng cách tiếp cận này để đánh giá các mối đe dọa cạnh tranh và tính lưu động của thị trường sản phẩm (product-market fluidity).
 
-More recent work has leveraged advances in deep learning. @huang2023finbert apply BERT-based models to earnings call transcripts and show that contextual embeddings capture information about future earnings that traditional bag-of-words measures miss. @jha2024chatgpt use GPT-based models for zero-shot financial text classification and demonstrate that LLMs can match or exceed purpose-built classifiers on standard benchmarks.
+Các nghiên cứu gần đây hơn tận dụng những tiến bộ của học sâu. @huang2023finbert áp dụng các mô hình dựa trên BERT vào bản ghi các cuộc họp công bố kết quả kinh doanh và cho thấy các vector nhúng theo ngữ cảnh nắm bắt được thông tin về lợi nhuận kế toán tương lai mà các thước đo bag-of-words truyền thống bỏ sót. @jha2024chatgpt sử dụng các mô hình dựa trên GPT để phân loại văn bản tài chính theo kiểu zero-shot và chứng minh rằng các LLM có thể sánh ngang hoặc vượt các bộ phân loại chuyên dụng trên những bộ kiểm chuẩn tiêu chuẩn.
 
-## NLP for Vietnamese Language {#sec-textual-lit-vnlp}
+Văn bản cũng có thể đo lường *mức độ bất định* mà nhà đầu tư phải đối mặt, chứ không chỉ sắc thái của nó. @wei2026narrative trích xuất một thước đo mơ hồ dựa trên diễn ngôn từ các bài báo tin tức kinh tế, khác biệt với các biến đại diện cho sự mơ hồ dựa trên khảo sát và dựa trên lợi nhuận, và cho thấy nó dự báo lợi nhuận thị trường chứng khoán tổng thể cả trong mẫu lẫn ngoài mẫu. Nhà đầu tư nhìn chung e ngại sự mơ hồ (ambiguity averse), nhưng sự chấp nhận mơ hồ xuất hiện khi xác suất thua lỗ cao, và việc kết hợp sự mơ hồ diễn ngôn theo từng ngành (chủ yếu từ các tin tức liên quan đến tiêu dùng, năng lượng và công nghệ) cho ra một biến dự báo thị trường mạnh hơn. Khả năng dự báo này mở rộng sang các thị trường quốc tế và các lớp tài sản khác, khiến cách tiếp cận này trở thành ứng viên tự nhiên cho các tin tức tài chính của Việt Nam.
 
-Vietnamese NLP has advanced significantly with the development of VnCoreNLP [@vu2018vncorenlp], a Java-based toolkit providing word segmentation, POS tagging, named entity recognition, and dependency parsing. The underthesea library offers a Python-native alternative. Most critically for financial applications, PhoBERT [@nguyen2020phobert] provides Vietnamese-specific BERT pre-training on a 20GB corpus, achieving state-of-the-art results on multiple Vietnamese NLP tasks.
+## NLP cho tiếng Việt {#sec-textual-lit-vnlp}
 
-| Study | Method | Key Finding | Relevance to Vietnam |
+NLP tiếng Việt đã tiến bộ đáng kể nhờ sự ra đời của VnCoreNLP [@vu2018vncorenlp], một bộ công cụ nền Java cung cấp các chức năng tách từ, gán nhãn từ loại, nhận dạng thực thể có tên và phân tích cú pháp phụ thuộc. Thư viện underthesea cung cấp một phương án thay thế thuần Python. Quan trọng nhất đối với các ứng dụng tài chính, PhoBERT [@nguyen2020phobert] cung cấp mô hình BERT tiền huấn luyện dành riêng cho tiếng Việt trên kho ngữ liệu 20GB, đạt kết quả tốt nhất hiện nay trên nhiều tác vụ NLP tiếng Việt.
+
+| Nghiên cứu | Phương pháp | Phát hiện chính | Mức độ liên quan đến Việt Nam |
 |:-----------------|:-----------------|:-----------------|:------------------|
-| @tetlock2007giving | Dictionary-based sentiment from WSJ column | Media pessimism predicts market activity and returns | Baseline for Vietnamese financial news sentiment |
-| @loughran2011liability | Domain-specific financial dictionaries | General dictionaries misclassify 73% of negative financial words | Need for Vietnamese financial sentiment lexicon |
-| @hoberg2016text | Cosine similarity on 10-K product descriptions | Text-based industries outperform SIC/NAICS | Peer identification for Vietnamese firms using business descriptions |
-| @nguyen2020phobert | PhoBERT: Vietnamese BERT pre-training | SOTA on Vietnamese NLP benchmarks | Foundation model for Vietnamese financial NLP |
-| @huang2023finbert | BERT embeddings on earnings calls | Contextual embeddings predict future earnings beyond BoW | Apply to Vietnamese earnings call transcripts |
-| @jha2024chatgpt | GPT-based zero-shot financial classification | LLMs match fine-tuned classifiers | Zero-shot Vietnamese financial text classification via multilingual LLMs |
+| @tetlock2007giving | Cảm xúc dựa trên từ điển từ chuyên mục WSJ | Sự bi quan của truyền thông dự báo hoạt động và lợi nhuận thị trường | Cơ sở tham chiếu cho cảm xúc của tin tức tài chính Việt Nam |
+| @loughran2011liability | Từ điển tài chính theo lĩnh vực chuyên biệt | Các từ điển đa dụng phân loại sai 73% số từ tiêu cực trong tài chính | Cần có từ điển cảm xúc tài chính tiếng Việt |
+| @hoberg2016text | Độ tương đồng cosine trên phần mô tả sản phẩm trong 10-K | Các ngành dựa trên văn bản vượt trội so với SIC/NAICS | Xác định nhóm doanh nghiệp cùng ngành của Việt Nam bằng phần mô tả hoạt động kinh doanh |
+| @nguyen2020phobert | PhoBERT: BERT tiền huấn luyện cho tiếng Việt | SOTA trên các bộ kiểm chuẩn NLP tiếng Việt | Mô hình nền tảng cho NLP tài chính tiếng Việt |
+| @huang2023finbert | Vector nhúng BERT trên các cuộc họp công bố kết quả kinh doanh | Vector nhúng theo ngữ cảnh dự báo lợi nhuận kế toán tương lai tốt hơn BoW | Áp dụng cho bản ghi các cuộc họp công bố kết quả kinh doanh của Việt Nam |
+| @jha2024chatgpt | Phân loại tài chính zero-shot dựa trên GPT | Các LLM sánh ngang bộ phân loại đã tinh chỉnh | Phân loại văn bản tài chính tiếng Việt zero-shot bằng các LLM đa ngôn ngữ |
+| @wei2026narrative | Sự mơ hồ diễn ngôn được trích xuất từ tin tức kinh tế | Sự mơ hồ dựa trên tin tức dự báo lợi nhuận thị trường vượt trội so với các thước đo dựa trên khảo sát và lợi nhuận; ác cảm chuyển thành chấp nhận khi xác suất thua lỗ cao | Chỉ số mơ hồ tổng hợp từ tin tức tài chính Việt Nam để dự báo lợi nhuận VN-Index |
+| @crowley2024executive | Phân loại bằng ML + độ tương đồng nội dung của các tweet từ lãnh đạo doanh nghiệp S&P 1500 | Nhà đầu tư phản ứng với các tweet tài chính của lãnh đạo thông qua cả kênh thông tin mới lẫn kênh uy tín | Các bài đăng Facebook/Zalo của lãnh đạo doanh nghiệp niêm yết Việt Nam (@sec-textual-exec-social) |
 
-: Key Literature on Textual Analysis in Finance {#tbl-literature}
+: Các nghiên cứu chính về phân tích văn bản trong tài chính {#tbl-literature}
 
-# Data: Vietnamese Listed Firms from DataCore.vn {#sec-textual-data}
+# Dữ liệu: Các doanh nghiệp niêm yết Việt Nam từ DataCore.vn {#sec-textual-data}
 
-## Constructing the Universe {#sec-textual-universe}
+## Xây dựng tập hợp doanh nghiệp {#sec-textual-universe}
 
-We construct the universe of Vietnamese listed firms. The universe includes all firms listed on HOSE, HNX, and UPCoM as of the analysis date.
+Chúng ta xây dựng tập hợp các doanh nghiệp niêm yết Việt Nam. Tập hợp này bao gồm tất cả doanh nghiệp niêm yết trên HOSE, HNX và UPCoM tính đến ngày phân tích.
 
 ```{python}
 #| label: setup
@@ -107,18 +111,18 @@ print(f'HNX: {len(universe[universe.exchange=="HNX"])}')
 print(f'UPCoM: {len(universe[universe.exchange=="UPCOM"])}')
 ```
 
-| Exchange | N Firms | Avg Mkt Cap (VND bn) | Median Mkt Cap (VND bn) | Total Mkt Cap (VND tn) |
+| Sàn giao dịch | Số DN | Vốn hóa TB (tỷ VND) | Vốn hóa trung vị (tỷ VND) | Tổng vốn hóa (nghìn tỷ VND) |
 |:--------------|--------------:|--------------:|--------------:|--------------:|
 | HOSE | 403 | 12,847 | 3,215 | 5,177 |
 | HNX | 334 | 2,156 | 687 | 720 |
 | UPCoM | 868 | 1,043 | 298 | 905 |
-| **Total** | **1,605** | **4,239** | **712** | **6,802** |
+| **Tổng** | **1,605** | **4,239** | **712** | **6,802** |
 
-: Universe of Vietnamese Listed Firms by Exchange (as of December 2024) {#tbl-universe}
+: Tập hợp các doanh nghiệp niêm yết Việt Nam theo sàn giao dịch (tính đến tháng 12 năm 2024) {#tbl-universe}
 
-## Retrieving Business Descriptions {#sec-textual-bus-desc}
+## Thu thập phần mô tả hoạt động kinh doanh {#sec-textual-bus-desc}
 
-Business descriptions for all listed firms can be in both Vietnamese and English. We retrieve both versions for our analysis. The Vietnamese text will serve as the primary corpus, while English descriptions provide a useful cross-validation.
+Phần mô tả hoạt động kinh doanh của tất cả doanh nghiệp niêm yết có thể có cả bằng tiếng Việt và tiếng Anh. Chúng ta thu thập cả hai phiên bản cho phân tích. Văn bản tiếng Việt sẽ là kho ngữ liệu chính, trong khi các bản mô tả tiếng Anh là phương tiện kiểm chứng chéo hữu ích.
 
 ```{python}
 #| label: get-bus-desc
@@ -147,15 +151,15 @@ print(corpus_df[['desc_len_vi', 'desc_len_en', 'word_count_vi']]
       .describe().round(0))
 ```
 
-| Statistic       |  Mean | Median | Std Dev | Min |    Max |
+| Thống kê | Trung bình | Trung vị | Độ lệch chuẩn | Nhỏ nhất | Lớn nhất |
 |:----------------|------:|-------:|--------:|----:|-------:|
-| Characters (VN) | 2,847 |  2,156 |   1,923 |  87 | 18,432 |
-| Characters (EN) | 3,412 |  2,689 |   2,245 | 102 | 22,156 |
-| Words (VN)      |   487 |    372 |     318 |  15 |  3,216 |
+| Ký tự (VN) | 2,847 |  2,156 |   1,923 |  87 | 18,432 |
+| Ký tự (EN) | 3,412 |  2,689 |   2,245 | 102 | 22,156 |
+| Từ (VN)      |   487 |    372 |     318 |  15 |  3,216 |
 
-: Descriptive Statistics of Business Description Text {#tbl-desc-stats}
+: Thống kê mô tả của văn bản mô tả hoạt động kinh doanh {#tbl-desc-stats}
 
-## Retrieving Annual Report Text {#sec-textual-annual-text}
+## Thu thập văn bản báo cáo thường niên {#sec-textual-annual-text}
 
 Beyond business descriptions, annual or quarterly reports provide richer and more time-varying textual data. We extract the Management Discussion and Analysis (MD&A) sections, which are most informative for financial analysis [@li2010textual; @bonsall2017plain]. The MD&A section, known in Vietnamese annual reports as "Báo cáo của Ban Giám đốc" or "Báo cáo của Hội đồng quản trị," discusses business performance, outlook, and risk factors.
 
@@ -186,18 +190,18 @@ annual_text['text_change_pct'] = (
 )
 ```
 
-# Text Preprocessing for Vietnamese {#sec-textual-preprocessing}
+# Tiền xử lý văn bản tiếng Việt {#sec-textual-preprocessing}
 
-## Vietnamese Word Segmentation {#sec-textual-segmentation}
+## Tách từ tiếng Việt {#sec-textual-segmentation}
 
 The most critical preprocessing step for Vietnamese text is word segmentation (phân đoạn từ). Unlike English where spaces reliably separate words, Vietnamese uses spaces between syllables, not between words. For example, the phrase "công ty cổ phần bất động sản" (real estate joint stock company) contains five syllables separated by spaces but consists of only two compound words: "công_ty cổ_phần" (joint stock company) and "bất_động_sản" (real estate). Failing to perform word segmentation leads to severe vocabulary fragmentation and loss of semantic meaning.
 
-| Stage | Text | Interpretation |
+| Giai đoạn | Văn bản | Diễn giải |
 |:------------------|:------------------|:---------------------------------|
-| Raw | `công ty cổ phần thương mại dịch vụ` | 7 syllables, ambiguous boundaries |
-| Segmented | `công_ty cổ_phần thương_mại dịch_vụ` | 4 words: company \| joint-stock \| commerce \| services |
+| Thô | `công ty cổ phần thương mại dịch vụ` | 8 âm tiết, ranh giới từ chưa rõ ràng |
+| Đã tách từ | `công_ty cổ_phần thương_mại dịch_vụ` | 4 từ: công ty \| cổ phần \| thương mại \| dịch vụ |
 
-: Vietnamese Word Segmentation Example {#tbl-segmentation}
+: Ví dụ về tách từ tiếng Việt {#tbl-segmentation}
 
 ```{python}
 #| label: word-segmentation
@@ -230,7 +234,7 @@ print('Raw:', sample.bus_desc_vi[:200])
 print('Segmented:', sample.bus_desc_segmented[:200])
 ```
 
-## Full Text Cleaning Pipeline {#sec-textual-cleaning}
+## Quy trình làm sạch văn bản đầy đủ {#sec-textual-cleaning}
 
 After word segmentation, we apply a cleaning pipeline. The pipeline handles Vietnamese-specific challenges including: diacritical mark normalization (e.g., hoà vs hòa), removal of HTML artifacts from scraped text, Vietnamese stopword removal, and lemmatization (which for Vietnamese primarily involves handling reduplicative words and synonym normalization).
 
@@ -318,9 +322,9 @@ print('Sample cleaned text:')
 print(corpus_df.iloc[0].text_clean[:300])
 ```
 
-## English Text Cleaning {#sec-textual-english-cleaning}
+## Làm sạch văn bản tiếng Anh {#sec-textual-english-cleaning}
 
-For firms that also provide English business descriptions, we apply a standard English NLP pipeline using spaCy and NLTK. This parallel processing enables cross-lingual validation of our textual measures.
+Đối với các doanh nghiệp cũng cung cấp phần mô tả hoạt động kinh doanh bằng tiếng Anh, chúng ta áp dụng quy trình NLP tiếng Anh tiêu chuẩn bằng spaCy và NLTK. Việc xử lý song song này cho phép kiểm chứng chéo giữa các ngôn ngữ đối với các thước đo văn bản của chúng ta.
 
 ```{python}
 #| label: english-cleaning
@@ -354,17 +358,17 @@ corpus_df['text_clean_en'] = (
 )
 ```
 
-# Document Representation: Bag-of-Words and TF-IDF {#sec-textual-bow-tfidf}
+# Biểu diễn tài liệu: Bag-of-Words và TF-IDF {#sec-textual-bow-tfidf}
 
-## Bag-of-Words Representation {#sec-textual-bow}
+## Biểu diễn bag-of-words {#sec-textual-bow}
 
-The bag-of-words (BoW) model represents each document as a vector of word frequencies, discarding word order. Despite its simplicity, BoW remains a workhorse in financial textual analysis. Formally, given a vocabulary $V = \{w_1, w_2, \ldots, w_{|V|}\}$, document $d$ is represented as a vector $\mathbf{x}_d$ where each element $x_{d,j}$ counts the frequency of word $w_j$ in document $d$:
+Mô hình bag-of-words (BoW) biểu diễn mỗi tài liệu dưới dạng một vector tần suất từ, bỏ qua thứ tự từ. Dù đơn giản, BoW vẫn là công cụ chủ lực trong phân tích văn bản tài chính. Về mặt hình thức, với một bộ từ vựng $V = \{w_1, w_2, \ldots, w_{|V|}\}$, tài liệu $d$ được biểu diễn bằng một vector $\mathbf{x}_d$ trong đó mỗi phần tử $x_{d,j}$ đếm tần suất của từ $w_j$ trong tài liệu $d$:
 
 $$
 \mathbf{x}_d = [\text{tf}(w_1, d), \; \text{tf}(w_2, d), \; \ldots, \; \text{tf}(w_{|V|}, d)]
 $$ {#eq-bow}
 
-where $\text{tf}(w, d)$ is the term frequency of word $w$ in document $d$.
+trong đó $\text{tf}(w, d)$ là tần suất từ của từ $w$ trong tài liệu $d$.
 
 ```{python}
 #| label: bow-vectorization
@@ -404,7 +408,7 @@ print(word_freq.head(20).to_string(index=False))
 
 ```{python}
 #| label: fig-word-freq
-#| fig-cap: "Top 20 Most Frequent Terms in Vietnamese Business Descriptions"
+#| fig-cap: "20 thuật ngữ xuất hiện thường xuyên nhất trong phần mô tả hoạt động kinh doanh tiếng Việt"
 #| code-summary: "Plot word frequency distribution"
 #| eval: false
 
@@ -430,11 +434,11 @@ plt.show()
 |   6 | cổ_phần     | 2,543 |  13 | vận_tải   | 1,345 |  20 | viễn_thông   |   876 |
 |   7 | chứng_khoán | 2,134 |  14 | thực_phẩm | 1,234 |     |              |       |
 
-: Top 20 Most Frequent Terms in Vietnamese Business Descriptions {#tbl-top-terms}
+: 20 thuật ngữ xuất hiện thường xuyên nhất trong phần mô tả hoạt động kinh doanh tiếng Việt {#tbl-top-terms}
 
-## TF-IDF Weighting {#sec-textual-tfidf}
+## Trọng số TF-IDF {#sec-textual-tfidf}
 
-Term Frequency-Inverse Document Frequency (TF-IDF) addresses a key limitation of raw term counts by downweighting terms that appear in many documents (and thus carry less discriminative information). The TF-IDF weight of term $w$ in document $d$ within corpus $D$ is:
+Tần suất từ – nghịch đảo tần suất tài liệu (TF-IDF) khắc phục một hạn chế chính của số đếm từ thô bằng cách giảm trọng số của những từ xuất hiện trong nhiều tài liệu (và do đó mang ít thông tin phân biệt hơn). Trọng số TF-IDF của từ $w$ trong tài liệu $d$ thuộc kho ngữ liệu $D$ là:
 
 $$
 \text{tfidf}(w, d, D) = \text{tf}(w, d) \times \log\left(\frac{|D|}{\text{df}(w, D)}\right)
@@ -473,7 +477,7 @@ for industry in ['Ngân hàng', 'Bất động sản',
 
 ```{python}
 #| label: fig-tfidf-heatmap
-#| fig-cap: "TF-IDF Heatmap: Top Terms by ICB Sector"
+#| fig-cap: "Bản đồ nhiệt TF-IDF: các thuật ngữ hàng đầu theo ngành ICB"
 #| eval: false
 #| code-summary: "Visualize industry-distinctive terms"
 
@@ -505,17 +509,17 @@ plt.tight_layout()
 plt.show()
 ```
 
-# Topic Modeling {#sec-textual-topic-modeling}
+# Mô hình hóa chủ đề {#sec-textual-topic-modeling}
 
-## Latent Dirichlet Allocation (LDA) {#sec-textual-lda}
+## Phân bổ Dirichlet tiềm ẩn (LDA) {#sec-textual-lda}
 
-Latent Dirichlet Allocation [@blei2003latent] is a generative probabilistic model that discovers latent topics in a corpus. Each document is modeled as a mixture of topics, and each topic is a distribution over words. LDA has been widely applied in finance to identify thematic content in 10-K filings [@dyer2017evolution], earnings calls [@huang2018analyst], and news articles [@bybee2023narrative].
+Phân bổ Dirichlet tiềm ẩn (Latent Dirichlet Allocation) [@blei2003latent] là một mô hình xác suất sinh dùng để khám phá các chủ đề tiềm ẩn trong một kho ngữ liệu. Mỗi tài liệu được mô hình hóa như một hỗn hợp của các chủ đề, và mỗi chủ đề là một phân phối trên các từ. LDA đã được áp dụng rộng rãi trong tài chính để nhận diện nội dung theo chủ đề trong các báo cáo 10-K [@dyer2017evolution], các cuộc họp công bố kết quả kinh doanh [@huang2018analyst] và các bài báo tin tức [@bybee2023narrative].
 
-The generative process assumes:
+Quá trình sinh giả định rằng:
 
-1.  For each topic $k$, draw a word distribution $\boldsymbol{\phi}_k \sim \text{Dir}(\beta)$.
-2.  For each document $d$, draw a topic distribution $\boldsymbol{\theta}_d \sim \text{Dir}(\alpha)$.
-3.  For each word position $i$ in document $d$, draw a topic $z_{d,i} \sim \text{Multinomial}(\boldsymbol{\theta}_d)$ and then draw the word $w_{d,i} \sim \text{Multinomial}(\boldsymbol{\phi}_{z_{d,i}})$.
+1.  Với mỗi chủ đề $k$, rút một phân phối từ $\boldsymbol{\phi}_k \sim \text{Dir}(\beta)$.
+2.  Với mỗi tài liệu $d$, rút một phân phối chủ đề $\boldsymbol{\theta}_d \sim \text{Dir}(\alpha)$.
+3.  Với mỗi vị trí từ $i$ trong tài liệu $d$, rút một chủ đề $z_{d,i} \sim \text{Multinomial}(\boldsymbol{\theta}_d)$ rồi rút từ $w_{d,i} \sim \text{Multinomial}(\boldsymbol{\phi}_{z_{d,i}})$.
 
 ```{python}
 #| label: lda-model
@@ -566,7 +570,7 @@ for topic_idx, topic in enumerate(lda_model.components_):
 
 ```{python}
 #| label: fig-lda-perplexity
-#| fig-cap: "LDA Model Selection: Perplexity vs. Number of Topics"
+#| fig-cap: "Lựa chọn mô hình LDA: độ rối (perplexity) so với số lượng chủ đề"
 #| code-summary: "Plot perplexity scores for topic model selection"
 #| eval: false
 
@@ -584,19 +588,19 @@ plt.tight_layout()
 plt.show()
 ```
 
-| Topic | Interpretation | Top Words |
+| Chủ đề | Diễn giải | Các từ hàng đầu |
 |------------------:|:------------------------------|:---------------------|
-| 0 | Banking & Finance | `ngân_hàng` \| `tín_dụng` \| `cho_vay` \| `tiền_gửi` \| `lãi_suất` \| `thanh_toán` \| `tài_khoản` |
-| 3 | Real Estate | `bất_động_sản` \| `dự_án` \| `căn_hộ` \| `khu_đô_thị` \| `xây_dựng` \| `nhà_ở` |
-| 7 | Technology | `công_nghệ` \| `phần_mềm` \| `giải_pháp` \| `hệ_thống` \| `số_hóa` \| `dữ_liệu` |
-| 11 | Manufacturing | `sản_xuất` \| `nguyên_liệu` \| `nhà_máy` \| `chất_lượng` \| `công_suất` \| `xuất_khẩu` |
-| 15 | Securities | `chứng_khoán` \| `môi_giới` \| `đầu_tư` \| `cổ_phiếu` \| `danh_mục` \| `quản_lý_quỹ` |
+| 0 | Ngân hàng & Tài chính | `ngân_hàng` \| `tín_dụng` \| `cho_vay` \| `tiền_gửi` \| `lãi_suất` \| `thanh_toán` \| `tài_khoản` |
+| 3 | Bất động sản | `bất_động_sản` \| `dự_án` \| `căn_hộ` \| `khu_đô_thị` \| `xây_dựng` \| `nhà_ở` |
+| 7 | Công nghệ | `công_nghệ` \| `phần_mềm` \| `giải_pháp` \| `hệ_thống` \| `số_hóa` \| `dữ_liệu` |
+| 11 | Sản xuất | `sản_xuất` \| `nguyên_liệu` \| `nhà_máy` \| `chất_lượng` \| `công_suất` \| `xuất_khẩu` |
+| 15 | Chứng khoán | `chứng_khoán` \| `môi_giới` \| `đầu_tư` \| `cổ_phiếu` \| `danh_mục` \| `quản_lý_quỹ` |
 
-: Selected LDA Topics from Vietnamese Business Descriptions (K=20) {#tbl-lda-topics}
+: Một số chủ đề LDA được chọn từ phần mô tả hoạt động kinh doanh tiếng Việt (K=20) {#tbl-lda-topics}
 
-## BERTopic: Neural Topic Modeling {#sec-textual-bertopic}
+## BERTopic: Mô hình hóa chủ đề bằng mạng nơ-ron {#sec-textual-bertopic}
 
-BERTopic [@grootendorst2022bertopic] represents a significant advance over LDA by leveraging pre-trained language model embeddings, dimensionality reduction via UMAP, and hierarchical density-based clustering (HDBSCAN) to discover topics. Unlike LDA, BERTopic captures semantic similarity rather than relying solely on word co-occurrence, producing more coherent topics, especially for specialized domains.
+BERTopic [@grootendorst2022bertopic] là một bước tiến đáng kể so với LDA nhờ tận dụng vector nhúng của mô hình ngôn ngữ tiền huấn luyện, giảm chiều bằng UMAP và phân cụm theo mật độ phân cấp (HDBSCAN) để khám phá các chủ đề. Khác với LDA, BERTopic nắm bắt sự tương đồng ngữ nghĩa thay vì chỉ dựa vào sự đồng xuất hiện của các từ, tạo ra các chủ đề mạch lạc hơn, đặc biệt đối với các lĩnh vực chuyên biệt.
 
 ```{python}
 #| label: bertopic-model
@@ -644,7 +648,7 @@ print(topic_info.head(20))
 
 ```{python}
 #| label: fig-bertopic-viz
-#| fig-cap: "BERTopic Document Cluster Visualization (UMAP projection of PhoBERT embeddings, colored by inferred topic). Each point represents a Vietnamese listed firm."
+#| fig-cap: "Trực quan hóa cụm tài liệu BERTopic (phép chiếu UMAP của vector nhúng PhoBERT, tô màu theo chủ đề suy ra). Mỗi điểm đại diện cho một doanh nghiệp niêm yết Việt Nam."
 #| code-summary: "Visualize BERTopic document clusters"
 #| eval: false
 
@@ -663,26 +667,26 @@ fig_barchart = topic_model.visualize_barchart(top_n_topics=10)
 fig_barchart.show()
 ```
 
-# Financial Sentiment Analysis {#sec-textual-sentiment}
+# Phân tích cảm xúc tài chính {#sec-textual-sentiment}
 
-## Dictionary-Based Approach {#sec-textual-dict-sentiment}
+## Cách tiếp cận dựa trên từ điển {#sec-textual-dict-sentiment}
 
-We construct a Vietnamese financial sentiment lexicon following the methodology of @loughran2011liability. Rather than directly translating the English LM dictionary (which would miss Vietnamese-specific financial expressions), we adopt a hybrid approach: (1) translate the core LM word lists using professional financial translators, (2) manually curate additions from Vietnamese financial regulation, accounting standards (VAS), and market commentary, and (3) validate the resulting dictionary against human-annotated Vietnamese financial text.
+Chúng ta xây dựng một từ điển cảm xúc tài chính tiếng Việt theo phương pháp của @loughran2011liability. Thay vì dịch trực tiếp từ điển LM tiếng Anh (cách này sẽ bỏ sót các cách diễn đạt tài chính đặc thù của Việt Nam), chúng ta áp dụng cách tiếp cận kết hợp: (1) dịch các danh sách từ cốt lõi của LM bằng các biên dịch viên tài chính chuyên nghiệp, (2) bổ sung thủ công các từ được tuyển chọn từ quy định tài chính của Việt Nam, các chuẩn mực kế toán (VAS) và các bình luận thị trường, và (3) kiểm định từ điển thu được trên văn bản tài chính tiếng Việt do con người gán nhãn.
 
-| Category  | Vietnamese Term | English Gloss | Source        | Count in Corpus |
+| Loại | Thuật ngữ tiếng Việt | Nghĩa tiếng Anh | Nguồn | Số lần xuất hiện trong kho ngữ liệu |
 |:----------|:----------------|:--------------|:--------------|----------------:|
-| Negative  | `lỗ`            | loss          | LM-translated |           2,341 |
-| Negative  | `sụt_giảm`      | decline       | Curated       |           1,876 |
-| Negative  | `nợ_xấu`        | bad debt      | VAS-specific  |           1,234 |
-| Negative  | `rủi_ro`        | risk          | LM-translated |           3,567 |
-| Positive  | `tăng_trưởng`   | growth        | LM-translated |           4,123 |
-| Positive  | `lợi_nhuận`     | profit        | LM-translated |           3,891 |
-| Positive  | `hiệu_quả`      | efficiency    | Curated       |           2,456 |
-| Uncertain | `biến_động`     | volatility    | LM-translated |           1,567 |
-| Litigious | `tranh_chấp`    | dispute       | Legal-VN      |             876 |
-| Litigious | `khởi_kiện`     | lawsuit       | Legal-VN      |             234 |
+| Tiêu cực  | `lỗ`            | loss          | Dịch từ LM |           2,341 |
+| Tiêu cực  | `sụt_giảm`      | decline       | Tuyển chọn thủ công |           1,876 |
+| Tiêu cực  | `nợ_xấu`        | bad debt      | Đặc thù VAS |           1,234 |
+| Tiêu cực  | `rủi_ro`        | risk          | Dịch từ LM |           3,567 |
+| Tích cực  | `tăng_trưởng`   | growth        | Dịch từ LM |           4,123 |
+| Tích cực  | `lợi_nhuận`     | profit        | Dịch từ LM |           3,891 |
+| Tích cực  | `hiệu_quả`      | efficiency    | Tuyển chọn thủ công |           2,456 |
+| Bất định  | `biến_động`     | volatility    | Dịch từ LM |           1,567 |
+| Tranh chấp pháp lý | `tranh_chấp`    | dispute       | Pháp lý VN |             876 |
+| Tranh chấp pháp lý | `khởi_kiện`     | lawsuit       | Pháp lý VN |             234 |
 
-: Vietnamese Financial Sentiment Lexicon: Sample Entries {#tbl-sentiment-lexicon}
+: Từ điển cảm xúc tài chính tiếng Việt: các mục mẫu {#tbl-sentiment-lexicon}
 
 ```{python}
 #| label: dict-sentiment
@@ -734,7 +738,7 @@ annual_text = pd.concat([annual_text, sentiment_scores], axis=1)
 
 ```{python}
 #| label: fig-sentiment-dist
-#| fig-cap: "Distribution of Net Sentiment Tone Across Firm-Years"
+#| fig-cap: "Phân phối sắc thái cảm xúc ròng trên các quan sát doanh nghiệp-năm"
 #| eval: false
 #| code-summary: "Plot sentiment distribution"
 
@@ -761,9 +765,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Transformer-Based Sentiment Classification {#sec-textual-bert-sentiment}
+## Phân loại cảm xúc dựa trên Transformer {#sec-textual-bert-sentiment}
 
-Dictionary approaches are limited by their inability to capture context, negation, and sarcasm. We complement the dictionary approach with PhoBERT-based sentiment classification. We fine-tune PhoBERT v2.
+Các cách tiếp cận dựa trên từ điển bị hạn chế vì không nắm bắt được ngữ cảnh, phủ định và mỉa mai. Chúng ta bổ sung cho cách tiếp cận từ điển bằng phân loại cảm xúc dựa trên PhoBERT. Chúng ta tinh chỉnh PhoBERT v2.
 
 ```{python}
 #| label: phobert-sentiment
@@ -818,25 +822,25 @@ def document_sentiment(text: str) -> dict:
     }
 ```
 
-| Method                  | Accuracy  | F1 (Pos)  | F1 (Neg)  | F1 (Neutral) |
+| Phương pháp                  | Độ chính xác  | F1 (Tích cực)  | F1 (Tiêu cực)  | F1 (Trung lập) |
 |:------------------------|:---------:|:---------:|:---------:|:------------:|
-| VN-LM Dictionary        |   0.612   |   0.584   |   0.637   |    0.598     |
+| Từ điển VN-LM        |   0.612   |   0.584   |   0.637   |    0.598     |
 | PhoBERT (zero-shot)     |   0.724   |   0.698   |   0.741   |    0.712     |
-| PhoBERT v2 (fine-tuned) | **0.831** | **0.812** | **0.847** |  **0.824**   |
+| PhoBERT v2 (đã tinh chỉnh) | **0.831** | **0.812** | **0.847** |  **0.824**   |
 
-: Sentiment Method Comparison: Dictionary vs. PhoBERT on Validation Set (N=500) {#tbl-sentiment-comparison}
+: So sánh các phương pháp cảm xúc: từ điển so với PhoBERT trên tập kiểm định (N=500) {#tbl-sentiment-comparison}
 
-# Text-Based Firm Similarity and Peer Identification {#sec-textual-similarity}
+# Độ tương đồng giữa các doanh nghiệp dựa trên văn bản và xác định nhóm cùng ngành {#sec-textual-similarity}
 
-## Cosine Similarity on TF-IDF Vectors {#sec-textual-tfidf-similarity}
+## Độ tương đồng cosine trên các vector TF-IDF {#sec-textual-tfidf-similarity}
 
-Following @hoberg2016text, we compute pairwise cosine similarity between firms based on their business description TF-IDF vectors. For two documents represented as TF-IDF vectors $\mathbf{a}$ and $\mathbf{b}$, cosine similarity is defined as:
+Theo @hoberg2016text, chúng ta tính độ tương đồng cosine theo từng cặp giữa các doanh nghiệp dựa trên vector TF-IDF của phần mô tả hoạt động kinh doanh. Với hai tài liệu được biểu diễn bằng các vector TF-IDF $\mathbf{a}$ và $\mathbf{b}$, độ tương đồng cosine được định nghĩa là:
 
 $$
 \cos(\mathbf{a}, \mathbf{b}) = \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{a}\| \times \|\mathbf{b}\|}
 $$ {#eq-cosine}
 
-This metric ranges from 0 (completely dissimilar) to 1 (identical content) and is invariant to document length. We use this to construct text-based industry networks (TNIC) for the Vietnamese market, which can capture firm relationships that static ICB sector codes miss.
+Thước đo này nhận giá trị từ 0 (hoàn toàn khác biệt) đến 1 (nội dung giống hệt) và bất biến với độ dài tài liệu. Chúng ta dùng nó để xây dựng các mạng lưới ngành dựa trên văn bản (TNIC) cho thị trường Việt Nam, vốn có thể nắm bắt các mối quan hệ giữa doanh nghiệp mà các mã ngành ICB tĩnh bỏ sót.
 
 ```{python}
 #| label: tfidf-similarity
@@ -871,20 +875,20 @@ for ticker in ['VCB', 'VNM', 'FPT', 'VIC', 'HPG']:
     print(get_top_peers(ticker))
 ```
 
-| Firm | ICB Sector  | Peer 1 | Peer 1 Sector | Sim Score | Same ICB? |
+| Doanh nghiệp | Ngành ICB  | Doanh nghiệp tương đồng 1 | Ngành của doanh nghiệp tương đồng 1 | Điểm tương đồng | Cùng ngành ICB? |
 |:-----|:------------|:-------|:--------------|:---------:|:---------:|
-| VCB  | Banking     | BID    | Banking       |   0.87    |    Yes    |
-| VCB  | Banking     | CTG    | Banking       |   0.84    |    Yes    |
-| VNM  | Food & Bev  | MCH    | Food & Bev    |   0.72    |    Yes    |
-| FPT  | Technology  | CMG    | Technology    |   0.68    |    Yes    |
-| VIC  | Real Estate | NVL    | Real Estate   |   0.74    |    Yes    |
-| HPG  | Steel       | HSG    | Steel         |   0.81    |    Yes    |
+| VCB  | Ngân hàng     | BID    | Ngân hàng       |   0.87    |    Có    |
+| VCB  | Ngân hàng     | CTG    | Ngân hàng       |   0.84    |    Có    |
+| VNM  | Thực phẩm & Đồ uống  | MCH    | Thực phẩm & Đồ uống    |   0.72    |    Có    |
+| FPT  | Công nghệ  | CMG    | Công nghệ    |   0.68    |    Có    |
+| VIC  | Bất động sản | NVL    | Bất động sản   |   0.74    |    Có    |
+| HPG  | Thép          | HSG    | Thép         |   0.81    |    Có    |
 
-: Text-Based Peer Identification: Top Most Similar Firms (TF-IDF Cosine) {#tbl-peers}
+: Xác định nhóm cùng ngành dựa trên văn bản: các doanh nghiệp tương đồng nhất (cosine TF-IDF) {#tbl-peers}
 
 ```{python}
 #| label: fig-similarity-heatmap
-#| fig-cap: "Pairwise TF-IDF Cosine Similarity Matrix for Selected Vietnamese Firms"
+#| fig-cap: "Ma trận độ tương đồng cosine TF-IDF theo từng cặp cho một số doanh nghiệp Việt Nam được chọn"
 #| code-summary: "Visualize similarity matrix"
 #| eval: false
 
@@ -901,11 +905,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Embedding-Based Similarity {#sec-textual-embedding-similarity}
+## Độ tương đồng dựa trên vector nhúng {#sec-textual-embedding-similarity}
 
-While TF-IDF cosine similarity captures lexical overlap, it misses semantic similarity. Two firms may describe similar businesses using different vocabulary. We address this using dense vector representations from pre-trained language models. Specifically, we compute document embeddings using Sentence-BERT [@reimers2019sentence] with a Vietnamese bi-encoder model.[^60_textual-3]
+Trong khi độ tương đồng cosine TF-IDF nắm bắt sự trùng lặp về từ vựng, nó bỏ sót sự tương đồng về ngữ nghĩa. Hai doanh nghiệp có thể mô tả những hoạt động kinh doanh tương tự bằng các từ vựng khác nhau. Chúng ta giải quyết vấn đề này bằng các biểu diễn vector dày đặc (dense) từ các mô hình ngôn ngữ tiền huấn luyện. Cụ thể, chúng ta tính vector nhúng tài liệu bằng Sentence-BERT [@reimers2019sentence] với một mô hình bi-encoder tiếng Việt.[^60_textual-3]
 
-[^60_textual-3]: @reimers2019sentence demonstrate that sentence-BERT embeddings reduce computation for similarity tasks from 65 hours to 5 seconds on 10,000 sentence pairs.
+[^60_textual-3]: @reimers2019sentence chứng minh rằng vector nhúng sentence-BERT giảm chi phí tính toán cho các tác vụ đo độ tương đồng từ 65 giờ xuống còn 5 giây trên 10.000 cặp câu.
 
 ```{python}
 #| label: embedding-similarity
@@ -944,7 +948,7 @@ for ticker in ['VCB', 'FPT', 'VIC']:
 
 ```{python}
 #| label: fig-tsne-embeddings
-#| fig-cap: "t-SNE Visualization of PhoBERT Sentence Embeddings (colored by ICB sector)"
+#| fig-cap: "Trực quan hóa t-SNE của vector nhúng câu PhoBERT (tô màu theo ngành ICB)"
 #| code-summary: "t-SNE projection of firm embeddings"
 #| eval: false
 
@@ -975,7 +979,7 @@ plt.show()
 
 ## Doc2Vec {#sec-textual-doc2vec}
 
-We also implement Doc2Vec [@le2014distributed], which learns fixed-length dense vectors for documents of variable length. Unlike averaging word embeddings, Doc2Vec jointly learns document and word vectors, allowing it to capture document-level semantics. We train Doc2Vec on the Vietnamese business description corpus using the concatenated DBOW+DM approach recommended by @lau2016empirical.
+Chúng ta cũng triển khai Doc2Vec [@le2014distributed], phương pháp học các vector dày đặc có độ dài cố định cho các tài liệu có độ dài biến thiên. Khác với việc lấy trung bình các vector nhúng từ, Doc2Vec học đồng thời vector tài liệu và vector từ, cho phép nắm bắt ngữ nghĩa ở cấp độ tài liệu. Chúng ta huấn luyện Doc2Vec trên kho ngữ liệu mô tả hoạt động kinh doanh tiếng Việt bằng cách tiếp cận DBOW+DM nối ghép do @lau2016empirical khuyến nghị.
 
 ```{python}
 #| label: doc2vec
@@ -1032,9 +1036,9 @@ for ticker in ['VCB', 'FPT', 'VIC']:
     print(f'{ticker}: {[(s[0], f"{s[1]:.3f}") for s in sims]}')
 ```
 
-# Deep Learning Approaches {#sec-textual-deep-learning}
+# Các cách tiếp cận học sâu {#sec-textual-deep-learning}
 
-## PhoBERT Embeddings for Financial Text {#sec-textual-phobert}
+## Vector nhúng PhoBERT cho văn bản tài chính {#sec-textual-phobert}
 
 PhoBERT [@nguyen2020phobert], pre-trained on 20GB of Vietnamese text, provides contextualized word embeddings that capture meaning based on surrounding context. Unlike static Word2Vec embeddings where "bảo" always has the same vector regardless of whether it means "insurance" (bảo hiểm) or "protect" (bảo vệ), PhoBERT produces context-dependent representations. We extract `[CLS]` token embeddings as document representations.
 
@@ -1098,11 +1102,11 @@ phobert_embeddings = np.array([
 ])
 ```
 
-## Large Language Model Applications {#sec-textual-llm}
+## Các ứng dụng của mô hình ngôn ngữ lớn {#sec-textual-llm}
 
-Recent advances in LLMs open new possibilities for financial textual analysis. We demonstrate three applications using Vietnamese-capable LLMs: zero-shot financial text classification, structured information extraction from annual reports, and automated ESG scoring from corporate disclosures.
+Những tiến bộ gần đây của các LLM mở ra những khả năng mới cho phân tích văn bản tài chính. Chúng ta trình bày ba ứng dụng sử dụng các LLM hỗ trợ tiếng Việt: phân loại văn bản tài chính zero-shot, trích xuất thông tin có cấu trúc từ báo cáo thường niên, và chấm điểm ESG tự động từ các bản công bố thông tin của doanh nghiệp.
 
-### Zero-Shot Financial Classification {#sec-textual-zero-shot}
+### Phân loại tài chính zero-shot {#sec-textual-zero-shot}
 
 ```{python}
 #| label: llm-zero-shot
@@ -1144,7 +1148,7 @@ def classify_financial_text(
     return response.content[0].text
 ```
 
-### Structured Information Extraction {#sec-textual-extraction}
+### Trích xuất thông tin có cấu trúc {#sec-textual-extraction}
 
 ```{python}
 #| label: llm-extraction
@@ -1186,7 +1190,7 @@ def extract_financial_info(annual_report_text: str) -> dict:
     return json.loads(response.content[0].text)
 ```
 
-### Automated ESG Scoring {#sec-textual-esg}
+### Chấm điểm ESG tự động {#sec-textual-esg}
 
 ```{python}
 #| label: llm-esg
@@ -1238,17 +1242,17 @@ for _, row in annual_text.iterrows():
 esg_df = pd.DataFrame(esg_results)
 ```
 
-# Empirical Applications {#sec-textual-empirical}
+# Các ứng dụng thực nghiệm {#sec-textual-empirical}
 
-## Textual Sentiment and Stock Returns {#sec-textual-sentiment-returns}
+## Cảm xúc văn bản và lợi nhuận cổ phiếu {#sec-textual-sentiment-returns}
 
-We examine whether textual sentiment from annual reports predicts subsequent stock returns, following the methodology of @tetlock2008more. We regress monthly stock returns on lagged sentiment measures while controlling for standard risk factors (market, size, value, momentum) adapted for the Vietnamese market:
+Chúng ta kiểm tra xem cảm xúc văn bản từ báo cáo thường niên có dự báo lợi nhuận cổ phiếu tiếp theo hay không, theo phương pháp của @tetlock2008more. Chúng ta hồi quy lợi nhuận cổ phiếu hằng tháng theo các thước đo cảm xúc có độ trễ, đồng thời kiểm soát các nhân tố rủi ro tiêu chuẩn (thị trường, quy mô, giá trị, động lượng) được điều chỉnh cho thị trường Việt Nam:
 
 $$
 R_{i,t} = \alpha + \beta_1 \text{Tone}_{i,t-1} + \beta_2 \text{Uncertainty}_{i,t-1} + \boldsymbol{\gamma}' \mathbf{X}_{i,t-1} + \varepsilon_{i,t}
 $$ {#eq-return-regression}
 
-where $R_{i,t}$ is the monthly excess return of firm $i$ in month $t$, $\text{Tone}$ is the net sentiment score (positive minus negative word proportion), $\text{Uncertainty}$ is the proportion of uncertain words, and $\mathbf{X}$ is a vector of controls including the Fama-French-Carhart factors adapted for Vietnam (see Chapter on Factor Models).
+trong đó $R_{i,t}$ là lợi nhuận vượt mức hằng tháng của doanh nghiệp $i$ trong tháng $t$, $\text{Tone}$ là điểm cảm xúc ròng (tỷ lệ từ tích cực trừ tỷ lệ từ tiêu cực), $\text{Uncertainty}$ là tỷ lệ các từ bất định, và $\mathbf{X}$ là vector các biến kiểm soát, bao gồm các nhân tố Fama-French-Carhart được điều chỉnh cho Việt Nam (xem chương về các mô hình nhân tố).
 
 ```{python}
 #| label: sentiment-return-regression
@@ -1317,13 +1321,13 @@ print(res2.summary)
 print(res3.summary)
 ```
 
-| Variable           | \(1\) Dictionary | \(2\) PhoBERT | \(3\) Combined |
+| Biến           | \(1\) Từ điển | \(2\) PhoBERT | \(3\) Kết hợp |
 |:-------------------|:----------------:|:-------------:|:--------------:|
-| Net Tone (Dict)    |    0.0234\*\*    |               |    0.0187\*    |
+| Sắc thái ròng (từ điển) |    0.0234\*\*    |               |    0.0187\*    |
 |                    |     (0.0098)     |               |    (0.0102)    |
-| Uncertainty (Dict) |  −0.0312\*\*\*   |               |  −0.0278\*\*   |
+| Bất định (từ điển) |  −0.0312\*\*\*   |               |  −0.0278\*\*   |
 |                    |     (0.0087)     |               |    (0.0091)    |
-| BERT Tone          |                  | 0.0456\*\*\*  |  0.0389\*\*\*  |
+| Sắc thái BERT |                  | 0.0456\*\*\*  |  0.0389\*\*\*  |
 |                    |                  |   (0.0112)    |    (0.0118)    |
 | MKT-RF             |   0.9123\*\*\*   | 0.9118\*\*\*  |  0.9115\*\*\*  |
 |                    |     (0.0234)     |   (0.0233)    |    (0.0234)    |
@@ -1331,17 +1335,17 @@ print(res3.summary)
 |                    |     (0.0456)     |   (0.0455)    |    (0.0456)    |
 | HML                |     0.0876\*     |   0.0871\*    |    0.0873\*    |
 |                    |     (0.0512)     |   (0.0511)    |    (0.0512)    |
-| Firm FE            |       Yes        |      Yes      |      Yes       |
-| Time FE            |       Yes        |      Yes      |      Yes       |
-| Clustering         |     Two-way      |    Two-way    |    Two-way     |
+| Hiệu ứng cố định doanh nghiệp |       Có        |      Có      |      Có       |
+| Hiệu ứng cố định thời gian |       Có        |      Có      |      Có       |
+| Phân cụm sai số chuẩn |      Hai chiều      |    Hai chiều    |     Hai chiều    |
 | N                  |      12,456      |    12,456     |     12,456     |
-| R² (within)        |      0.142       |     0.148     |     0.153      |
+| R² (trong nhóm)        |      0.142       |     0.148     |     0.153      |
 
-: Textual Sentiment and Stock Returns: Panel Regression Results {#tbl-regression}
+: Cảm xúc văn bản và lợi nhuận cổ phiếu: kết quả hồi quy dữ liệu bảng {#tbl-regression}
 
-## Text-Based Industry Classification {#sec-textual-tnic}
+## Phân loại ngành dựa trên văn bản {#sec-textual-tnic}
 
-We construct Vietnamese Text-Based Network Industries (VN-TNIC) analogous to @hoberg2016text. For each firm-year, we identify the set of firms with cosine similarity above a threshold $\tau$ as the firm's text-based industry peers. We then compare the explanatory power of VN-TNIC versus ICB sector codes for various financial outcomes.
+Chúng ta xây dựng các Mạng lưới ngành dựa trên văn bản của Việt Nam (VN-TNIC) tương tự @hoberg2016text. Với mỗi quan sát doanh nghiệp-năm, chúng ta xác định tập hợp các doanh nghiệp có độ tương đồng cosine vượt ngưỡng $\tau$ làm nhóm doanh nghiệp cùng ngành dựa trên văn bản của doanh nghiệp đó. Sau đó chúng ta so sánh sức giải thích của VN-TNIC với các mã ngành ICB đối với nhiều kết quả tài chính khác nhau.
 
 ```{python}
 #| label: tnic-construction
@@ -1397,7 +1401,7 @@ panel['icb_peer_ret'] = panel.groupby(
 ```{python}
 #| label: fig-tnic-network
 #| eval: false
-#| fig-cap: "Vietnamese Text-Based Network Industry (VN-TNIC) Graph. Node color represents ICB sector; edge thickness proportional to cosine similarity."
+#| fig-cap: "Đồ thị mạng lưới ngành dựa trên văn bản của Việt Nam (VN-TNIC). Màu của nút biểu thị ngành ICB; độ dày của cạnh tỷ lệ với độ tương đồng cosine."
 #| code-summary: "Visualize TNIC network"
 
 import networkx as nx
@@ -1431,9 +1435,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Measuring Textual Similarity Changes Around Corporate Events {#sec-textual-event-study}
+## Đo lường sự thay đổi độ tương đồng văn bản xung quanh các sự kiện doanh nghiệp {#sec-textual-event-study}
 
-We examine how firms' textual similarity changes around major corporate events such as M&A announcements, industry reclassifications, and strategic pivots. This analysis leverages the time-varying nature of annual report text to capture real business changes that static industry codes may lag in reflecting.
+Chúng ta xem xét độ tương đồng văn bản của các doanh nghiệp thay đổi như thế nào xung quanh các sự kiện doanh nghiệp lớn như thông báo M&A, tái phân loại ngành và các chuyển hướng chiến lược. Phân tích này tận dụng tính chất biến đổi theo thời gian của văn bản báo cáo thường niên để nắm bắt những thay đổi kinh doanh thực sự mà các mã ngành tĩnh có thể phản ánh chậm.
 
 ```{python}
 #| label: event-study-text
@@ -1499,34 +1503,458 @@ print(f't-stat: {event_df.delta_similarity.mean() / '
       f'np.sqrt(len(event_df))):.3f}')
 ```
 
-# Method Comparison and Best Practices {#sec-textual-comparison}
+## Mạng xã hội của lãnh đạo doanh nghiệp và giá cổ phiếu {#sec-textual-exec-social}
 
-| Method | Interpretability | Semantic | Speed | VN Support | Data Req. | Best Use Case |
-|:----------|:---------:|:---------:|:---------:|:---------:|:---------:|:----------|
-| BoW/TF-IDF | High | Low | Fast | Good\* | None | Peer groups, lexical similarity |
-| LDA | Medium | Low | Medium | Good\* | None | Topic discovery |
-| Doc2Vec | Low | Medium | Medium | Good\* | Corpus | Document similarity |
-| BERTopic | High | High | Slow | Excellent | None | Coherent topics |
-| PhoBERT | Low | High | Slow | Excellent | Fine-tune | Sentiment, NER, classification |
-| Sentence-BERT | Low | High | Medium | Good | None | Semantic similarity |
-| LLM (zero-shot) | High | High | Slow | Good | None | Extraction, classification |
+Các ứng dụng cho đến nay phân tích văn bản do *doanh nghiệp* tạo ra: báo cáo thường niên, phần mô tả hoạt động kinh doanh và các thông báo chính thức. Một nhánh tài liệu đang phát triển nhanh nghiên cứu văn bản do *những người điều hành doanh nghiệp* tạo ra. @crowley2024executive cung cấp nghiên cứu chuẩn mực. Khảo sát hoạt động trên Twitter (nay là X) của các CEO và CFO thuộc S&P 1500 từ năm 2011 đến 2018, họ ghi nhận ba phát hiện thực nghiệm làm nền tảng cho toàn bộ mục này. Thứ nhất, lãnh đạo doanh nghiệp đăng tải thông tin tài chính một cách có chiến lược: các bài đăng liên quan đến tài chính tập trung quanh các sự kiện doanh nghiệp lớn thay vì rải ngẫu nhiên theo thời gian. Thứ hai, nhà đầu tư phản ứng với các tweet tài chính của lãnh đạo *vượt trên* cùng thông tin đó được đưa qua các tài khoản chính thức của doanh nghiệp, và phản ứng đối với nội dung liên quan đến tài chính lớn hơn khi nội dung đó xuất hiện trên tài khoản cá nhân của lãnh đạo so với khi nội dung tương tự xuất hiện trên tài khoản của doanh nghiệp, điều mà các tác giả quy cho cơ chế niềm tin giữa người với người. Thứ ba, và hữu ích nhất cho thiết kế nghiên cứu, @crowley2024executive xây dựng một thước đo học máy về *độ tương đồng nội dung* giữa mỗi tweet của lãnh đạo và các tweet của chính doanh nghiệp, cho phép họ tách biệt hai kênh phản ứng của thị trường: một **kênh thông tin mới**, được nhận diện từ phản ứng của thị trường đối với các tweet tài chính của lãnh đạo xuất hiện khi không có bản công bố thông tin tương ứng nào của doanh nghiệp, và một **kênh uy tín**, được nhận diện từ các phản ứng mạnh hơn đối với những tweet của lãnh đạo có nội dung xác nhận điều mà tài khoản của doanh nghiệp đã đăng trước đó. Cả hai kênh đều hoạt động trong dữ liệu của họ. Trong một nghiên cứu đi kèm, @crowley2024discretionary cho thấy phía doanh nghiệp trong cuộc trao đổi này tự nó cũng mang tính chiến lược: các doanh nghiệp tự quyết định tin tức nào của mình được đẩy lên mạng xã hội.
 
-: Comparison of Textual Analysis Methods for Vietnamese Financial Text {#tbl-method-comparison}
+Những phát hiện này mở rộng một nhánh tài liệu rộng hơn về mạng xã hội trên thị trường vốn, điều mà người đọc nên lưu ý khi diễn giải bất kỳ triển khai nào cho Việt Nam. @blankespoor2014role cho thấy chỉ cần phát tán thông cáo báo chí về lợi nhuận qua Twitter cũng cải thiện thanh khoản của các doanh nghiệp ít được chú ý, nghĩa là mạng xã hội vẫn đóng vai trò quan trọng ngay cả khi nó không mang nội dung mới. @jung2018firms ghi nhận rằng các doanh nghiệp ít có khả năng phát tán tin xấu về lợi nhuận hơn đáng kể so với tin tốt trên mạng xã hội, một lời cảnh báo rằng dòng bài đăng quan sát được là một mẫu đã bị chọn lọc. @bartov2018can nhận thấy rằng ý kiến tổng hợp trong các tweet liên quan đến doanh nghiệp dự báo bất ngờ lợi nhuận và lợi nhuận quanh ngày công bố, và @chen2014wisdom cho thấy kết quả tương tự đối với ý kiến đám đông trên các nền tảng đầu tư, do đó các bài đăng của lãnh đạo cạnh tranh với, và cần được đối chiếu với, một tín hiệu đám đông nhiều nhiễu.
 
-::: callout-note
-\*Requires Vietnamese word segmentation as a preprocessing step. VN Support rates how well the method handles Vietnamese text natively.
+Việc áp dụng chương trình nghiên cứu này vào Việt Nam đòi hỏi phải chuyển đổi cả bối cảnh thể chế lẫn bộ công cụ đo lường. Cơ cấu nền tảng khác biệt căn bản: lãnh đạo doanh nghiệp Việt Nam giao tiếp trên Facebook và ngày càng nhiều trên Zalo; mức độ phổ biến của X là không đáng kể. Các tình huống giao tiếp của lãnh đạo doanh nghiệp rất nổi bật trên thị trường Việt Nam, từ các CEO công nghệ công bố kế hoạch sản phẩm trên trang Facebook cá nhân đến các lãnh đạo công ty môi giới và bất động sản bình luận về tình hình thị trường với lượng người theo dõi lên tới hàng trăm nghìn. Cơ cấu người tiếp nhận làm tăng thêm tầm quan trọng: nhà đầu tư cá nhân chiếm khoảng 80% khối lượng giao dịch (@sec-textual-why-vietnam), và các nhà giao dịch cá nhân chính là những nhà đầu tư có nhiều khả năng nhất theo dõi lãnh đạo doanh nghiệp trên các nền tảng xã hội. Bối cảnh pháp lý cũng đặc thù: Ủy ban Chứng khoán Nhà nước và các cơ quan công an đã nhiều lần xử phạt các cá nhân phát tán thông tin sai lệch có khả năng tác động đến thị trường trên các nền tảng xã hội, và các vụ thao túng thị trường trong những năm gần đây có liên quan đến hoạt động phối hợp trên mạng xã hội, vì vậy một hệ thống giám sát như loại chúng ta xây dựng dưới đây có cả ứng dụng tuân thủ lẫn ứng dụng tìm kiếm alpha.
+
+Việc ánh xạ thiết kế của @crowley2024executive sang một triển khai tại Việt Nam được tóm tắt trong @tbl-exec-design.
+
+| Yếu tố thiết kế | @crowley2024executive (Mỹ) | Điều chỉnh cho Việt Nam |
+|:------------------|:--------------------------|:--------------------------|
+| Mẫu | CEO/CFO thuộc S&P 1500, 2011-2018 | Lãnh đạo điều hành và chủ tịch của các doanh nghiệp niêm yết trên HOSE/HNX |
+| Nền tảng | Twitter/X | Trang Facebook, Zalo OA; X nếu có |
+| Nhận diện tài khoản | Đối chiếu tên tài khoản + xác minh thủ công | Danh bạ được xây dựng từ báo cáo thường niên, công bố thông tin về quản trị công ty, các trang đã xác minh |
+| Bộ phân loại nội dung tài chính | ML có giám sát trên các tweet đã gán nhãn | Từ điển tài chính tiếng Việt + tinh chỉnh PhoBERT (@sec-textual-phobert) hoặc LLM zero-shot (@sec-textual-llm) |
+| Thước đo độ tương đồng nội dung | Độ tương đồng ML giữa tweet của lãnh đạo và của doanh nghiệp | Độ tương đồng cosine trong không gian TF-IDF hoặc vector nhúng dùng chung (@sec-textual-similarity) |
+| Phản ứng của thị trường | Lợi nhuận và khối lượng trong cửa sổ công bố | CAR điều chỉnh theo thị trường; suy luận đầy đủ qua khung nghiên cứu sự kiện của chương về nghiên cứu sự kiện |
+| Ma sát chính | Reg FD hạn chế việc công bố có chọn lọc | Không có quy định tương tự Reg FD; thay vào đó là các thông tư về công bố thông tin và các quy định xử lý thao túng |
+
+: Ánh xạ thiết kế nghiên cứu tweet của lãnh đạo sang Việt Nam {#tbl-exec-design}
+
+### Kiến trúc dữ liệu cho môi trường vận hành {#sec-textual-exec-data}
+
+Hệ thống vận hành bắt đầu bằng một danh bạ các tài khoản của lãnh đạo doanh nghiệp và một bộ thu thập lưu trữ các bài đăng ngay tại thời điểm tiếp nhận. Việc lưu trữ rất quan trọng: các bài đăng thường xuyên bị chỉnh sửa hoặc xóa sau khi thị trường đã phản ứng, vì vậy phiên bản bạn phân tích phải là phiên bản mà nhà đầu tư đã thấy. Mã thu thập dưới đây là bộ khung vận hành; nó đòi hỏi thông tin xác thực API của nền tảng và sự tôn trọng điều khoản dịch vụ của từng nền tảng, và chỉ nên thu thập các bài đăng công khai, liên quan đến hoạt động kinh doanh.
+
+```{python}
+#| label: exec-social-collection
+#| eval: false
+#| code-summary: "Production: executive account registry and post collector"
+
+import sqlite3
+import json
+from datetime import datetime, timezone
+
+DB_PATH = 'data/exec_social.sqlite'
+
+REGISTRY_SCHEMA = """
+CREATE TABLE IF NOT EXISTS exec_accounts (
+    ticker        TEXT NOT NULL,     -- listed firm ticker
+    exec_name     TEXT NOT NULL,     -- as disclosed in governance reports
+    exec_role     TEXT NOT NULL,     -- CEO / CFO / Chair / ...
+    platform      TEXT NOT NULL,     -- facebook / zalo / x
+    handle        TEXT NOT NULL,     -- page id or username
+    verified_by   TEXT,              -- annual report / press / platform badge
+    verified_date TEXT,
+    PRIMARY KEY (platform, handle)
+);
+CREATE TABLE IF NOT EXISTS social_posts (
+    post_id       TEXT PRIMARY KEY,
+    platform      TEXT NOT NULL,
+    handle        TEXT NOT NULL,
+    posted_at_utc TEXT NOT NULL,
+    collected_at  TEXT NOT NULL,
+    text          TEXT,
+    raw_json      TEXT,              -- full API payload, archived verbatim
+    is_deleted    INTEGER DEFAULT 0, -- flipped by re-crawls, never overwritten
+    is_edited     INTEGER DEFAULT 0
+);
+"""
+
+def collect_x_posts(handles: List[str], bearer_token: str) -> List[dict]:
+    """Collect recent posts via the X API v2 (tweepy)."""
+    import tweepy
+    client = tweepy.Client(bearer_token=bearer_token)
+    out = []
+    for handle in handles:
+        user = client.get_user(username=handle)
+        tweets = client.get_users_tweets(
+            user.data.id, max_results=100,
+            tweet_fields=['created_at', 'public_metrics', 'edit_history_tweet_ids']
+        )
+        for tw in tweets.data or []:
+            out.append({
+                'post_id': f'x_{tw.id}', 'platform': 'x', 'handle': handle,
+                'posted_at_utc': tw.created_at.isoformat(),
+                'text': tw.text, 'raw_json': json.dumps(tw.data)
+            })
+    return out
+
+def collect_facebook_posts(page_ids: List[str], access_token: str) -> List[dict]:
+    """Collect public page posts via the Facebook Graph API.
+
+    Personal profiles are not accessible; most Vietnamese executives with a
+    public presence operate a public *page*, which is what the registry should
+    record. Zalo Official Accounts expose a similar API for OA posts.
+    """
+    import requests
+    out = []
+    for pid in page_ids:
+        r = requests.get(
+            f'https://graph.facebook.com/v19.0/{pid}/posts',
+            params={'fields': 'id,created_time,message',
+                    'access_token': access_token}
+        )
+        for post in r.json().get('data', []):
+            out.append({
+                'post_id': f'fb_{post["id"]}', 'platform': 'facebook',
+                'handle': pid, 'posted_at_utc': post['created_time'],
+                'text': post.get('message', ''), 'raw_json': json.dumps(post)
+            })
+    return out
+
+def store_posts(posts: List[dict]):
+    """Idempotent insert; re-crawls mark deletions instead of overwriting."""
+    con = sqlite3.connect(DB_PATH)
+    con.executescript(REGISTRY_SCHEMA)
+    now = datetime.now(timezone.utc).isoformat()
+    con.executemany(
+        """INSERT OR IGNORE INTO social_posts
+           (post_id, platform, handle, posted_at_utc, collected_at, text, raw_json)
+           VALUES (:post_id, :platform, :handle, :posted_at_utc, :collected_at,
+                   :text, :raw_json)""",
+        [{**p, 'collected_at': now} for p in posts]
+    )
+    con.commit(); con.close()
+```
+
+Hai quy ước về thời gian đặc biệt quan trọng đối với dữ liệu Việt Nam. Thứ nhất, dấu thời gian đến ở dạng UTC và phải được chuyển sang giờ Đông Dương (UTC+7). Thứ hai, các bài đăng phải được ánh xạ tới ngày sự kiện theo *ngày giao dịch*: một bài đăng được đăng sau khi phiên ATC đóng cửa lúc 14:45, hoặc vào cuối tuần hay ngày lễ, thuộc về ngày giao dịch kế tiếp, đúng như cách xử lý dấu thời gian công bố trong chương về nghiên cứu sự kiện.
+
+### Môi trường thử nghiệm tái lập: Các bài đăng mô phỏng của lãnh đạo {#sec-textual-exec-sim}
+
+Phần còn lại của mục này là một bản tái lập hoàn chỉnh, có thể chạy được, của thiết kế của @crowley2024executive trên dữ liệu Việt Nam mô phỏng, để mọi bước (phân loại, độ tương đồng, phản ứng thị trường) có thể được thực thi và kiểm tra trước khi có bất kỳ thông tin xác thực API nào. Chúng ta mô phỏng 20 mã chứng khoán giả lập trong 500 ngày giao dịch: mỗi doanh nghiệp đăng các thông báo chính thức quanh các ngày công bố kết quả hằng quý, và mỗi lãnh đạo đăng một hỗn hợp gồm nội dung phi tài chính, nội dung tài chính *xác nhận* diễn giải lại thông báo của chính doanh nghiệp, và nội dung tài chính *mới* (các phát biểu mang tính định hướng, đưa ra trước bất kỳ bản công bố nào của doanh nghiệp). Phản ánh các phát hiện của bài báo, chúng ta gắn vào dữ liệu một phản ứng giá đối với các bài đăng tài chính của lãnh đạo, lớn nhất đối với nội dung mới. Toàn bộ văn bản là tiếng Việt đã được tách từ sẵn (các từ ghép nối bằng dấu gạch dưới), phù hợp với các quy ước của @sec-textual-segmentation. Các mã chứng khoán và lãnh đạo là giả lập theo thiết kế; việc gán các phát biểu mô phỏng cho các doanh nghiệp hay cá nhân có thật là không phù hợp.
+
+```{python}
+#| label: exec-social-simulate
+#| code-summary: "Simulate returns, firm posts, and executive posts"
+
+rng = np.random.default_rng(42)
+
+TICKERS = [f'T{i:02d}' for i in range(20)]
+DATES = pd.bdate_range('2023-01-02', periods=500)
+
+# --- Market and stock returns -------------------------------------------
+mkt_ret = rng.normal(0.0004, 0.010, len(DATES))
+betas = {t: rng.uniform(0.8, 1.2) for t in TICKERS}
+returns = pd.DataFrame({
+    t: betas[t] * mkt_ret + rng.normal(0, 0.018, len(DATES))
+    for t in TICKERS
+}, index=DATES)
+
+# --- Quarterly earnings dates per ticker --------------------------------
+earnings_dates = {
+    t: [DATES[min(len(DATES) - 1, q * 63 + int(rng.integers(0, 10)))]
+        for q in range(1, 8)]
+    for t in TICKERS
+}
+
+NONFIN_TEMPLATES = [
+    'chúc_mừng năm_mới toàn_thể nhân_viên và khách_hàng của công_ty',
+    'tự_hào về đội_ngũ nhân_viên tận_tâm của chúng_ta',
+    'hôm_nay tôi tham_dự hội_thảo về chuyển_đổi_số và đổi_mới sáng_tạo',
+    'cảm_ơn khách_hàng đã luôn đồng_hành cùng chúng_tôi',
+    'cuối_tuần đọc một cuốn sách hay về quản_trị doanh_nghiệp',
+]
+FIRM_FIN_TEMPLATE = ('công_ty công_bố kết_quả kinh_doanh quý '
+                     'doanh_thu đạt {rev} tỷ đồng lợi_nhuận tăng {gro} '
+                     'phần_trăm so với cùng_kỳ')
+CONFIRM_TEMPLATE = ('rất vui chia_sẻ kết_quả kinh_doanh quý '
+                    'doanh_thu đạt {rev} tỷ đồng lợi_nhuận tăng {gro} '
+                    'phần_trăm so với cùng_kỳ cảm_ơn cả đội_ngũ')
+NOVEL_TEMPLATES = [
+    'đơn_hàng mới rất khả_quan lợi_nhuận quý tới dự_kiến vượt kế_hoạch',
+    'biên lợi_nhuận đang cải_thiện nhờ giá nguyên_liệu giảm mạnh',
+    'công_ty chuẩn_bị ký hợp_đồng xuất_khẩu lớn doanh_thu sẽ tăng mạnh',
+]
+
+firm_posts, exec_posts = [], []
+for t in TICKERS:
+    for ed in earnings_dates[t]:
+        rev, gro = int(rng.integers(200, 900)), int(rng.integers(5, 40))
+        firm_posts.append({'ticker': t, 'date': ed, 'account': 'firm',
+                           'text': FIRM_FIN_TEMPLATE.format(rev=rev, gro=gro)})
+        # Confirmatory executive post one day after the firm announcement
+        if rng.random() < 0.6:
+            d = DATES[min(len(DATES) - 1, DATES.get_loc(ed) + 1)]
+            exec_posts.append({'ticker': t, 'date': d, 'account': 'executive',
+                               'category': 'financial_confirmatory',
+                               'text': CONFIRM_TEMPLATE.format(rev=rev, gro=gro)})
+        # Novel executive post about a week before the firm announcement
+        if rng.random() < 0.4:
+            d = DATES[max(0, DATES.get_loc(ed) - int(rng.integers(4, 8)))]
+            exec_posts.append({'ticker': t, 'date': d, 'account': 'executive',
+                               'category': 'financial_novel',
+                               'text': NOVEL_TEMPLATES[int(rng.integers(0, 3))]})
+    # Non-financial posts scattered through time
+    for _ in range(int(rng.integers(15, 25))):
+        d = DATES[int(rng.integers(0, len(DATES)))]
+        exec_posts.append({'ticker': t, 'date': d, 'account': 'executive',
+                           'category': 'nonfinancial',
+                           'text': NONFIN_TEMPLATES[int(rng.integers(0, 5))]})
+
+firm_posts = pd.DataFrame(firm_posts)
+exec_posts = pd.DataFrame(exec_posts)
+
+# --- Embed market reactions (the "truth" our tests should recover) ------
+for _, p in exec_posts.iterrows():
+    i = DATES.get_loc(p.date)
+    if p.category == 'financial_novel':
+        returns.loc[DATES[i], p.ticker] += 0.010
+        if i + 1 < len(DATES):
+            returns.loc[DATES[i + 1], p.ticker] += 0.005
+    elif p.category == 'financial_confirmatory':
+        returns.loc[DATES[i], p.ticker] += 0.003
+
+print(f'Simulated {len(firm_posts)} firm posts and {len(exec_posts)} '
+      f'executive posts across {len(TICKERS)} tickers')
+print(exec_posts.category.value_counts())
+```
+
+### Phân loại nội dung tài chính {#sec-textual-exec-classify}
+
+Trước tiên, @crowley2024executive tách các tweet tài chính khỏi tweet phi tài chính bằng một bộ phân loại có giám sát được huấn luyện trên dữ liệu gán nhãn thủ công. Chúng ta tái lập bước đó bằng biểu diễn TF-IDF của @sec-textual-tfidf và một hồi quy logistic. Trong môi trường thử nghiệm, các nhãn đến từ mô phỏng; trong môi trường vận hành, chúng đến từ một vòng gán nhãn thủ công (thường vài trăm bài đăng là đủ để bắt đầu), sau đó bộ phân loại có thể được nâng cấp lên PhoBERT đã tinh chỉnh (@sec-textual-phobert) hoặc bộ phân loại LLM zero-shot (@sec-textual-llm) mà không cần thay đổi bất cứ điều gì ở các bước phía sau.
+
+```{python}
+#| label: exec-social-classify
+#| code-summary: "Financial-content classifier for Vietnamese posts"
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+
+exec_posts['is_financial'] = (exec_posts.category != 'nonfinancial').astype(int)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    exec_posts.text, exec_posts.is_financial,
+    test_size=0.3, random_state=42, stratify=exec_posts.is_financial
+)
+
+clf_vectorizer = TfidfVectorizer(token_pattern=r'\S+')
+clf = LogisticRegression(max_iter=1000)
+clf.fit(clf_vectorizer.fit_transform(X_train), y_train)
+
+y_pred = clf.predict(clf_vectorizer.transform(X_test))
+print(classification_report(y_test, y_pred,
+                            target_names=['non-financial', 'financial']))
+
+# The most financially loaded tokens, per the fitted model
+coefs = pd.Series(clf.coef_[0], index=clf_vectorizer.get_feature_names_out())
+print('Top financial indicator tokens:')
+print(coefs.sort_values(ascending=False).head(8).round(2))
+```
+
+### Đo lường độ tương đồng nội dung giữa lãnh đạo và doanh nghiệp {#sec-textual-exec-similarity}
+
+Thước đo cốt lõi trong @crowley2024executive là độ tương đồng nội dung giữa một bài đăng của lãnh đạo và các bài đăng gần đây của chính doanh nghiệp, biến hai cơ chế phản ứng của thị trường thành một phép phân tách có thể đo lường: một bài đăng tài chính của lãnh đạo rất giống với nội dung gần đây của doanh nghiệp là *xác nhận* (phản ứng của nó, nếu có, vận hành qua kênh uy tín), trong khi một bài đăng tài chính không có nội dung tương tự nào từ doanh nghiệp là *mới* (phản ứng của nó cho thấy thông tin mới đi vào thị trường thông qua lãnh đạo). Chúng ta triển khai thước đo này dưới dạng độ tương đồng cosine tối đa giữa mỗi bài đăng tài chính của lãnh đạo và các bài đăng chính thức của cùng doanh nghiệp trong bảy ngày lịch gần nhất, trong một không gian TF-IDF dùng chung (@sec-textual-tfidf-similarity).
+
+```{python}
+#| label: exec-social-similarity
+#| code-summary: "Executive-firm content similarity and novelty split"
+
+from sklearn.metrics.pairwise import cosine_similarity
+
+all_text = pd.concat([exec_posts.text, firm_posts.text])
+sim_vectorizer = TfidfVectorizer(token_pattern=r'\S+').fit(all_text)
+
+SIM_WINDOW_DAYS = 7
+SIM_THRESHOLD = 0.30
+
+def max_similarity_to_firm(row) -> float:
+    window = firm_posts[
+        (firm_posts.ticker == row.ticker) &
+        (firm_posts.date <= row.date) &
+        (firm_posts.date >= row.date - pd.Timedelta(days=SIM_WINDOW_DAYS))
+    ]
+    if window.empty:
+        return 0.0
+    sims = cosine_similarity(
+        sim_vectorizer.transform([row.text]),
+        sim_vectorizer.transform(window.text)
+    )
+    return float(sims.max())
+
+fin_posts = exec_posts[exec_posts.is_financial == 1].copy()
+fin_posts['max_sim_to_firm'] = fin_posts.apply(max_similarity_to_firm, axis=1)
+fin_posts['post_type'] = np.where(fin_posts.max_sim_to_firm >= SIM_THRESHOLD,
+                                  'confirmatory', 'novel')
+
+print(fin_posts.groupby('post_type').max_sim_to_firm.describe().round(3))
+print('\nClassification vs simulated ground truth:')
+print(pd.crosstab(fin_posts.post_type, fin_posts.category))
+
+fig, ax = plt.subplots(figsize=(8, 4.5))
+sns.histplot(data=fin_posts, x='max_sim_to_firm', hue='category',
+             bins=30, ax=ax)
+ax.axvline(SIM_THRESHOLD, color='black', linestyle='--',
+           label=f'threshold = {SIM_THRESHOLD}')
+ax.set_xlabel('Max cosine similarity to firm posts (trailing 7 days)')
+ax.set_title('Executive-firm content similarity separates novel from '
+             'confirmatory posts')
+plt.tight_layout()
+plt.show()
+```
+
+Phân phối độ tương đồng có dạng hai đỉnh rõ rệt: các bài đăng diễn giải lại kết quả kinh doanh nằm gần đầu trên của miền giá trị trong khi các bài đăng mang tính định hướng tập trung gần 0, do đó phép phân tách không nhạy với ngưỡng chính xác. Trong môi trường vận hành, ngưỡng nên được kiểm định trên một mẫu gán nhãn thủ công, và không gian TF-IDF có thể được thay bằng vector nhúng câu PhoBERT (@sec-textual-embedding-similarity) để bắt được các bài diễn giải lại có cùng ý nghĩa nhưng không cùng từ vựng.
+
+### Phản ứng của thị trường đối với các bài đăng của lãnh đạo {#sec-textual-exec-reaction}
+
+Khi các bài đăng đã được phân loại và tách nhóm, kiểm định phản ứng thị trường theo logic của nghiên cứu sự kiện: tính lợi nhuận bất thường điều chỉnh theo thị trường và cộng dồn chúng trong cửa sổ bài đăng, riêng cho các bài đăng tài chính mới, tài chính xác nhận và phi tài chính. Các bài đăng phi tài chính đóng vai trò nhóm giả dược, đúng như trong @crowley2024executive; nếu những lời chào hỏi và chúc mừng ngày lễ làm dịch chuyển giá, thiết kế đã bị nhiễm.
+
+```{python}
+#| label: exec-social-reaction
+#| code-summary: "CARs around executive posts by post type"
+
+from scipy import stats
+
+abnormal = returns.sub(pd.Series(mkt_ret, index=DATES), axis=0)
+
+def car_around(ticker: str, date: pd.Timestamp, w: Tuple[int, int]) -> float:
+    i = DATES.get_loc(date)
+    lo, hi = max(0, i + w[0]), min(len(DATES) - 1, i + w[1])
+    return float(abnormal[ticker].iloc[lo:hi + 1].sum())
+
+events = pd.concat([
+    fin_posts[['ticker', 'date', 'post_type']],
+    exec_posts.loc[exec_posts.is_financial == 0,
+                   ['ticker', 'date']].assign(post_type='nonfinancial')
+])
+events['car_0_1'] = events.apply(
+    lambda r: car_around(r.ticker, r.date, (0, 1)), axis=1)
+
+summary = []
+for ptype, grp in events.groupby('post_type'):
+    tstat, pval = stats.ttest_1samp(grp.car_0_1, 0.0)
+    summary.append({'post_type': ptype, 'n': len(grp),
+                    'mean_car_pct': 100 * grp.car_0_1.mean(),
+                    't_stat': tstat, 'p_value': pval})
+summary = (pd.DataFrame(summary)
+           .set_index('post_type')
+           .loc[['novel', 'confirmatory', 'nonfinancial']])
+print(summary.round(3))
+
+novel = events.loc[events.post_type == 'novel', 'car_0_1']
+confirm = events.loc[events.post_type == 'confirmatory', 'car_0_1']
+t_diff, p_diff = stats.ttest_ind(novel, confirm, equal_var=False)
+print(f'\nNovel minus confirmatory: '
+      f'{100 * (novel.mean() - confirm.mean()):.2f} pp '
+      f'(t = {t_diff:.2f}, p = {p_diff:.4f})')
+
+fig, ax = plt.subplots(figsize=(8, 4.5))
+order = ['novel', 'confirmatory', 'nonfinancial']
+means = summary.loc[order, 'mean_car_pct']
+errs = [100 * 1.96 * events.loc[events.post_type == p, 'car_0_1'].sem()
+        for p in order]
+ax.bar(order, means, yerr=errs, capsize=5)
+ax.axhline(0, color='black', linewidth=0.8)
+ax.set_ylabel('Mean CAR[0,+1], %')
+ax.set_title('Market reactions to executive posts by content type')
+plt.tight_layout()
+plt.show()
+```
+
+Môi trường thử nghiệm khôi phục đúng cấu trúc mà chúng ta đã gắn vào, cũng là cấu trúc mà @crowley2024executive tìm thấy trong dữ liệu thực của Mỹ: các bài đăng tài chính mới mang phản ứng lớn và có ý nghĩa thống kê (kênh thông tin mới), trong khi các bài đăng phi tài chính là nhóm giả dược không có phản ứng. Nhóm xác nhận mang tính gợi mở theo một cách khác: phản ứng được gắn vào là có thật nhưng nhỏ, và với cỡ mẫu mô phỏng này thì không thể phân biệt một cách đáng tin cậy với 0, một lời nhắc rằng các hiệu ứng của kênh uy tín đòi hỏi bảng dữ liệu bài đăng lớn mới phát hiện được (@crowley2024executive nhận diện kênh của họ từ toàn bộ lịch sử tweet của S&P 1500), vì vậy một nhà nghiên cứu Việt Nam nên kỳ vọng kết quả của các bài đăng mới xuất hiện trước và kết quả của nhóm xác nhận cần tích lũy nhiều năm dữ liệu. Trên dữ liệu Việt Nam thực, CAR điều chỉnh theo thị trường đơn giản này nên được thay bằng bộ máy suy luận đầy đủ của chương về nghiên cứu sự kiện (lợi nhuận bất thường theo mô hình rủi ro, các kiểm định BMP và kiểm định hạng, và các cửa sổ rộng hơn để tính đến biên độ giá), và các phản ứng nên được đo bằng khối lượng và biến động cũng như lợi nhuận, vì các hiệu ứng thu hút sự chú ý do nhà đầu tư cá nhân thúc đẩy thường xuất hiện ở khối lượng trước.
+
+### Từ tái lập đến giám sát vận hành {#sec-textual-exec-production}
+
+Mọi thứ ở trên hợp lại thành một hệ thống giám sát chạy liên tục: thu thập các bài đăng mới, phân loại nội dung tài chính, tính độ tương đồng với dòng bài đăng chính thức của doanh nghiệp, và phản ứng trong vòng vài phút thay vì vào cuối một quý nghiên cứu. Bộ khung dưới đây được cố ý giữ ở mức tối giản; mỗi phương thức ủy quyền cho một thành phần đã được xây dựng trong mục này.
+
+```{python}
+#| label: exec-social-monitor
+#| eval: false
+#| code-summary: "Production: real-time executive post monitor"
+
+class ExecutiveSocialMonitor:
+    """Poll -> classify -> similarity -> alert, on a fixed schedule.
+
+    Schedule with cron / Task Scheduler at the desired latency, e.g.
+    every 5 minutes during HOSE trading hours (09:00-14:45 ICT).
+    """
+
+    def __init__(self, db_path, clf, clf_vectorizer, sim_vectorizer,
+                 sim_threshold=0.30, sim_window_days=7):
+        self.db_path = db_path
+        self.clf, self.clf_vectorizer = clf, clf_vectorizer
+        self.sim_vectorizer = sim_vectorizer
+        self.sim_threshold = sim_threshold
+        self.sim_window_days = sim_window_days
+
+    def poll(self):
+        """Collect new posts for every registered account (see
+        exec-social-collection) and return those not yet processed."""
+        ...
+
+    def classify(self, posts):
+        """Word-segment (underthesea), then flag financial content."""
+        ...
+
+    def similarity(self, post):
+        """Max cosine similarity vs the firm's official posts in the
+        trailing window; below threshold => novel."""
+        ...
+
+    def alert(self, post, is_novel):
+        """Route by rule:
+        - novel financial post by a covered executive -> analyst channel
+          (candidate trading signal; log expected reaction window)
+        - quantitative claim with no firm disclosure within 24h ->
+          compliance flag (selective disclosure / manipulation risk)
+        - deleted or edited financial post -> archive diff + escalate
+        """
+        ...
+
+    def run_once(self):
+        new_posts = self.poll()
+        for post in self.classify(new_posts):
+            if post['is_financial']:
+                self.alert(post, self.similarity(post) < self.sim_threshold)
+```
+
+::: {.callout-warning title="Tuân thủ và đạo đức trong bối cảnh Việt Nam"}
+A production monitor must respect three constraints. First, collect only public business communications of public-company executives; Vietnam's Personal Data Protection Decree (13/2023/NĐ-CP) and platform terms of service both bind, and private profiles are out of scope. Second, the same system that surfaces trading signals surfaces manipulation: executives or affiliated accounts posting inflated claims ahead of insider sales is exactly the pattern securities regulators sanction, so log everything immutably; the archive is evidence. Third, trading on a novel executive post is trading on public information the moment it is posted, but a researcher who receives material information *privately* from an executive is in different legal territory entirely. @jung2018firms is the reminder that the observable stream is strategically selected; absence of posts is not absence of news.
 :::
 
-For researchers beginning textual analysis of Vietnamese firms, we recommend the following workflow:
+::: {.callout-tip title="Danh mục kiểm tra khi triển khai"}
+1. **Danh bạ**: các tài khoản lãnh đạo được xác minh từ báo cáo thường niên và công bố thông tin về quản trị công ty; xác minh lại hằng quý.
+2. **Thu thập**: truy vấn định kỳ theo lịch với kho lưu trữ JSON thô bất biến; theo dõi việc xóa và chỉnh sửa; chuyển đổi UTC sang ICT; ánh xạ mốc ATC sang các ngày giao dịch.
+3. **Mô hình**: bộ phân loại được huấn luyện lại trên tập gán nhãn ngày càng lớn; ngưỡng độ tương đồng được kiểm định lại; vector nhúng PhoBERT khi khối lượng bài diễn giải lại đủ lớn.
+4. **Đo lường**: CAR từ quy trình của chương về nghiên cứu sự kiện; phản ứng về khối lượng và biến động đi kèm lợi nhuận.
+5. **Quản trị**: cảnh báo tuân thủ được định tuyến tách biệt với cảnh báo nghiên cứu; rà soát hằng quý tỷ lệ dương tính giả của cả hai.
+:::
 
-1.  **Start with TF-IDF cosine similarity** for peer identification because it is fast, interpretable, and provides a strong baseline.
-2.  **Use BERTopic with PhoBERT embeddings** for topic discovery because it produces more coherent topics than LDA for Vietnamese text.
-3.  **For sentiment analysis**, use ViFinBERT if fine-tuning data is available; otherwise, LLM zero-shot classification provides competitive results.
-4.  **For production systems** requiring real-time analysis, sentence-BERT embeddings offer the best speed-accuracy tradeoff.
+Chương trình nghiên cứu mà điều này mở ra tại Việt Nam phần lớn vẫn còn bỏ ngỏ: chưa có nghiên cứu nào được công bố đo lường liệu các bài đăng Facebook và Zalo của lãnh đạo doanh nghiệp Việt Nam có làm dịch chuyển giá cổ phiếu của doanh nghiệp họ hay không, phản ứng khác nhau thế nào giữa cơ sở nhà đầu tư cá nhân đông đảo trên HOSE và các nhà đầu tư tổ chức, hay liệu cơ chế uy tín của @crowley2024executive có mạnh hơn trong một thị trường mà niềm tin giữa người với người có thể thay thế cho một môi trường công bố thông tin chính thức mỏng hơn. Quy trình trong mục này là hạ tầng cho cả ba câu hỏi.
+
+# So sánh phương pháp và thực hành tốt nhất {#sec-textual-comparison}
+
+| Phương pháp | Khả năng diễn giải | Ngữ nghĩa | Tốc độ | Hỗ trợ tiếng Việt | Yêu cầu dữ liệu | Trường hợp sử dụng tốt nhất |
+|:----------|:---------:|:---------:|:---------:|:---------:|:---------:|:----------|
+| BoW/TF-IDF | Cao | Thấp | Nhanh | Tốt\* | Không | Nhóm doanh nghiệp cùng ngành, tương đồng từ vựng |
+| LDA | Trung bình | Thấp | Trung bình | Tốt\* | Không | Khám phá chủ đề |
+| Doc2Vec | Thấp | Trung bình | Trung bình | Tốt\* | Kho ngữ liệu | Tương đồng tài liệu |
+| BERTopic | Cao | Cao | Chậm | Xuất sắc | Không | Các chủ đề mạch lạc |
+| PhoBERT | Thấp | Cao | Chậm | Xuất sắc | Tinh chỉnh | Cảm xúc, NER, phân loại |
+| Sentence-BERT | Thấp | Cao | Trung bình | Tốt | Không | Tương đồng ngữ nghĩa |
+| LLM (zero-shot) | Cao | Cao | Chậm | Tốt | Không | Trích xuất, phân loại |
+
+: So sánh các phương pháp phân tích văn bản cho văn bản tài chính tiếng Việt {#tbl-method-comparison}
+
+::: callout-note
+\*Yêu cầu tách từ tiếng Việt như một bước tiền xử lý. Cột Hỗ trợ tiếng Việt đánh giá mức độ phương pháp xử lý văn bản tiếng Việt một cách tự nhiên.
+:::
+
+Đối với các nhà nghiên cứu mới bắt đầu phân tích văn bản của các doanh nghiệp Việt Nam, chúng tôi khuyến nghị quy trình làm việc sau:
+
+1.  **Bắt đầu với độ tương đồng cosine TF-IDF** để xác định nhóm doanh nghiệp cùng ngành vì nó nhanh, dễ diễn giải và cung cấp một mức cơ sở mạnh.
+2.  **Dùng BERTopic với vector nhúng PhoBERT** để khám phá chủ đề vì nó tạo ra các chủ đề mạch lạc hơn LDA đối với văn bản tiếng Việt.
+3.  **Đối với phân tích cảm xúc**, dùng ViFinBERT nếu có dữ liệu để tinh chỉnh; nếu không, phân loại LLM zero-shot cho kết quả cạnh tranh.
+4.  **Đối với các hệ thống vận hành** cần phân tích theo thời gian thực, vector nhúng sentence-BERT mang lại sự đánh đổi tốt nhất giữa tốc độ và độ chính xác.
 
 ```{python}
 #| label: fig-method-comparison
-#| fig-cap: "Peer Identification Accuracy by Method: Fraction of Top-5 Peers Sharing the Same ICB Sector"
+#| fig-cap: "Độ chính xác xác định nhóm cùng ngành theo phương pháp: tỷ lệ trong 5 doanh nghiệp tương đồng nhất có cùng ngành ICB"
 #| eval: false
 #| code-summary: "Compare methods on peer identification accuracy"
 
@@ -1569,18 +1997,18 @@ plt.tight_layout()
 plt.show()
 ```
 
-# Conclusion {#sec-textual-conclusion}
+# Kết luận {#sec-textual-conclusion}
 
-This chapter has demonstrated the full pipeline of textual analysis methods applied to Vietnamese listed firms, from classical bag-of-words approaches to state-of-the-art large language models. The key takeaways for practitioners and researchers are:
+Chương này đã trình bày toàn bộ quy trình các phương pháp phân tích văn bản áp dụng cho các doanh nghiệp niêm yết Việt Nam, từ các cách tiếp cận bag-of-words cổ điển đến các mô hình ngôn ngữ dựa trên transformer. Những điểm then chốt dành cho người thực hành và nhà nghiên cứu là:
 
-First, Vietnamese text preprocessing requires a word segmentation step that has no parallel in English-language NLP. Using tools like VnCoreNLP or underthesea for this step is essential and significantly affects downstream analysis quality.
+Thứ nhất, tiền xử lý văn bản tiếng Việt đòi hỏi một bước tách từ mà NLP tiếng Anh không có tương đương. Sử dụng các công cụ như VnCoreNLP hoặc underthesea cho bước này là thiết yếu và ảnh hưởng đáng kể đến chất lượng của các phân tích phía sau.
 
-Second, domain-specific sentiment lexicons substantially outperform general-purpose dictionaries for Vietnamese financial text, consistent with @loughran2011liability findings for English.
+Thứ hai, các từ điển cảm xúc theo lĩnh vực chuyên biệt vượt trội đáng kể so với các từ điển đa dụng đối với văn bản tài chính tiếng Việt, phù hợp với các phát hiện của @loughran2011liability cho tiếng Anh.
 
-Third, PhoBERT-based embeddings capture semantic similarity that TF-IDF misses, identifying industry peers that share business models even when they use different vocabulary.
+Thứ ba, vector nhúng dựa trên PhoBERT nắm bắt sự tương đồng ngữ nghĩa mà TF-IDF bỏ sót, nhận diện các doanh nghiệp cùng ngành có chung mô hình kinh doanh ngay cả khi họ dùng từ vựng khác nhau.
 
-Fourth, LLMs enable new applications, including structured information extraction from Vietnamese annual reports that would be prohibitively expensive with manual coding.
+Thứ tư, các LLM cho phép những ứng dụng mới, bao gồm trích xuất thông tin có cấu trúc từ báo cáo thường niên tiếng Việt vốn sẽ cực kỳ tốn kém nếu mã hóa thủ công.
 
-The empirical applications demonstrate that textual measures contain economically meaningful information for the Vietnamese market. Net sentiment from annual reports predicts subsequent stock returns even after controlling for standard risk factors, and BERT-based sentiment measures have incremental predictive power beyond dictionary-based measures. Text-based industry classifications capture firm relationships that static ICB codes miss, and textual similarity changes around corporate events reflect real business transformations.
+Các ứng dụng thực nghiệm cho thấy các thước đo văn bản chứa thông tin có ý nghĩa kinh tế đối với thị trường Việt Nam. Cảm xúc ròng từ báo cáo thường niên dự báo lợi nhuận cổ phiếu tiếp theo ngay cả sau khi kiểm soát các nhân tố rủi ro tiêu chuẩn, và các thước đo cảm xúc dựa trên BERT có sức dự báo gia tăng vượt trên các thước đo dựa trên từ điển. Các phân loại ngành dựa trên văn bản nắm bắt các mối quan hệ giữa doanh nghiệp mà các mã ICB tĩnh bỏ sót, và những thay đổi về độ tương đồng văn bản quanh các sự kiện doanh nghiệp phản ánh những chuyển đổi kinh doanh thực sự.
 
-<!--# All code and data pipelines in this chapter are designed to be reproducible using DataCore.vn's API. Researchers can extend these methods to other text sources, including earnings call transcripts, news articles from CafeF and VnExpress, and social media data from Vietnamese financial forums, all of which are available via DataCore.vn -->
+<!--# Toàn bộ mã nguồn và quy trình dữ liệu trong chương này được thiết kế để có thể tái lập bằng API của DataCore.vn. Các nhà nghiên cứu có thể mở rộng các phương pháp này sang các nguồn văn bản khác, bao gồm bản ghi các cuộc họp công bố kết quả kinh doanh, các bài báo tin tức từ CafeF và VnExpress, và dữ liệu mạng xã hội từ các diễn đàn tài chính tiếng Việt, tất cả đều có sẵn qua DataCore.vn -->

@@ -31,7 +31,7 @@ end_date = "2024-12-31"
 
 ## Tổng quan về các nguồn dữ liệu tài chính Việt Nam
 
-Trước khi đi sâu vào triển khai kỹ thuật, điều quan trọng là phải hiểu rõ bức tranh tổng quan về các nhà cung cấp dữ liệu tài chính phục vụ thị trường Việt Nam. Không giống như các thị trường phát triển, nơi một vài nhà cung cấp hàng đầu (Bloomberg, Refinitiv, FactSet) cung cấp phạm vi phủ sóng toàn diện, dữ liệu tài chính Việt Nam từ trước đến nay vẫn phân tán trên nhiều nguồn khác nhau, mỗi nguồn đều có những điểm mạnh và hạn chế riêng.
+Trước khi bắt tay vào triển khai, cần khảo sát các nhà cung cấp dữ liệu tài chính phục vụ thị trường Việt Nam. Không giống như các thị trường phát triển, nơi một vài nhà cung cấp hàng đầu (Bloomberg, Refinitiv, FactSet) cung cấp phạm vi phủ sóng toàn diện, dữ liệu tài chính Việt Nam từ trước đến nay vẫn phân tán trên nhiều nguồn khác nhau, mỗi nguồn đều có những điểm mạnh và hạn chế riêng.
 
 Các nguồn dữ liệu tài chính của Việt Nam bao gồm dữ liệu giao dịch chính thức từ HOSE và HNX, cung cấp dữ liệu giao dịch thời gian thực và lịch sử. Ủy ban Chứng khoán Nhà nước Việt Nam (SSC) công bố các báo cáo quản lý, thông báo của doanh nghiệp và số liệu thống kê thị trường. Các nhà cung cấp dữ liệu thương mại như FiinGroup, StoxPlus (nay thuộc FiinGroup) và VNDirect cung cấp các bộ dữ liệu được chọn lọc với mức độ bao phủ và chất lượng dữ liệu khác nhau. Ngoài ra, Ngân hàng Nhà nước Việt Nam (SBV) và Tổng cục Thống kê (GSO) cung cấp các chỉ số kinh tế vĩ mô cần thiết cho nghiên cứu định giá tài sản.
 
@@ -41,7 +41,7 @@ May mắn thay, bức tranh tổng thể đã được cải thiện đáng kể
 
 Điều làm nên sự khác biệt giữa [Datacore](https://datacore.vn/) và các nhà cung cấp thương mại truyền thống như FiinGroup không chỉ đơn thuần là việc tổng hợp dữ liệu. Trong khi FiinGroup từ lâu đã là nhà cung cấp hàng đầu trong lĩnh vực này, một số yếu tố khiến Datacore trở nên đặc biệt hấp dẫn đối với các nghiên cứu thực nghiệm nghiêm túc:
 
-1. **Kiến trúc ưu tiên API**: Datacore được xây dựng từ đầu để truy cập lập trình, giúp tích hợp liền mạch với Python, R và các quy trình nghiên cứu khác. Ngược lại, việc truy cập dữ liệu của FiinGroup thường yêu cầu tải xuống thủ công hoặc giao diện dựa trên Excel rườm rà, gây khó khăn cho việc tái tạo kết quả.
+1. **Kiến trúc ưu tiên API**: Datacore được xây dựng từ đầu để truy cập lập trình, nên có thể đưa thẳng vào Python, R và các quy trình nghiên cứu khác mà không cần bước xuất dữ liệu trung gian. Ngược lại, việc truy cập dữ liệu của FiinGroup thường yêu cầu tải xuống thủ công hoặc giao diện dựa trên Excel rườm rà, gây khó khăn cho việc tái tạo kết quả.
 
 2. **Hiệu quả chi phí**: Các nhà nghiên cứu học thuật thường hoạt động trong điều kiện ngân sách hạn chế. Datacore cung cấp cấu trúc giá cả cạnh tranh, giúp tiếp cận phạm vi thị trường toàn diện mà không cần trả phí đăng ký cao như các nhà cung cấp truyền thống.
 
@@ -59,7 +59,7 @@ Bảng dưới đây tóm tắt các nguồn dữ liệu chính cho nghiên cứ
 |---------------|---------------|---------------|---------------|---------------|
 | **Datacore** | Giá cả, yếu tố cơ bản, chỉ số, kinh tế vĩ mô, phái sinh | API | Nền tảng thống nhất, truy cập lập trình, phạm vi phủ sóng toàn diện, phương pháp luận minh bạch | Nền tảng mới hơn |
 | FiinGroup | Phạm vi thị trường toàn diện | Thương mại | Uy tín đã được khẳng định, được các tổ chức tin dùng | Chi phí cao, truy cập thủ công, API hạn chế |
-| Trang web HOSE/HNX | Dữ liệu giao dịch chính thức | Miễn phí (thủ công) | Chính xác, thời gian thực | Không cần API, không cần thu thập thủ công |
+| Trang web HOSE/HNX | Dữ liệu giao dịch chính thức | Miễn phí (thủ công) | Chính xác, thời gian thực | Không có API, cần thu thập thủ công |
 | Tổng cục Thống kê Quốc gia (GSO) (gso.gov.vn) | Các chỉ số kinh tế vĩ mô | Miễn phí (thủ công) | Thống kê chính thức của chính phủ | Cập nhật không thường xuyên, không có API |
 | Ngân hàng Nhà nước Việt Nam (sbv.gov.vn) | Chính sách tiền tệ, lãi suất | Miễn phí (thủ công) | Dữ liệu ngân hàng trung ương | Chỉ tải xuống thủ công |
 | CafeF/VnExpress | Tin tức, thông báo | Miễn phí | Tâm lý thị trường, sự kiện | Dữ liệu không cấu trúc, cần xử lý bằng NLP |
@@ -77,7 +77,7 @@ Nguồn dữ liệu tài chính Việt Nam {#tbl-data-sources}
 
 ```
 
-DataFrame chứa các mã định danh an toàn thiết yếu bao gồm mã chứng khoán, tên công ty bằng cả tiếng Việt và tiếng Anh, thị trường giao dịch, phân loại ngành theo Hệ thống Phân loại ngành công nghiệp Việt Nam (VSIC) và nhiều cờ chỉ thị trạng thái đặc biệt như hạn chế sở hữu nước ngoài hoặc đình chỉ giao dịch.
+DataFrame chứa các mã định danh chứng khoán thiết yếu bao gồm mã chứng khoán, tên công ty bằng cả tiếng Việt và tiếng Anh, thị trường giao dịch, phân loại ngành theo Hệ thống Phân loại ngành công nghiệp Việt Nam (VSIC) và nhiều cờ chỉ thị trạng thái đặc biệt như hạn chế sở hữu nước ngoài hoặc đình chỉ giao dịch.
 
 ### Dữ liệu giá lịch sử
 
@@ -154,7 +154,7 @@ display(df_company_infor.head())
 
 ### Các hoạt động và sự kiện của công ty
 
-Việc xử lý chính xác các hành động của công ty là rất quan trọng để tính toán lợi nhuận chính xác và duy trì tính toàn vẹn của dữ liệu. Các công ty Việt Nam thường xuyên tham gia vào các hành động của công ty bao gồm tiền cổ tức, cổ tức thưởng (cổ phiếu quà tặng), phát hành thêm cổ phiếu theo quyền và chia cổ phiếu.
+Việc xử lý chính xác các hành động của công ty là rất quan trọng để tính toán lợi nhuận chính xác và duy trì tính toàn vẹn của dữ liệu. Các công ty Việt Nam thường xuyên tham gia vào các hành động của công ty bao gồm cổ tức tiền mặt, cổ tức bằng cổ phiếu (cổ phiếu thưởng), phát hành quyền mua cổ phiếu và chia tách cổ phiếu.
 
 ```{python}
 #| eval: false
@@ -162,14 +162,14 @@ Việc xử lý chính xác các hành động của công ty là rất quan tr�
 
 ```
 
-## Các Chỉ Số Thị Trường và Tiêu Chuẩn
+## Các chỉ số thị trường và chỉ số tham chiếu
 
-Việc xây dựng các tiêu chuẩn tham chiếu phù hợp là yếu tố cơ bản trong đánh giá hiệu suất và ước lượng mô hình nhân tố. Thị trường Việt Nam có một số chỉ số phục vụ các mục đích khác nhau trong nghiên cứu tài chính.
+Việc xây dựng các chỉ số tham chiếu phù hợp là yếu tố cơ bản trong đánh giá hiệu suất và ước lượng mô hình nhân tố. Thị trường Việt Nam có một số chỉ số phục vụ các mục đích khác nhau trong nghiên cứu tài chính.
 
-| Mục lục | Sàn giao dịch | Mô tả | Trường hợp sử dụng |
+| Chỉ số | Sàn giao dịch | Mô tả | Trường hợp sử dụng |
 |-------------|----------|-------------------------|------------------------|
 | Chỉ số VN | HOSE | Tất cả cổ phiếu niêm yết trên HOSE | Chỉ số tham chiếu thị trường chung |
-| Chỉ số VN30 | HOSE | 30 công ty lớn nhất, có tính thanh khoản cao nhất | Chuẩn mực đầu tư |
+| Chỉ số VN30 | HOSE | 30 công ty lớn nhất, có tính thanh khoản cao nhất | Chỉ số tham chiếu có thể đầu tư |
 | Chỉ số HNX | HNX | Tất cả cổ phiếu niêm yết trên HNX | Chỉ số tham chiếu vốn hóa trung bình |
 | HNX30-Index | HNX | 30 cổ phiếu lớn nhất HNX | HNX vốn hóa lớn |
 | VNAllShare | Kết hợp | HOSE + HNX | Tổng thị trường |
@@ -177,7 +177,7 @@ Việc xây dựng các tiêu chuẩn tham chiếu phù hợp là yếu tố cơ
 
 Chỉ số thị trường Việt Nam {#tbl-indices}
 
-Chỉ số VN-Index, theo dõi tất cả các cổ phiếu niêm yết trên Sở giao dịch chứng khoán Hà Nội (HOSE), là chỉ số chuẩn được theo dõi rộng rãi nhất và là thước đo chính về hiệu suất tổng thể của thị trường. Chỉ số HNX-Index bao gồm các cổ phiếu trên sàn giao dịch Hà Nội, trong khi chỉ số VN30-Index theo dõi 30 cổ phiếu lớn nhất và có tính thanh khoản cao nhất trên HOSE.
+Chỉ số VN-Index, theo dõi tất cả các cổ phiếu niêm yết trên Sở Giao dịch Chứng khoán Thành phố Hồ Chí Minh (HOSE), là chỉ số chuẩn được theo dõi rộng rãi nhất và là thước đo chính về hiệu suất tổng thể của thị trường. Chỉ số HNX-Index bao gồm các cổ phiếu trên sàn giao dịch Hà Nội, trong khi chỉ số VN30-Index theo dõi 30 cổ phiếu lớn nhất và có tính thanh khoản cao nhất trên HOSE.
 
 Đối với nghiên cứu định giá tài sản, chỉ số VN30 đặc biệt có giá trị vì nó đại diện cho phạm vi đầu tư của các nhà đầu tư tổ chức và là tài sản cơ sở cho các hợp đồng phái sinh có tính thanh khoản cao nhất tại Việt Nam. Các cổ phiếu thành phần được xem xét định kỳ nửa năm một lần dựa trên vốn hóa thị trường, tính thanh khoản và yêu cầu về tỷ lệ cổ phiếu lưu hành tự do.
 
@@ -189,7 +189,7 @@ Chỉ số VN-Index, theo dõi tất cả các cổ phiếu niêm yết trên S�
 
 ### Dữ liệu thành phần chỉ số
 
-Để xây dựng mô hình nhân tố và phân tích danh mục đầu tư, việc truy cập vào danh sách các thành phần chỉ số và trọng số của chúng là thiết yếu. Mặc dù dữ liệu thành phần chính thức yêu cầu đăng ký nguồn dữ liệu giao dịch, chúng ta có thể ước tính thành viên chỉ số bằng cách sử dụng bộ lọc về vốn hóa thị trường và thanh khoản.
+Để xây dựng mô hình nhân tố và phân tích danh mục đầu tư, việc truy cập vào danh sách các thành phần chỉ số và trọng số của chúng là thiết yếu. Mặc dù dữ liệu thành phần chính thức yêu cầu đăng ký nguồn dữ liệu giao dịch, chúng ta có thể ước tính danh sách thành phần chỉ số bằng cách sử dụng bộ lọc về vốn hóa thị trường và thanh khoản.
 
 
 ```{python}
@@ -205,7 +205,7 @@ Các mô hình định giá tài sản thường kết hợp các biến số ki
 
 Các biến số kinh tế vĩ mô sau đây đặc biệt quan trọng đối với nghiên cứu tài chính Việt Nam:
 
-1. **Chỉ số giá tiêu dùng (CPI)**: Cần thiết để tính toán lợi nhuận thực tế và định giá điều chỉnh theo lạm phát. Việt Nam đã trải qua các giai đoạn lạm phát cao, đặc biệt là trong giai đoạn 2008 và 2011 khi CPI hàng năm vượt quá 20%.
+1. **Chỉ số giá tiêu dùng (CPI)**: Cần thiết để tính toán lợi nhuận thực và định giá điều chỉnh theo lạm phát. Việt Nam đã trải qua các giai đoạn lạm phát cao, đặc biệt là trong giai đoạn 2008 và 2011 khi CPI hàng năm vượt quá 20%.
 
 2. **Chỉ số sản xuất công nghiệp (IPI)**: Đại diện cho hoạt động kinh tế và điều kiện chu kỳ kinh doanh.
 
@@ -238,7 +238,7 @@ Việc xác định lãi suất phi rủi ro phù hợp cho Việt Nam đặt ra
 
 3. **Lãi suất liên ngân hàng**: Lãi suất cho vay liên ngân hàng qua đêm hoặc kỳ hạn. Phản ánh chi phí huy động vốn ngắn hạn nhưng bao gồm rủi ro tín dụng.
 
-4. **Lãi suất điều chỉnh của Mỹ**: Lãi suất trái phiếu kho bạc Mỹ cộng với dự báo giảm giá trị của VND, theo nguyên tắc ngang giá lãi suất không được bảo hiểm.
+4. **Lãi suất điều chỉnh của Mỹ**: Lãi suất trái phiếu kho bạc Mỹ cộng với dự báo giảm giá trị của VND, theo nguyên tắc ngang giá lãi suất không phòng ngừa (UIP).
 
 ```{python}
 #| eval: false
@@ -405,9 +405,24 @@ print(table_stats)
 tidy_finance_python.close()
 ```
 
-## Các nguồn dữ liệu thay thế cho thị trường Việt Nam
+## Các nguồn dữ liệu thay thế cho thị trường Việt Nam {#sec-data-alternative}
 
-Ngoài các dữ liệu truyền thống về giá cả và cơ bản, các nhà nghiên cứu ngày càng kết hợp nhiều nguồn dữ liệu thay thế để có được những hiểu biết độc đáo về động thái thị trường.
+Ngoài các dữ liệu truyền thống về giá cả và cơ bản, các nhà nghiên cứu ngày càng kết hợp nhiều nguồn dữ liệu thay thế để có được những hiểu biết độc đáo về động thái thị trường. Giá trị kinh tế của dữ liệu thay thế đã được ghi nhận rõ ràng trên thị trường tín dụng: @dimaggio2026invisible cho thấy mô hình thẩm định của một công ty cho vay fintech lớn tại Mỹ, nhờ kết hợp các biến phi truyền thống như trình độ học vấn và lịch sử việc làm, có thể nhận diện những "khách hàng hạng nhất vô hình" (invisible primes, tức là những người vay có hồ sơ tín dụng mỏng và điểm tín dụng thấp nhưng rủi ro vỡ nợ thực tế thấp), qua đó mở rộng khả năng tiếp cận tín dụng so với phương pháp thẩm định chỉ dựa trên điểm tín dụng truyền thống. Bằng chứng này đặc biệt phù hợp với Việt Nam, nơi độ phủ của thông tin tín dụng chính thức còn hạn chế và nhiều hộ gia đình cũng như doanh nghiệp nhỏ chưa có lịch sử tín dụng đầy đủ, khiến dữ liệu thay thế trở thành yếu tố trung tâm trong lĩnh vực cho vay fintech đang phát triển của Việt Nam. Dữ liệu thay thế không nhất thiết phải mô tả chính người vay: @allen2026social cho thấy mạng lưới xã hội kết nối cộng đồng của người vay với phần còn lại của đất nước, được đo bằng Chỉ số Kết nối Xã hội (Social Connectedness Index) của Facebook, chứa thông tin làm tăng cả khả năng tiếp cận tín dụng trực tuyến lẫn chất lượng của các khoản vay được cấp, đặc biệt ở các cộng đồng thiệt thòi. @sec-networks-social trình bày cách đo lường này và dữ liệu hiện có cho Việt Nam. Việc lựa chọn biến số thẩm định cũng đặt ra những câu hỏi về công bằng mà dữ liệu thay thế có thể làm nổi rõ hơn chứ không giải quyết: @amornsiripanitch2026age cho thấy trong dữ liệu vay thế chấp nhà ở tại Mỹ chỉ có một người đứng tên vay, tuổi của người nộp đơn có mối tương quan với xác suất bị từ chối và mức lãi suất mạnh ngang với chủng tộc và sắc tộc, với xác suất bị từ chối tăng dần theo tuổi và tăng nhanh ở tuổi cao, có lẽ phản ánh rủi ro về khả năng duy trì tài sản thế chấp và rủi ro tử vong hơn là phân biệt đối xử theo sở thích. Khi các tổ chức cho vay Việt Nam bắt đầu tích hợp nhiều thuộc tính người vay phong phú hơn, các nhà nghiên cứu và cơ quan quản lý sẽ cần phân biệt giữa định giá dựa trên rủi ro hợp lý và phân biệt đối xử thống kê đối với các nhóm được bảo vệ hoặc dễ bị tổn thương—một mối quan tâm ngày càng nổi bật trong một xã hội đang già hóa.
+
+### Khi quyết định của bên cho vay tự nó là thông tin {#sec-data-credit-signal}
+
+Các nghiên cứu trên coi dữ liệu tín dụng là thông tin mà *bên cho vay* sử dụng. @yin2026learning cho thấy quyết định của bên cho vay cũng là thông tin mà *người vay* sử dụng, và điều này làm thay đổi ý nghĩa của các số liệu đo lường cung tín dụng. Làm việc với một ngân hàng thương mại lớn của Trung Quốc, tác giả ngẫu nhiên hóa thời điểm tăng hạn mức thẻ tín dụng mà ngân hàng đã phê duyệt cho khoảng 17,000 khách hàng thông qua quy trình thẩm định thông thường: nhóm đối chứng bị trì hoãn việc tăng hạn mức mười hai tháng. Các khách hàng được xử lý sau đó được chia thành hai nhóm. Một nhóm nhận thông báo thông thường của ngân hàng. Nhóm còn lại nhận cùng thông báo đó kèm một phát biểu trung thực rằng việc tăng hạn mức được dành cho một nhóm được chọn ngẫu nhiên trong số các khách hàng có điểm tín dụng tốt. Dữ liệu giao dịch và một cuộc khảo sát được tiến hành trong vòng mười ngày sau khi tăng hạn mức đã đo lường những gì khách hàng làm và những gì họ kỳ vọng. Các con số dưới đây lấy từ phiên bản bài nghiên cứu sơ bộ (working paper).
+
+Những khách hàng nhận thông báo thông thường chi tiêu thêm 0.37 nhân dân tệ trong sáu tháng trên mỗi nhân dân tệ hạn mức tăng thêm và tích lũy thêm 0.15 nhân dân tệ nợ không có bảo đảm, các mức độ phù hợp với các ước lượng trước đây. Những khách hàng được thông báo rằng việc tăng hạn mức của họ là ngẫu nhiên chi tiêu ít hơn khoảng 37%. Cuộc khảo sát cho thấy lý do. Nhóm nhận thông báo tiêu chuẩn nâng kỳ vọng về tiêu dùng tương lai và thu nhập tương lai trong cùng công việc, giảm mức rủi ro thất nghiệp mà họ cảm nhận, và kỳ vọng nền kinh tế tăng trưởng nhanh hơn và thất nghiệp thấp hơn, nhưng không có kế hoạch làm thêm giờ hay rút tiền tiết kiệm. Nhóm được thông báo rằng việc tăng hạn mức là ngẫu nhiên không điều chỉnh kỳ vọng nào trong số này. Những thay đổi về niềm tin tập trung ở các khách hàng không chắc chắn về nhận định của mình đối với nền kinh tế và cho rằng điều kiện kinh tế vĩ mô có ảnh hưởng đến thu nhập của họ, và gần như không đáng kể ở các khách hàng có thu nhập không biến động trước thí nghiệm. Các khảo sát tình huống giả định đối với người trả lời tại Mỹ cho ra cùng một kiểu kết quả.
+
+Cách diễn giải là một **kênh suy luận thu nhập**. Bên cho vay đặt hạn mức dựa trên thông tin về phần mang tính hệ thống trong thu nhập tương lai của người vay, thông tin mà người vay không có, vì vậy hạn mức cao hơn báo hiệu triển vọng tốt hơn, và người vay chi tiêu tương ứng ngay cả khi họ còn rất xa ràng buộc vay nợ. Điều này quan trọng đối với ba loại nghiên cứu thực nghiệm. Các ước lượng về xu hướng tiêu dùng cận biên đối với hạn mức tín dụng gộp chung một kênh thanh khoản và một kênh thông tin, và tỷ lệ pha trộn phụ thuộc vào mức độ người vay tin rằng bên cho vay của họ biết nhiều đến đâu. Các cú sốc cung tín dụng được dùng làm biến công cụ cho kết quả của hộ gia đình hoặc doanh nghiệp có thể vi phạm điều kiện loại trừ thông qua niềm tin, chứ không chỉ thông qua việc vay nợ. Và mô hình thẩm định càng tốt thì tín hiệu càng mạnh: việc thẩm định dựa trên dữ liệu thay thế được thảo luận ở trên làm cho các quyết định tín dụng mang nhiều thông tin hơn, và do đó có khả năng tác động mạnh hơn đến kỳ vọng của người vay, theo hướng tốt hơn hoặc xấu hơn.
+
+Việt Nam có nhiều bối cảnh để nghiên cứu kênh này. Tín dụng tiêu dùng tăng nhanh qua thẻ tín dụng, các công ty tài chính tiêu dùng và các sản phẩm mua trước trả sau, và khung thử nghiệm có kiểm soát (sandbox) cho vay ngang hàng được mở vào năm 2025 (@sec-networks-social-vietnam) bổ sung thêm các nền tảng có quyết định tín dụng dựa trên dữ liệu thay thế. Ở cấp độ tổng thể, hạn mức tăng trưởng tín dụng hằng năm mà Ngân hàng Nhà nước giao cho từng ngân hàng, cùng các điều chỉnh trong năm, là những tín hiệu công khai về cung tín dụng mà hộ gia đình và doanh nghiệp có thể diễn giải như thông tin về nền kinh tế, chứ không chỉ là sự thay đổi về mức độ sẵn có của các khoản vay. Từ đó rút ra bốn nguyên tắc thực hành.
+
+1.  **Tách các kênh bằng thiết kế nghiên cứu.** Khi một ngân hàng đối tác có thể ngẫu nhiên hóa các thay đổi hạn mức, một can thiệp thông tin công khai trung thực cách thức phân bổ hạn mức sẽ tách được suy luận khỏi thanh khoản với chi phí thấp. Nếu không có ngẫu nhiên hóa, các thay đổi hạn mức sinh ra từ một quy tắc máy móc được công bố công khai mang ít thông tin hơn các thay đổi theo quyết định tùy nghi và có thể dùng làm nhóm so sánh.
+2.  **Đo lường kỳ vọng, không chỉ chi tiêu.** Dữ liệu giao dịch không thể phân biệt một người tiêu dùng chi tiêu vì ràng buộc đã nới lỏng với một người chi tiêu vì kỳ vọng sẽ kiếm được nhiều hơn. Các khảo sát ngắn liên kết với dữ liệu tài khoản thì làm được.
+3.  **Dùng tính không đồng nhất như một phép kiểm định.** Kênh thông tin dự đoán không có phản ứng ở các hộ gia đình có thu nhập ổn định và nhiều tiết kiệm thanh khoản; kênh thanh khoản dự đoán không có phản ứng ở các hộ gia đình còn xa hạn mức của mình bất kể rủi ro thu nhập. Hai dự đoán này phân loại các hộ gia đình theo cách khác nhau.
+4.  **Coi hàm lượng thông tin của quyết định tín dụng là một kết quả của khâu thẩm định.** Khi các công ty cho vay fintech tại Việt Nam chuyển từ thẩm định dựa trên tài sản bảo đảm sang thẩm định dựa trên dữ liệu, hàm lượng tín hiệu trong các quyết định của họ tăng lên. Các nghiên cứu về tác động của họ đối với người vay nên kỳ vọng phản ứng kỳ vọng lớn hơn, và các cơ quan quản lý nên kỳ vọng việc siết tín dụng sẽ làm giảm chi tiêu thông qua niềm tin cũng như thông qua thanh khoản.
 
 ### Dữ liệu về dòng vốn đầu tư nước ngoài
 

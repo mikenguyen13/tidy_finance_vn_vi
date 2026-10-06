@@ -1,10 +1,10 @@
-# Firm Valuation, Financial Distress, and Company Maturity
+# Định giá doanh nghiệp, kiệt quệ tài chính và mức độ trưởng thành của công ty
 
-Understanding firm valuation, financial health, and corporate maturity is fundamental to financial analysis and investment decision-making. Three widely used measures (e.g., Tobin's Q, the Altman Z-Score, and company age) capture distinct but complementary dimensions of a firm's economic standing. Tobin's Q reflects the market's assessment of a firm's value relative to its asset base, the Altman Z-Score predicts the likelihood of financial distress, and company age proxies for organizational maturity and operational stability.
+Hiểu rõ về định giá doanh nghiệp, sức khỏe tài chính và mức độ trưởng thành của doanh nghiệp là nền tảng của phân tích tài chính và việc ra quyết định đầu tư. Ba thước đo được sử dụng rộng rãi (chẳng hạn Q của Tobin, điểm Z của Altman và tuổi công ty) phản ánh những khía cạnh khác nhau nhưng bổ sung cho nhau về vị thế kinh tế của doanh nghiệp. Q của Tobin phản ánh đánh giá của thị trường về giá trị doanh nghiệp so với cơ sở tài sản của nó, điểm Z của Altman dự báo khả năng xảy ra kiệt quệ tài chính, còn tuổi công ty là đại diện cho mức độ trưởng thành về tổ chức và sự ổn định hoạt động.
 
-While these measures have been extensively studied in developed markets, particularly the United States [see @lindenberg1981tobin; @altman1968financial; @gompers2003corporate], their application in emerging markets like Vietnam presents unique challenges and opportunities. The Vietnamese stock market has grown rapidly but retains structural features, such as ownership concentration, state-owned enterprise dominance, limited bond market depth, and evolving accounting standards, which necessitate careful adaptation of standard valuation and distress metrics.
+Mặc dù các thước đo này đã được nghiên cứu rộng rãi ở các thị trường phát triển, đặc biệt là Hoa Kỳ [xem @lindenberg1981tobin; @altman1968financial; @gompers2003corporate], việc áp dụng chúng ở các thị trường mới nổi như Việt Nam đặt ra những thách thức và cơ hội riêng. Thị trường chứng khoán Việt Nam tăng trưởng nhanh nhưng vẫn mang những đặc điểm cấu trúc, như mức độ tập trung sở hữu, sự chi phối của doanh nghiệp nhà nước, thị trường trái phiếu còn thiếu chiều sâu và chuẩn mực kế toán đang tiếp tục phát triển, đòi hỏi phải điều chỉnh cẩn trọng các thước đo định giá và kiệt quệ tài chính tiêu chuẩn.
 
-## Required Packages
+## Các gói cần thiết
 
 ```{python}
 #| label: setup
@@ -47,186 +47,186 @@ colors = {
 }
 ```
 
-# Theoretical Foundations {#sec-valuation-theory}
+# Nền tảng lý thuyết {#sec-valuation-theory}
 
-## Tobin's Q: Market Valuation of the Firm {#sec-valuation-tobinq-theory}
+## Q của Tobin: Giá trị thị trường của doanh nghiệp {#sec-valuation-tobinq-theory}
 
-### The Original Concept
+### Khái niệm gốc
 
-Tobin's Q was introduced by @tobin1969general as a theoretical link between financial markets and real investment decisions. The fundamental idea is elegant: if the market values a firm's assets at more than their replacement cost, the firm has an incentive to invest in new capital; if the market values them at less, the firm should not invest, and may even benefit from selling assets.
+Q của Tobin được @tobin1969general giới thiệu như một mối liên kết lý thuyết giữa thị trường tài chính và các quyết định đầu tư thực. Ý tưởng cốt lõi rất đơn giản mà tinh tế: nếu thị trường định giá tài sản của doanh nghiệp cao hơn chi phí thay thế của chúng, doanh nghiệp có động cơ đầu tư thêm vốn mới; nếu thị trường định giá thấp hơn, doanh nghiệp không nên đầu tư, thậm chí có thể có lợi khi bán bớt tài sản.
 
-Formally, Tobin's Q is defined as:
+Một cách hình thức, Q của Tobin được định nghĩa như sau:
 
 $$
 Q = \frac{\text{Market Value of the Firm}}{\text{Replacement Cost of Assets}}
 $$ {#eq-tobinq-basic}
 
-When $Q > 1$, the market perceives the firm as possessing valuable intangible assets, such as brand equity, managerial talent, proprietary technology, or growth opportunities, that exceed the cost of its tangible asset base. When $Q < 1$, the market effectively values the firm at less than what it would cost to reassemble its assets, suggesting potential undervaluation or the presence of agency costs and organizational inefficiencies.
+Khi $Q > 1$, thị trường nhận thấy doanh nghiệp sở hữu các tài sản vô hình có giá trị, như giá trị thương hiệu, năng lực quản lý, công nghệ độc quyền hoặc cơ hội tăng trưởng, vượt quá chi phí của cơ sở tài sản hữu hình. Khi $Q < 1$, thị trường thực chất định giá doanh nghiệp thấp hơn chi phí để xây dựng lại tài sản của nó, gợi ý khả năng bị định giá thấp hoặc sự hiện diện của chi phí đại diện và sự kém hiệu quả về tổ chức.
 
-### Market Value Decomposition
+### Phân rã giá trị thị trường
 
-The numerator of Tobin's Q represents the total market value of all claims on the firm:
+Tử số của Q của Tobin biểu diễn tổng giá trị thị trường của mọi quyền đòi đối với doanh nghiệp:
 
 $$
 MV = CS + PS + ST + LT
 $$ {#eq-mv-decomposition}
 
-where:
+trong đó:
 
--   $CS$ = Market value of common stock (shares outstanding $\times$ market price)
--   $PS$ = Market value of preferred stock
--   $ST$ = Market value of short-term debt
--   $LT$ = Market value of long-term debt
+-   $CS$ = Giá trị thị trường của cổ phiếu phổ thông (số cổ phiếu đang lưu hành $\times$ giá thị trường)
+-   $PS$ = Giá trị thị trường của cổ phiếu ưu đãi
+-   $ST$ = Giá trị thị trường của nợ ngắn hạn
+-   $LT$ = Giá trị thị trường của nợ dài hạn
 
-### Replacement Cost of Assets
+### Chi phí thay thế của tài sản
 
-The denominator captures the replacement cost of the firm's asset base:
+Mẫu số phản ánh chi phí thay thế của cơ sở tài sản của doanh nghiệp:
 
 $$
 RC = TA + (RNP - HNP) + (RINV - HINV)
 $$ {#eq-replacement-cost}
 
-where:
+trong đó:
 
--   $TA$ = Total assets as reported
--   $RNP$ = Replacement cost of net plant and equipment
--   $HNP$ = Historical (book) value of net plant and equipment
--   $RINV$ = Replacement cost of inventories
--   $HINV$ = Historical (book) value of inventories
+-   $TA$ = Tổng tài sản theo báo cáo
+-   $RNP$ = Chi phí thay thế của nhà xưởng và thiết bị ròng
+-   $HNP$ = Giá trị lịch sử (sổ sách) của nhà xưởng và thiết bị ròng
+-   $RINV$ = Chi phí thay thế của hàng tồn kho
+-   $HINV$ = Giá trị lịch sử (sổ sách) của hàng tồn kho
 
-The replacement cost adjustments for plant and equipment involve recursive calculations that account for depreciation rates and, in more detailed estimations, technical progress rates [@lindenberg1981tobin]. For inventories, the adjustment depends on the inventory accounting method: LIFO (Last In, First Out), FIFO (First In, First Out), average cost, or retail cost.
+Việc điều chỉnh chi phí thay thế đối với nhà xưởng và thiết bị đòi hỏi các phép tính đệ quy có tính đến tỷ lệ khấu hao và, trong các ước lượng chi tiết hơn, tỷ lệ tiến bộ kỹ thuật [@lindenberg1981tobin]. Đối với hàng tồn kho, việc điều chỉnh phụ thuộc vào phương pháp kế toán hàng tồn kho: LIFO (nhập sau, xuất trước), FIFO (nhập trước, xuất trước), giá bình quân hoặc giá bán lẻ.
 
-### Simplified Tobin's Q
+### Q của Tobin giản lược
 
-In practice, the full replacement cost computation requires data that are often unavailable, particularly in emerging markets. @gompers2003corporate popularized a simplified version:
+Trong thực tế, việc tính đầy đủ chi phí thay thế đòi hỏi dữ liệu thường không có sẵn, đặc biệt ở các thị trường mới nổi. @gompers2003corporate phổ biến một phiên bản giản lược:
 
 $$
 Q_{\text{simple}} = \frac{TA + ME - BE}{TA}
 $$ {#eq-tobinq-simple}
 
-where $ME$ is the market value of equity and $BE$ is the book value of equity. This formulation assumes that the book values of debt and preferred stock approximate their market values, and that total assets approximate the replacement cost of the firm's asset base. Despite its simplicity, this measure has been shown to correlate well with more elaborate constructions and has become the standard in empirical corporate finance research.
+trong đó $ME$ là giá trị thị trường của vốn chủ sở hữu và $BE$ là giá trị sổ sách của vốn chủ sở hữu. Cách xây dựng này giả định rằng giá trị sổ sách của nợ và cổ phiếu ưu đãi xấp xỉ giá trị thị trường của chúng, và tổng tài sản xấp xỉ chi phí thay thế của cơ sở tài sản của doanh nghiệp. Dù đơn giản, thước đo này được chứng minh là tương quan tốt với các cách xây dựng phức tạp hơn và đã trở thành chuẩn mực trong nghiên cứu tài chính doanh nghiệp thực nghiệm.
 
-### Chung and Pruitt Approximation
+### Xấp xỉ của Chung và Pruitt
 
-@chung1994simple proposed another widely used approximation:
+@chung1994simple đề xuất một phép xấp xỉ khác được sử dụng rộng rãi:
 
 $$
 Q_{\text{CP}} = \frac{ME + PS + DEBT}{TA}
 $$ {#eq-tobinq-cp}
 
-where $DEBT = \text{Current Liabilities} - \text{Current Assets} + \text{Book Value of Inventories} + \text{Long-term Debt}$. This formulation captures the net debt position more precisely than the @gompers2003corporate version.
+trong đó $DEBT = \text{Current Liabilities} - \text{Current Assets} + \text{Book Value of Inventories} + \text{Long-term Debt}$. Cách xây dựng này nắm bắt vị thế nợ ròng chính xác hơn so với phiên bản của @gompers2003corporate.
 
 ------------------------------------------------------------------------
 
-## Altman Z-Score: Predicting Financial Distress {#sec-valuation-zscore-theory}
+## Điểm Z của Altman: Dự báo kiệt quệ tài chính {#sec-valuation-zscore-theory}
 
-### The Original Model
+### Mô hình gốc
 
-The Altman Z-Score, developed by @altman1968financial, is a multivariate discriminant analysis model that predicts the probability of corporate bankruptcy within a two-year horizon. The model was originally estimated using a matched sample of bankrupt and non-bankrupt U.S. manufacturing firms and takes the form:
+Điểm Z của Altman, do @altman1968financial phát triển, là một mô hình phân tích phân biệt đa biến dự báo xác suất phá sản của doanh nghiệp trong khoảng thời gian hai năm. Mô hình ban đầu được ước lượng bằng một mẫu ghép cặp gồm các doanh nghiệp sản xuất của Hoa Kỳ đã phá sản và chưa phá sản, và có dạng:
 
 $$
 Z = 3.3 \cdot X_1 + 0.999 \cdot X_2 + 0.6 \cdot X_3 + 1.2 \cdot X_4 + 1.4 \cdot X_5
 $$ {#eq-zscore-original}
 
-where the five financial ratios are in @tbl-zscore-components
+trong đó năm tỷ số tài chính được nêu trong @tbl-zscore-components
 
-| Variable | Formula | Interpretation |
+| Biến | Công thức | Diễn giải |
 |---------------------|-------------------|--------------------------------|
-| $X_1$ | $\frac{\text{EBIT}}{\text{Total Assets}}$ | Earning power of assets |
-| $X_2$ | $\frac{\text{Net Sales}}{\text{Total Assets}}$ | Total asset turnover |
-| $X_3$ | $\frac{\text{Market Value of Equity}}{\text{Total Liabilities}}$ | Leverage ratio (inverse) |
-| $X_4$ | $\frac{\text{Working Capital}}{\text{Total Assets}}$ | Short-term liquidity |
-| $X_5$ | $\frac{\text{Retained Earnings}}{\text{Total Assets}}$ | Cumulative profitability |
+| $X_1$ | $\frac{\text{EBIT}}{\text{Total Assets}}$ | Khả năng sinh lời của tài sản |
+| $X_2$ | $\frac{\text{Net Sales}}{\text{Total Assets}}$ | Vòng quay tổng tài sản |
+| $X_3$ | $\frac{\text{Market Value of Equity}}{\text{Total Liabilities}}$ | Tỷ số đòn bẩy (nghịch đảo) |
+| $X_4$ | $\frac{\text{Working Capital}}{\text{Total Assets}}$ | Thanh khoản ngắn hạn |
+| $X_5$ | $\frac{\text{Retained Earnings}}{\text{Total Assets}}$ | Khả năng sinh lời tích lũy |
 
-: Components of the Altman Z-Score {#tbl-zscore-components}
+: Các thành phần của điểm Z của Altman {#tbl-zscore-components}
 
-The interpretation zones are in @tbl-zscore-zones
+Các vùng diễn giải được nêu trong @tbl-zscore-zones
 
-| Z-Score Range | Interpretation |
+| Khoảng điểm Z | Diễn giải |
 |-----------------------------------|-------------------------------------|
-| $Z > 2.99$ | Safe zone-low probability of financial distress |
-| $2.70 \leq Z \leq 2.99$ | Grey zone-on alert, moderate risk |
-| $1.80 \leq Z < 2.70$ | Distress zone-significant bankruptcy risk within 2 years |
-| $Z < 1.80$ | High distress-very high probability of financial failure |
+| $Z > 2.99$ | Vùng an toàn-xác suất kiệt quệ tài chính thấp |
+| $2.70 \leq Z \leq 2.99$ | Vùng xám-cần cảnh giác, rủi ro trung bình |
+| $1.80 \leq Z < 2.70$ | Vùng kiệt quệ-rủi ro phá sản đáng kể trong vòng 2 năm |
+| $Z < 1.80$ | Kiệt quệ nghiêm trọng-xác suất thất bại tài chính rất cao |
 
-: Altman Z-Score interpretation zones {#tbl-zscore-zones}
+: Các vùng diễn giải điểm Z của Altman {#tbl-zscore-zones}
 
-### The Z'-Score Model for Private Firms
+### Mô hình điểm Z' cho doanh nghiệp chưa niêm yết
 
-Because the original model uses market value of equity in $X_3$, @altman2010corporate developed the Z'-Score for private (non-publicly traded) firms by replacing market capitalization with book value of equity:
+Vì mô hình gốc dùng giá trị thị trường của vốn chủ sở hữu trong $X_3$, @altman2010corporate phát triển điểm Z' cho các doanh nghiệp chưa niêm yết (không giao dịch công khai) bằng cách thay vốn hóa thị trường bằng giá trị sổ sách của vốn chủ sở hữu:
 
 $$
 Z' = 0.717 \cdot X_1' + 0.847 \cdot X_2' + 3.107 \cdot X_3' + 0.420 \cdot X_4' + 0.998 \cdot X_5'
 $$ {#eq-zscore-private}
 
-where $X_4' = \frac{\text{Book Value of Equity}}{\text{Total Liabilities}}$, and the remaining variables are defined as in the original model but with re-estimated coefficients.
+trong đó $X_4' = \frac{\text{Book Value of Equity}}{\text{Total Liabilities}}$, và các biến còn lại được định nghĩa như trong mô hình gốc nhưng với các hệ số được ước lượng lại.
 
-### The Z''-Score Model for Emerging Markets
+### Mô hình điểm Z'' cho thị trường mới nổi
 
-Most relevant for Vietnam, @altman2010corporate also developed the Z''-Score for non-manufacturing and emerging market firms:
+Phù hợp nhất với Việt Nam, @altman2010corporate cũng phát triển điểm Z'' cho các doanh nghiệp phi sản xuất và doanh nghiệp ở thị trường mới nổi:
 
 $$
 Z'' = 3.25 + 6.56 \cdot X_1'' + 3.26 \cdot X_2'' + 6.72 \cdot X_3'' + 1.05 \cdot X_4''
 $$ {#eq-zscore-emerging}
 
-where:
+trong đó:
 
 -   $X_1'' = \frac{\text{Working Capital}}{\text{Total Assets}}$
 -   $X_2'' = \frac{\text{Retained Earnings}}{\text{Total Assets}}$
 -   $X_3'' = \frac{\text{EBIT}}{\text{Total Assets}}$
 -   $X_4'' = \frac{\text{Book Value of Equity}}{\text{Total Liabilities}}$
 
-Note that this model drops the sales/total assets ratio ($X_2$ in the original model) to minimize industry effects and adds an intercept. The classification zones shift accordingly (@tbl-zscore-em-zones).
+Lưu ý rằng mô hình này loại bỏ tỷ số doanh thu/tổng tài sản ($X_2$ trong mô hình gốc) để giảm thiểu hiệu ứng ngành và bổ sung một hệ số chặn. Các vùng phân loại được dịch chuyển tương ứng (@tbl-zscore-em-zones).
 
-| Z''-Score Range           | Interpretation |
+| Khoảng điểm Z''           | Diễn giải |
 |---------------------------|----------------|
-| $Z'' > 2.60$              | Safe zone      |
-| $1.10 \leq Z'' \leq 2.60$ | Grey zone      |
-| $Z'' < 1.10$              | Distress zone  |
+| $Z'' > 2.60$              | Vùng an toàn   |
+| $1.10 \leq Z'' \leq 2.60$ | Vùng xám       |
+| $Z'' < 1.10$              | Vùng kiệt quệ  |
 
-: Z''-Score interpretation zones for emerging markets {#tbl-zscore-em-zones}
+: Các vùng diễn giải điểm Z'' cho thị trường mới nổi {#tbl-zscore-em-zones}
 
-## Company Age: Measuring Corporate Maturity {#sec-valuation-age-theory}
+## Tuổi công ty: Đo lường mức độ trưởng thành của doanh nghiệp {#sec-valuation-age-theory}
 
-Company age captures the accumulated experience, reputation, and organizational capital of a firm. Older firms typically exhibit more stable operations, established competitive advantages, and predictable cash flow patterns [@coad2018firm]. Age is commonly used as a control variable in corporate finance research, and its relationship with performance is theoretically ambiguous: older firms benefit from learning effects and reputation but may suffer from organizational rigidity and declining innovation [@huergo2004firms].
+Tuổi công ty phản ánh kinh nghiệm tích lũy, uy tín và vốn tổ chức của doanh nghiệp. Các doanh nghiệp lâu đời thường có hoạt động ổn định hơn, lợi thế cạnh tranh vững chắc và dòng tiền dễ dự báo [@coad2018firm]. Tuổi thường được dùng làm biến kiểm soát trong nghiên cứu tài chính doanh nghiệp, và mối quan hệ của nó với hiệu quả hoạt động là mơ hồ về mặt lý thuyết: doanh nghiệp lâu đời được hưởng lợi từ hiệu ứng học hỏi và uy tín nhưng có thể chịu sự cứng nhắc về tổ chức và suy giảm đổi mới [@huergo2004firms].
 
-The ideal measure is the number of years since founding. When founding dates are unavailable, common proxies include:
+Thước đo lý tưởng là số năm kể từ khi thành lập. Khi không có ngày thành lập, các đại diện thông dụng gồm:
 
-1.  **Listing age**: Years since the first IPO or listing on a stock exchange.
-2.  **Data age**: Years since the first appearance in financial databases.
-3.  **Incorporation age**: Years since the date of legal incorporation.
+1.  **Tuổi niêm yết**: Số năm kể từ lần IPO hoặc niêm yết đầu tiên trên một sở giao dịch chứng khoán.
+2.  **Tuổi dữ liệu**: Số năm kể từ lần xuất hiện đầu tiên trong các cơ sở dữ liệu tài chính.
+3.  **Tuổi đăng ký thành lập**: Số năm kể từ ngày đăng ký thành lập pháp lý.
 
-In the Vietnamese context, we can use multiple proxies, including the date of first listing on HOSE or HNX, the first available financial statement date, and (when available) the founding date from company profiles.
+Trong bối cảnh Việt Nam, chúng ta có thể sử dụng nhiều đại diện, bao gồm ngày niêm yết lần đầu trên HOSE hoặc HNX, ngày báo cáo tài chính đầu tiên có sẵn, và (khi có) ngày thành lập từ hồ sơ công ty.
 
-# The Vietnamese Market Context {#sec-valuation-vietnam-context}
+# Bối cảnh thị trường Việt Nam {#sec-valuation-vietnam-context}
 
-## Institutional Features Affecting Valuation Measures
+## Các đặc điểm thể chế ảnh hưởng đến thước đo định giá
 
-The Vietnamese stock market has several institutional features that are important to consider when computing and interpreting Tobin's Q, Altman Z-Score, and company age.
+Thị trường chứng khoán Việt Nam có một số đặc điểm thể chế quan trọng cần xem xét khi tính toán và diễn giải Q của Tobin, điểm Z của Altman và tuổi công ty.
 
-### State Ownership and Equitization
+### Sở hữu nhà nước và cổ phần hóa
 
 A significant proportion of Vietnamese listed firms are former state-owned enterprises (SOEs) that underwent equitization (cổ phần hóa). These firms often retain substantial state ownership, which can affect:
 
--   **Tobin's Q**: State ownership may depress Q if markets perceive government influence as reducing efficiency, or it may elevate Q if state connections provide preferential access to resources and contracts.
--   **Z-Score**: SOEs may have implicit government guarantees that reduce actual bankruptcy risk below what the Z-Score predicts.
--   **Age**: The true operational age of equitized SOEs may far exceed their listing age, creating measurement challenges.
+-   **Q của Tobin**: Sở hữu nhà nước có thể làm giảm Q nếu thị trường cho rằng sự can thiệp của chính phủ làm giảm hiệu quả, hoặc có thể làm tăng Q nếu các mối liên hệ với nhà nước mang lại khả năng tiếp cận ưu đãi đối với nguồn lực và hợp đồng.
+-   **Điểm Z**: Các doanh nghiệp nhà nước (SOE) có thể có bảo lãnh ngầm của chính phủ làm giảm rủi ro phá sản thực tế xuống thấp hơn mức điểm Z dự báo.
+-   **Tuổi**: Tuổi hoạt động thực của các SOE đã cổ phần hóa có thể vượt xa tuổi niêm yết của chúng, gây ra khó khăn trong đo lường.
 
-### Foreign Ownership Limits
+### Giới hạn sở hữu nước ngoài
 
-Vietnam imposes foreign ownership limits (FOL) on listed companies, typically capped at 49% for most sectors (with some exceptions). This constraint can create price premiums for stocks approaching the FOL ceiling, potentially inflating Tobin's Q for these firms [@vo2015foreign].
+Việt Nam áp đặt giới hạn sở hữu nước ngoài (FOL) đối với các công ty niêm yết, thường được giới hạn ở mức 49% đối với hầu hết các ngành (có một số ngoại lệ). Ràng buộc này có thể tạo ra phần bù giá đối với các cổ phiếu tiến gần trần FOL, có khả năng làm tăng Q của Tobin của các doanh nghiệp này [@vo2015foreign].
 
-### Accounting Standards
+### Chuẩn mực kế toán
 
-Vietnamese Accounting Standards (VAS) differ from International Financial Reporting Standards (IFRS) in several ways relevant to our measures:
+Chuẩn mực Kế toán Việt Nam (VAS) khác với Chuẩn mực Báo cáo Tài chính Quốc tế (IFRS) ở một số điểm liên quan đến các thước đo của chúng ta:
 
--   **Historical cost basis**: VAS relies more heavily on historical cost, which can cause book values to diverge substantially from replacement costs, affecting both Q and Z-Score calculations.
--   **Limited fair value measurement**: Unlike IFRS, VAS limits fair value measurement for many asset classes, making book-value-based proxies less reliable.
--   **Inventory methods**: Vietnamese firms use various inventory valuation methods (FIFO, weighted average), which affect the book value of inventories and hence the Z-Score's working capital component.
+-   **Cơ sở giá gốc**: VAS dựa nhiều hơn vào giá gốc, có thể khiến giá trị sổ sách lệch đáng kể so với chi phí thay thế, ảnh hưởng đến cả phép tính Q lẫn điểm Z.
+-   **Hạn chế đo lường theo giá trị hợp lý**: Không như IFRS, VAS hạn chế việc đo lường theo giá trị hợp lý đối với nhiều loại tài sản, khiến các đại diện dựa trên giá trị sổ sách kém tin cậy hơn.
+-   **Phương pháp hàng tồn kho**: Các doanh nghiệp Việt Nam dùng nhiều phương pháp định giá hàng tồn kho (FIFO, bình quân gia quyền), ảnh hưởng đến giá trị sổ sách của hàng tồn kho và do đó đến thành phần vốn lưu động của điểm Z.
 
-### Market Microstructure
+### Vi cấu trúc thị trường
 
-Vietnam's market features daily price limits (currently $\pm$ 7% on HOSE, $\pm$ 10% on HNX, $\pm$ 15% on UPCoM), which can prevent prices from reaching equilibrium values quickly. This means that market capitalization at any point may not fully reflect available information, introducing noise into market-value-based measures like Tobin's Q.
+Thị trường Việt Nam có biên độ giá hằng ngày (hiện là $\pm$ 7% trên HOSE, $\pm$ 10% trên HNX, $\pm$ 15% trên UPCoM), có thể ngăn giá đạt tới giá trị cân bằng một cách nhanh chóng. Điều này có nghĩa là vốn hóa thị trường tại một thời điểm có thể không phản ánh đầy đủ thông tin sẵn có, đưa nhiễu vào các thước đo dựa trên giá trị thị trường như Q của Tobin.
 
 ```{=html}
 <!-- ## DataCore.vn Dataset Structure
@@ -239,11 +239,11 @@ DataCore.vn provides comprehensive financial data for Vietnamese listed companie
 4.  **Delisting information** (`delisting_info`): Records of firms that have been delisted, including dates and reasons. -->
 ```
 
-# Data Preparation {#sec-valuation-data-prep}
+# Chuẩn bị dữ liệu {#sec-valuation-data-prep}
 
-## Loading and Cleaning Financial Statement Data
+## Tải và làm sạch dữ liệu báo cáo tài chính
 
-We begin by loading the annual financial statement data and constructing the variables needed for our three measures.
+Chúng ta bắt đầu bằng việc tải dữ liệu báo cáo tài chính hằng năm và xây dựng các biến cần thiết cho ba thước đo.
 
 ```{python}
 #| label: simulate-data
@@ -384,13 +384,13 @@ print(f"Year range: {df['year'].min()}–{df['year'].max()}")
 print(f"Exchanges: {df['exchange'].value_counts().to_dict()}")
 ```
 
-## Variable Definitions and Mapping
+## Định nghĩa biến và ánh xạ
 
-@tbl-variable-mapping provides the mapping between standard variable names and the corresponding fields.
+@tbl-variable-mapping trình bày ánh xạ giữa tên biến chuẩn và các trường tương ứng.
 
 ```{python}
 #| label: tbl-variable-mapping
-#| tbl-cap: "Variable mapping"
+#| tbl-cap: "Ánh xạ biến"
 
 variable_map = pd.DataFrame({
     "Compustat Variable": [
@@ -444,9 +444,9 @@ variable_map.style.set_properties(**{
 ])
 ```
 
-## Data Quality Checks
+## Kiểm tra chất lượng dữ liệu
 
-Before computing any measures, we perform essential data quality checks that are particularly important for Vietnamese data.
+Trước khi tính bất kỳ thước đo nào, chúng ta thực hiện các kiểm tra chất lượng dữ liệu thiết yếu, đặc biệt quan trọng đối với dữ liệu Việt Nam.
 
 ```{python}
 #| label: data-quality-checks
@@ -488,17 +488,17 @@ print(f"\nObservations after cleaning: {len(df_clean):,} "
       f"(dropped {len(df) - len(df_clean):,})")
 ```
 
-# Computing Tobin's Q {#sec-valuation-tobinq-computation}
+# Tính Q của Tobin {#sec-valuation-tobinq-computation}
 
-## Book Value of Equity
+## Giá trị sổ sách của vốn chủ sở hữu
 
-Following @daniel1997evidence, we compute the book value of equity as:
+Theo @daniel1997evidence, chúng ta tính giá trị sổ sách của vốn chủ sở hữu như sau:
 
 $$
 BE = SEQ + TXDB + ITCB - PREF
 $$ {#eq-book-equity}
 
-where $PREF$ is the preferred stock value, using the redemption value if available, otherwise the liquidating value, and finally the carrying value as a last resort. In the Vietnamese context, preferred stock is relatively rare among listed companies, so $PREF$ is often zero.
+trong đó $PREF$ là giá trị cổ phiếu ưu đãi, sử dụng giá trị hoàn lại nếu có, nếu không thì dùng giá trị thanh lý, và sau cùng là giá trị ghi sổ như phương án dự phòng cuối cùng. Trong bối cảnh Việt Nam, cổ phiếu ưu đãi tương đối hiếm trong các công ty niêm yết, nên $PREF$ thường bằng không.
 
 ```{python}
 #| label: compute-book-equity
@@ -533,15 +533,15 @@ print("Book Equity Summary Statistics (VND millions)")
 print(df_clean["be"].describe().apply(lambda x: f"{x:,.0f}"))
 ```
 
-## Market Value of Equity
+## Giá trị thị trường của vốn chủ sở hữu
 
-The market value of equity is computed using the calendar year-end stock price and shares outstanding:
+Giá trị thị trường của vốn chủ sở hữu được tính bằng giá cổ phiếu cuối năm dương lịch và số cổ phiếu đang lưu hành:
 
 $$
 ME = P_{\text{close}} \times \text{CSHO}
 $$ {#eq-market-equity}
 
-For Vietnamese firms, this is obtained from the closing price on the last trading day of the fiscal year. Most Vietnamese firms have a December 31 fiscal year end, though some (particularly in agriculture and banking) may differ.
+Đối với các doanh nghiệp Việt Nam, giá trị này lấy từ giá đóng cửa vào ngày giao dịch cuối cùng của năm tài chính. Hầu hết doanh nghiệp Việt Nam kết thúc năm tài chính vào ngày 31 tháng 12, dù một số (đặc biệt trong nông nghiệp và ngân hàng) có thể khác.
 
 ```{python}
 #| label: compute-market-equity
@@ -557,21 +557,21 @@ print("Market Equity Summary Statistics (VND millions)")
 print(df_clean["me"].describe().apply(lambda x: f"{x:,.0f}"))
 ```
 
-## Simplified Tobin's Q
+## Q của Tobin giản lược
 
-We implement the @gompers2003corporate simplified version:
+Chúng ta triển khai phiên bản giản lược của @gompers2003corporate:
 
 $$
 Q_{\text{simple}} = \frac{AT + ME - BE}{AT}
 $$ {#eq-tobinq-implementation}
 
-This can be rewritten as:
+Công thức này có thể viết lại thành:
 
 $$
 Q_{\text{simple}} = 1 + \frac{ME - BE}{AT}
 $$ {#eq-tobinq-rewritten}
 
-which makes the interpretation clear: Tobin's Q equals one plus the market-to-book premium (or discount) scaled by total assets.
+giúp cách diễn giải trở nên rõ ràng: Q của Tobin bằng một cộng với phần bù (hoặc chiết khấu) giữa giá trị thị trường và giá trị sổ sách, chia cho tổng tài sản.
 
 ```{python}
 #| label: compute-tobinq
@@ -620,9 +620,9 @@ print("Tobin's Q Summary Statistics")
 print(q_summary.to_string())
 ```
 
-## Winsorizing Extreme Values
+## Áp dụng winsorization cho các giá trị cực đoan
 
-Tobin's Q values can be heavily influenced by outliers, particularly in emerging markets where data quality may be inconsistent. We winsorize at the 1st and 99th percentiles.
+Giá trị Q của Tobin có thể bị ảnh hưởng nặng bởi các giá trị ngoại lai, đặc biệt ở các thị trường mới nổi nơi chất lượng dữ liệu có thể không đồng đều. Chúng ta thực hiện winsorization tại phân vị thứ 1 và thứ 99.
 
 ```{python}
 #| label: winsorize
@@ -645,11 +645,11 @@ print(f"  After:  mean={df_clean['tobin_q_simple_w'].mean():.3f}, "
       f"std={df_clean['tobin_q_simple_w'].std():.3f}")
 ```
 
-## Cross-Sectional Distribution of Tobin's Q
+## Phân phối chéo của Q của Tobin
 
 ```{python}
 #| label: fig-tobinq-distribution
-#| fig-cap: "Distribution of Tobin's Q across Vietnamese listed firms (2024). The vertical dashed line at Q=1 indicates the theoretical threshold where market value equals replacement cost."
+#| fig-cap: "Phân phối của Q của Tobin trên các doanh nghiệp niêm yết Việt Nam (2024). Đường nét đứt thẳng đứng tại Q=1 biểu thị ngưỡng lý thuyết mà tại đó giá trị thị trường bằng chi phí thay thế."
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -690,11 +690,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Time-Series Evolution of Tobin's Q
+## Diễn biến chuỗi thời gian của Q của Tobin
 
 ```{python}
 #| label: fig-tobinq-timeseries
-#| fig-cap: "Evolution of median Tobin's Q across Vietnamese exchanges (2008–2024). Shaded areas represent the interquartile range."
+#| fig-cap: "Diễn biến của Q của Tobin trung vị trên các sàn giao dịch Việt Nam (2008–2024). Vùng tô bóng biểu thị khoảng tứ phân vị."
 
 # Compute annual statistics by exchange
 annual_q = (
@@ -729,11 +729,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Tobin's Q by Industry
+## Q của Tobin theo ngành
 
 ```{python}
 #| label: fig-tobinq-industry
-#| fig-cap: "Median Tobin's Q by industry in Vietnam (latest available year). Industries are sorted by median Q value."
+#| fig-cap: "Q của Tobin trung vị theo ngành ở Việt Nam (năm gần nhất có sẵn). Các ngành được sắp xếp theo giá trị Q trung vị."
 
 latest_industry_q = (
     latest_data
@@ -766,9 +766,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-# Computing the Altman Z-Score {#sec-valuation-zscore-computation}
+# Tính điểm Z của Altman {#sec-valuation-zscore-computation}
 
-## Original Z-Score for Listed Firms
+## Điểm Z gốc cho doanh nghiệp niêm yết
 
 ```{python}
 #| label: compute-zscore
@@ -844,13 +844,13 @@ z_summary.columns = ["Original Z", "Z' (Private)", "Z'' (Emerging)"]
 print(z_summary.to_string())
 ```
 
-## Z-Score Component Analysis
+## Phân tích các thành phần của điểm Z
 
-Understanding which components drive the Z-Score is particularly informative in the Vietnamese context, where certain ratios may behave differently than in developed markets.
+Việc hiểu thành phần nào chi phối điểm Z đặc biệt hữu ích trong bối cảnh Việt Nam, nơi một số tỷ số có thể hành xử khác với các thị trường phát triển.
 
 ```{python}
 #| label: fig-zscore-components
-#| fig-cap: "Distribution of Altman Z-Score component ratios for Vietnamese listed firms. Each panel shows a component weighted by its coefficient in the original Z-Score formula."
+#| fig-cap: "Phân phối các tỷ số thành phần của điểm Z của Altman đối với các doanh nghiệp niêm yết Việt Nam. Mỗi biểu đồ con thể hiện một thành phần được gia quyền theo hệ số của nó trong công thức điểm Z gốc."
 
 fig, axes = plt.subplots(2, 3, figsize=(15, 9))
 
@@ -884,11 +884,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Distribution of Risk Zones
+## Phân phối các vùng rủi ro
 
 ```{python}
 #| label: fig-zscore-zones
-#| fig-cap: "Proportion of Vietnamese listed firms in each Altman Z-Score risk zone over time. The figure shows both the original Z-Score zones and the emerging market Z''-Score zones."
+#| fig-cap: "Tỷ lệ các doanh nghiệp niêm yết Việt Nam trong từng vùng rủi ro của điểm Z của Altman theo thời gian. Hình thể hiện cả các vùng điểm Z gốc và các vùng điểm Z'' cho thị trường mới nổi."
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
@@ -956,13 +956,13 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Comparing Z-Score Variants
+## So sánh các biến thể của điểm Z
 
-An important practical question is which Z-Score variant is most appropriate for Vietnamese firms. The original model was calibrated on U.S. manufacturing firms, while the Z''-Score was specifically designed for emerging markets and non-manufacturing sectors.
+Một câu hỏi thực tiễn quan trọng là biến thể điểm Z nào phù hợp nhất với các doanh nghiệp Việt Nam. Mô hình gốc được hiệu chỉnh trên các doanh nghiệp sản xuất của Hoa Kỳ, trong khi điểm Z'' được thiết kế riêng cho thị trường mới nổi và các ngành phi sản xuất.
 
 ```{python}
 #| label: fig-zscore-comparison
-#| fig-cap: "Comparison of original Z-Score and emerging market Z''-Score for Vietnamese listed firms. Points above (below) the 45-degree line have higher Z''-Scores (Z-Scores) than the other measure."
+#| fig-cap: "So sánh điểm Z gốc và điểm Z'' cho thị trường mới nổi đối với các doanh nghiệp niêm yết Việt Nam. Các điểm nằm trên (dưới) đường 45 độ có điểm Z'' (điểm Z) cao hơn thước đo còn lại."
 
 fig, ax = plt.subplots(figsize=(8, 8))
 
@@ -1001,11 +1001,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-# Computing Company Age {#sec-valuation-age-computation}
+# Tính tuổi công ty {#sec-valuation-age-computation}
 
-## Multiple Age Proxies
+## Nhiều đại diện cho tuổi
 
-For Vietnamese firms, we compute three age measures:
+Đối với các doanh nghiệp Việt Nam, chúng ta tính ba thước đo tuổi:
 
 $$
 \text{Age}_{\text{founding}} = \text{Current Year} - \text{Founding Year}
@@ -1061,11 +1061,11 @@ age_summary.columns = ["Founding Age", "Listing Age", "Data Age"]
 print(age_summary.to_string())
 ```
 
-## Age Distribution
+## Phân phối tuổi
 
 ```{python}
 #| label: fig-age-distribution
-#| fig-cap: "Distribution of company age measures for Vietnamese listed firms. Founding age reflects true organizational maturity, while listing age captures capital market experience."
+#| fig-cap: "Phân phối các thước đo tuổi công ty đối với các doanh nghiệp niêm yết Việt Nam. Tuổi thành lập phản ánh mức độ trưởng thành thực sự của tổ chức, trong khi tuổi niêm yết phản ánh kinh nghiệm trên thị trường vốn."
 
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
@@ -1095,13 +1095,13 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Age and the Equitization Effect
+## Tuổi và hiệu ứng cổ phần hóa
 
-A distinctive feature of the Vietnamese market is the equitization of SOEs. Many firms have founding dates that predate the stock market by decades, creating a large gap between founding age and listing age.
+Một đặc điểm riêng của thị trường Việt Nam là việc cổ phần hóa các SOE. Nhiều doanh nghiệp có ngày thành lập sớm hơn thị trường chứng khoán hàng chục năm, tạo ra khoảng cách lớn giữa tuổi thành lập và tuổi niêm yết.
 
 ```{python}
 #| label: fig-age-gap
-#| fig-cap: "Relationship between founding age and listing age for Vietnamese firms. The gap reflects years of pre-listing operations, which is especially large for equitized state-owned enterprises."
+#| fig-cap: "Mối quan hệ giữa tuổi thành lập và tuổi niêm yết của các doanh nghiệp Việt Nam. Khoảng cách phản ánh số năm hoạt động trước khi niêm yết, đặc biệt lớn đối với các doanh nghiệp nhà nước đã cổ phần hóa."
 
 fig, ax = plt.subplots(figsize=(8, 8))
 
@@ -1131,19 +1131,19 @@ plt.tight_layout()
 plt.show()
 ```
 
-# Joint Analysis: Valuation, Distress, and Maturity {#sec-valuation-joint-analysis}
+# Phân tích kết hợp: Định giá, kiệt quệ và mức độ trưởng thành {#sec-valuation-joint-analysis}
 
-## The Relationship Between Q, Z-Score, and Age
+## Mối quan hệ giữa Q, điểm Z và tuổi
 
-These three measures capture different dimensions of a firm's financial standing, but they are not independent. Theoretically, we expect:
+Ba thước đo này phản ánh những khía cạnh khác nhau về vị thế tài chính của doanh nghiệp, nhưng chúng không độc lập với nhau. Về mặt lý thuyết, chúng ta kỳ vọng:
 
--   **Q and Z**: Firms with high growth opportunities (high Q) tend to be financially healthier (high Z), but the relationship is not monotonic, very high Q values may indicate speculative overvaluation.
--   **Q and Age**: Young firms may have higher Q (growth expectations) or lower Q (unproven business model). The relationship depends on the industry life cycle.
--   **Z and Age**: Older firms typically have more stable earnings and higher retained earnings, contributing to higher Z-Scores, though very old firms may face declining competitiveness.
+-   **Q và Z**: Các doanh nghiệp có nhiều cơ hội tăng trưởng (Q cao) thường khỏe mạnh hơn về tài chính (Z cao), nhưng mối quan hệ không đơn điệu, giá trị Q rất cao có thể cho thấy sự định giá quá cao mang tính đầu cơ.
+-   **Q và tuổi**: Các doanh nghiệp trẻ có thể có Q cao hơn (kỳ vọng tăng trưởng) hoặc thấp hơn (mô hình kinh doanh chưa được kiểm chứng). Mối quan hệ phụ thuộc vào vòng đời của ngành.
+-   **Z và tuổi**: Các doanh nghiệp lâu đời thường có lợi nhuận ổn định hơn và lợi nhuận giữ lại cao hơn, góp phần làm điểm Z cao hơn, dù các doanh nghiệp rất lâu đời có thể đối mặt với năng lực cạnh tranh suy giảm.
 
 ```{python}
 #| label: fig-joint-analysis
-#| fig-cap: "Relationship between Tobin's Q, Altman Z-Score, and company age for Vietnamese listed firms. Bubble size reflects total assets; color indicates the emerging market Z''-Score risk zone."
+#| fig-cap: "Mối quan hệ giữa Q của Tobin, điểm Z của Altman và tuổi công ty đối với các doanh nghiệp niêm yết Việt Nam. Kích thước bong bóng phản ánh tổng tài sản; màu sắc cho biết vùng rủi ro điểm Z'' cho thị trường mới nổi."
 
 fig, axes = plt.subplots(1, 3, figsize=(16, 5))
 
@@ -1190,11 +1190,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Correlation Structure
+## Cấu trúc tương quan
 
 ```{python}
 #| label: fig-correlation-matrix
-#| fig-cap: "Correlation matrix of key valuation, distress, and maturity measures for Vietnamese listed firms."
+#| fig-cap: "Ma trận tương quan của các thước đo chính về định giá, kiệt quệ và mức độ trưởng thành đối với các doanh nghiệp niêm yết Việt Nam."
 
 corr_vars = [
     "tobin_q_simple_w", "mtb_w", "altman_z_w", "altman_z_em_w",
@@ -1229,9 +1229,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Cross-Sectional Regression Analysis
+## Phân tích hồi quy dữ liệu chéo
 
-We estimate a simple cross-sectional model to examine the determinants of Tobin's Q in the Vietnamese market:
+Chúng ta ước lượng một mô hình hồi quy dữ liệu chéo đơn giản để xem xét các yếu tố quyết định Q của Tobin trên thị trường Việt Nam:
 
 $$
 Q_{i,t} = \alpha + \beta_1 \ln(\text{Age}_{i}) + \beta_2 Z''_{i,t} + \beta_3 \text{SOE}_{i} + \beta_4 \ln(\text{TA}_{i,t}) + \varepsilon_{i,t}
@@ -1290,11 +1290,11 @@ print("=" * 65)
 print("  Significance: *** p<0.01, ** p<0.05, * p<0.10")
 ```
 
-# The Complete Pipeline {#sec-valuation-pipeline}
+# Quy trình hoàn chỉnh {#sec-valuation-pipeline}
 
-## Putting It All Together
+## Tổng hợp tất cả
 
-Here we provide a single, clean function that takes raw DataCore.vn financial data and produces a complete dataset with all three measures computed.
+Ở đây chúng tôi cung cấp một hàm gọn gàng duy nhất nhận dữ liệu tài chính thô từ DataCore.vn và tạo ra bộ dữ liệu hoàn chỉnh với cả ba thước đo đã được tính.
 
 ```{python}
 #| label: complete-pipeline
@@ -1420,7 +1420,7 @@ for var in ["tobin_q", "tobin_q_cp", "mtb", "altman_z", "altman_z_prime",
         print(f"  {var}: {non_null:,} non-null values")
 ```
 
-## Exporting Results
+## Xuất kết quả
 
 ```{python}
 #| label: export-results
@@ -1450,15 +1450,15 @@ display_cols = [c for c in display_cols if c in export_df.columns]
 print(export_df[display_cols].head().to_string(index=False))
 ```
 
-# Special Topics for the Vietnamese Market {#sec-valuation-special-topics}
+# Các chủ đề đặc biệt cho thị trường Việt Nam {#sec-valuation-special-topics}
 
-## State Ownership and Valuation
+## Sở hữu nhà nước và định giá
 
-State ownership is a defining feature of the Vietnamese corporate landscape. We examine how state ownership affects both Tobin's Q and financial distress risk.
+Sở hữu nhà nước là đặc điểm nổi bật của bức tranh doanh nghiệp Việt Nam. Chúng ta xem xét sở hữu nhà nước ảnh hưởng thế nào đến cả Q của Tobin lẫn rủi ro kiệt quệ tài chính.
 
 ```{python}
 #| label: fig-soe-analysis
-#| fig-cap: "Relationship between state ownership percentage and firm valuation/distress measures. The left panel shows Tobin's Q against state ownership, with a LOWESS smoother. The right panel shows the Z''-Score by state ownership quartile."
+#| fig-cap: "Mối quan hệ giữa tỷ lệ sở hữu nhà nước và các thước đo định giá/kiệt quệ của doanh nghiệp. Biểu đồ bên trái thể hiện Q của Tobin theo sở hữu nhà nước, với đường làm trơn LOWESS. Biểu đồ bên phải thể hiện điểm Z'' theo tứ phân vị sở hữu nhà nước."
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
@@ -1516,11 +1516,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Exchange-Level Analysis
+## Phân tích theo sàn giao dịch
 
 ```{python}
 #| label: tbl-exchange-summary
-#| tbl-cap: "Summary statistics by exchange for Vietnamese listed firms (latest year)"
+#| tbl-cap: "Thống kê mô tả theo sàn giao dịch đối với các doanh nghiệp niêm yết Việt Nam (năm gần nhất)"
 
 exchange_summary = (
     latest
@@ -1562,11 +1562,11 @@ exchange_summary.style.set_properties(**{
 })
 ```
 
-## Sector Heatmap: Valuation and Distress
+## Bản đồ nhiệt theo ngành: Định giá và kiệt quệ
 
 ```{python}
 #| label: fig-sector-heatmap
-#| fig-cap: "Median Tobin's Q and Z''-Score by industry and year for Vietnamese listed firms. Warmer colors indicate higher values."
+#| fig-cap: "Q của Tobin và điểm Z'' trung vị theo ngành và năm đối với các doanh nghiệp niêm yết Việt Nam. Màu ấm hơn biểu thị giá trị cao hơn."
 
 fig, axes = plt.subplots(1, 2, figsize=(16, 8))
 
@@ -1610,9 +1610,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Handling Delisted Firms: Survivorship Bias
+## Xử lý các doanh nghiệp bị hủy niêm yết: Thiên kiến sống sót
 
-A critical issue in measuring financial distress is survivorship bias. If we only analyze currently listed firms, we miss the very firms that the Z-Score is designed to identify, those that went bankrupt or were delisted.
+Một vấn đề then chốt khi đo lường kiệt quệ tài chính là thiên kiến sống sót. Nếu chỉ phân tích các doanh nghiệp hiện đang niêm yết, chúng ta bỏ sót chính những doanh nghiệp mà điểm Z được thiết kế để nhận diện, tức những doanh nghiệp đã phá sản hoặc bị hủy niêm yết.
 
 ```{python}
 #| label: survivorship-bias
@@ -1644,13 +1644,13 @@ print(f"\nSurvivorship rate: "
       f"{final_df['ticker'].nunique()/(final_df['ticker'].nunique()+n_delisted)*100:.1f}%")
 ```
 
-# Robustness Checks and Extensions {#sec-valuation-robustness}
+# Kiểm tra độ vững và mở rộng {#sec-valuation-robustness}
 
-## Alternative Tobin's Q Specifications
+## Các cách xác định Q của Tobin thay thế
 
 ```{python}
 #| label: fig-q-variants-comparison
-#| fig-cap: "Comparison of Tobin's Q variants: Simple Q (Gompers et al. 2003) vs. Chung-Pruitt approximation. High correlation supports the use of the simpler measure."
+#| fig-cap: "So sánh các biến thể của Q của Tobin: Q đơn giản (Gompers et al. 2003) so với xấp xỉ Chung-Pruitt. Tương quan cao ủng hộ việc sử dụng thước đo đơn giản hơn."
 
 fig, ax = plt.subplots(figsize=(7, 7))
 
@@ -1683,15 +1683,15 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Industry-Adjusted Measures
+## Các thước đo điều chỉnh theo ngành
 
-Raw Tobin's Q and Z-Scores may reflect industry characteristics rather than firm-specific attributes. We compute industry-adjusted versions:
+Q của Tobin và điểm Z thô có thể phản ánh đặc điểm ngành hơn là thuộc tính riêng của doanh nghiệp. Chúng ta tính các phiên bản điều chỉnh theo ngành:
 
 $$
 Q^{\text{adj}}_{i,t} = Q_{i,t} - \overline{Q}_{j(i),t}
 $$ {#eq-industry-adj-q}
 
-where $\overline{Q}_{j(i),t}$ is the median Tobin's Q of the industry $j$ to which firm $i$ belongs in year $t$.
+trong đó $\overline{Q}_{j(i),t}$ là Q của Tobin trung vị của ngành $j$ mà doanh nghiệp $i$ thuộc về trong năm $t$.
 
 ```{python}
 #| label: industry-adjusted
@@ -1714,9 +1714,9 @@ print(f"  Z''-Score (adjusted): mean={latest_adj['altman_z_em_adj'].mean():.4f},
       f"std={latest_adj['altman_z_em_adj'].std():.3f}")
 ```
 
-## Panel Regression with Fixed Effects
+## Hồi quy dữ liệu bảng với hiệu ứng cố định
 
-For more rigorous analysis, we estimate a panel model with firm and year fixed effects:
+Để phân tích chặt chẽ hơn, chúng ta ước lượng một mô hình dữ liệu bảng với hiệu ứng cố định theo doanh nghiệp và theo năm:
 
 $$
 Q_{i,t} = \alpha_i + \gamma_t + \beta_1 Z''_{i,t} + \beta_2 \ln(\text{Age}_{i,t}) + \beta_3 \text{Size}_{i,t} + \varepsilon_{i,t}
@@ -1776,50 +1776,479 @@ print(f"  Observations: {n:,}")
 print("=" * 65)
 ```
 
-# Practical Considerations and Limitations {#sec-valuation-limitations}
+# Giải quyết kiệt quệ: Chế độ pháp lý đằng sau điểm Z {#sec-valuation-resolution}
 
-## Known Limitations of Tobin's Q in Vietnam
+## Điểm Z thực sự dự báo điều gì
 
-Several issues affect the reliability of Tobin's Q estimates for Vietnamese firms:
+Hàm phân biệt của @altman1968financial được ước lượng trên một mẫu ghép cặp gồm các doanh nghiệp đã nộp và chưa nộp đơn phá sản. Do đó, sự kiện mà nó chấm điểm là *việc bước vào một thủ tục pháp lý cụ thể*, chứ không phải cái chết về mặt kinh tế, và càng không phải mức tổn thất khi xảy ra kiệt quệ. Sự phân biệt này dễ bị bỏ qua vì các vùng diễn giải trong @tbl-zscore-zones được diễn đạt bằng ngôn ngữ xác suất thất bại, nhưng đối với bất kỳ ai định giá một quyền đòi đối với doanh nghiệp, đối tượng liên quan là
 
-1.  **Book value as replacement cost proxy**: The simplified Q measure assumes that book value of assets approximates replacement cost. Under VAS's heavy reliance on historical cost, this assumption may be more problematic than in IFRS-adopting countries, particularly for firms with significant land use rights or long-lived tangible assets.
+$$
+\mathbb{E}[\text{Loss}_i] \;=\; \underbrace{\Pr(\text{distress}_i)}_{\text{what } Z \text{ scores}} \times \underbrace{\mathbb{E}\!\left[\text{Loss}_i \mid \text{distress}_i\right]}_{\text{set by the insolvency regime}} .
+$$ {#eq-loss-decomposition}
 
-2.  **Market microstructure effects**: Vietnam's daily price limits can prevent market prices from reaching equilibrium, potentially distorting the market value component. Foreign ownership limits may create artificial price premiums for certain stocks.
+Nhân tố thứ hai không phải là thuộc tính của doanh nghiệp. Nó là thuộc tính của các quy tắc quy định ai kiểm soát một doanh nghiệp kiệt quệ, chi phí tái cơ cấu là bao nhiêu, chủ nợ có thể buộc thanh lý hay không, và chủ sở hữu hiện hữu có thể giữ lại vốn chủ sở hữu hay không. Việc chuyển một hàm phân biệt được ước lượng ở một khu vực pháp lý sang nơi khác đồng nghĩa với việc chuyển theo một nhân tố thứ hai ngầm định. Việc nhân tố thứ hai thực sự thay đổi đã được ghi nhận rõ: @davydenko2008bankruptcy cho thấy các vụ vỡ nợ đối với các khoản vay tương tự ở Pháp, Đức và Anh được giải quyết khác nhau đến mức các ngân hàng điều chỉnh yêu cầu tài sản đảm bảo theo bộ luật, và @schoenherr2022when chứng minh cả về lý thuyết lẫn thực nghiệm rằng mức độ thân thiện tối ưu đối với con nợ phụ thuộc vào môi trường xung quanh chứ không phải là một hằng số phổ quát.
 
-3.  **Preferred stock rarity**: While this simplifies the computation (most Vietnamese firms have no preferred stock), it means the BE calculation is dominated by common equity, which may not capture all ownership claims.
+Đối với nghiên cứu về Việt Nam, điều này quan trọng gấp đôi. Các hệ số của điểm Z'' được sử dụng trong @sec-valuation-zscore-computation được hiệu chỉnh bên ngoài Việt Nam, và phân phối kết cục mà chúng ngầm định lấy làm điều kiện được tạo ra bởi một hệ thống phá sản mà Việt Nam không có.
 
-4.  **Cross-listing effects**: Some Vietnamese firms are listed on multiple venues (HOSE, HNX, UPCoM, or even foreign exchanges). Care must be taken to use consistent price and share data.
+## Thí nghiệm Subchapter V {#sec-valuation-subchapterv}
 
-## Known Limitations of Altman Z-Score in Vietnam
+@hotchkiss2026can cung cấp bằng chứng gần đây rõ ràng nhất rằng nhân tố thứ hai trong @eq-loss-decomposition là một lựa chọn chính sách chứ không phải một hằng số công nghệ, và họ làm điều đó ở phân khúc mà câu hỏi này gay gắt nhất: các doanh nghiệp nhỏ.
 
-1.  **Calibration sample**: The original Z-Score was estimated on mid-20th-century U.S. manufacturing firms. The Z''-Score for emerging markets is more appropriate but was still estimated on a non-Vietnamese sample.
+Thực tế cách điệu hóa (stylized fact) làm động lực cho bài nghiên cứu lại đảo ngược thực tế quen thuộc. Đối với các công ty đại chúng lớn của Hoa Kỳ, các vụ thanh lý theo Chapter 11 hiếm khi xảy ra và hầu hết các doanh nghiệp nộp đơn thoát ra với một phần hoặc toàn bộ hoạt động còn nguyên vẹn. Đối với doanh nghiệp nhỏ, bức tranh đảo ngược: 70% doanh nghiệp nhỏ bước vào thủ tục phá sản giai đoạn 2010-2019 nộp đơn thẳng vào thanh lý theo Chapter 7, và trong số những doanh nghiệp đã vào Chapter 11, chỉ khoảng một phần ba được xác nhận kế hoạch. Phần còn lại bị chuyển sang Chapter 7 hoặc bị tòa bác đơn. Việc bị bác đơn không phải là một cú hạ cánh mềm, vì doanh nghiệp quay lại với các chủ nợ mà không được xóa nợ và thường ngừng hoạt động [@morrison2007bankruptcy; @iverson2018get].
 
-2.  **Accounting differences**: VAS accounting standards produce financial ratios with different distributional properties than US GAAP or IFRS data, potentially affecting the discriminant function's classification accuracy.
+Ba ma sát giải thích khoảng cách này. Thứ nhất, các chi phí trực tiếp của Chapter 11 phần lớn là cố định, nên chúng trở nên quá nặng nề so với một cơ sở tài sản nhỏ [@bris2006costs; @dou2021dissecting]. Thứ hai, nguyên tắc ưu tiên tuyệt đối xóa sạch vốn chủ sở hữu trước phá sản, nhưng trong một doanh nghiệp nhỏ, các mối quan hệ của chủ sở hữu kiêm nhà quản lý với nhà cung cấp và khách hàng thường *chính là* giá trị hoạt động liên tục; các chủ nợ kiêm chủ sở hữu mới không thể dễ dàng thay thế những gì họ vừa tước đoạt, và các chủ nợ thương mại cùng các ngân hàng địa phương hiếm khi muốn nắm giữ vốn chủ sở hữu ngay từ đầu. Thứ ba, các chủ nợ phân tán với thứ tự ưu tiên khác nhau tạo ra các vấn đề phối hợp, và một chủ nợ có bảo đảm ưu tiên với khoản nợ nhỏ thường thích phát mại nhanh hơn một kế hoạch được thương lượng, ngay cả khi việc tiếp tục hoạt động có giá trị hơn xét trên tổng thể.
 
-3.  **Banking and financial firms**: The Z-Score was not designed for financial institutions, which have fundamentally different balance sheet structures. Banks, insurance companies, and securities firms should be excluded or analyzed separately.
+Đạo luật Tái cơ cấu Doanh nghiệp Nhỏ năm 2019 (Small Business Reorganization Act of 2019) đã tạo ra Subchapter V của Chapter 11, có hiệu lực từ ngày 19 tháng 2 năm 2020, giải quyết đồng thời cả ba ma sát này đối với các con nợ có tổng nợ không phụ thuộc điều kiện và đã xác định không vượt quá \$7.5 triệu. Mức trần để đủ điều kiện ban đầu là \$2.725 triệu và được CARES Act nâng lên \$7.5 triệu vào ngày 27 tháng 3 năm 2020, một tháng sau khi thủ tục này mở ra. Ba thay đổi then chốt là: một kế hoạch có thể được xác nhận bất chấp sự phản đối của chủ nợ mà không xóa bỏ vốn chủ sở hữu của chủ doanh nghiệp, với điều kiện doanh nghiệp cam kết dành thu nhập khả dụng dự kiến của mình để trả nợ trong ba đến năm năm; ủy ban chủ nợ và bản công bố thông tin không còn bắt buộc; và một người được ủy thác Subchapter V được chỉ định để hòa giải thay vì thay thế ban quản lý.
 
-4.  **Implicit guarantees**: SOEs and firms connected to major economic groups may have implicit support that reduces actual default risk below Z-Score predictions.
+Chính mức trần đủ điều kiện khiến đây trở thành một thí nghiệm chứ không phải một giai thoại. @tbl-subv-estimates tổng hợp các ước lượng chính.
 
-## Recommendations for Researchers
+| Kết cục | Thiết kế | Ước lượng | Mức tham chiếu |
+|:---|:---|---:|:---|
+| Kế hoạch được xác nhận | OLS, 6,431 vụ dưới \$15m | $+18.4$ pp | tỷ lệ cơ sở $31.9\%$ |
+| Kế hoạch được xác nhận | Fuzzy RDD, \$4--11m ($n=999$) | $+32.0$ pp | $17.3\%$ đối với không thuộc SubV |
+| Kế hoạch được xác nhận | Fuzzy RDD, \$6--9m | $+49.5$ pp | $17.3\%$ đối với không thuộc SubV |
+| Kế hoạch được xác nhận | DiD, ý định điều trị | $+12.5$ pp | --- |
+| Số ngày đến khi xác nhận | OLS / fuzzy RDD | $-24\%$ / $-35\%$ | trung bình 319 ngày |
+| Tỷ lệ thu hồi của chủ nợ không bảo đảm | Fuzzy RDD | $+11.9$ pp | --- |
+| Khả năng tồn tại sau phá sản | Fuzzy RDD, \$4--11m | $+21$ pp | không có ý nghĩa ở \$6--9m |
 
-Based on our analysis, we offer the following recommendations for researchers working with Vietnamese data:
+: Tác động ước lượng của điều kiện đủ hưởng Subchapter V đối với kết cục Chapter 11 của doanh nghiệp nhỏ, từ @hotchkiss2026can. "pp" là điểm phần trăm. Giai đoạn một là mức nhảy $41.9$ pp trong việc sử dụng Subchapter V tại ngưỡng ($F = 71.2$) ở băng thông rộng và $37.1$ pp ($F = 19.7$) ở băng thông hẹp. {#tbl-subv-estimates}
 
-1.  **Use the Z''-Score (Emerging Market) variant** as the primary distress measure for Vietnamese non-financial firms.
-2.  **Report multiple Q variants** (Simple and Chung-Pruitt) to demonstrate robustness.
-3.  **Winsorize at 1%/99%** to mitigate the impact of data errors and extreme outliers.
-4.  **Compute industry-adjusted measures** when making cross-sectional comparisons.
-5.  **Use founding age** rather than listing age when available, but report both to distinguish organizational maturity from capital market experience.
-6.  **Exclude financial firms** from Z-Score analysis.
-7.  **Account for state ownership** as a moderating variable in valuation and distress studies.
+Hai đặc điểm của bảng này đáng được nhấn mạnh, ngoài các con số riêng lẻ.
 
-# Summary {#sec-valuation-summary}
+Thứ nhất là tác động rất lớn so với tỷ lệ cơ sở. Một doanh nghiệp ngay dưới ngưỡng có xác suất tái cơ cấu cao gấp hơn hai lần so với một doanh nghiệp tương tự ngay trên ngưỡng. Trong khoảng này, việc một doanh nghiệp nhỏ kiệt quệ có tồn tại được hay không phụ thuộc vào thủ tục mà nó được phép sử dụng nhiều hơn là bất cứ điều gì trên bảng cân đối kế toán. Hệ quả đối với @eq-loss-decomposition là nhân tố tổn thất có điều kiện là một tham số chính sách.
 
-This chapter presented a treatment of three fundamental corporate finance measures (i.e., Tobin's Q, the Altman Z-Score, and Company Age). We covered the theoretical foundations of each measure and provided extensive visualizations of cross-sectional and time-series patterns.
+Thứ hai là phản bác hiển nhiên không đứng vững. Một chế độ cho phép chủ sở hữu giữ vốn chủ sở hữu bất chấp sự phản đối của chủ nợ, theo lập luận chuẩn, sẽ giữ cho các doanh nghiệp không khả thi tiếp tục tồn tại gây thiệt hại cho chủ nợ; hiệu quả hoạt động kém sau phá sản của các doanh nghiệp lớn đã thoát khỏi thủ tục phá sản từ lâu đã được xem là bằng chứng cho chính thiên lệch duy trì hoạt động đó [@hotchkiss1995postbankruptcy; @morrison2007bankruptcy]. Ở đây, tỷ lệ thu hồi kỳ vọng của chủ nợ không bảo đảm *tăng* 11.9 điểm phần trăm và khả năng tồn tại sau phá sản tăng lên chứ không giảm. Lợi ích từ việc tránh một cuộc thanh lý tốn kém dường như được chia sẻ chứ không bị tái phân phối, đúng như kỳ vọng nếu tỷ lệ thanh lý trước cải cách phản ánh chi phí giao dịch và thất bại phối hợp chứ không phải việc phân loại đúng giữa doanh nghiệp khả thi và không khả thi.
 
-Key findings from our analysis of Vietnamese listed firms include:
+## Đọc bằng chứng từ góc nhìn Việt Nam
 
-1.  **Tobin's Q** varies substantially across industries and exchanges, with technology and consumer-facing sectors typically commanding higher valuations. HOSE-listed firms tend to have higher Q values than HNX or UPCoM firms, reflecting both firm quality differences and liquidity effects.
+Bốn hàm ý được áp dụng sang bối cảnh Việt Nam, nhưng không hàm ý nào áp dụng một cách máy móc.
 
-2.  **The Altman Z-Score** reveals that a meaningful proportion of Vietnamese firms operate in or near the distress zone, though the appropriate variant matters; the emerging market Z''-Score provides more nuanced classification than the original model. Financial health shows significant time-series variation, with notable deterioration during economic downturns.
+**Vùng kiệt quệ mang một ý nghĩa khác ở đây.** Khung pháp lý chính thức về mất khả năng thanh toán của Việt Nam là Luật Phá sản số 51/2014/QH13, có hiệu lực từ ngày 1 tháng 1 năm 2015, quy định cả thủ tục phục hồi kinh doanh và thanh lý. Tuy nhiên, như đã trình bày trong @sec-missing-delisting, các trường hợp rời khỏi nhóm doanh nghiệp niêm yết Việt Nam quan sát được chủ yếu là hủy niêm yết bắt buộc do lỗ vượt vốn điều lệ, không nộp báo cáo tài chính và xử lý vi phạm của cơ quan quản lý, chứ không phải các thủ tục tái cơ cấu dưới sự giám sát của tòa án tạo ra một tỷ lệ thu hồi quan sát được. Do đó, nội dung thực nghiệm của điểm Z'' dưới 1.10 ở Việt Nam gần với "kỳ vọng bị hủy niêm yết và lợi nhuận cuối kỳ âm lớn" hơn là "kỳ vọng một quy trình có giám sát với tỷ lệ thu hồi của chủ nợ đo lường được". Đây chính là lý do việc ước tính lợi nhuận hủy niêm yết trong @sec-missing-delisting không phải là một chi tiết kỹ thuật: đối với các doanh nghiệp Việt Nam, nó đang làm công việc mà hồ sơ vụ án của tòa án phá sản đảm nhiệm trong dữ liệu của Hoa Kỳ.
 
-3.  **Company age** in Vietnam requires careful treatment due to the equitization of SOEs, which creates large gaps between founding age and listing age. This distinction is substantively important for understanding the relationship between maturity, valuation, and financial stability.
+**Việt Nam không có cơ sở dữ liệu tương đương FJC.** Thiết kế của Hotchkiss--Iverson--Zheng dựa trên một cuộc điều tra toàn bộ công khai, ở cấp độ từng vụ việc, về các hồ sơ nộp đơn với nợ phải trả được ghi nhận tại thời điểm nộp đơn, bổ sung bằng các bảng kê thu thập thủ công từ hồ sơ tòa án. Việt Nam không có dữ liệu nào tương đương, và việc xây dựng nó sẽ là một đóng góp nghiên cứu độc lập. Cho đến khi nó tồn tại, nghiên cứu kiệt quệ tài chính ở Việt Nam phần lớn bị giới hạn trong nhóm doanh nghiệp niêm yết, vốn là lát cắt *kém* đại diện nhất của tổng thể doanh nghiệp nhỏ mà lý thuyết hướng đến.
+
+**Ma sát tái triển khai tài sản có thể lớn hơn.** @bernstein2019asset cho thấy tài sản của các doanh nghiệp nhỏ bị thanh lý ở Hoa Kỳ được tái triển khai kém và cuối cùng bị sử dụng dưới công suất, đó là cơ chế khiến việc thanh lý quá mức gây tốn kém cho xã hội. Thị trường thứ cấp mỏng đối với thiết bị vốn đã qua sử dụng và sự phức tạp về hành chính khi chuyển nhượng quyền sử dụng đất khiến ma sát này nhiều khả năng nghiêm trọng hơn ở Việt Nam, dù chúng tôi không biết có ước lượng trực tiếp nào.
+
+**Dư địa cải cách vẫn còn rộng mở.** @hotchkiss2026can ghi nhận rằng ít nhất mười một quốc gia đã áp dụng các thủ tục mất khả năng thanh toán đơn giản hóa cho doanh nghiệp nhỏ trong thập kỷ qua, một số trong khu vực, và @gurrea2024reinventing khảo sát cải cách mất khả năng thanh toán ở các nền kinh tế mới nổi một cách cụ thể. Việt Nam không nằm trong nhóm áp dụng. Đối với nhà nghiên cứu, điều này có hai mặt: không có thí nghiệm tự nhiên sẵn có kiểu này ở Việt Nam để khai thác, nhưng câu hỏi đánh giá ex-ante hoàn toàn bỏ ngỏ và khuôn mẫu nhận diện dưới đây có thể chuyển giao.
+
+## Quy tắc ngưỡng như thiết kế nghiên cứu {#sec-valuation-threshold-designs}
+
+Nội dung phương pháp luận của @hotchkiss2026can đáng được tách khỏi nội dung thể chế, vì các ngưỡng đủ điều kiện có ở khắp nơi trong quy định của Việt Nam và thiết kế này có thể chuyển giao ngay cả khi nội dung cụ thể thì không.
+
+### Gián đoạn hồi quy mờ (Fuzzy Regression Discontinuity)
+
+Điều kiện đủ hưởng là một hàm tất định của biến chạy, nhưng *việc tham gia* thì không: 39% doanh nghiệp đủ điều kiện trong mẫu của bài nghiên cứu vẫn chọn Chapter 11 truyền thống, và một số ít doanh nghiệp có vẻ không đủ điều kiện đã được chấp nhận sau khi tòa án phân loại lại một phần nợ phải trả của họ thành nợ phụ thuộc điều kiện. Do đó, việc điều trị nhảy tại ngưỡng mà không đi từ không lên một, đó là trường hợp mờ. Đặt $s_i = L_i - c$ cho biến chạy đã được dời gốc về ngưỡng và $B_i = \mathbf{1}\{s_i \leq 0\}$ cho điều kiện đủ hưởng. Thiết kế là bình phương tối thiểu hai giai đoạn với $B_i$ là biến công cụ bị loại trừ:
+
+$$
+D_i = \alpha + \pi B_i + f(s_i) + B_i \cdot g(s_i) + X_i'\gamma + u_i
+$$ {#eq-rdd-first-stage}
+
+$$
+y_i = \tilde{\alpha} + \beta \widehat{D}_i + \tilde{f}(s_i) + B_i \cdot \tilde{g}(s_i) + X_i'\tilde{\gamma} + \varepsilon_i
+$$ {#eq-rdd-second-stage}
+
+trong đó $D_i$ chỉ thị việc sử dụng thực tế thủ tục đơn giản hóa, còn $f$ và $g$ là các đa thức bậc thấp được ước lượng riêng ở mỗi phía của ngưỡng [@imbens2008regression; @lee2010regression]. Trong trường hợp vừa đủ nhận diện, $\beta$ bằng tỷ số giữa mức nhảy dạng rút gọn của $y$ và mức nhảy giai đoạn một $\pi$, đó là dạng Wald của bộ ước lượng và là cách hữu ích nhất để đọc nó. Điều $\beta$ nhận diện là một tác động điều trị trung bình cục bộ: tác động đối với các doanh nghiệp gần ngưỡng sử dụng thủ tục *vì* họ đủ điều kiện. Đó không phải là tác động đối với một doanh nghiệp có nợ phải trả \$1 triệu, và cũng không phải là tác động của việc bắt buộc áp dụng thủ tục.
+
+### Điều gì làm thiết kế đáng tin cậy
+
+Bốn kiểm tra đảm nhiệm vai trò này, và cả bốn đều được báo cáo trong bài nghiên cứu.
+
+1.  **Tính liên tục của mật độ.** Nếu các doanh nghiệp thao túng biến chạy để đủ điều kiện, mật độ của $s_i$ nhảy tại ngưỡng và phép so sánh diễn ra giữa các nhóm tự chọn. Kiểm định @mccrary2008manipulation không tìm thấy sự gián đoạn ($p = 0.25$). Lập luận thể chế củng cố lập luận thống kê: một doanh nghiệp kiệt quệ không thể dễ dàng thanh toán nợ để xuống dưới một mức trần, và bản thân mức trần được nâng lên bất ngờ một tháng sau khi thủ tục mở ra.
+
+2.  **Tính trơn của các hiệp biến.** Đòn bẩy, tỷ trọng nợ có bảo đảm, tổng tài sản, tình trạng nộp đơn chung và số lượng chủ nợ đều liên tục qua ngưỡng, cả riêng lẻ lẫn đồng thời.
+
+3.  **Độ vững theo đặc tả donut-hole.** Loại bỏ các vụ việc trong dải \$7--7.5 triệu, nơi mọi sự thao túng sẽ tập trung, hầu như không làm thay đổi các hệ số.
+
+4.  **Độ nhạy theo băng thông, được báo cáo trung thực.** Tác động xác nhận là $+32.0$ pp trong khoảng \$4--11 triệu và $+49.5$ pp trong khoảng \$6--9 triệu. Thu hẹp cửa sổ củng cố nhận diện nhưng làm giảm sức mạnh thống kê, và bài nghiên cứu cho thấy cả hai mặt của sự đánh đổi đó: ước lượng điểm tăng, nhưng tác động lên khả năng tồn tại có ý nghĩa ở cửa sổ rộng lại không có ý nghĩa ở cửa sổ hẹp. Báo cáo đường đi của băng thông không phải là một nghi thức kiểm tra độ vững; nó là kết quả chính. Lựa chọn băng thông theo dữ liệu với suy luận hiệu chỉnh thiên lệch [@calonico2014robust] là phần bổ sung tự nhiên, không phải là sự thay thế cho việc trình bày đường đi đó.
+
+Có một mối đe dọa mà không kiểm tra nội bộ nào có thể giải quyết, đó là sự chọn lọc vào chính mẫu. Nếu điều kiện đủ hưởng khiến các doanh nghiệp lẽ ra sẽ tái cơ cấu ngoài tòa phải nộp đơn, thì phép so sánh bị nhiễm ngay cả khi có sự gián đoạn hoàn hảo. Phản hồi của bài nghiên cứu là một khuôn mẫu hữu ích: thay vì bác bỏ mối đe dọa bằng lập luận, nó định lượng mức độ chọn lọc cần thiết để lật ngược kết quả, và cho thấy việc loại bỏ ngẫu nhiên 29 vụ Subchapter V tái cơ cấu làm ước lượng chuyển từ 32.0 sang 29.1 điểm phần trăm, trong khi để đưa nó về không cần loại bỏ ít nhất 120 vụ.
+
+### Sai biệt trong sai biệt như ý định điều trị
+
+Vì thủ tục này chưa tồn tại trước tháng 2 năm 2020, cùng một ngưỡng hỗ trợ một thiết kế thứ hai,
+
+$$
+y_i = \alpha + \beta_1 \text{Treated}_i + \beta_2 \text{Post}_t + \beta_3\,(\text{Treated}_i \times \text{Post}_t) + X_i'\gamma + \varepsilon_i
+$$ {#eq-did-subv}
+
+với các doanh nghiệp dưới mức trần là nhóm được điều trị và các doanh nghiệp ngay trên mức trần là nhóm đối chứng chưa bao giờ được điều trị. Ở đây $\beta_3$ là tác động ý định điều trị, và nó nhỏ hơn ước lượng RDD vì hai lý do cộng dồn: không phải mọi doanh nghiệp đủ điều kiện đều sử dụng thủ tục, và mẫu trước năm 2020 chỉ có thể được chia theo *tổng* nợ phải trả chứ không phải nợ không phụ thuộc điều kiện, nên một số doanh nghiệp thực sự đủ điều kiện bị phân loại nhầm vào nhóm đối chứng. Sự đối chiếu này rất đáng học hỏi. Chia ITT là 12.5 điểm phần trăm cho giai đoạn một là 42 điểm phần trăm cho ra 29.8, gần với ước lượng RDD là 32.0. Một ITT và một LATE trông không nhất quán thường là cùng một tham số chia cho các mẫu số khác nhau.
+
+### Điều chỉnh thiết kế cho Việt Nam
+
+Quy định của Việt Nam có rất nhiều quy tắc ranh giới rõ ràng: các điều kiện niêm yết và hủy niêm yết gắn với lỗ lũy kế so với vốn điều lệ, với số năm thua lỗ liên tiếp và với ý kiến kiểm toán; các định nghĩa dựa trên quy mô quyết định khả năng tiếp cận các chương trình hỗ trợ và ưu đãi thuế; trần sở hữu nước ngoài. Mỗi quy tắc đều là một ứng viên cho biến chạy (forcing variable).
+
+Lời cảnh báo là kiểm định thao túng, vốn gần như một thủ tục hình thức trong @hotchkiss2026can, trở thành yếu tố then chốt ở đây. Một doanh nghiệp Hoa Kỳ kiệt quệ không thể dễ dàng trả bớt nợ để lọt xuống dưới mức trần nợ phải trả. Một doanh nghiệp Việt Nam tiến gần ngưỡng được xác định theo lỗ lũy kế, doanh thu hoặc số lao động *được báo cáo* thường có thể làm được, và các động cơ quản trị dồn tích được ghi nhận trong chương quản trị lợi nhuận cung cấp cả động cơ lẫn phương tiện. Bất kỳ RDD nào của Việt Nam xây dựng trên một ngưỡng kế toán đều cần kiểm định mật độ, một đặc tả donut-hole (loại bỏ các quan sát sát ngưỡng) và một lập luận về lý do ngày báo cáo đi trước việc doanh nghiệp biết đến quy tắc --- và cần sẵn sàng kết luận rằng thiết kế không hiệu quả. Các quy tắc ngưỡng cũng thay đổi; nội dung chính xác và ngày có hiệu lực của thông tư điều chỉnh phải được đối chiếu với giai đoạn mẫu chứ không được mặc định.
+
+## Triển khai: Fuzzy RDD từ đầu {#sec-valuation-rdd-implementation}
+
+Không tồn tại bảng dữ liệu phá sản cấp vụ việc nào của Việt Nam, vì vậy chúng ta mô phỏng một bảng mà quá trình sinh dữ liệu được hiệu chỉnh theo các ước lượng trong @tbl-subv-estimates: tỷ lệ xác nhận cơ sở $17\%$, tỷ lệ tham gia khoảng $60\%$ trong số các doanh nghiệp đủ điều kiện, và tác động cục bộ thực là $32$ điểm phần trăm. Vì biết trước giá trị thực, bộ ước lượng có thể được kiểm tra so với nó, và vấn đề chọn lọc thúc đẩy thiết kế này có thể được cố ý đưa vào. Độ phức tạp vụ việc không quan sát được làm tăng tỷ lệ tham gia và giảm xác suất xác nhận cơ sở, nên phép so sánh ngây thơ giữa doanh nghiệp sử dụng và không sử dụng thủ tục bị chệch *xuống dưới* --- cùng chiều mà @hotchkiss2026can lập luận là áp dụng trong dữ liệu của họ, nơi các doanh nghiệp nộp đơn theo Subchapter V thậm chí còn kiệt quệ hơn các doanh nghiệp nộp đơn theo Chapter 11 truyền thống.
+
+```{python}
+#| label: rdd-simulate
+#| code-summary: "Simulate a threshold-eligibility insolvency regime"
+
+rng = np.random.default_rng(2026)
+CUTOFF = 7.5        # eligibility ceiling, in millions of currency units
+TAU = 0.32          # true local effect on the probability of confirmation
+
+n_draw = 2000
+liab = CUTOFF + rng.normal(0.0, 2.5, n_draw)
+liab = liab[(liab > 2.0) & (liab < 13.0)]
+n = liab.size
+
+# Unobserved case complexity: raises take-up, lowers baseline success.
+complexity = rng.normal(0.0, 1.0, n)
+eligible = (liab <= CUTOFF).astype(float)
+
+# Take-up is imperfect on both sides: some eligible firms decline the
+# simplified track, and a few ineligible ones are admitted after the court
+# reclassifies part of their liabilities as contingent.
+p_take = np.where(eligible == 1.0,
+                  np.clip(0.60 + 0.12 * complexity, 0.05, 0.95),
+                  0.03)
+simplified = (rng.random(n) < p_take).astype(float)
+
+p_conf = np.clip(
+    0.17 + 0.010 * (liab - CUTOFF) - 0.05 * complexity + TAU * simplified,
+    0.01, 0.99,
+)
+confirmed = (rng.random(n) < p_conf).astype(float)
+
+# A covariate that is smooth through the threshold, for the placebo check.
+leverage = 3.0 + 0.15 * (liab - CUTOFF) + rng.normal(0.0, 1.2, n)
+
+print(f"Cases simulated:                 {n:,}")
+print(f"Eligible (below cutoff):         {eligible.mean():6.1%}")
+print(f"Use simplified track | eligible: {simplified[eligible == 1].mean():6.1%}")
+print(f"Use simplified track | above:    {simplified[eligible == 0].mean():6.1%}")
+print(f"Plan confirmed (overall):        {confirmed.mean():6.1%}")
+```
+
+Bộ máy ước lượng đủ ngắn để viết ra đầy đủ. Bình phương tối thiểu có trọng số với sai số chuẩn vững với phương sai thay đổi là khối xây dựng cơ bản; bình phương tối thiểu hai giai đoạn là cùng phép đại số được áp dụng cho phép chiếu của biến hồi quy nội sinh lên tập biến công cụ.
+
+```{python}
+#| label: rdd-estimators
+#| code-summary: "Weighted least squares, weighted 2SLS, and the fuzzy RD wrapper"
+
+from math import erfc, sqrt
+
+
+def tri_weights(s, h):
+    """Triangular kernel weights on the centred running variable."""
+    return np.clip(1.0 - np.abs(s) / h, 0.0, None)
+
+
+def robust_wls(X, y, w):
+    """WLS coefficients with HC1 standard errors."""
+    Xw = X * w[:, None]
+    XtWX = X.T @ Xw
+    beta = np.linalg.solve(XtWX, Xw.T @ y)
+    e = y - X @ beta
+    G = X * (w * e)[:, None]
+    bread = np.linalg.inv(XtWX)
+    n_obs, k = X.shape
+    V = bread @ (G.T @ G) @ bread * (n_obs / max(n_obs - k, 1))
+    return beta, np.sqrt(np.diag(V))
+
+
+def robust_2sls(X, Z, y, w):
+    """Weighted 2SLS with HC1 standard errors; Z must have as many columns as X."""
+    Zw = Z * w[:, None]
+    Xhat = Z @ np.linalg.solve(Z.T @ Zw, Zw.T @ X)
+    A = Xhat.T @ (X * w[:, None])
+    beta = np.linalg.solve(A, (Xhat * w[:, None]).T @ y)
+    e = y - X @ beta
+    G = Xhat * (w * e)[:, None]
+    Ainv = np.linalg.inv(A)
+    n_obs, k = X.shape
+    V = Ainv @ (G.T @ G) @ Ainv.T * (n_obs / max(n_obs - k, 1))
+    return beta, np.sqrt(np.diag(V))
+
+
+def fuzzy_rd(running, treat, outcome, cutoff=CUTOFF, h=3.5, donut=0.0):
+    """
+    Local-linear fuzzy RD with separate slopes on each side of the cutoff.
+
+    Returns the first stage, the reduced form (intent-to-treat), and the
+    2SLS local average treatment effect, all estimated on the same sample.
+    """
+    s = running - cutoff
+    m = (np.abs(s) <= h) & (np.abs(s) >= donut)
+    s, d, y = s[m], treat[m], outcome[m]
+    below = (s <= 0).astype(float)
+    w = tri_weights(s, h)
+    one = np.ones_like(s)
+
+    Z = np.column_stack([one, below, s, below * s])   # instrument set
+    X = np.column_stack([one, d, s, below * s])       # structural regressors
+
+    b_fs, se_fs = robust_wls(Z, d, w)
+    b_rf, se_rf = robust_wls(Z, y, w)
+    b_iv, se_iv = robust_2sls(X, Z, y, w)
+
+    return {
+        "h": h, "n": int(m.sum()),
+        "first_stage": b_fs[1], "first_stage_se": se_fs[1],
+        "F": (b_fs[1] / se_fs[1]) ** 2,
+        "itt": b_rf[1], "itt_se": se_rf[1],
+        "late": b_iv[1], "late_se": se_iv[1],
+        "wald": b_rf[1] / b_fs[1],
+    }
+```
+
+Giờ đây có thể đặt phép so sánh ngây thơ và ước lượng RD cạnh nhau.
+
+```{python}
+#| label: rdd-main
+#| code-summary: "Naive OLS versus the fuzzy RD estimate"
+
+b_naive, se_naive = robust_wls(
+    np.column_stack([np.ones(n), simplified]), confirmed, np.ones(n)
+)
+main = fuzzy_rd(liab, simplified, confirmed, h=3.5)
+
+print("=" * 66)
+print("  Effect on the probability of confirming a plan")
+print("=" * 66)
+print(f"  True local effect (by construction)      {TAU:>10.3f}")
+print(f"  Naive OLS, users vs non-users            {b_naive[1]:>10.3f}"
+      f"   (se {se_naive[1]:.3f})")
+print("-" * 66)
+print(f"  Fuzzy RD, bandwidth +/-{main['h']:.1f}, n = {main['n']:,}")
+print(f"    First stage (eligibility -> use)       {main['first_stage']:>10.3f}"
+      f"   (F = {main['F']:.1f})")
+print(f"    Reduced form (intent-to-treat)         {main['itt']:>10.3f}"
+      f"   (se {main['itt_se']:.3f})")
+print(f"    2SLS local average treatment effect    {main['late']:>10.3f}"
+      f"   (se {main['late_se']:.3f})")
+print(f"    Wald ratio, ITT / first stage          {main['wald']:>10.3f}")
+print("=" * 66)
+```
+
+Tỷ số Wald và hệ số 2SLS trùng khớp đến độ chính xác của máy tính, vì mô hình vừa đủ nhận diện. Phép so sánh ngây thơ đánh giá thấp tác động thực, đúng như câu chuyện chọn lọc dự báo.
+
+Tiếp theo là độ nhạy theo băng thông và đặc tả donut-hole. Mục đích của bảng không phải là tìm đặc tả có hệ số lớn nhất mà là xem ước lượng và độ chính xác của nó biến đổi cùng nhau như thế nào.
+
+```{python}
+#| label: rdd-bandwidth
+#| code-summary: "Bandwidth path and donut-hole robustness"
+
+rows = []
+for h in [1.5, 2.0, 2.5, 3.0, 3.5]:
+    r = fuzzy_rd(liab, simplified, confirmed, h=h)
+    rows.append({"Bandwidth": f"+/-{h:.1f}", "N": r["n"],
+                 "First stage": r["first_stage"], "F": r["F"],
+                 "LATE": r["late"], "SE": r["late_se"],
+                 "t": r["late"] / r["late_se"]})
+
+r_donut = fuzzy_rd(liab, simplified, confirmed, h=3.5, donut=0.5)
+rows.append({"Bandwidth": "+/-3.5 donut", "N": r_donut["n"],
+             "First stage": r_donut["first_stage"], "F": r_donut["F"],
+             "LATE": r_donut["late"], "SE": r_donut["late_se"],
+             "t": r_donut["late"] / r_donut["late_se"]})
+
+bw_table = pd.DataFrame(rows)
+print(f"Bandwidth path for the fuzzy RD estimate (true effect = {TAU:.2f})")
+print(bw_table.to_string(index=False, float_format=lambda v: f"{v:8.3f}"))
+```
+
+Tiếp theo là hai kiểm tra tính hợp lệ. Kiểm định mật độ tìm sự dồn tụ (bunching) ngay dưới ngưỡng, vốn cho thấy các doanh nghiệp quản lý biến chạy để đủ điều kiện; kiểm tra hiệp biến ước lượng dạng rút gọn trên một biến mà việc điều trị không thể ảnh hưởng.
+
+```{python}
+#| label: rdd-validity
+#| code-summary: "Density continuity test and covariate smoothness placebo"
+
+def density_jump(x, cutoff=CUTOFF, h=3.5, binw=0.25, n_boot=400, seed=7):
+    """
+    McCrary-style test: a local-linear density fitted separately on each side
+    of the cutoff, with a bootstrap standard error for the log difference.
+    """
+    n_bins = int(round(2 * h / binw))
+    edges = np.linspace(-h, h, n_bins + 1)
+    mid = (edges[:-1] + edges[1:]) / 2.0
+
+    def one_jump(sample):
+        s = sample - cutoff
+        s = s[np.abs(s) <= h]
+        dens = np.histogram(s, bins=edges)[0] / (sample.size * binw)
+        fitted = []
+        for side in (-1.0, 1.0):
+            m = (mid * side) > 0
+            A = np.column_stack([np.ones(int(m.sum())), mid[m]])
+            b, _ = robust_wls(A, dens[m], tri_weights(mid[m], h))
+            fitted.append(max(b[0], 1e-12))
+        return np.log(fitted[1]) - np.log(fitted[0])
+
+    theta = one_jump(x)
+    boot_rng = np.random.default_rng(seed)
+    draws = np.array([
+        one_jump(x[boot_rng.integers(0, x.size, x.size)]) for _ in range(n_boot)
+    ])
+    se = draws.std(ddof=1)
+    z = theta / se if se > 0 else 0.0
+    return theta, se, erfc(abs(z) / sqrt(2.0))
+
+
+theta, se_theta, p_density = density_jump(liab)
+cov_check = fuzzy_rd(liab, simplified, leverage, h=3.5)
+
+print("Validity checks")
+print("-" * 66)
+print(f"  Density log-jump at the cutoff   {theta:>8.3f}"
+      f"   (se {se_theta:.3f}, p = {p_density:.3f})")
+print(f"  Leverage jump at the cutoff      {cov_check['itt']:>8.3f}"
+      f"   (se {cov_check['itt_se']:.3f}, "
+      f"t = {cov_check['itt'] / cov_check['itt_se']:.2f})")
+print("-" * 66)
+print("  Neither should be distinguishable from zero.")
+```
+
+```{python}
+#| label: fig-rdd-discontinuity
+#| fig-cap: "Gián đoạn hồi quy mờ tại một ngưỡng đủ điều kiện. Biểu đồ bên trái thể hiện giai đoạn một: mức tham gia thủ tục đơn giản hóa nhảy gián đoạn tại mức trần nhưng không đi từ không lên một, đó là điều làm cho thiết kế là mờ chứ không phải sắc nét. Biểu đồ bên phải thể hiện dạng rút gọn: xác suất xác nhận kế hoạch giảm mạnh đối với các doanh nghiệp ngay trên mức trần. Các điểm là trung bình theo nhóm; các đường là hồi quy tuyến tính cục bộ được ước lượng riêng ở mỗi phía."
+
+bins = np.linspace(CUTOFF - 3.5, CUTOFF + 3.5, 29)
+idx = np.digitize(liab, bins) - 1
+mids = (bins[:-1] + bins[1:]) / 2.0
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+panels = [
+    (axes[0], simplified, "First stage: take-up of the simplified track",
+     "Share using the procedure"),
+    (axes[1], confirmed, "Reduced form: plan confirmation",
+     "Share confirming a plan"),
+]
+
+for ax, series, title, ylab in panels:
+    means = np.array([
+        series[idx == b].mean() if (idx == b).sum() > 0 else np.nan
+        for b in range(len(bins) - 1)
+    ])
+    ax.scatter(mids, means, s=34, color=colors["primary"], alpha=0.85,
+               zorder=3, label="Binned mean")
+    for side, col in [(-1.0, colors["tertiary"]), (1.0, colors["quaternary"])]:
+        m = ((mids - CUTOFF) * side > 0) & ~np.isnan(means)
+        A = np.column_stack([np.ones(int(m.sum())), mids[m] - CUTOFF])
+        b, _ = robust_wls(A, means[m], tri_weights(mids[m] - CUTOFF, 3.5))
+        grid = np.linspace(mids[m].min(), mids[m].max(), 50)
+        ax.plot(grid, b[0] + b[1] * (grid - CUTOFF), color=col, linewidth=2)
+    ax.axvline(CUTOFF, color=colors["distress"], linestyle="--", linewidth=2,
+               label="Eligibility ceiling")
+    ax.set_xlabel("Non-contingent liabilities at filing (millions)")
+    ax.set_ylabel(ylab)
+    ax.set_title(title)
+    ax.legend(loc="best")
+
+plt.tight_layout()
+plt.show()
+```
+
+Cuối cùng là phần tương ứng của sai biệt trong sai biệt. Nhóm giai đoạn trước nộp đơn trước khi thủ tục tồn tại, và biến chỉ thị điều trị của nó phải được xây dựng từ *tổng* nợ phải trả, vì sự phân chia nợ không phụ thuộc điều kiện không quan sát được trước khi quy tắc tạo ra lý do để ghi nhận nó. Sai số đo lường đó làm suy giảm ước lượng ý định điều trị, và việc điều chỉnh tỷ lệ theo giai đoạn một khôi phục tham số cấu trúc.
+
+```{python}
+#| label: rdd-did
+#| code-summary: "Difference-in-differences intent-to-treat, and rescaling to a LATE"
+
+did_rng = np.random.default_rng(20200219)
+
+
+def make_cohort(size, post):
+    """One filing cohort; the simplified track exists only when post is True."""
+    nc_liab = CUTOFF + did_rng.normal(0.0, 2.5, size)
+    total_liab = nc_liab + did_rng.gamma(1.5, 0.6, size)   # contingent claims
+    cplx = did_rng.normal(0.0, 1.0, size)
+    can_use = (nc_liab <= CUTOFF) & bool(post)
+    p_use = np.where(can_use, np.clip(0.60 + 0.12 * cplx, 0.05, 0.95), 0.0)
+    used = (did_rng.random(size) < p_use).astype(float)
+    p_c = np.clip(0.17 + 0.010 * (nc_liab - CUTOFF) - 0.05 * cplx + TAU * used,
+                  0.01, 0.99)
+    return pd.DataFrame({
+        "total_liab": total_liab,
+        "used": used,
+        "confirmed": (did_rng.random(size) < p_c).astype(float),
+        "post": float(post),
+    })
+
+
+panel = pd.concat([make_cohort(4000, False), make_cohort(4000, True)],
+                  ignore_index=True)
+panel = panel[(panel["total_liab"] >= 4.0) & (panel["total_liab"] <= 11.0)].copy()
+panel["treated"] = (panel["total_liab"] <= CUTOFF).astype(float)
+
+D = np.column_stack([
+    np.ones(len(panel)),
+    panel["treated"].to_numpy(),
+    panel["post"].to_numpy(),
+    (panel["treated"] * panel["post"]).to_numpy(),
+])
+unit_w = np.ones(len(panel))
+b_itt, se_itt = robust_wls(D, panel["confirmed"].to_numpy(), unit_w)
+b_first, se_first = robust_wls(D, panel["used"].to_numpy(), unit_w)
+
+print("=" * 66)
+print(f"  Difference-in-differences, n = {len(panel):,}"
+      f"   (true effect = {TAU:.2f})")
+print("=" * 66)
+print(f"  Treated x Post on confirmation (ITT)   {b_itt[3]:>8.3f}"
+      f"   (se {se_itt[3]:.3f})")
+print(f"  Treated x Post on take-up (1st stage)  {b_first[3]:>8.3f}"
+      f"   (se {se_first[3]:.3f})")
+print(f"  Rescaled: ITT / first stage            {b_itt[3] / b_first[3]:>8.3f}")
+print("=" * 66)
+```
+
+ITT rơi xa dưới tác động thực vì hầu hết các doanh nghiệp được điều trị trên danh nghĩa không bao giờ sử dụng thủ tục và một số bị phân loại nhầm theo tổng nợ phải trả thay vì nợ không phụ thuộc điều kiện. Chia cho giai đoạn một khôi phục tham số, đó là cùng phép đối chiếu mà @hotchkiss2026can báo cáo là $12.5 / 0.42 = 29.8$ điểm phần trăm so với ước lượng RDD là $32.0$.
+
+Khuôn mẫu là điều có thể chuyển giao. Với một quy tắc ngưỡng của Việt Nam, một bảng dữ liệu cấp vụ việc hoặc cấp doanh nghiệp ghi nhận biến chạy theo cách quy tắc đo lường, và một lập luận đáng tin cậy rằng các doanh nghiệp không thể tự định vị quanh ngưỡng, các đoạn mã tương tự cho ra giai đoạn một, một LATE, một đường đi băng thông và hai kiểm tra tính hợp lệ quyết định liệu toàn bộ điều này có ý nghĩa hay không.
+
+# Các cân nhắc thực tiễn và hạn chế {#sec-valuation-limitations}
+
+## Các hạn chế đã biết của Q của Tobin ở Việt Nam
+
+Một số vấn đề ảnh hưởng đến độ tin cậy của các ước lượng Q của Tobin đối với doanh nghiệp Việt Nam:
+
+1.  **Giá trị sổ sách làm đại diện cho chi phí thay thế**: Thước đo Q giản lược giả định rằng giá trị sổ sách của tài sản xấp xỉ chi phí thay thế. Với việc VAS dựa nhiều vào giá gốc, giả định này có thể gây vấn đề hơn so với các nước áp dụng IFRS, đặc biệt đối với các doanh nghiệp có quyền sử dụng đất đáng kể hoặc tài sản hữu hình tuổi thọ dài.
+
+2.  **Hiệu ứng vi cấu trúc thị trường**: Biên độ giá hằng ngày của Việt Nam có thể ngăn giá thị trường đạt tới cân bằng, có khả năng làm méo mó thành phần giá trị thị trường. Giới hạn sở hữu nước ngoài có thể tạo ra phần bù giá nhân tạo đối với một số cổ phiếu.
+
+3.  **Sự hiếm gặp của cổ phiếu ưu đãi**: Dù điều này đơn giản hóa phép tính (hầu hết doanh nghiệp Việt Nam không có cổ phiếu ưu đãi), nó có nghĩa là phép tính BE bị chi phối bởi vốn cổ phần phổ thông, có thể không nắm bắt hết mọi quyền đòi của chủ sở hữu.
+
+4.  **Hiệu ứng niêm yết chéo**: Một số doanh nghiệp Việt Nam niêm yết trên nhiều nơi (HOSE, HNX, UPCoM, hoặc thậm chí các sàn nước ngoài). Cần thận trọng để sử dụng dữ liệu giá và số cổ phiếu nhất quán.
+
+## Các hạn chế đã biết của điểm Z của Altman ở Việt Nam
+
+1.  **Mẫu hiệu chỉnh**: Điểm Z gốc được ước lượng trên các doanh nghiệp sản xuất của Hoa Kỳ giữa thế kỷ 20. Điểm Z'' cho thị trường mới nổi phù hợp hơn nhưng vẫn được ước lượng trên một mẫu không phải của Việt Nam.
+
+2.  **Khác biệt kế toán**: Các chuẩn mực kế toán VAS tạo ra các tỷ số tài chính có tính chất phân phối khác với dữ liệu US GAAP hoặc IFRS, có khả năng ảnh hưởng đến độ chính xác phân loại của hàm phân biệt.
+
+3.  **Ngân hàng và doanh nghiệp tài chính**: Điểm Z không được thiết kế cho các định chế tài chính, vốn có cấu trúc bảng cân đối kế toán khác biệt căn bản. Ngân hàng, công ty bảo hiểm và công ty chứng khoán nên được loại trừ hoặc phân tích riêng.
+
+4.  **Bảo lãnh ngầm**: Các SOE và doanh nghiệp liên kết với các tập đoàn kinh tế lớn có thể có sự hỗ trợ ngầm làm giảm rủi ro vỡ nợ thực tế xuống dưới dự báo của điểm Z.
+
+## Khuyến nghị cho các nhà nghiên cứu
+
+Dựa trên phân tích của chúng tôi, chúng tôi đưa ra các khuyến nghị sau cho các nhà nghiên cứu làm việc với dữ liệu Việt Nam:
+
+1.  **Sử dụng biến thể điểm Z'' (thị trường mới nổi)** làm thước đo kiệt quệ chính cho các doanh nghiệp phi tài chính của Việt Nam.
+2.  **Báo cáo nhiều biến thể Q** (đơn giản và Chung-Pruitt) để chứng minh độ vững.
+3.  **Winsorization tại 1%/99%** để giảm thiểu tác động của lỗi dữ liệu và các giá trị ngoại lai cực đoan.
+4.  **Tính các thước đo điều chỉnh theo ngành** khi thực hiện so sánh chéo.
+5.  **Sử dụng tuổi thành lập** thay vì tuổi niêm yết khi có sẵn, nhưng báo cáo cả hai để phân biệt mức độ trưởng thành của tổ chức với kinh nghiệm trên thị trường vốn.
+6.  **Loại trừ các doanh nghiệp tài chính** khỏi phân tích điểm Z.
+7.  **Tính đến sở hữu nhà nước** như một biến điều tiết trong các nghiên cứu về định giá và kiệt quệ.
+8.  **Đừng đọc điểm Z như một dự báo thu hồi.** Nó chấm điểm xác suất kiệt quệ, không phải điều mà hệ thống pháp luật làm với một doanh nghiệp kiệt quệ; xem @sec-valuation-resolution.
+
+# Tóm tắt {#sec-valuation-summary}
+
+Chương này trình bày cách tiếp cận đối với ba thước đo cơ bản của tài chính doanh nghiệp (tức Q của Tobin, điểm Z của Altman và tuổi công ty). Chúng tôi đã trình bày nền tảng lý thuyết của từng thước đo và cung cấp nhiều hình minh họa về các mô thức cắt ngang và chuỗi thời gian.
+
+Các phát hiện chính từ phân tích các doanh nghiệp niêm yết Việt Nam gồm:
+
+1.  **Q của Tobin** biến thiên đáng kể giữa các ngành và các sàn giao dịch, với các ngành công nghệ và hướng đến người tiêu dùng thường có mức định giá cao hơn. Các doanh nghiệp niêm yết trên HOSE có xu hướng có giá trị Q cao hơn các doanh nghiệp trên HNX hoặc UPCoM, phản ánh cả sự khác biệt về chất lượng doanh nghiệp lẫn hiệu ứng thanh khoản.
+
+2.  **Điểm Z của Altman** cho thấy một tỷ lệ đáng kể các doanh nghiệp Việt Nam hoạt động trong hoặc gần vùng kiệt quệ, dù biến thể phù hợp rất quan trọng; điểm Z'' cho thị trường mới nổi cho phép phân loại tinh tế hơn mô hình gốc. Sức khỏe tài chính có biến thiên chuỗi thời gian đáng kể, với sự suy giảm rõ rệt trong các giai đoạn kinh tế suy thoái.
+
+3.  **Tuổi công ty** ở Việt Nam đòi hỏi xử lý cẩn thận do việc cổ phần hóa các SOE, tạo ra khoảng cách lớn giữa tuổi thành lập và tuổi niêm yết. Sự phân biệt này có ý nghĩa quan trọng về bản chất để hiểu mối quan hệ giữa mức độ trưởng thành, định giá và sự ổn định tài chính.
+
+4.  **Giải quyết kiệt quệ** là một câu hỏi tách biệt với dự báo kiệt quệ, và điểm Z chỉ nói về vế sau. @hotchkiss2026can cho thấy chỉ riêng một thay đổi trong thủ tục mất khả năng thanh toán đã làm xác suất một doanh nghiệp nhỏ của Hoa Kỳ tái cơ cấu thay vì thanh lý tăng hơn gấp đôi, mà không gây hại đến tỷ lệ thu hồi của chủ nợ. Vì các trường hợp rời khỏi thị trường ở Việt Nam chủ yếu là hủy niêm yết bắt buộc chứ không phải tái cơ cấu dưới sự giám sát của tòa án, một điểm Z'' của Việt Nam trong vùng kiệt quệ ứng với một phân phối kết cục khác biệt đáng kể so với cùng điểm số đó trong mẫu mà các hệ số được ước lượng. @sec-valuation-resolution phát triển luận điểm này và triển khai các thiết kế gián đoạn hồi quy mờ và sai biệt trong sai biệt mà các ngưỡng đủ điều kiện cho phép.

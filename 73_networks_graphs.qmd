@@ -1,10 +1,10 @@
-# Networks and Graphs in Finance
+# Mạng lưới và đồ thị trong tài chính
 
-Financial markets are networks. Every stock return is shaped by connections: firms share supply chains, directors, auditors, investors, lenders, and regulators. Shocks propagate through these links (e.g., a bankruptcy ripples through supplier networks, a central bank liquidity squeeze radiates through interbank exposures, and information diffuses through board interlocks and institutional co-ownership). Yet the dominant empirical paradigm in finance treats firms as isolated observations indexed by $(i, t)$, connected only through their shared exposure to common factors. This chapter introduces tools for modeling, measuring, and exploiting the network structure that standard panel regressions ignore.
+Thị trường tài chính là những mạng lưới. Lợi nhuận của mỗi cổ phiếu đều chịu ảnh hưởng từ các mối liên kết: các doanh nghiệp có chung chuỗi cung ứng, thành viên hội đồng quản trị, kiểm toán viên, nhà đầu tư, bên cho vay và cơ quan quản lý. Các cú sốc lan truyền qua những liên kết này (chẳng hạn, một vụ phá sản gây hiệu ứng lan tỏa trong mạng lưới nhà cung cấp, một cú siết thanh khoản của ngân hàng trung ương lan ra qua các khoản dư nợ liên ngân hàng, còn thông tin khuếch tán qua các thành viên hội đồng quản trị kiêm nhiệm và qua việc các tổ chức cùng nắm giữ cổ phiếu). Tuy nhiên, mô thức thực nghiệm chiếm ưu thế trong tài chính lại coi các doanh nghiệp là những quan sát độc lập được lập chỉ số theo $(i, t)$, chỉ liên hệ với nhau thông qua mức độ phơi nhiễm chung với các nhân tố chung. Chương này giới thiệu các công cụ để mô hình hóa, đo lường và khai thác cấu trúc mạng lưới mà các hồi quy dữ liệu bảng (panel) tiêu chuẩn bỏ qua.
 
-The Vietnamese financial system is particularly network-dense. State ownership creates a lattice of cross-connected enterprises: the same line ministry may oversee the borrower, the lender, and the insurer. Pyramidal business groups (such as Vingroup, Masan, and FPT) link dozens of listed and unlisted entities through chains of equity ownership. The banking system is small and concentrated, with a few state-owned commercial banks accounting for the majority of assets, generating dense interbank exposures. Board interlocks (e.g., directors who serve on multiple boards simultaneously) are pervasive and often follow ownership lines. And the equity market itself exhibits return co-movement patterns that, when represented as a correlation network, reveal sector-level and ownership-level clustering invisible in standard factor analysis.
+Hệ thống tài chính Việt Nam có mật độ mạng lưới đặc biệt cao. Sở hữu nhà nước tạo ra một mạng lưới các doanh nghiệp đan xen: cùng một bộ chủ quản có thể giám sát cả bên đi vay, bên cho vay và bên bảo hiểm. Các tập đoàn kim tự tháp (như Vingroup, Masan và FPT) liên kết hàng chục thực thể niêm yết và chưa niêm yết thông qua các chuỗi sở hữu vốn cổ phần. Hệ thống ngân hàng có quy mô nhỏ và tập trung, với một số ít ngân hàng thương mại nhà nước nắm giữ phần lớn tài sản, từ đó hình thành các khoản dư nợ liên ngân hàng dày đặc. Việc thành viên hội đồng quản trị kiêm nhiệm (chẳng hạn, những thành viên đồng thời tham gia nhiều hội đồng quản trị) rất phổ biến và thường đi theo các quan hệ sở hữu. Bản thân thị trường cổ phiếu cũng thể hiện các mẫu hình đồng biến động lợi nhuận mà khi được biểu diễn dưới dạng mạng lưới tương quan, sẽ bộc lộ các cụm theo ngành và theo hình thức sở hữu mà phân tích nhân tố tiêu chuẩn không nhìn thấy.
 
-This chapter covers the full spectrum of network methods used in financial economics, from classical graph theory through modern graph neural networks (GNNs). We organize the material in seven sections. First, graph theory fundamentals and the representation of financial data as networks. Second, ownership and control networks, which are the most distinctive network structure in Vietnamese markets. Third, board interlock and governance networks. Fourth, supply chain and trade networks. Fifth, correlation and co-movement networks for portfolio construction and systemic risk monitoring. Sixth, interbank and contagion networks. Seventh, graph neural networks and graph-based machine learning for asset pricing, credit risk, and anomaly detection.
+Chương này trình bày toàn bộ các phương pháp mạng lưới được sử dụng trong kinh tế học tài chính, từ lý thuyết đồ thị cổ điển đến các mạng nơ-ron đồ thị (GNN) hiện đại. Chúng ta tổ chức nội dung thành tám phần. Thứ nhất, các nền tảng của lý thuyết đồ thị và cách biểu diễn dữ liệu tài chính dưới dạng mạng lưới. Thứ hai, các mạng lưới sở hữu và kiểm soát, là cấu trúc mạng lưới đặc trưng nhất của thị trường Việt Nam. Thứ ba, các mạng lưới thành viên hội đồng quản trị kiêm nhiệm và quản trị công ty. Thứ tư, các mạng lưới chuỗi cung ứng và thương mại. Thứ năm, các mạng lưới tương quan và đồng biến động phục vụ xây dựng danh mục đầu tư và giám sát rủi ro hệ thống. Thứ sáu, các mạng lưới liên ngân hàng và lây lan. Thứ bảy, các mạng lưới xã hội giữa các địa phương, được đo bằng Chỉ số Kết nối Xã hội (Social Connectedness Index), và vai trò của chúng như kênh truyền dẫn thông tin tài chính [@allen2026social]. Thứ tám, các mạng nơ-ron đồ thị và học máy dựa trên đồ thị cho định giá tài sản, rủi ro tín dụng và phát hiện bất thường.
 
 ```{python}
 #| label: setup
@@ -45,59 +45,59 @@ from datacore import DataCore
 dc = DataCore()
 ```
 
-## Graph Theory Foundations for Finance
+## Nền tảng lý thuyết đồ thị cho tài chính
 
-### Representing Financial Data as Graphs
+### Biểu diễn dữ liệu tài chính dưới dạng đồ thị
 
-A graph $G = (V, E)$ consists of a set of vertices (nodes) $V$ and edges (links) $E \subseteq V \times V$. In financial networks, nodes represent economic agents, such as firms, banks, investors, directors, and edges represent relationships including ownership stakes, lending, board seats, supply contracts, and return co-movement.
+Một đồ thị $G = (V, E)$ gồm một tập đỉnh (nút) $V$ và một tập cạnh (liên kết) $E \subseteq V \times V$. Trong các mạng lưới tài chính, các nút đại diện cho các tác nhân kinh tế, như doanh nghiệp, ngân hàng, nhà đầu tư, thành viên hội đồng quản trị, còn các cạnh đại diện cho các mối quan hệ, bao gồm tỷ lệ sở hữu, cho vay, ghế trong hội đồng quản trị, hợp đồng cung ứng và đồng biến động lợi nhuận.
 
-Financial graphs come in several varieties:
+Các đồ thị tài chính có nhiều dạng khác nhau:
 
-**Directed vs. undirected.** Ownership is directed: firm $A$ owns a stake in firm $B$, but not necessarily vice versa. Board interlocks are undirected: if director $d$ sits on both firm $A$'s and firm $B$'s boards, the connection is symmetric. Supply chains are directed: $A$ supplies to $B$.
+**Có hướng so với vô hướng.** Quan hệ sở hữu là có hướng: doanh nghiệp $A$ sở hữu một tỷ lệ cổ phần trong doanh nghiệp $B$, nhưng không nhất thiết có chiều ngược lại. Quan hệ kiêm nhiệm hội đồng quản trị là vô hướng: nếu thành viên $d$ ngồi trong hội đồng quản trị của cả doanh nghiệp $A$ và doanh nghiệp $B$, thì mối liên kết là đối xứng. Chuỗi cung ứng là có hướng: $A$ cung cấp cho $B$.
 
-**Weighted vs. unweighted.** Ownership networks are naturally weighted by the ownership percentage. Correlation networks are weighted by the pairwise correlation coefficient. Board interlocks can be weighted by the number of shared directors.
+**Có trọng số so với không trọng số.** Các mạng lưới sở hữu tự nhiên có trọng số theo tỷ lệ sở hữu. Các mạng lưới tương quan có trọng số theo hệ số tương quan từng cặp. Quan hệ kiêm nhiệm hội đồng quản trị có thể được gán trọng số theo số thành viên dùng chung.
 
-**Static vs. dynamic.** Most financial networks evolve over time as ownership changes, directors rotate, and correlations shift. A temporal graph $G_t = (V_t, E_t)$ captures this evolution.
+**Tĩnh so với động.** Hầu hết các mạng lưới tài chính tiến triển theo thời gian khi quan hệ sở hữu thay đổi, các thành viên hội đồng quản trị luân chuyển và các tương quan dịch chuyển. Một đồ thị theo thời gian $G_t = (V_t, E_t)$ nắm bắt sự tiến triển này.
 
-**Bipartite vs. unipartite.** The raw data for many financial networks is bipartite: directors $\times$ firms, investors $\times$ stocks, banks $\times$ borrowers. The one-mode projection converts this to a unipartite graph: two firms are connected if they share a director, two stocks are connected if they share an institutional investor, etc.
+**Hai phía so với một phía.** Dữ liệu thô của nhiều mạng lưới tài chính là đồ thị hai phía (bipartite): thành viên hội đồng quản trị $\times$ doanh nghiệp, nhà đầu tư $\times$ cổ phiếu, ngân hàng $\times$ bên đi vay. Phép chiếu một phía (one-mode projection) chuyển đồ thị này thành đồ thị một phía: hai doanh nghiệp được nối với nhau nếu có chung một thành viên hội đồng quản trị, hai cổ phiếu được nối với nhau nếu có chung một nhà đầu tư tổ chức, v.v.
 
-### Key Graph Metrics
+### Các thước đo chính của đồ thị
 
-For a graph $G$ with $n = |V|$ nodes and $m = |E|$ edges, we define the following metrics, each with a specific financial interpretation.
+Với một đồ thị $G$ có $n = |V|$ nút và $m = |E|$ cạnh, chúng ta định nghĩa các thước đo sau, mỗi thước đo có một cách diễn giải tài chính riêng.
 
-**Degree centrality.** The degree $k_i$ of node $i$ is the number of edges incident to $i$. In a directed graph, we distinguish in-degree $k_i^{\text{in}}$ (edges pointing to $i$) and out-degree $k_i^{\text{out}}$ (edges from $i$). Normalized degree centrality is:
+**Độ trung tâm bậc (degree centrality).** Bậc $k_i$ của nút $i$ là số cạnh liên thuộc với $i$. Trong đồ thị có hướng, chúng ta phân biệt bậc vào $k_i^{\text{in}}$ (các cạnh hướng tới $i$) và bậc ra $k_i^{\text{out}}$ (các cạnh xuất phát từ $i$). Độ trung tâm bậc chuẩn hóa là:
 
 $$
 C_D(i) = \frac{k_i}{n - 1}
 $$ {#eq-degree-centrality}
 
-In an ownership network, high out-degree means a firm owns stakes in many others (conglomerate); high in-degree means many entities own stakes in the firm (dispersed ownership).
+Trong một mạng lưới sở hữu, bậc ra cao có nghĩa là doanh nghiệp sở hữu cổ phần trong nhiều doanh nghiệp khác (tập đoàn đa ngành); bậc vào cao có nghĩa là nhiều thực thể sở hữu cổ phần trong doanh nghiệp đó (sở hữu phân tán).
 
-**Betweenness centrality.** The fraction of shortest paths between all pairs of nodes that pass through node $i$:
+**Độ trung tâm trung gian (betweenness centrality).** Tỷ lệ các đường đi ngắn nhất giữa mọi cặp nút đi qua nút $i$:
 
 $$
 C_B(i) = \sum_{s \neq i \neq t} \frac{\sigma_{st}(i)}{\sigma_{st}}
 $$ {#eq-betweenness}
 
-where $\sigma_{st}$ is the total number of shortest paths from $s$ to $t$ and $\sigma_{st}(i)$ is the number that pass through $i$. High betweenness identifies "bridge" nodes (i.e., firms or banks that connect otherwise disconnected parts of the financial system). The failure of a high-betweenness bank can fragment the interbank network.
+trong đó $\sigma_{st}$ là tổng số đường đi ngắn nhất từ $s$ đến $t$ và $\sigma_{st}(i)$ là số đường đi đi qua $i$. Độ trung gian cao xác định các nút "cầu nối" (tức là các doanh nghiệp hoặc ngân hàng nối những bộ phận vốn tách rời của hệ thống tài chính). Sự sụp đổ của một ngân hàng có độ trung gian cao có thể làm phân mảnh mạng lưới liên ngân hàng.
 
-**Eigenvector centrality.** A node is central if it is connected to other central nodes. The eigenvector centrality is the solution to:
+**Độ trung tâm vector riêng (eigenvector centrality).** Một nút là trung tâm nếu nó được nối với các nút trung tâm khác. Độ trung tâm vector riêng là nghiệm của:
 
 $$
 \lambda \mathbf{c} = A \mathbf{c}
 $$ {#eq-eigenvector-centrality}
 
-where $A$ is the adjacency matrix and $\lambda$ is the largest eigenvalue. Google's PageRank is a regularized variant designed for directed graphs. In financial networks, eigenvector centrality identifies systemically important institutions (i.e., those connected to other important institutions).
+trong đó $A$ là ma trận kề và $\lambda$ là trị riêng lớn nhất. PageRank của Google là một biến thể được chính quy hóa, thiết kế cho đồ thị có hướng. Trong các mạng lưới tài chính, độ trung tâm vector riêng xác định các tổ chức quan trọng về mặt hệ thống (tức là những tổ chức được nối với các tổ chức quan trọng khác).
 
-**Clustering coefficient.** The fraction of a node's neighbors that are also neighbors of each other:
+**Hệ số phân cụm (clustering coefficient).** Tỷ lệ các nút lân cận của một nút mà bản thân chúng cũng là lân cận của nhau:
 
 $$
 C_C(i) = \frac{2 T_i}{k_i(k_i - 1)}
 $$ {#eq-clustering}
 
-where $T_i$ is the number of triangles containing node $i$. High clustering indicates tightly knit groups (e.g., business groups, lending circles, co-invested portfolios).
+trong đó $T_i$ là số tam giác chứa nút $i$. Mức phân cụm cao cho thấy các nhóm gắn kết chặt chẽ (chẳng hạn, các tập đoàn, các vòng cho vay, các danh mục cùng đầu tư).
 
-**Community structure.** Many financial networks exhibit modular structure: groups of densely connected nodes with sparse connections between groups. Community detection algorithms (Louvain, label propagation, spectral clustering) identify these modules, which in financial networks often correspond to business groups, industry sectors, or lending clusters.
+**Cấu trúc cộng đồng.** Nhiều mạng lưới tài chính có cấu trúc mô-đun: các nhóm nút kết nối dày đặc với nhau nhưng liên kết thưa giữa các nhóm. Các thuật toán phát hiện cộng đồng (Louvain, lan truyền nhãn, phân cụm phổ) xác định các mô-đun này, mà trong các mạng lưới tài chính thường tương ứng với các tập đoàn, các ngành hoặc các cụm cho vay.
 
 ```{python}
 #| label: graph-fundamentals
@@ -188,17 +188,17 @@ def compute_network_metrics(G):
     return node_metrics, graph_metrics
 ```
 
-### The Adjacency Matrix and Its Spectral Properties
+### Ma trận kề và các tính chất phổ
 
-The adjacency matrix $A \in \mathbb{R}^{n \times n}$ encodes the graph structure: $A_{ij} = w_{ij}$ if there is an edge from $i$ to $j$ with weight $w_{ij}$, and $A_{ij} = 0$ otherwise. For undirected graphs, $A$ is symmetric.
+Ma trận kề $A \in \mathbb{R}^{n \times n}$ mã hóa cấu trúc đồ thị: $A_{ij} = w_{ij}$ nếu có một cạnh từ $i$ đến $j$ với trọng số $w_{ij}$, và $A_{ij} = 0$ trong trường hợp ngược lại. Với đồ thị vô hướng, $A$ là ma trận đối xứng.
 
-The graph Laplacian $L = D - A$ (where $D$ is the diagonal degree matrix) has eigenvalues $0 = \lambda_1 \leq \lambda_2 \leq \ldots \leq \lambda_n$ with important structural interpretations:
+Ma trận Laplace của đồ thị $L = D - A$ (trong đó $D$ là ma trận bậc đường chéo) có các trị riêng $0 = \lambda_1 \leq \lambda_2 \leq \ldots \leq \lambda_n$ với những cách diễn giải cấu trúc quan trọng:
 
--   The multiplicity of $\lambda = 0$ equals the number of connected components.
--   The second eigenvalue $\lambda_2$ (the algebraic connectivity or Fiedler value) measures how well-connected the graph is. Low $\lambda_2$ implies the graph has a bottleneck, which is a weak point where cutting a few edges would disconnect large portions.
--   The eigenvectors of $L$ provide the spectral embedding of the graph, which is the foundation for spectral clustering and graph convolutional networks.
+-   Bội của $\lambda = 0$ bằng số thành phần liên thông.
+-   Trị riêng thứ hai $\lambda_2$ (độ liên thông đại số hay giá trị Fiedler) đo mức độ liên kết tốt của đồ thị. $\lambda_2$ thấp hàm ý đồ thị có một nút thắt cổ chai, tức là một điểm yếu mà việc cắt một vài cạnh sẽ làm đứt rời những phần lớn của đồ thị.
+-   Các vector riêng của $L$ cung cấp phép nhúng phổ (spectral embedding) của đồ thị, là nền tảng cho phân cụm phổ và các mạng tích chập đồ thị.
 
-The normalized Laplacian $\tilde{L} = D^{-1/2} L D^{-1/2}$ is used in GCNs because it stabilizes message passing across nodes with different degrees.
+Ma trận Laplace chuẩn hóa $\tilde{L} = D^{-1/2} L D^{-1/2}$ được dùng trong GCN vì nó ổn định việc truyền thông điệp giữa các nút có bậc khác nhau.
 
 ```{python}
 #| label: spectral-analysis
@@ -260,17 +260,17 @@ def spectral_graph_analysis(A, n_components=10):
     }
 ```
 
-## Ownership and Control Networks
+## Mạng lưới sở hữu và kiểm soát
 
-### Vietnamese Ownership Structure
+### Cấu trúc sở hữu ở Việt Nam
 
-Ownership networks are arguably the most economically consequential graph structure in Vietnamese markets. The Vietnamese corporate landscape is characterized by three distinctive features that generate complex ownership topologies:
+Có thể nói các mạng lưới sở hữu là cấu trúc đồ thị có hệ quả kinh tế lớn nhất trong thị trường Việt Nam. Bức tranh doanh nghiệp Việt Nam được đặc trưng bởi ba nét riêng tạo ra các cấu trúc sở hữu phức tạp:
 
 **State ownership pyramids.** The government holds equity in hundreds of firms through a hierarchy of holding entities: the State Capital Investment Corporation (SCIC), line ministries, provincial People's Committees, and state-owned economic groups (tập đoàn kinh tế nhà nước). These chains create multi-layered pyramids where the state's ultimate control rights may substantially exceed its cash flow rights.
 
 **Private business groups.** Vietnamese conglomerates (Vingroup, Masan, FPT, Hoà Phát, Thaco) create complex webs of cross-ownership, subsidiary relationships, and associate stakes. These structures serve multiple purposes: internal capital markets, tax optimization, regulatory arbitrage, and control enhancement.
 
-**Circular and cross-ownership.** Vietnamese regulations do not effectively prevent circular ownership (firm $A$ owns firm $B$ which owns firm $C$ which owns firm $A$), creating loops in the ownership graph that amplify control beyond direct stakes and inflate accounting equity [@bebchuk1999rent].
+**Sở hữu vòng tròn và sở hữu chéo.** Các quy định của Việt Nam không ngăn chặn hiệu quả tình trạng sở hữu vòng tròn (doanh nghiệp $A$ sở hữu doanh nghiệp $B$, doanh nghiệp này sở hữu doanh nghiệp $C$, và doanh nghiệp sau cùng này lại sở hữu doanh nghiệp $A$), tạo ra các vòng lặp trong đồ thị sở hữu làm khuếch đại quyền kiểm soát vượt quá tỷ lệ sở hữu trực tiếp và làm phình vốn chủ sở hữu kế toán [@bebchuk1999rent].
 
 ```{python}
 #| label: ownership-network-data
@@ -337,7 +337,7 @@ for k, v in graph_metrics_own.items():
 ```{python}
 #| label: tbl-ownership-network-stats
 #| eval: false
-#| tbl-cap: "Ownership Network: Graph-Level Statistics"
+#| tbl-cap: "Mạng lưới sở hữu: Thống kê cấp độ đồ thị"
 
 own_stats = pd.DataFrame([graph_metrics_own]).T
 own_stats.columns = ["Value"]
@@ -345,15 +345,15 @@ own_stats = own_stats.round(4)
 own_stats
 ```
 
-### Ultimate Ownership and Control Chains
+### Sở hữu cuối cùng và các chuỗi kiểm soát
 
-Direct ownership understates the actual control exercised through pyramidal chains. The ultimate ownership stake of entity $A$ in firm $Z$ through a chain $A \to B \to C \to Z$ is the product of intermediate stakes:
+Sở hữu trực tiếp đánh giá thấp quyền kiểm soát thực sự được thực thi qua các chuỗi kim tự tháp. Tỷ lệ sở hữu cuối cùng của thực thể $A$ trong doanh nghiệp $Z$ qua chuỗi $A \to B \to C \to Z$ là tích của các tỷ lệ sở hữu trung gian:
 
 $$
 \omega_{A \to Z}^{\text{ultimate}} = \prod_{(i,j) \in \text{path}(A, Z)} w_{ij}
 $$ {#eq-ultimate-ownership}
 
-where $w_{ij}$ is the direct stake of $i$ in $j$. When multiple paths exist from $A$ to $Z$, the total ultimate ownership is the sum across paths. The control rights, however, are determined by the weakest link in the chain (the minimum stake along the path), reflecting the principle that control requires a majority at each level.
+trong đó $w_{ij}$ là tỷ lệ sở hữu trực tiếp của $i$ trong $j$. Khi tồn tại nhiều đường đi từ $A$ đến $Z$, tổng sở hữu cuối cùng là tổng trên các đường đi. Tuy nhiên, quyền kiểm soát được quyết định bởi mắt xích yếu nhất trong chuỗi (tỷ lệ sở hữu nhỏ nhất dọc theo đường đi), phản ánh nguyên tắc rằng kiểm soát đòi hỏi đa số ở mỗi tầng.
 
 ```{python}
 #| label: ultimate-ownership
@@ -462,7 +462,7 @@ wedge_df = compute_control_wedge(G_own, listed_firms)
 ```{python}
 #| label: tbl-control-wedge
 #| eval: false
-#| tbl-cap: "Control-Cash Flow Wedge: Summary Statistics"
+#| tbl-cap: "Khoảng cách giữa quyền kiểm soát và quyền dòng tiền: Thống kê tóm tắt"
 
 wedge_summary = wedge_df[
     ["direct_stake", "ultimate_ownership", "control_rights",
@@ -474,7 +474,7 @@ wedge_summary
 ```{python}
 #| label: fig-control-wedge
 #| eval: false
-#| fig-cap: "Distribution of Control-Cash Flow Wedge Across Vietnamese Listed Firms"
+#| fig-cap: "Phân phối khoảng cách giữa quyền kiểm soát và quyền dòng tiền trên các doanh nghiệp niêm yết Việt Nam"
 
 (
     p9.ggplot(wedge_df, p9.aes(x="wedge"))
@@ -490,9 +490,9 @@ wedge_summary
 )
 ```
 
-### Ownership Centrality and Firm Value
+### Độ trung tâm sở hữu và giá trị doanh nghiệp
 
-We test whether a firm's position in the ownership network predicts its market valuation, controlling for standard determinants:
+Chúng ta kiểm định xem vị trí của một doanh nghiệp trong mạng lưới sở hữu có dự báo được định giá thị trường của doanh nghiệp đó hay không, sau khi kiểm soát các yếu tố quyết định tiêu chuẩn:
 
 $$
 Q_{i,t} = \beta_0 + \beta_1 \text{Centrality}_{i,t} + \beta_2 \text{Wedge}_{i,t} + \boldsymbol{\gamma}' \mathbf{X}_{i,t} + \alpha_{\text{ind}} + \delta_t + \varepsilon_{i,t}
@@ -534,9 +534,9 @@ if len(val_clean) > 50:
               f"(t = {model_network_val.tvalues[var]:.3f})")
 ```
 
-### Business Group Detection
+### Phát hiện tập đoàn
 
-Business groups (i.e., collections of legally independent firms linked by common ownership) are a defining feature of Vietnamese corporate structure. We detect them algorithmically using community detection on the ownership graph.
+Các tập đoàn (tức là tập hợp các doanh nghiệp độc lập về mặt pháp lý nhưng liên kết với nhau bằng quan hệ sở hữu chung) là một đặc trưng nổi bật của cấu trúc doanh nghiệp Việt Nam. Chúng ta phát hiện chúng bằng thuật toán, sử dụng phương pháp phát hiện cộng đồng trên đồ thị sở hữu.
 
 ```{python}
 #| label: business-groups
@@ -617,7 +617,7 @@ print(f"Firms in groups: {len(groups_df[groups_df['node_type'] == 'firm'])}")
 ```{python}
 #| label: tbl-business-groups
 #| eval: false
-#| tbl-cap: "Largest Vietnamese Business Groups by Ownership Network Analysis"
+#| tbl-cap: "Các tập đoàn lớn nhất của Việt Nam theo phân tích mạng lưới sở hữu"
 
 top_groups = (
     groups_df.groupby("group_id")
@@ -636,13 +636,13 @@ top_groups["total_mcap_bn"] = top_groups["total_mcap"] / 1e9
 top_groups[["apex", "n_members", "n_listed", "total_mcap_bn", "industries"]]
 ```
 
-## Board Interlock Networks
+## Mạng lưới thành viên hội đồng quản trị kiêm nhiệm
 
-### Construction
+### Xây dựng mạng lưới
 
-A board interlock exists when a director serves on the boards of two or more firms simultaneously. The board interlock network is a unipartite projection of the bipartite director$\times$firm graph: two firms are connected if they share at least one director, weighted by the number of shared directors.
+Một quan hệ kiêm nhiệm hội đồng quản trị tồn tại khi một thành viên đồng thời giữ ghế trong hội đồng quản trị của hai hay nhiều doanh nghiệp. Mạng lưới kiêm nhiệm hội đồng quản trị là phép chiếu một phía của đồ thị hai phía thành viên$\times$doanh nghiệp: hai doanh nghiệp được nối với nhau nếu có chung ít nhất một thành viên, với trọng số là số thành viên dùng chung.
 
-Board interlocks are an information channel. @bizjak2008does show that compensation practices diffuse through board networks. @cai2014board demonstrate that firms connected through interlocks have correlated investment policies. In Vietnamese markets, interlocks often follow ownership lines (e.g., the parent company appoints directors to subsidiary boards), creating a governance channel that reinforces the ownership channel.
+Quan hệ kiêm nhiệm là một kênh thông tin. @bizjak2008does chỉ ra rằng các thông lệ trả thưởng lan truyền qua mạng lưới hội đồng quản trị. @cai2014board chứng minh rằng các doanh nghiệp được nối với nhau qua quan hệ kiêm nhiệm có chính sách đầu tư tương quan với nhau. Trong thị trường Việt Nam, quan hệ kiêm nhiệm thường đi theo các quan hệ sở hữu (chẳng hạn, công ty mẹ bổ nhiệm thành viên vào hội đồng quản trị của công ty con), tạo ra một kênh quản trị củng cố kênh sở hữu.
 
 ```{python}
 #| label: board-interlock-data
@@ -711,9 +711,9 @@ if n_interlock > 0:
           f"{n_overlap / n_interlock:.3f}")
 ```
 
-### Interlocks and Return Co-Movement
+### Kiêm nhiệm và đồng biến động lợi nhuận
 
-If board interlocks serve as information channels, firms connected through interlocks should exhibit excess return co-movement beyond what is explained by shared industry or size characteristics. We test this using the methodology of @cohen2008economic:
+Nếu quan hệ kiêm nhiệm đóng vai trò kênh thông tin, các doanh nghiệp được nối với nhau qua quan hệ kiêm nhiệm sẽ thể hiện mức đồng biến động lợi nhuận vượt mức, vượt quá phần được giải thích bởi đặc điểm ngành hoặc quy mô chung. Chúng ta kiểm định điều này bằng phương pháp của @cohen2008economic:
 
 $$
 \rho_{ij,t} = \alpha + \beta \cdot \text{Interlock}_{ij,t} + \gamma \cdot \text{SameIndustry}_{ij} + \delta \cdot \text{SizeProximity}_{ij,t} + \varepsilon_{ij,t}
@@ -763,11 +763,11 @@ if interlock_corrs and non_interlock_corrs:
     print(f"Difference t-stat: {t_stat:.3f}, p-value: {p_val:.4f}")
 ```
 
-## Supply Chain and Trade Networks
+## Mạng lưới chuỗi cung ứng và thương mại
 
-### Constructing the Supply Chain Graph
+### Xây dựng đồ thị chuỗi cung ứng
 
-Supply chain relationships (customer-supplier linkages) represent real economic connections through which shocks propagate. @acemoglu2015systemic demonstrate theoretically that in the presence of supply chain linkages, idiosyncratic shocks to individual firms can generate aggregate fluctuations rather than washing out. @cohen2008economic and @menzly2010market show that supply chain connections predict cross-sectional return differences: when a major customer's stock drops, its suppliers' stocks follow with a delay.
+Các quan hệ chuỗi cung ứng (liên kết khách hàng–nhà cung cấp) thể hiện những mối liên hệ kinh tế thực mà qua đó các cú sốc lan truyền. @acemoglu2015systemic chứng minh về mặt lý thuyết rằng khi tồn tại các liên kết chuỗi cung ứng, các cú sốc đặc thù của từng doanh nghiệp có thể tạo ra biến động tổng thể thay vì triệt tiêu lẫn nhau. @cohen2008economic và @menzly2010market cho thấy các liên kết chuỗi cung ứng dự báo được chênh lệch lợi nhuận chéo (cross-sectional): khi cổ phiếu của một khách hàng lớn giảm giá, cổ phiếu của các nhà cung cấp giảm theo với độ trễ.
 
 ```{python}
 #| label: supply-chain-data
@@ -796,15 +796,15 @@ print(f"Supply chain links: {G_supply.number_of_edges()}")
 print(f"Firms involved: {G_supply.number_of_nodes()}")
 ```
 
-### Customer Momentum
+### Động lượng khách hàng
 
-The "customer momentum" strategy of @cohen2008economic exploits the delayed propagation of information through supply chains. When a customer firm's stock rises, its suppliers' stocks tend to follow in subsequent months:
+Chiến lược "động lượng khách hàng" của @cohen2008economic khai thác sự lan truyền chậm của thông tin qua các chuỗi cung ứng. Khi cổ phiếu của một doanh nghiệp khách hàng tăng giá, cổ phiếu của các nhà cung cấp có xu hướng tăng theo trong những tháng tiếp theo:
 
 $$
 r_{i,t+1} = \alpha + \beta \cdot \text{CustomerReturn}_{i,t} + \gamma \cdot r_{i,t} + \boldsymbol{\delta}' \mathbf{X}_{i,t} + \varepsilon_{i,t}
 $$ {#eq-customer-momentum}
 
-where $\text{CustomerReturn}_{i,t} = \sum_{j \in \text{Customers}(i)} w_{ij} \cdot r_{j,t}$ is the weighted average return of firm $i$'s customers.
+trong đó $\text{CustomerReturn}_{i,t} = \sum_{j \in \text{Customers}(i)} w_{ij} \cdot r_{j,t}$ là lợi nhuận bình quân gia quyền của các khách hàng của doanh nghiệp $i$.
 
 ```{python}
 #| label: customer-momentum
@@ -882,7 +882,7 @@ model_mom = sm.OLS(
 ```{python}
 #| label: tbl-customer-momentum
 #| eval: false
-#| tbl-cap: "Customer Momentum: Supplier Returns Predicted by Customer Returns"
+#| tbl-cap: "Động lượng khách hàng: Lợi nhuận của nhà cung cấp được dự báo bởi lợi nhuận của khách hàng"
 
 mom_results = pd.DataFrame({
     "Coefficient": model_mom.params.round(4),
@@ -893,9 +893,9 @@ mom_results = pd.DataFrame({
 mom_results
 ```
 
-### Network Propagation: Shock Diffusion Through Supply Chains
+### Lan truyền trong mạng lưới: Khuếch tán cú sốc qua các chuỗi cung ứng
 
-The @acemoglu2015systemic model predicts that the aggregate effect of an idiosyncratic shock depends on the network's topology. In a star network (one central hub), hub shocks generate aggregate fluctuations. In a symmetric network, shocks cancel out. We implement a simulation-based approach to measure shock propagation in the Vietnamese supply chain.
+Mô hình của @acemoglu2015systemic dự báo rằng tác động tổng thể của một cú sốc đặc thù phụ thuộc vào cấu trúc của mạng lưới. Trong mạng hình sao (một trung tâm duy nhất), các cú sốc tại trung tâm tạo ra biến động tổng thể. Trong mạng đối xứng, các cú sốc triệt tiêu lẫn nhau. Chúng ta triển khai một phương pháp dựa trên mô phỏng để đo lường sự lan truyền cú sốc trong chuỗi cung ứng của Việt Nam.
 
 ```{python}
 #| label: shock-propagation
@@ -977,7 +977,7 @@ systemic_df = pd.DataFrame(
 ```{python}
 #| label: tbl-systemic-supply-chain
 #| eval: false
-#| tbl-cap: "Most Systemically Important Firms in the Supply Chain Network"
+#| tbl-cap: "Các doanh nghiệp quan trọng nhất về mặt hệ thống trong mạng lưới chuỗi cung ứng"
 
 top_systemic = systemic_df.head(20).merge(
     firms[["ticker", "industry", "market_cap"]],
@@ -987,17 +987,17 @@ top_systemic["market_cap_bn"] = top_systemic["market_cap"] / 1e9
 top_systemic[["ticker", "industry", "market_cap_bn", "systemic_impact"]].round(4)
 ```
 
-## Correlation and Co-Movement Networks
+## Mạng lưới tương quan và đồng biến động
 
-### Construction from Return Data
+### Xây dựng từ dữ liệu lợi nhuận
 
-A correlation network connects assets whose returns co-move. This is perhaps the most widely used financial network because it requires only return data---no proprietary ownership or supply chain information. The standard construction involves three steps:
+Mạng lưới tương quan nối các tài sản có lợi nhuận đồng biến động. Có lẽ đây là mạng lưới tài chính được sử dụng rộng rãi nhất vì nó chỉ cần dữ liệu lợi nhuận---không cần thông tin sở hữu hay chuỗi cung ứng độc quyền. Cách xây dựng tiêu chuẩn gồm ba bước:
 
-1.  **Compute pairwise correlations.** For $n$ assets over $T$ periods, the sample correlation matrix $\hat{\rho} \in \mathbb{R}^{n \times n}$ has $n(n-1)/2$ unique entries.
+1.  **Tính các tương quan từng cặp.** Với $n$ tài sản trong $T$ kỳ, ma trận tương quan mẫu $\hat{\rho} \in \mathbb{R}^{n \times n}$ có $n(n-1)/2$ phần tử riêng biệt.
 
-2.  **Threshold or transform.** Convert the dense correlation matrix into a sparse graph. Common approaches: hard threshold ($\rho_{ij} > \bar{\rho}$), Minimum Spanning Tree (MST), or Planar Maximally Filtered Graph (PMFG).
+2.  **Đặt ngưỡng hoặc biến đổi.** Chuyển ma trận tương quan dày thành một đồ thị thưa. Các cách tiếp cận phổ biến: ngưỡng cứng ($\rho_{ij} > \bar{\rho}$), cây khung nhỏ nhất (Minimum Spanning Tree, MST), hoặc đồ thị lọc cực đại phẳng (Planar Maximally Filtered Graph, PMFG).
 
-3.  **Analyze the graph.** Community detection reveals sector clustering; centrality identifies market bellwethers; temporal evolution tracks regime changes.
+3.  **Phân tích đồ thị.** Phát hiện cộng đồng cho thấy các cụm theo ngành; độ trung tâm xác định các cổ phiếu dẫn dắt thị trường; sự tiến triển theo thời gian theo dõi các thay đổi chế độ.
 
 ```{python}
 #| label: correlation-network
@@ -1052,21 +1052,21 @@ print(f"Corr network (ρ > {threshold}): "
       f"{G_corr.number_of_edges()} edges")
 ```
 
-### The Diebold-Yilmaz Connectedness Framework
+### Khung kết nối Diebold–Yilmaz
 
-@diebold2014network propose measuring financial connectedness using the variance decomposition from a vector autoregression (VAR). The fraction of the $H$-step-ahead forecast error variance of variable $i$ attributable to shocks from variable $j$ defines the pairwise directional connectedness:
+@diebold2014network đề xuất đo lường mức độ kết nối tài chính bằng phân rã phương sai từ mô hình tự hồi quy vector (VAR). Tỷ lệ phương sai sai số dự báo trước $H$ bước của biến $i$ do các cú sốc từ biến $j$ gây ra xác định mức kết nối có hướng theo từng cặp:
 
 $$
 C_{i \leftarrow j}(H) = \frac{\tilde{\theta}_{ij}^g(H)}{\sum_{j=1}^{n} \tilde{\theta}_{ij}^g(H)} \times 100
 $$ {#eq-dy-connectedness}
 
-where $\tilde{\theta}_{ij}^g(H)$ is the generalized forecast error variance decomposition. The total connectedness index (TCI) aggregates across all pairs:
+trong đó $\tilde{\theta}_{ij}^g(H)$ là phân rã phương sai sai số dự báo tổng quát. Chỉ số kết nối tổng (total connectedness index, TCI) tổng hợp trên mọi cặp:
 
 $$
 \text{TCI}(H) = \frac{\sum_{i \neq j} C_{i \leftarrow j}(H)}{\sum_{i,j} C_{i \leftarrow j}(H)} \times 100
 $$ {#eq-tci}
 
-High TCI indicates a tightly connected system where shocks propagate widely; low TCI indicates relative isolation.
+TCI cao cho thấy một hệ thống kết nối chặt chẽ, nơi các cú sốc lan truyền rộng; TCI thấp cho thấy mức độ cô lập tương đối.
 
 ```{python}
 #| label: diebold-yilmaz
@@ -1158,7 +1158,7 @@ print(f"Total Connectedness Index: {dy_results['TCI']:.2f}%")
 ```{python}
 #| label: tbl-connectedness
 #| eval: false
-#| tbl-cap: "Diebold-Yilmaz Net Connectedness: Net Transmitters (+) and Receivers (−)"
+#| tbl-cap: "Kết nối ròng Diebold–Yilmaz: Bên truyền dẫn ròng (+) và bên tiếp nhận ròng (−)"
 
 net_df = pd.DataFrame({
     "TO_others": dy_results["TO"].round(2),
@@ -1213,17 +1213,17 @@ def rolling_tci(returns_wide, window=252, step=21, var_order=1,
 # tci_df = rolling_tci(daily_wide, window=252, step=21)
 ```
 
-## Interbank and Financial Contagion Networks
+## Mạng lưới liên ngân hàng và lây lan tài chính
 
-### The Interbank Market as a Network
+### Thị trường liên ngân hàng như một mạng lưới
 
-The interbank market, where banks lend reserves to each other, is the canonical financial network. @allen2000financial demonstrate that the structure of interbank linkages determines whether a bank failure cascades into a systemic crisis or is absorbed by the network. Two extreme topologies illustrate:
+Thị trường liên ngân hàng, nơi các ngân hàng cho nhau vay dự trữ, là mạng lưới tài chính điển hình. @allen2000financial chứng minh rằng cấu trúc các liên kết liên ngân hàng quyết định việc sự sụp đổ của một ngân hàng sẽ lan truyền thành khủng hoảng hệ thống hay được mạng lưới hấp thụ. Hai cấu trúc cực đoan minh họa điều này:
 
-**Complete network (all banks linked to all).** Each bank's exposure to any single counterpart is small. A bank failure imposes small losses on many banks, which can individually absorb them. The network is resilient.
+**Mạng đầy đủ (mọi ngân hàng nối với mọi ngân hàng).** Mức dư nợ của mỗi ngân hàng với bất kỳ một đối tác nào đều nhỏ. Sự sụp đổ của một ngân hàng gây ra tổn thất nhỏ cho nhiều ngân hàng, mà từng ngân hàng có thể tự hấp thụ. Mạng lưới có khả năng chống chịu.
 
-**Ring network (each bank linked to one neighbor).** Each bank's exposure is concentrated in a single counterpart. A failure in one bank can topple its neighbor, triggering a chain of cascading defaults. The network is fragile.
+**Mạng vòng (mỗi ngân hàng nối với một ngân hàng lân cận).** Mức dư nợ của mỗi ngân hàng tập trung vào một đối tác duy nhất. Sự sụp đổ của một ngân hàng có thể kéo đổ ngân hàng lân cận, kích hoạt một chuỗi vỡ nợ dây chuyền. Mạng lưới dễ đổ vỡ.
 
-The Vietnamese banking system, with its concentration of state-owned banks and the regulatory emphasis on interbank lending for liquidity management, lies between these extremes.
+Hệ thống ngân hàng Việt Nam, với sự tập trung của các ngân hàng nhà nước và việc cơ quan quản lý nhấn mạnh cho vay liên ngân hàng để quản lý thanh khoản, nằm giữa hai thái cực này.
 
 ```{python}
 #| label: interbank-network
@@ -1259,15 +1259,15 @@ for _, row in bank_info.iterrows():
 bank_metrics, bank_graph_stats = compute_network_metrics(G_bank)
 ```
 
-### Cascading Default Simulation
+### Mô phỏng vỡ nợ dây chuyền
 
-We implement the @eisenberg2001systemic clearing mechanism to simulate cascading defaults in the interbank network. When a bank fails, it cannot honor its interbank obligations, imposing losses on its creditors, who may in turn fail:
+Chúng ta triển khai cơ chế bù trừ của @eisenberg2001systemic để mô phỏng các vụ vỡ nợ dây chuyền trong mạng lưới liên ngân hàng. Khi một ngân hàng sụp đổ, ngân hàng đó không thể thực hiện các nghĩa vụ liên ngân hàng, gây tổn thất cho các chủ nợ của nó, và đến lượt các chủ nợ này có thể sụp đổ:
 
 $$
 p_i^* = \min\left(\bar{p}_i, \; e_i + \sum_{j} \frac{L_{ji}}{\sum_k L_{jk}} p_j^*\right)
 $$ {#eq-eisenberg-noe}
 
-where $p_i^*$ is bank $i$'s actual payment, $\bar{p}_i$ is its total obligation, $e_i$ is its external assets minus external liabilities, and $L_{ji}/\sum_k L_{jk}$ is the fraction of bank $j$'s obligations owed to bank $i$.
+trong đó $p_i^*$ là khoản thanh toán thực tế của ngân hàng $i$, $\bar{p}_i$ là tổng nghĩa vụ của ngân hàng đó, $e_i$ là tài sản bên ngoài trừ nợ phải trả bên ngoài của nó, và $L_{ji}/\sum_k L_{jk}$ là phần nghĩa vụ của ngân hàng $j$ phải trả cho ngân hàng $i$.
 
 ```{python}
 #| label: cascading-defaults
@@ -1373,42 +1373,107 @@ cascade_df = pd.DataFrame(cascade_results).sort_values(
 ```{python}
 #| label: tbl-systemic-banks
 #| eval: false
-#| tbl-cap: "Systemically Important Banks: Cascading Default Analysis"
+#| tbl-cap: "Các ngân hàng quan trọng về mặt hệ thống: Phân tích vỡ nợ dây chuyền"
 
 cascade_df.head(15).round(4)
 ```
 
-## Graph Neural Networks for Financial Prediction
+## Kết nối xã hội giữa các địa phương {#sec-networks-social}
 
-### From Graphs to Predictions
+Mọi mạng lưới trong chương này cho đến giờ đều nối các doanh nghiệp hoặc tổ chức tài chính. Một loại mạng lưới khác nối con người, và qua con người nối các địa phương. Điều này quan trọng với tài chính vì các hộ gia đình tìm hiểu về sản phẩm tài chính từ những người họ quen biết, và vì bên cho vay và nhà đầu tư cũng một phần tìm hiểu về các bên đi vay và doanh nghiệp ở xa thông qua chính những mối quan hệ đó. Cho đến gần đây, mạng lưới này chưa thể được đo lường trên quy mô lớn. **Chỉ số Kết nối Xã hội** (Social Connectedness Index, SCI) của @bailey2018social đã thay đổi điều đó. Được xây dựng từ toàn bộ các liên kết bạn bè giữa người dùng Facebook, chỉ số này đo lường, với mỗi cặp vùng $i$ và $j$, xác suất tương đối để một người dùng ở $i$ và một người dùng ở $j$ là bạn bè:
 
-Classical network analysis computes hand-crafted features (centrality, clustering, community membership) and feeds them into standard regression models. Graph neural networks (GNNs) learn features directly from the graph structure and node attributes through message passing. The key insight is that a node's representation should depend not only on its own features but on the features of its neighbors, their neighbors, and so on.
+$$
+\text{SCI}_{ij} = \frac{\text{Connections}_{ij}}{\text{Users}_i \times \text{Users}_j}.
+$$ {#eq-networks-sci}
 
-### Graph Convolutional Networks (GCN)
+Mức độ kết nối giảm mạnh theo khoảng cách địa lý, nhưng cũng phản ánh lịch sử di cư, các tuyến giao thông, và các ranh giới chính trị và văn hóa [@bailey2018social]. Với một vùng cho trước, SCI xác định một tập trọng số trên tất cả các vùng còn lại. Hữu ích nhất là các tỷ trọng bạn bè, tức tỷ lệ các liên kết bạn bè của vùng $i$ dẫn đến vùng $j$,
 
-The Graph Convolutional Network of @kipf2016semi performs spectral convolution on graphs. The layer-wise propagation rule is:
+$$
+w_{ij} = \frac{\text{SCI}_{ij} \times \text{Users}_j}{\sum_{k} \text{SCI}_{ik} \times \text{Users}_k},
+$$ {#eq-networks-friend-share}
+
+biến bất kỳ biến số vùng $X_j$ nào thành một **mức phơi nhiễm xã hội**:
+
+$$
+\text{SocialExp}_i(X) = \sum_{j \in \mathcal{N}(i)} w_{ij}\, X_j ,
+$$ {#eq-networks-social-exposure}
+
+trong đó $\mathcal{N}(i)$ là tập các vùng mà trên đó mức phơi nhiễm được tính: tất cả các vùng, hoặc chỉ những vùng ở xa $i$ về mặt địa lý. Hai khuôn mẫu xây dựng trên @eq-networks-social-exposure làm nền cho tài liệu tài chính xã hội được @kuchler2021social tổng quan. Trong @bailey2018economic, $X_j$ là tăng trưởng giá nhà ở các vùng của bạn bè: những cá nhân có bạn bè trải qua mức tăng giá nhà lớn hơn kỳ vọng mức tăng trong tương lai lớn hơn và mua nhà lớn hơn với giá cao hơn. Trong @kuchler2022social, $X_j$ là vốn tổ chức đặt tại vùng $j$: các doanh nghiệp có trụ sở ở những vùng có *mức gần gũi xã hội với vốn* cao thì có sở hữu tổ chức, định giá và thanh khoản cao hơn, với các tác động tập trung ở các doanh nghiệp nhỏ không được các nhà phân tích theo dõi. Các nghiên cứu trước đó đã xác lập phiên bản ở cấp độ cá nhân của ý tưởng này, từ việc tham gia thị trường cổ phiếu lan truyền qua tương tác xã hội [@hong2004social] đến việc những người cho vay trên một nền tảng cho vay ngang hàng coi mạng lưới bạn bè của bên đi vay là tín hiệu về chất lượng tín dụng [@lin2013judging].
+
+### Mạng lưới xã hội như kênh truyền dẫn tín dụng {#sec-networks-allen-peng-shan}
+
+@allen2026social đưa bộ công cụ này vào tín dụng tiêu dùng và, một cách hiếm có, vào cả hai phía của thị trường cùng lúc. Bối cảnh của họ là LendingClub, nền tảng cho vay trực tuyến lớn nhất Hoa Kỳ, có dữ liệu công khai bao gồm cả các đơn bị từ chối lẫn được chấp thuận, nhờ đó có thể nghiên cứu các *quyết định* cấp vốn chứ không chỉ các khoản vay đã được cấp. Phiên bản đầu của bài báo sử dụng các đơn vay từ năm 2010 đến 2017, xác định vị trí bên đi vay theo mã ZIP ba chữ số, và ánh xạ các khu vực đó sang SCI cấp hạt (county).
+
+**Cầu.** Số đơn vay trực tuyến ở một khu vực tăng lên sau khi hoạt động vay trực tuyến tăng ở những khu vực ở xa về địa lý nhưng có kết nối xã hội với khu vực đó. Giới hạn địa lý chính là yếu tố nhận diện. Bạn bè ở gần cùng chia sẻ điều kiện kinh tế địa phương, nên tương quan giữa hoạt động vay của một khu vực và của bạn bè nó có thể phản ánh một cú sốc chung chứ không phải quá trình học hỏi. Việc giới hạn $\mathcal{N}(i)$ trong @eq-networks-social-exposure vào các vùng ở xa (ngoài bang, trong bản thảo đầu, theo thiết kế của @bailey2018economic) loại bỏ thành phần chung đó. Phần còn lại phù hợp với việc nhận thức về một sản phẩm tài chính mới lan truyền qua các mối quan hệ xã hội: mọi người nghe về một nền tảng từ những người bạn đã dùng nó.
+
+**Cung.** Các đơn vay từ những khu vực có mức gần gũi xã hội cao với các vùng dồi dào tiền gửi, một thước đo theo tinh thần của @kuchler2022social với tiền gửi thay cho vốn tổ chức, có khả năng được cấp vốn cao hơn. Riêng kết quả này có thể phản ánh một trong hai kênh mà bài báo đặt đối chọi nhau. Các mối quan hệ xã hội có thể truyền *thông tin* khó có được về điều kiện tín dụng của một cộng đồng đến những người có khả năng cấp vốn cho cộng đồng đó. Hoặc chúng có thể truyền *sự thiên vị theo quan hệ thân quen* (affinity): sự quen thuộc, và việc lặp lại các ý kiến qua một mạng lưới tạo ra thiên lệch thuyết phục, khiến bên cấp vốn ưu ái các bên đi vay có kết nối bất kể chất lượng. Cả hai kênh đều dự báo rằng các bên đi vay có kết nối nhận được nhiều tín dụng hơn. Chúng bất đồng về hiệu quả của khoản vay cận biên. Sự thiên vị theo quan hệ thân quen hạ thấp tiêu chuẩn, nên các khoản vay bổ sung sẽ vỡ nợ thường xuyên hơn; thông tin làm sắc nét việc sàng lọc, nên chúng sẽ vỡ nợ ít hơn. Kết quả sau thực tế (ex post) tốt hơn, điều này chỉ ra kênh thông tin. @lin2013judging đi đến kết luận tương tự từ các liên kết bạn bè của từng bên đi vay trên Prosper, và khi @duarte2012trust áp dụng cùng logic cho ngoại hình của bên đi vay, họ thấy rằng những bên đi vay trông đáng tin mà người cho vay ưu ái thực sự vỡ nợ ít hơn.
+
+**Nhận diện.** Mức độ kết nối xã hội không được phân bổ ngẫu nhiên. Các khu vực mà cư dân có mạng lưới phân tán về địa lý thường giàu hơn, học vấn cao hơn và di động hơn [@bailey2018social], và mỗi đặc điểm đó đều ảnh hưởng trực tiếp đến kết quả tín dụng. Do đó, phiên bản đã công bố của bài báo thiết lập quan hệ nhân quả bằng các **biến công cụ shift-share**. Các tỷ trọng là các trọng số mạng lưới xã hội $w_{ij}$, còn các cú dịch chuyển là những sự kiện ở các vùng có kết nối làm thay đổi cầu hoặc cung tín dụng ở đó mà không phản ánh điều kiện ở khu vực của chính bên đi vay: thiên tai ở phía cầu và hành vi sai phạm của cố vấn tài chính ở phía cung. Hành vi sai phạm của cố vấn được đo lường đặc biệt tốt ở Hoa Kỳ vì hồ sơ kỷ luật của nhà môi giới là công khai, đây là dữ liệu mà @egan2019market khai thác.
+
+**Phân phối.** Cả tác động lên cầu lẫn lên cung đều mạnh nhất ở các cộng đồng thiệt thòi, và không đi kèm tỷ lệ nợ quá hạn cao hơn. Các mối quan hệ xã hội với những vùng thịnh vượng hơn dường như thay thế một phần cho hạ tầng thông tin địa phương (chi nhánh ngân hàng, lịch sử tín dụng dài, bên cho vay dựa trên quan hệ) mà các khu vực thiệt thòi thiếu.
+
+Bài báo đáng được đọc kỹ bởi bất kỳ ai xây dựng các thước đo mạng lưới, vì bốn lý do. Nó coi một mạng lưới giữa các địa phương là một đối tượng quan sát được, đo lường được ngang hàng với các liên kết sở hữu hay chuỗi cung ứng. Nó nghiên cứu cả hai phía của một thị trường thông qua cùng một mạng lưới, điều mà ít bài báo về mạng lưới làm được. Nó sử dụng kết quả sau thực tế làm phép kiểm định phân tách thông tin với thiên lệch, một phép kiểm định mà mọi khẳng định rằng mạng lưới "cải thiện" phân bổ đều nên được yêu cầu vượt qua. Và nó nêu rõ rằng biến phơi nhiễm xã hội là một cấu trúc shift-share, điều quyết định những gì có thể dùng để nhận diện nó.
+
+### Logic shift-share và suy luận {#sec-networks-ssiv}
+
+@eq-networks-social-exposure là tổng có trọng số các cú dịch chuyển theo vùng, cùng cấu trúc với các biến công cụ Bartik của kinh tế học lao động, và tài liệu kinh tế lượng về các thiết kế này nêu rất chính xác khi nào chúng nhận diện được một tác động nhân quả. Việc nhận diện có thể đến từ các tỷ trọng ngoại sinh [@goldsmith2020bartik]. Ở đây điều đó có nghĩa là cấu trúc các mối quan hệ xã hội của một khu vực không liên quan đến kết quả tín dụng của khu vực đó ngoại trừ thông qua các cú sốc mà các mối quan hệ truyền đi, một giả định mạnh khi các cấu trúc đó phản ánh di cư, dân tộc và cấu trúc ngành. Ngoài ra, việc nhận diện có thể đến từ các cú dịch chuyển được phân bổ giữa các vùng gần như ngẫu nhiên, có điều kiện theo các tỷ trọng [@borusyak2022quasi]. Thiên tai là những cú dịch chuyển hấp dẫn chính vì con đường thứ hai là hợp lý đối với chúng. Dù theo con đường nào, suy luận cũng đòi hỏi sự cẩn trọng. Các vùng có trọng số phơi nhiễm tương tự nhận các cú sốc tương quan với nhau, nên các sai số chuẩn thông thường và sai số chuẩn theo cụm vùng đánh giá quá cao độ chính xác. @adao2019shift suy ra các sai số chuẩn vững trước tương quan do phơi nhiễm này. Một hồi quy phơi nhiễm xã hội được báo cáo mà không có chúng, và không có các kiểm định cân bằng của các cú dịch chuyển với đặc điểm vùng trước kỳ, thì chưa đủ sức thuyết phục.
+
+### Kết nối xã hội ở Việt Nam {#sec-networks-social-vietnam}
+
+Dữ liệu đã có sẵn. Bản phát hành SCI công khai của Meta bao phủ các quốc gia ngoài châu Âu ở cấp đơn vị hành chính thứ nhất, mà với Việt Nam nghĩa là 63 tỉnh theo phiên bản ranh giới được dùng trong bản phát hành. Facebook được sử dụng rộng rãi ở Việt Nam, nhưng nhiều liên lạc riêng tư lại đi qua Zalo, mà SCI không quan sát được. Do đó, mức độ kết nối giữa các cặp tỉnh từ Facebook chỉ đo lường một kênh tiếp xúc xã hội, không phải tất cả.
+
+Hai đặc điểm của bối cảnh này cần được lưu ý trước khi chạy bất kỳ hồi quy nào. Thứ nhất, việc hợp nhất các tỉnh của Việt Nam từ 63 xuống 34 vào năm 2025 có nghĩa là các thống kê cấp tỉnh hiện hành phải được ánh xạ ngược về ranh giới cũ, hoặc SCI phải được tổng hợp xuôi theo trọng số dân số, và cả hai cách ánh xạ đều không vô hại đối với những tỉnh bị chia cho nhiều đơn vị mới. Thứ hai, di cư nội địa là yếu tố quyết định chính của mức độ kết nối, và tổng điều tra ghi nhận trực tiếp điều này. Các cuộc Tổng điều tra Dân số và Nhà ở năm 2009 và 2019 ghi nhận tỉnh cư trú năm năm trước của mỗi người trả lời, từ đó cho ra các ma trận di cư từ tỉnh này sang tỉnh khác. Một thước đo phơi nhiễm có trọng số theo di cư vừa là phép kiểm tra tính hợp lệ của SCI, vừa, do có trước hầu hết các kết quả cần quan tâm, là một ứng viên biến công cụ cho nó.
+
+Có bốn thiết kế nghiên cứu có thể chuyển giao trực tiếp nhất.
+
+**Mức gần gũi xã hội với vốn đối với các doanh nghiệp niêm yết.** Vốn đầu tư và hoạt động môi giới ở Việt Nam tập trung tại Thành phố Hồ Chí Minh và Hà Nội. Thước đo của @kuchler2022social, được tính cho tỉnh đặt trụ sở của từng doanh nghiệp, với tiền gửi hay thu nhập cấp tỉnh thay cho vốn tổ chức, đặt câu hỏi liệu các doanh nghiệp có trụ sở ở những tỉnh gần gũi xã hội với các trung tâm này có thanh khoản, định giá và sở hữu nước ngoài cao hơn hay không. Tỉnh đặt trụ sở xuất hiện trong mọi bản cáo bạch niêm yết, và các biến kết quả là những biến tiêu chuẩn trong cuốn sách này.
+
+**Sự khuếch tán của việc tham gia thị trường của nhà đầu tư cá nhân.** Sự gia tăng đột biến các tài khoản môi giới mới trong giai đoạn 2020–2022 là một sự kiện phía cầu đúng loại mà @allen2026social nghiên cứu: nhận thức về một sản phẩm tài chính lan truyền qua các mối quan hệ xã hội. Thiết kế đặt câu hỏi liệu việc mở tài khoản ở một tỉnh có tăng tốc sau khi việc mở tài khoản tăng ở các tỉnh ở xa nhưng có kết nối xã hội hay không. Ràng buộc chính là dữ liệu. Thống kê tài khoản được công bố ở cấp quốc gia, và việc phân tách theo tỉnh sẽ cần sự hợp tác của các công ty môi giới.
+
+**Cho vay trên nền tảng trong khung thử nghiệm có kiểm soát (sandbox).** Nghị định 94/2025/ND-CP, có hiệu lực từ tháng 7 năm 2025, tạo ra cơ chế thử nghiệm có kiểm soát cho cho vay ngang hàng cùng với chấm điểm tín dụng và API mở. Một thị trường nền tảng trong những năm đầu là bối cảnh của kết quả về cầu trong @allen2026social, và nếu dữ liệu về các bên tham gia sandbox được cung cấp cho các nhà nghiên cứu, thì sự lan rộng của các nền tảng giữa các tỉnh gần như là một cơ hội tái lập. Việt Nam cũng là nơi mà kết quả phía cung có thể quan trọng nhất. Như đã thảo luận trong @sec-data-alternative, độ bao phủ của trung tâm thông tin tín dụng vẫn còn mỏng, và @allen2026social gợi ý rằng các mối quan hệ xã hội với những vùng giàu hơn có thể một phần thay thế cho hạ tầng thông tin còn thiếu.
+
+**Các cú sốc cho thiết kế shift-share.** Ở phía cầu, bão và lũ lụt tác động đến những tỉnh xác định được vào những thời điểm được ghi nhận rõ ràng, trong đó có bão Yagi ở các tỉnh phía Bắc vào tháng 9 năm 2024, và đây là những cú dịch chuyển tự nhiên. Ở phía cung, sự kiện tương ứng gần nhất ở Việt Nam với hành vi sai phạm của cố vấn tại Hoa Kỳ là việc bán trái phiếu doanh nghiệp cho người gửi tiền ngân hàng thông qua mạng lưới chi nhánh, bị phát hiện trong vụ Vạn Thịnh Phát và SCB năm 2022, một cú sốc đối với niềm tin vào tiết kiệm qua trung gian ngân hàng. Sử dụng nó làm cú dịch chuyển đòi hỏi phải biết các trái chủ bị ảnh hưởng sống ở đâu, thông tin này không công khai, và không nên thực hiện thiết kế này nếu thiếu thông tin đó.
+
+Sáu quy tắc thực hành sau đây áp dụng cho nghiên cứu mạng lưới xã hội cấp tỉnh ở Việt Nam.
+
+1.  **Định nghĩa "ở xa" theo vùng, không theo sự tiếp giáp.** Hình dạng dài và hẹp của Việt Nam khiến các tỉnh lân cận có thể cách xa nhau về kinh tế còn các tỉnh ở xa lại hội nhập chặt chẽ. Hãy đo phơi nhiễm trên các tỉnh nằm ngoài vùng kinh tế–xã hội của chính bên đi vay, tương tự hạn chế ngoài bang, và chứng tỏ rằng kết quả vẫn vững với các ngưỡng cắt thay thế.
+2.  **Cố định phiên bản ranh giới.** Làm việc xuyên suốt với 63 tỉnh trước năm 2025, và ghi lại bảng chuyển đổi tương ứng cho mọi dữ liệu được báo cáo theo hệ thống 34 tỉnh.
+3.  **Coi SCI là ảnh chụp của một mạng lưới nội sinh.** Nó được quan sát tại một vài thời điểm, sau phần lớn quá trình di cư đã tạo ra nó. Với các kết quả có trước ảnh chụp này, hãy dùng ma trận di cư của tổng điều tra năm 2009 làm thước đo phiên bản sớm hơn.
+4.  **Báo cáo các chẩn đoán shift-share.** Cho thấy những tỷ trọng nào chi phối ước lượng [@goldsmith2020bartik], kiểm định cân bằng của các cú dịch chuyển với đặc điểm cấp tỉnh trước kỳ [@borusyak2022quasi], và dùng các sai số chuẩn vững với phơi nhiễm [@adao2019shift].
+5.  **Thực hiện phép kiểm định hiệu quả.** Bất kỳ phát hiện nào cho rằng các mối quan hệ xã hội làm tăng phê duyệt, cấp vốn hay đầu tư đều phải được tiếp nối bằng một kiểm định trên các kết quả sau thực tế, vỡ nợ đối với tín dụng và lợi nhuận tiếp theo đối với cổ phiếu, phân biệt thông tin với sự thiên vị theo quan hệ thân quen, như @allen2026social đã làm.
+6.  **Tôn trọng số lượng đơn vị nhỏ.** Với 63 tỉnh, suy luận theo cụm dựa trên ít cụm. Hãy báo cáo các giá trị p của bootstrap cụm kiểu wild (wild-cluster bootstrap) bên cạnh các giá trị thông thường.
+
+## Mạng nơ-ron đồ thị cho dự báo tài chính
+
+### Từ đồ thị đến dự báo
+
+Phân tích mạng lưới cổ điển tính các đặc trưng thủ công (độ trung tâm, phân cụm, thành viên cộng đồng) rồi đưa vào các mô hình hồi quy tiêu chuẩn. Các mạng nơ-ron đồ thị (GNN) học các đặc trưng trực tiếp từ cấu trúc đồ thị và thuộc tính của nút thông qua truyền thông điệp. Ý tưởng then chốt là biểu diễn của một nút không chỉ phụ thuộc vào đặc trưng của chính nó mà còn phụ thuộc vào đặc trưng của các nút lân cận, lân cận của chúng, và cứ thế tiếp tục.
+
+### Mạng tích chập đồ thị (GCN)
+
+Mạng tích chập đồ thị (Graph Convolutional Network) của @kipf2016semi thực hiện phép tích chập phổ trên đồ thị. Quy tắc lan truyền theo từng lớp là:
 
 $$
 H^{(\ell+1)} = \sigma\left(\tilde{D}^{-1/2} \tilde{A} \tilde{D}^{-1/2} H^{(\ell)} W^{(\ell)}\right)
 $$ {#eq-gcn}
 
-where $\tilde{A} = A + I_n$ is the adjacency matrix with self-loops, $\tilde{D}$ is the corresponding degree matrix, $H^{(\ell)}$ is the node feature matrix at layer $\ell$, $W^{(\ell)}$ is the learnable weight matrix, and $\sigma$ is a nonlinearity (ReLU). The normalized $\tilde{D}^{-1/2} \tilde{A} \tilde{D}^{-1/2}$ term averages each node's features with its neighbors' features, weighted by degree.
+trong đó $\tilde{A} = A + I_n$ là ma trận kề có thêm các vòng tự nối, $\tilde{D}$ là ma trận bậc tương ứng, $H^{(\ell)}$ là ma trận đặc trưng nút ở lớp $\ell$, $W^{(\ell)}$ là ma trận trọng số có thể học, và $\sigma$ là hàm phi tuyến (ReLU). Số hạng chuẩn hóa $\tilde{D}^{-1/2} \tilde{A} \tilde{D}^{-1/2}$ lấy trung bình các đặc trưng của mỗi nút với đặc trưng của các nút lân cận, có trọng số theo bậc.
 
-### Graph Attention Networks (GAT)
+### Mạng chú ý đồ thị (GAT)
 
-The Graph Attention Network of @velivckovic2017graph replaces the fixed normalization in GCN with learned attention coefficients:
+Mạng chú ý đồ thị (Graph Attention Network) của @velivckovic2017graph thay thế phép chuẩn hóa cố định trong GCN bằng các hệ số chú ý được học:
 
 $$
 h_i^{(\ell+1)} = \sigma\left(\sum_{j \in \mathcal{N}(i)} \alpha_{ij}^{(\ell)} W^{(\ell)} h_j^{(\ell)}\right)
 $$ {#eq-gat}
 
-where the attention coefficient $\alpha_{ij}$ is computed as:
+trong đó hệ số chú ý $\alpha_{ij}$ được tính như sau:
 
 $$
 \alpha_{ij} = \frac{\exp\left(\text{LeakyReLU}\left(\mathbf{a}^\top [W h_i \| W h_j]\right)\right)}{\sum_{k \in \mathcal{N}(i)} \exp\left(\text{LeakyReLU}\left(\mathbf{a}^\top [W h_i \| W h_k]\right)\right)}
 $$ {#eq-gat-attention}
 
-This allows the model to learn which neighbors are most informative for each node, rather than treating all neighbors equally.
+Điều này cho phép mô hình học xem các nút lân cận nào mang nhiều thông tin nhất đối với từng nút, thay vì đối xử bình đẳng với mọi nút lân cận.
 
 ```{python}
 #| label: gnn-models
@@ -1585,9 +1650,9 @@ class FinancialGNN(nn.Module):
         return predictions, attention_weights
 ```
 
-### GNN for Cross-Sectional Return Prediction
+### GNN cho dự báo lợi nhuận chéo (cross-sectional)
 
-We apply the GNN to predict cross-sectional stock returns, where the graph encodes ownership connections between firms. The hypothesis is that firms connected through ownership have correlated return dynamics that the GNN can exploit.
+Chúng ta áp dụng GNN để dự báo lợi nhuận cổ phiếu theo chiều chéo (cross-sectional), trong đó đồ thị mã hóa các quan hệ sở hữu giữa các doanh nghiệp. Giả thuyết là các doanh nghiệp liên kết qua quan hệ sở hữu có động thái lợi nhuận tương quan mà GNN có thể khai thác.
 
 ```{python}
 #| label: gnn-return-prediction
@@ -1706,15 +1771,15 @@ def train_gnn_model(model, X_train, A_train, y_train,
     return model, best_val_loss
 ```
 
-### Temporal Graph Networks
+### Mạng đồ thị theo thời gian
 
-Financial networks evolve over time. Ownership stakes change, directors rotate, correlations shift. Temporal GNNs extend static GNNs by incorporating the time dimension explicitly. The Temporal Graph Network (TGN) of @rossi2020temporal maintains a memory state for each node that is updated whenever an event involving the node occurs:
+Các mạng lưới tài chính tiến triển theo thời gian. Tỷ lệ sở hữu thay đổi, các thành viên hội đồng quản trị luân chuyển, các tương quan dịch chuyển. Các GNN theo thời gian mở rộng GNN tĩnh bằng cách đưa chiều thời gian vào một cách tường minh. Mạng đồ thị theo thời gian (Temporal Graph Network, TGN) của @rossi2020temporal duy trì một trạng thái bộ nhớ cho mỗi nút, được cập nhật mỗi khi có một sự kiện liên quan đến nút đó:
 
 $$
 \mathbf{s}_i(t) = \text{GRU}\left(\mathbf{s}_i(t^-), \; \text{msg}(i, t)\right)
 $$ {#eq-tgn}
 
-where $\mathbf{s}_i(t)$ is the memory state of node $i$ at time $t$, $\text{msg}(i, t)$ is the message aggregated from events at time $t$, and GRU is a gated recurrent unit.
+trong đó $\mathbf{s}_i(t)$ là trạng thái bộ nhớ của nút $i$ tại thời điểm $t$, $\text{msg}(i, t)$ là thông điệp được tổng hợp từ các sự kiện tại thời điểm $t$, và GRU là đơn vị hồi quy có cổng (gated recurrent unit).
 
 ```{python}
 #| label: temporal-gnn
@@ -1824,9 +1889,9 @@ class TemporalFinancialGNN(nn.Module):
         return predictions
 ```
 
-### GNN for Credit Risk and Fraud Detection
+### GNN cho rủi ro tín dụng và phát hiện gian lận
 
-Beyond return prediction, GNNs are particularly powerful for credit risk assessment and fraud detection, where the network structure itself is informative. In credit risk, firms connected to defaulted counterparties face elevated risk. In fraud detection, suspicious transaction patterns propagate through networks of related entities.
+Ngoài dự báo lợi nhuận, GNN đặc biệt mạnh trong đánh giá rủi ro tín dụng và phát hiện gian lận, nơi bản thân cấu trúc mạng lưới mang thông tin. Trong rủi ro tín dụng, các doanh nghiệp liên kết với các đối tác đã vỡ nợ phải đối mặt với rủi ro gia tăng. Trong phát hiện gian lận, các mẫu hình giao dịch đáng ngờ lan truyền qua các mạng lưới thực thể liên quan.
 
 ```{python}
 #| label: gnn-credit-risk
@@ -1863,62 +1928,64 @@ class CreditRiskGNN(nn.Module):
         return probs, attn
 ```
 
-## When to Use Network Methods
+## Khi nào nên dùng các phương pháp mạng lưới
 
-### Decision Framework
+### Khung ra quyết định
 
-| Question | Best Approach | Example |
+| Câu hỏi | Cách tiếp cận tốt nhất | Ví dụ |
 |----------------------|------------------------------|--------------------|
-| Does firm $A$ affect firm $B$? | Pairwise test + network controls | Supply chain momentum |
-| Which firms are most systemically important? | Centrality measures | Interbank contagion |
-| Do network-connected firms co-move? | Correlation vs. interlock overlap | Board interlock diffusion |
-| Can network structure predict returns? | GNN or network-augmented regression | GCN return prediction |
-| How does a shock propagate? | Cascade simulation | Eisenberg-Noe default model |
-| What is the optimal portfolio given network risk? | Network-regularized optimization | Correlation MST filtering |
-| How does the network change over time? | Temporal GNN or rolling analysis | DY rolling connectedness |
+| Doanh nghiệp $A$ có tác động đến doanh nghiệp $B$ không? | Kiểm định từng cặp + biến kiểm soát mạng lưới | Động lượng chuỗi cung ứng |
+| Doanh nghiệp nào quan trọng nhất về mặt hệ thống? | Các thước đo độ trung tâm | Lây lan liên ngân hàng |
+| Các doanh nghiệp kết nối qua mạng lưới có đồng biến động không? | Tương quan so với mức trùng lặp kiêm nhiệm | Khuếch tán qua kiêm nhiệm hội đồng quản trị |
+| Cấu trúc mạng lưới có dự báo được lợi nhuận không? | GNN hoặc hồi quy bổ sung biến mạng lưới | Dự báo lợi nhuận bằng GCN |
+| Một cú sốc lan truyền như thế nào? | Mô phỏng dây chuyền | Mô hình vỡ nợ Eisenberg-Noe |
+| Danh mục tối ưu là gì khi xét rủi ro mạng lưới? | Tối ưu hóa chính quy hóa theo mạng lưới | Lọc MST của tương quan |
+| Mạng lưới thay đổi theo thời gian như thế nào? | GNN theo thời gian hoặc phân tích cửa sổ trượt | Kết nối trượt DY |
+| Thông tin có truyền giữa các vùng qua quan hệ xã hội không? | Phơi nhiễm xã hội trên các vùng ở xa + IV shift-share | Khuếch tán tín dụng trực tuyến [@allen2026social] |
 
-: Decision Framework for Network Methods {#tbl-network-decision}
+: Khung ra quyết định cho các phương pháp mạng lưới {#tbl-network-decision}
 
-### Data Requirements and Vietnamese Availability
+### Yêu cầu dữ liệu và mức độ sẵn có ở Việt Nam
 
-| Network Type | Required Data | Vietnamese Availability | Update Frequency |
+| Loại mạng lưới | Dữ liệu cần thiết | Mức độ sẵn có ở Việt Nam | Tần suất cập nhật |
 |------------------|------------------|-------------------|------------------|
-| Ownership | Shareholder registers | Good (semi-annual filings) | Semi-annual |
-| Board interlocks | Director appointments | Good (filings) | Annual |
-| Supply chain | Customer-supplier disclosures, trade data | Moderate (related-party disclosures) | Annual |
-| Correlation | Return data | Excellent (daily from exchanges) | Daily |
-| Interbank | Bilateral exposures | Limited (SBV data, banks' notes to FS) | Quarterly |
-| Co-holdings | Institutional holdings | Moderate (semi-annual disclosures) | Semi-annual |
-| Lending | Loan-level data | Limited (banking supervision data) | Quarterly |
+| Sở hữu | Sổ đăng ký cổ đông | Tốt (báo cáo bán niên) | Nửa năm |
+| Kiêm nhiệm hội đồng quản trị | Bổ nhiệm thành viên | Tốt (hồ sơ công bố) | Hằng năm |
+| Chuỗi cung ứng | Công bố khách hàng–nhà cung cấp, dữ liệu thương mại | Trung bình (công bố giao dịch với bên liên quan) | Hằng năm |
+| Tương quan | Dữ liệu lợi nhuận | Rất tốt (hằng ngày từ sở giao dịch) | Hằng ngày |
+| Liên ngân hàng | Dư nợ song phương | Hạn chế (dữ liệu NHNN, thuyết minh BCTC của ngân hàng) | Hằng quý |
+| Cùng nắm giữ | Sở hữu của tổ chức | Trung bình (công bố bán niên) | Nửa năm |
+| Cho vay | Dữ liệu cấp khoản vay | Hạn chế (dữ liệu giám sát ngân hàng) | Hằng quý |
+| Kết nối xã hội | Liên kết bạn bè giữa các cặp vùng; ma trận di cư | Trung bình (SCI của Meta cho 63 tỉnh; di cư theo tổng điều tra 2009 và 2019) | Ảnh chụp định kỳ |
 
-: Financial Network Data Sources in Vietnam {#tbl-network-data}
+: Các nguồn dữ liệu mạng lưới tài chính ở Việt Nam {#tbl-network-data}
 
-<!-- ## Exercises
+<!-- ## Bài tập
 
-1.  **Ownership Pyramid Depth and Tunneling.** For each listed firm, compute the depth of the longest ownership chain from the ultimate controller to the firm. Regress Tobin's $Q$ and ROA on pyramid depth, controlling for the control-cash flow wedge, firm size, industry, and listing exchange. Does deeper pyramidal ownership destroy value? Does the effect differ between state and private pyramids? Use the @claessens2002disentangling methodology.
+1.  **Độ sâu kim tự tháp sở hữu và chuyển dịch lợi ích (tunneling).** Với mỗi doanh nghiệp niêm yết, hãy tính độ sâu của chuỗi sở hữu dài nhất từ chủ thể kiểm soát cuối cùng đến doanh nghiệp. Hồi quy Tobin's $Q$ và ROA theo độ sâu kim tự tháp, kiểm soát khoảng cách giữa quyền kiểm soát và quyền dòng tiền, quy mô doanh nghiệp, ngành và sàn niêm yết. Sở hữu kim tự tháp sâu hơn có phá hủy giá trị không? Tác động có khác nhau giữa các kim tự tháp nhà nước và tư nhân không? Sử dụng phương pháp của @claessens2002disentangling.
 
-2.  **Board Network Information Diffusion.** Construct the board interlock network for 2020-2024 and identify firms that added new interlocking directors. Using a difference-in-differences design, test whether newly interlocked firms exhibit increased return co-movement relative to a matched control group. Does the effect depend on whether the shared director is classified as independent?
+2.  **Khuếch tán thông tin qua mạng lưới hội đồng quản trị.** Xây dựng mạng lưới kiêm nhiệm hội đồng quản trị cho giai đoạn 2020-2024 và xác định các doanh nghiệp bổ sung thêm thành viên kiêm nhiệm mới. Sử dụng thiết kế sai biệt trong sai biệt (difference-in-differences), kiểm định xem các doanh nghiệp mới được kết nối có thể hiện mức đồng biến động lợi nhuận tăng lên so với nhóm đối chứng được ghép cặp hay không. Tác động có phụ thuộc vào việc thành viên dùng chung có được phân loại là độc lập hay không?
 
-3.  **Supply Chain Contagion During COVID-19.** Reconstruct the supply chain network as of December 2019. Identify firms with direct supply chain links to Chinese manufacturers. Using the onset of COVID-19 lockdowns in China (January 2020) as a shock, estimate the differential stock price decline for firms with high vs. low exposure to Chinese suppliers. Does the effect attenuate by network distance (direct supplier vs. supplier's supplier)?
+3.  **Lây lan chuỗi cung ứng trong giai đoạn COVID-19.** Tái dựng mạng lưới chuỗi cung ứng tại thời điểm tháng 12 năm 2019. Xác định các doanh nghiệp có liên kết chuỗi cung ứng trực tiếp với các nhà sản xuất Trung Quốc. Sử dụng thời điểm bắt đầu phong tỏa COVID-19 ở Trung Quốc (tháng 1 năm 2020) làm cú sốc, ước lượng mức giảm giá cổ phiếu chênh lệch giữa các doanh nghiệp có mức phơi nhiễm cao và thấp với nhà cung cấp Trung Quốc. Tác động có suy giảm theo khoảng cách mạng lưới (nhà cung cấp trực tiếp so với nhà cung cấp của nhà cung cấp) không?
 
-4.  **Correlation Network Regime Detection.** Compute rolling 6-month correlation networks with monthly updates for 2014-2024. Apply community detection (Louvain algorithm) at each date. Track the number of communities, modularity, and the composition of the largest community over time. Do correlation regime changes (merging of previously distinct communities) precede periods of elevated market volatility? Construct a "network fragility" indicator based on decreasing modularity and test its predictive power for VN-Index drawdowns.
+4.  **Phát hiện chế độ trong mạng lưới tương quan.** Tính các mạng lưới tương quan cửa sổ trượt 6 tháng với cập nhật hằng tháng cho giai đoạn 2014-2024. Áp dụng phát hiện cộng đồng (thuật toán Louvain) tại mỗi thời điểm. Theo dõi số lượng cộng đồng, độ mô-đun (modularity) và thành phần của cộng đồng lớn nhất theo thời gian. Các thay đổi chế độ tương quan (việc hợp nhất các cộng đồng vốn tách biệt) có đi trước các giai đoạn biến động thị trường tăng cao không? Xây dựng một chỉ báo "độ mong manh của mạng lưới" dựa trên độ mô-đun giảm dần và kiểm định sức dự báo của nó đối với các đợt sụt giảm của VN-Index.
 
-5.  **GNN vs. Linear Models for Return Prediction.** Implement a rigorous horse race between: (a) Fama-MacBeth cross-sectional regression with standard characteristics, (b) the same regression augmented with hand-crafted network features (degree, betweenness, eigenvector centrality, community membership), and (c) a GCN and GAT that take the same node features plus the adjacency matrix as input. Use expanding-window time-series cross-validation with monthly rebalancing. Report out-of-sample $R^2$, information coefficient, and the Sharpe ratio of quintile-sorted long-short portfolios. Does the GNN's ability to learn features from graph structure outperform hand-crafted network features?
+5.  **GNN so với các mô hình tuyến tính trong dự báo lợi nhuận.** Triển khai một cuộc đua ngựa (horse race) chặt chẽ giữa: (a) hồi quy chéo Fama-MacBeth với các đặc điểm tiêu chuẩn, (b) cùng hồi quy đó bổ sung các đặc trưng mạng lưới thủ công (bậc, độ trung gian, độ trung tâm vector riêng, thành viên cộng đồng), và (c) GCN và GAT nhận cùng các đặc trưng nút cộng với ma trận kề làm đầu vào. Sử dụng kiểm định chéo chuỗi thời gian với cửa sổ mở rộng và tái cân bằng hằng tháng. Báo cáo $R^2$ ngoài mẫu, hệ số thông tin (information coefficient) và tỷ số Sharpe của các danh mục mua–bán khống phân loại theo ngũ phân vị. Khả năng của GNN trong việc học đặc trưng từ cấu trúc đồ thị có vượt trội so với các đặc trưng mạng lưới thủ công không?
 
-6.  **Dynamic Interbank Contagion Index.** Implement the rolling Diebold-Yilmaz (2014) connectedness index for the Vietnamese banking sector using quarterly data. Compute the Total Connectedness Index, directional FROM/TO measures, and net connectedness for each bank. Plot the TCI over time and identify peaks corresponding to known stress events (2011 banking consolidation, 2022 corporate bond crisis). Does a rising TCI at time $t$ predict banking sector underperformance at $t+1$?
+6.  **Chỉ số lây lan liên ngân hàng động.** Triển khai chỉ số kết nối Diebold-Yilmaz (2014) trượt cho ngành ngân hàng Việt Nam bằng dữ liệu hằng quý. Tính Chỉ số Kết nối Tổng (TCI), các thước đo có hướng FROM/TO và kết nối ròng cho từng ngân hàng. Vẽ biểu đồ TCI theo thời gian và xác định các đỉnh tương ứng với các sự kiện căng thẳng đã biết (hợp nhất ngân hàng năm 2011, khủng hoảng trái phiếu doanh nghiệp năm 2022). TCI tăng tại thời điểm $t$ có dự báo được ngành ngân hàng hoạt động kém tại $t+1$ không?
 
-7.  **Heterogeneous Graph Neural Network.** Construct a heterogeneous financial graph with three node types (firms, banks, directors) and four edge types (ownership, lending, board membership, supply chain). Implement a Heterogeneous GAT (HAN) that uses edge-type-specific attention. Does the heterogeneous graph outperform separate homogeneous graphs for return prediction? Which edge type receives the highest attention weight?
+7.  **Mạng nơ-ron đồ thị không đồng nhất.** Xây dựng một đồ thị tài chính không đồng nhất với ba loại nút (doanh nghiệp, ngân hàng, thành viên hội đồng quản trị) và bốn loại cạnh (sở hữu, cho vay, thành viên hội đồng quản trị, chuỗi cung ứng). Triển khai một GAT không đồng nhất (HAN) sử dụng chú ý riêng theo loại cạnh. Đồ thị không đồng nhất có vượt trội hơn các đồ thị đồng nhất riêng lẻ trong dự báo lợi nhuận không? Loại cạnh nào nhận trọng số chú ý cao nhất?
 
-8.  **Node2Vec Financial Embeddings.** Apply the Node2Vec algorithm [@grover2016node2vec] to the ownership network with different hyperparameters ($p$, $q$) controlling the balance between BFS-like (local neighborhood) and DFS-like (structural role) exploration. Visualize the 128-dimensional embeddings using t-SNE, colored by industry. Do the embeddings capture industry structure? Use the embeddings as additional features in a return prediction model and compare with hand-crafted centrality features. -->
+8.  **Nhúng tài chính bằng Node2Vec.** Áp dụng thuật toán Node2Vec [@grover2016node2vec] cho mạng lưới sở hữu với các siêu tham số ($p$, $q$) khác nhau điều khiển sự cân bằng giữa khám phá kiểu BFS (vùng lân cận cục bộ) và kiểu DFS (vai trò cấu trúc). Trực quan hóa các vector nhúng 128 chiều bằng t-SNE, tô màu theo ngành. Các vector nhúng có nắm bắt được cấu trúc ngành không? Sử dụng các vector nhúng làm đặc trưng bổ sung trong mô hình dự báo lợi nhuận và so sánh với các đặc trưng độ trung tâm thủ công. -->
 
-## Summary
+## Tóm tắt
 
-This chapter developed the network toolkit for Vietnamese financial markets, spanning classical graph theory, domain-specific financial network construction, and modern graph neural networks.
+Chương này đã phát triển bộ công cụ mạng lưới cho thị trường tài chính Việt Nam, trải từ lý thuyết đồ thị cổ điển, việc xây dựng các mạng lưới tài chính theo từng lĩnh vực, đến các mạng nơ-ron đồ thị hiện đại.
 
-The central insight is that financial networks encode information invisible to standard panel regressions. Ownership networks reveal pyramidal control structures and tunneling risk that explain cross-sectional differences in firm value. Board interlocks serve as information channels through which compensation practices, investment policies, and governance norms diffuse. Supply chain networks propagate real economic shocks: the customer momentum anomaly demonstrates that market prices incorporate supply chain information with a predictable delay. Correlation networks capture co-movement structure that both reveals sector clustering and evolves across market regimes. And interbank networks determine whether individual bank failures cascade into systemic crises.
+Hiểu biết trung tâm là các mạng lưới tài chính mã hóa thông tin mà các hồi quy dữ liệu bảng tiêu chuẩn không nhìn thấy. Các mạng lưới sở hữu bộc lộ cấu trúc kiểm soát kim tự tháp và rủi ro chuyển dịch lợi ích (tunneling), giải thích các khác biệt chéo về giá trị doanh nghiệp. Quan hệ kiêm nhiệm hội đồng quản trị đóng vai trò kênh thông tin qua đó các thông lệ trả thưởng, chính sách đầu tư và chuẩn mực quản trị khuếch tán. Các mạng lưới chuỗi cung ứng lan truyền các cú sốc kinh tế thực: hiện tượng bất thường động lượng khách hàng cho thấy giá thị trường phản ánh thông tin chuỗi cung ứng với độ trễ có thể dự báo. Các mạng lưới tương quan nắm bắt cấu trúc đồng biến động vừa cho thấy các cụm theo ngành vừa tiến triển qua các chế độ thị trường. Các mạng lưới liên ngân hàng quyết định liệu sự sụp đổ của từng ngân hàng có lan thành khủng hoảng hệ thống hay không. Và các mạng lưới xã hội giữa các địa phương mang thông tin mà các kênh chính thức bỏ sót: @allen2026social cho thấy các mối quan hệ giữa các cộng đồng mở rộng cả cầu lẫn cung tín dụng trực tuyến, nhất là ở các cộng đồng thiệt thòi, mà không làm tăng nợ quá hạn, điều này khiến Chỉ số Kết nối Xã hội trở thành công cụ đo lường có giá trị đặc biệt trong một thị trường mà thông tin tín dụng chính thức còn mỏng.
 
-Vietnamese markets are particularly network-dense because of the pervasive role of state ownership, the prominence of business groups, and the concentration of the banking system. The control-cash flow wedge (i.e., the gap between control rights and cash flow rights created by pyramidal ownership) is larger and more variable than in markets with stronger minority shareholder protections. This wedge, which is computable only through network analysis of ownership chains, is both a governance risk measure and a predictor of firm value.
+Thị trường Việt Nam có mật độ mạng lưới đặc biệt cao vì vai trò phổ biến của sở hữu nhà nước, vị thế nổi bật của các tập đoàn và sự tập trung của hệ thống ngân hàng. Khoảng cách giữa quyền kiểm soát và quyền dòng tiền (tức là chênh lệch giữa quyền kiểm soát và quyền dòng tiền do sở hữu kim tự tháp tạo ra) lớn hơn và biến động nhiều hơn so với các thị trường có mức bảo vệ cổ đông thiểu số mạnh hơn. Khoảng cách này, chỉ có thể tính được thông qua phân tích mạng lưới của các chuỗi sở hữu, vừa là thước đo rủi ro quản trị vừa là yếu tố dự báo giá trị doanh nghiệp.
 
-Graph neural networks extend the toolkit from hand-crafted network features to learned representations. The GCN and GAT architectures aggregate information across network neighborhoods, and the temporal GNN captures the evolution of network structure over time. For return prediction, the empirical question is whether the GNN's ability to learn flexible functions of the graph structure outperforms the simpler approach of computing centrality measures and feeding them into standard models. The exercises provide a framework for answering this question rigorously.
+Các mạng nơ-ron đồ thị mở rộng bộ công cụ từ các đặc trưng mạng lưới thủ công sang các biểu diễn được học. Các kiến trúc GCN và GAT tổng hợp thông tin trên các vùng lân cận mạng lưới, và GNN theo thời gian nắm bắt sự tiến triển của cấu trúc mạng lưới theo thời gian. Với dự báo lợi nhuận, câu hỏi thực nghiệm là liệu khả năng của GNN trong việc học các hàm linh hoạt của cấu trúc đồ thị có vượt trội so với cách tiếp cận đơn giản hơn là tính các thước đo độ trung tâm rồi đưa vào các mô hình tiêu chuẩn hay không. Các bài tập cung cấp một khung để trả lời câu hỏi này một cách chặt chẽ.
 
-The network perspective is not a replacement for standard asset pricing or corporate finance methods; it is a complement. The most productive research designs combine network structure with identification strategies from the causal inference toolkit: using network shocks as instruments, exploiting network disruptions as natural experiments, and controlling for network position when estimating treatment effects. The intersection of networks and causal inference (e.g., network interference, peer effects identification, spatial econometrics) represents the frontier of empirical finance.
+Góc nhìn mạng lưới không phải là sự thay thế cho các phương pháp định giá tài sản hay tài chính doanh nghiệp tiêu chuẩn; nó là một sự bổ sung. Các thiết kế nghiên cứu hiệu quả nhất kết hợp cấu trúc mạng lưới với các chiến lược nhận diện từ bộ công cụ suy luận nhân quả: sử dụng các cú sốc mạng lưới làm biến công cụ, khai thác các gián đoạn mạng lưới như các thí nghiệm tự nhiên, và kiểm soát vị trí trong mạng lưới khi ước lượng các tác động can thiệp. Giao điểm của mạng lưới và suy luận nhân quả (chẳng hạn, nhiễu chéo trong mạng lưới (network interference), nhận diện hiệu ứng ngang hàng, kinh tế lượng không gian) là biên giới của tài chính thực nghiệm.

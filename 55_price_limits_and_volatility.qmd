@@ -1,18 +1,18 @@
-# Price Limits and Volatility
+# Biên độ giá và biến động
 
 ::: callout-note
-In this chapter, we examine how Vietnam's daily price limit regime distorts observed return distributions, biases volatility estimates, and affects the validity of standard asset pricing tests. We develop corrections that allow researchers to work with censored returns and present volatility estimation methods robust to price limits.
+Trong chương này, chúng ta xem xét cách chế độ biên độ giá hằng ngày của Việt Nam làm méo phân phối lợi nhuận quan sát được, gây chệch các ước lượng biến động và ảnh hưởng đến tính hợp lệ của các kiểm định định giá tài sản chuẩn. Chúng ta phát triển các phương pháp hiệu chỉnh cho phép nhà nghiên cứu làm việc với lợi nhuận bị kiểm duyệt (censored) và trình bày các phương pháp ước lượng biến động vững trước biên độ giá.
 :::
 
-Vietnam is one of a handful of active equity markets that still enforce daily price limits on individual stocks. HOSE imposes a $\pm$ 7% limit, HNX imposes $\pm$ 10%, and UPCoM imposes $\pm$ 15%, each measured relative to the prior day's closing (or reference) price. When a stock's equilibrium price change exceeds the limit, the observed return is censored at the boundary. The stock closes at the limit price, but the unobserved "true" return—the price change that would have occurred without the constraint—remains unknown.
+Việt Nam là một trong số ít thị trường cổ phiếu sôi động vẫn áp dụng biên độ giá hằng ngày cho từng cổ phiếu. HOSE áp dụng biên độ $\pm$ 7%, HNX áp dụng $\pm$ 10%, và UPCoM áp dụng $\pm$ 15%, mỗi mức được đo so với giá đóng cửa (hoặc giá tham chiếu) của ngày hôm trước. Khi biến động giá cân bằng của một cổ phiếu vượt quá biên độ, lợi nhuận quan sát được bị kiểm duyệt tại ngưỡng. Cổ phiếu đóng cửa tại mức giá biên, nhưng lợi nhuận "thực" không quan sát được—mức thay đổi giá lẽ ra đã xảy ra nếu không có ràng buộc—vẫn chưa được biết.
 
-This censoring has pervasive consequences for empirical finance. Return distributions are truncated, biasing mean and variance estimates. Volatility models that ignore censoring understate true risk. Factor betas are attenuated. Event study abnormal returns are compressed. Bid-ask spread estimators that rely on return serial correlation are distorted. Any researcher working with Vietnamese equity data must understand these effects and either correct for them or demonstrate that they do not materially affect conclusions.
+Việc kiểm duyệt này có những hệ quả lan rộng đối với tài chính thực nghiệm. Các phân phối lợi nhuận bị cắt cụt, làm chệch các ước lượng trung bình và phương sai. Các mô hình biến động bỏ qua kiểm duyệt đánh giá thấp rủi ro thực. Các beta nhân tố bị suy giảm. Lợi nhuận bất thường của nghiên cứu sự kiện bị nén lại. Các bộ ước lượng chênh lệch giá mua–bán dựa trên tương quan chuỗi của lợi nhuận bị méo. Bất kỳ nhà nghiên cứu nào làm việc với dữ liệu cổ phiếu Việt Nam đều phải hiểu những hiệu ứng này và hoặc hiệu chỉnh chúng, hoặc chứng minh rằng chúng không ảnh hưởng đáng kể đến kết luận.
 
-Price limits exist for a stated policy purpose: to prevent panic selling and speculative excess, thereby "cooling" the market during periods of stress [@brennan1986theory]. Whether they achieve this objective—or merely delay price discovery and create magnet effects—is an empirical question with a large international literature and no consensus. We examine the Vietnamese evidence.
+Biên độ giá tồn tại với một mục đích chính sách đã nêu: ngăn chặn bán tháo hoảng loạn và đầu cơ thái quá, từ đó "hạ nhiệt" thị trường trong các giai đoạn căng thẳng [@brennan1986theory]. Liệu chúng có đạt được mục tiêu này—hay chỉ làm trì hoãn quá trình khám phá giá và tạo ra hiệu ứng nam châm—là một câu hỏi thực nghiệm với nhiều nghiên cứu quốc tế nhưng chưa có sự đồng thuận. Chúng ta xem xét bằng chứng của Việt Nam.
 
-## The Vietnamese Price Limit Regime {#sec-price-limit-regime}
+## Chế độ biên độ giá của Việt Nam {#sec-price-limit-regime}
 
-### Institutional Details
+### Chi tiết thể chế
 
 ```{python}
 #| label: setup
@@ -36,17 +36,17 @@ plt.rcParams.update({
 })
 ```
 
-The price limit structure has evolved over time. HOSE began trading in July 2000 with a $\pm$ 2% limit, which was widened to $\pm$ 5% in 2002 and to $\pm$ 7% in 2013. HNX has operated at $\pm$ 10% since its current form, and UPCoM at $\pm$ 15% @tbl-price-limit-limits. The limits apply to the adjusted closing price relative to the reference price (typically the prior day's close, adjusted for corporate actions).
+Cấu trúc biên độ giá đã thay đổi theo thời gian. HOSE bắt đầu giao dịch vào tháng 7 năm 2000 với biên độ $\pm$ 2%, được nới lên $\pm$ 5% năm 2002 và lên $\pm$ 7% năm 2013. HNX vận hành ở mức $\pm$ 10% kể từ khi có hình thức hiện nay, và UPCoM ở mức $\pm$ 15% @tbl-price-limit-limits. Biên độ áp dụng cho giá đóng cửa điều chỉnh so với giá tham chiếu (thường là giá đóng cửa ngày hôm trước, được điều chỉnh theo các sự kiện doanh nghiệp).
 
-| Exchange | Current Limit | Effective Date | Prior Limits                       |
+| Sở giao dịch | Biên độ hiện hành | Ngày hiệu lực | Biên độ trước đây                       |
 |------------------|------------------|------------------|-------------------|
-| HOSE     | $\pm$ 7%      | June 2013      | $\pm$ 2% (2000), $\pm$ 5% (2002)   |
-| HNX      | $\pm$ 10%     | —              | Various, stabilized at $\pm$ 10%   |
-| UPCoM    | $\pm$ 15%     | —              | Wider limits reflecting OTC nature |
+| HOSE     | $\pm$ 7%      | Tháng 6/2013      | $\pm$ 2% (2000), $\pm$ 5% (2002)   |
+| HNX      | $\pm$ 10%     | —              | Nhiều mức, ổn định ở $\pm$ 10%   |
+| UPCoM    | $\pm$ 15%     | —              | Biên độ rộng hơn phản ánh tính chất OTC |
 
-: Vietnamese daily price limit regime by exchange. {#tbl-price-limit-limits}
+: Chế độ biên độ giá hằng ngày của Việt Nam theo sở giao dịch. {#tbl-price-limit-limits}
 
-Importantly, the limits are *asymmetric in practice*: they apply equally to up and down moves, but the economic consequences differ. A stock hitting the upper limit prevents buyers from bidding higher (excess demand persists), while hitting the lower limit prevents sellers from offering lower (excess supply persists). Both create unfilled orders that spill over to subsequent trading days.
+Điều quan trọng là các biên độ này *bất đối xứng trong thực tế*: chúng áp dụng như nhau cho biến động tăng và giảm, nhưng hệ quả kinh tế lại khác nhau. Một cổ phiếu chạm giá trần ngăn người mua đặt giá cao hơn (dư cầu vẫn còn), trong khi chạm giá sàn ngăn người bán chào giá thấp hơn (dư cung vẫn còn). Cả hai đều tạo ra các lệnh chưa khớp tràn sang các phiên giao dịch tiếp theo.
 
 ```{python}
 #| label: data-load
@@ -91,11 +91,11 @@ print(f"Date range: {daily['date'].min()} to {daily['date'].max()}")
 print(f"Unique tickers: {daily['ticker'].nunique()}")
 ```
 
-## Prevalence of Limit Hits {#sec-price-limit-prevalence}
+## Mức độ phổ biến của việc chạm biên độ {#sec-price-limit-prevalence}
 
-### Aggregate Frequency
+### Tần suất tổng hợp
 
-How often do Vietnamese stocks hit their price limits? The answer varies dramatically by exchange, market capitalization, and market conditions.
+Các cổ phiếu Việt Nam chạm biên độ giá thường xuyên đến mức nào? Câu trả lời thay đổi rất lớn theo sở giao dịch, vốn hóa thị trường và điều kiện thị trường.
 
 ```{python}
 #| label: limit-frequency
@@ -137,7 +137,7 @@ monthly_limit['date'] = monthly_limit['year_month'].dt.to_timestamp()
 ```{python}
 #| label: fig-limit-timeseries
 #| eval: false
-#| fig-cap: "Time series of daily price limit hit frequency on HOSE. Panel A shows the percentage of stock-days hitting the upper (green) and lower (red) limits each month. Panel B overlays the VN-Index return. Limit hits cluster during market stress (2008–2009, 2011–2012, March 2020, 2022) and during euphoric rallies (2006–2007, late 2021). The asymmetry between up and down hits reveals the market's directional bias."
+#| fig-cap: "Chuỗi thời gian tần suất chạm biên độ giá hằng ngày trên HOSE. Panel A cho thấy tỷ lệ phần trăm cổ phiếu–ngày chạm giá trần (xanh lá) và giá sàn (đỏ) mỗi tháng. Panel B chồng lợi nhuận VN-Index lên. Các lần chạm biên độ tập trung trong giai đoạn thị trường căng thẳng (2008–2009, 2011–2012, tháng 3/2020, 2022) và trong các đợt tăng giá hưng phấn (2006–2007, cuối 2021). Sự bất đối xứng giữa lần chạm trần và chạm sàn cho thấy thiên hướng của thị trường."
 #| code-summary: "Plot limit hit frequency over time"
 fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True,
                           gridspec_kw={'height_ratios': [3, 1]})
@@ -169,12 +169,12 @@ plt.tight_layout()
 plt.show()
 ```
 
-### By Market Capitalization
+### Theo vốn hóa thị trường
 
 ```{python}
 #| label: fig-price-limit-by-size
-#| fig-cap: "Price limit hit frequency by market capitalization quintile on HOSE"
-#| fig-alt: "Price limit hit frequency by market capitalization quintile on HOSE. Smaller stocks hit limits far more frequently than large-caps, reflecting their higher volatility, wider bid-ask spreads, and thinner order books. The 7% HOSE limit is essentially non-binding for the largest quintile but censors a meaningful fraction of returns for the smallest quintile."
+#| fig-cap: "Tần suất chạm biên độ giá theo ngũ phân vị vốn hóa thị trường trên HOSE"
+#| fig-alt: "Tần suất chạm biên độ giá theo ngũ phân vị vốn hóa thị trường trên HOSE. Các cổ phiếu nhỏ hơn chạm biên độ thường xuyên hơn nhiều so với cổ phiếu vốn hóa lớn, phản ánh biến động cao hơn, chênh lệch giá mua–bán rộng hơn và sổ lệnh mỏng hơn. Biên độ 7% của HOSE về cơ bản không ràng buộc đối với nhóm lớn nhất nhưng kiểm duyệt một tỷ lệ đáng kể lợi nhuận của nhóm nhỏ nhất."
 #| eval: false
 #| code-summary: "Compute limit hit rates by size quintile"
 # Merge with lagged market cap
@@ -232,9 +232,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Consecutive Limit Days
+### Các ngày chạm biên độ liên tiếp
 
-A single limit hit might simply reflect a large information event that is absorbed within one day. Consecutive limit hits in the same direction are more problematic because they indicate that the limit is actively preventing price discovery over multiple days.
+Một lần chạm biên độ đơn lẻ có thể chỉ phản ánh một sự kiện thông tin lớn được hấp thụ trong vòng một ngày. Các lần chạm biên độ liên tiếp cùng chiều có vấn đề hơn vì chúng cho thấy biên độ đang chủ động ngăn cản việc khám phá giá trong nhiều ngày.
 
 ```{python}
 #| label: consecutive-limits
@@ -299,11 +299,11 @@ for direction, runs in [('Upper', all_up_runs), ('Lower', all_down_runs)]:
     print(f"    Max consecutive: {runs_series.max()}")
 ```
 
-## Return Distribution Distortion {#sec-price-limit-distortion}
+## Sự méo mó của phân phối lợi nhuận {#sec-price-limit-distortion}
 
-### Censoring Mechanics
+### Cơ chế kiểm duyệt
 
-Price limits create *Type I censoring* (also called "truncation at a known point"): the latent (unobserved) return $r^*$ is generated from some continuous distribution, but the observed return is:
+Biên độ giá tạo ra *kiểm duyệt Loại I* (còn gọi là "cắt cụt tại một điểm đã biết"): lợi nhuận tiềm ẩn (không quan sát được) $r^*$ được sinh ra từ một phân phối liên tục nào đó, nhưng lợi nhuận quan sát được là:
 
 $$
 r^{\text{obs}} = \begin{cases}
@@ -313,18 +313,18 @@ r^* & \text{if } \underline{L} < r^* < \bar{L} \quad \text{(interior)} \\
 \end{cases}
 $$ {#eq-censoring}
 
-where $\bar{L}$ and $\underline{L}$ are the upper and lower limits. For HOSE, $\bar{L} = +0.07$ and $\underline{L} = -0.07$.
+trong đó $\bar{L}$ và $\underline{L}$ là biên độ trên và dưới. Với HOSE, $\bar{L} = +0.07$ và $\underline{L} = -0.07$.
 
-The censoring has predictable effects on the observed distribution:
+Việc kiểm duyệt có những tác động có thể dự đoán lên phân phối quan sát được:
 
-1.  **Mean bias.** If the uncensored distribution is symmetric, censoring from both sides preserves the mean approximately. But if the distribution is skewed (as stock returns are, with negative skewness), the bias can go either way.
-2.  **Variance underestimation.** Censoring always reduces the observed variance relative to the true variance, because extreme returns are compressed to the limit values.
-3.  **Kurtosis distortion.** Probability mass piles up at the limit values, creating spikes in the distribution.
+1.  **Chệch trung bình.** Nếu phân phối không bị kiểm duyệt là đối xứng, kiểm duyệt từ hai phía xấp xỉ giữ nguyên trung bình. Nhưng nếu phân phối lệch (như lợi nhuận cổ phiếu, với độ lệch âm), độ chệch có thể đi theo cả hai hướng.
+2.  **Đánh giá thấp phương sai.** Kiểm duyệt luôn làm giảm phương sai quan sát được so với phương sai thực, vì các lợi nhuận cực đoan bị nén về các giá trị biên.
+3.  **Méo độ nhọn (kurtosis).** Khối xác suất dồn lại tại các giá trị biên, tạo ra các đỉnh nhọn trong phân phối.
 
 ```{python}
 #| label: fig-return-distribution
 #| eval: false
-#| fig-cap: "Daily return distribution on HOSE. Panel A shows the full histogram with visible spikes at 7% (the price limits). Panel B zooms in on the tails to show the discontinuity at the limit values. The pile-up at exactly 7% is direct evidence of censoring—these observations represent stocks whose equilibrium return exceeded the limit."
+#| fig-cap: "Phân phối lợi nhuận hằng ngày trên HOSE. Panel A cho thấy toàn bộ biểu đồ tần suất với các đỉnh nhọn thấy rõ tại 7% (biên độ giá). Panel B phóng to phần đuôi để cho thấy sự gián đoạn tại các giá trị biên. Sự dồn lại đúng tại 7% là bằng chứng trực tiếp của kiểm duyệt—các quan sát này đại diện cho những cổ phiếu có lợi nhuận cân bằng vượt quá biên độ."
 #| code-summary: "Visualize the effect of price limits on the return distribution"
 hose_returns = daily_hose['daily_return'].dropna()
 hose_returns = hose_returns[hose_returns.abs() < 0.15]  # Remove data errors
@@ -370,14 +370,14 @@ print(f"Observations at lower limit: {n_at_lower:,} "
       f"({n_at_lower/n_total:.2%})")
 ```
 
-### Comparing HOSE vs. HNX vs. UPCoM
+### So sánh HOSE, HNX và UPCoM
 
-The three Vietnamese exchanges have different limit widths, creating a natural experiment: if limits distort the distribution, wider limits should produce distributions closer to the uncensored benchmark.
+Ba sở giao dịch của Việt Nam có độ rộng biên độ khác nhau, tạo ra một thí nghiệm tự nhiên: nếu biên độ làm méo phân phối, biên độ rộng hơn sẽ cho ra các phân phối gần với chuẩn so sánh không bị kiểm duyệt hơn.
 
 ```{python}
 #| label: fig-cross-exchange
 #| eval: false
-#| fig-cap: "Daily return distributions across Vietnamese exchanges with different price limit widths. HOSE (7%) shows the most pronounced pile-up at its limits. HNX (10%) has less pile-up. UPCoM (15%) is essentially uncensored—virtually no observations reach the limits. This cross-exchange comparison provides a benchmark for what the HOSE distribution would look like without censoring."
+#| fig-cap: "Phân phối lợi nhuận hằng ngày giữa các sở giao dịch Việt Nam với độ rộng biên độ giá khác nhau. HOSE (7%) cho thấy sự dồn lại rõ rệt nhất tại biên. HNX (10%) có ít dồn lại hơn. UPCoM (15%) về cơ bản không bị kiểm duyệt—hầu như không có quan sát nào chạm biên. So sánh chéo giữa các sở giao dịch này cung cấp một chuẩn cho hình dạng phân phối của HOSE nếu không bị kiểm duyệt."
 #| code-summary: "Compare return distributions across exchanges"
 fig, axes = plt.subplots(1, 3, figsize=(16, 4.5))
 
@@ -410,17 +410,17 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Variance Bias from Censoring {#sec-price-limit-variance-bias}
+## Độ chệch phương sai do kiểm duyệt {#sec-price-limit-variance-bias}
 
-### Analytical Bias
+### Độ chệch giải tích
 
-If the true return follows $r^* \sim N(\mu, \sigma^2)$, the variance of the censored return can be derived analytically. Let $a = (\underline{L} - \mu) / \sigma$ and $b = (\bar{L} - \mu) / \sigma$:
+Nếu lợi nhuận thực tuân theo $r^* \sim N(\mu, \sigma^2)$, phương sai của lợi nhuận bị kiểm duyệt có thể được suy ra bằng giải tích. Đặt $a = (\underline{L} - \mu) / \sigma$ và $b = (\bar{L} - \mu) / \sigma$:
 
 $$
 \text{Var}(r^{\text{obs}}) = \sigma^2 \left[1 - \frac{b \phi(b) - a \phi(a)}{\Phi(b) - \Phi(a)} - \left(\frac{\phi(a) - \phi(b)}{\Phi(b) - \Phi(a)}\right)^2 \right] + \text{boundary terms}
 $$ {#eq-censored-variance}
 
-where $\phi$ and $\Phi$ are the standard normal PDF and CDF. The key result is that $\text{Var}(r^{\text{obs}}) < \sigma^2$ always—censoring systematically underestimates variance.
+trong đó $\phi$ và $\Phi$ là hàm mật độ (PDF) và hàm phân phối tích lũy (CDF) của phân phối chuẩn tắc. Kết quả then chốt là $\text{Var}(r^{\text{obs}}) < \sigma^2$ luôn đúng—kiểm duyệt đánh giá thấp phương sai một cách có hệ thống.
 
 ```{python}
 #| label: variance-bias-simulation
@@ -463,7 +463,7 @@ bias_df = pd.DataFrame(results_bias)
 ```{python}
 #| label: fig-variance-bias
 #| eval: false
-#| fig-cap: "Variance bias from price limit censoring as a function of true daily volatility. Panel A shows the ratio of observed to true variance: values below 1.0 indicate underestimation. Panel B shows the percentage of returns that are censored. For a typical HOSE stock with 2.5% daily volatility, the variance is underestimated by roughly 3–5%. For volatile small-caps with 5%+ daily volatility, the bias exceeds 15%, making naive variance estimates seriously misleading."
+#| fig-cap: "Độ chệch phương sai do kiểm duyệt biên độ giá như một hàm của biến động hằng ngày thực. Panel A cho thấy tỷ số giữa phương sai quan sát được và phương sai thực: giá trị dưới 1,0 cho thấy bị đánh giá thấp. Panel B cho thấy tỷ lệ phần trăm lợi nhuận bị kiểm duyệt. Với một cổ phiếu HOSE điển hình có biến động hằng ngày 2,5%, phương sai bị đánh giá thấp khoảng 3–5%. Với các cổ phiếu vốn hóa nhỏ biến động mạnh có biến động hằng ngày trên 5%, độ chệch vượt 15%, khiến các ước lượng phương sai thô gây hiểu lầm nghiêm trọng."
 #| code-summary: "Plot variance bias across volatility levels"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -496,7 +496,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Empirical Variance Bias by Size
+### Độ chệch phương sai thực nghiệm theo quy mô
 
 ```{python}
 #| label: empirical-bias
@@ -592,7 +592,7 @@ print(f"  Max bias:      {tobit_df['bias_pct'].max():.1f}%")
 ```{python}
 #| label: fig-tobit-vs-naive
 #| eval: false
-#| fig-cap: "Tobit-corrected vs naive volatility estimates for HOSE stocks. Panel A is a scatter plot where points above the 45-degree line indicate stocks whose true volatility is higher than what naive estimation suggests. Panel B shows the distribution of the percentage correction. The Tobit correction is small for low-volatility large-caps (where censoring is rare) but substantial for high-volatility small-caps."
+#| fig-cap: "Ước lượng biến động hiệu chỉnh Tobit so với ước lượng thô cho các cổ phiếu HOSE. Panel A là biểu đồ phân tán trong đó các điểm nằm trên đường 45 độ cho thấy những cổ phiếu có biến động thực cao hơn mức mà ước lượng thô gợi ý. Panel B cho thấy phân phối của phần trăm hiệu chỉnh. Hiệu chỉnh Tobit nhỏ đối với các cổ phiếu vốn hóa lớn biến động thấp (nơi kiểm duyệt hiếm khi xảy ra) nhưng đáng kể đối với các cổ phiếu vốn hóa nhỏ biến động cao."
 #| code-summary: "Plot Tobit vs naive volatility comparison"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -620,11 +620,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Volatility Estimation Under Price Limits {#sec-price-limit-vol-estimation}
+## Ước lượng biến động dưới biên độ giá {#sec-price-limit-vol-estimation}
 
-### Range-Based Estimators
+### Các bộ ước lượng dựa trên khoảng giá cao–thấp trong ngày (range-based)
 
-Range-based volatility estimators use the daily high and low prices rather than close-to-close returns, making them partially robust to closing-price censoring (since intraday prices may approach but not be censored at the same points). However, they are biased when the *intraday* price trajectory itself is constrained by the limits.
+Các bộ ước lượng biến động dựa trên khoảng giá cao–thấp trong ngày (range-based) dùng giá cao nhất và thấp nhất hằng ngày thay vì lợi nhuận đóng cửa–đóng cửa, nên vững một phần trước kiểm duyệt giá đóng cửa (vì giá trong ngày có thể tiến gần nhưng không bị kiểm duyệt tại cùng các điểm). Tuy nhiên, chúng bị chệch khi chính quỹ đạo giá *trong ngày* bị biên độ ràng buộc.
 
 ```{python}
 #| label: range-estimators
@@ -696,7 +696,7 @@ sample['yang_zhang'] = yang_zhang_vol(
 ```{python}
 #| label: fig-vol-estimators
 #| eval: false
-#| fig-cap: "Comparison of volatility estimators for VNM (Vinamilk). Close-to-close (CC) volatility is subject to censoring bias when the stock hits price limits. Range-based estimators (Parkinson, Garman-Klass, Yang-Zhang) use high-low prices that are less affected by closing-price censoring. During high-volatility periods (shaded), the range-based estimators typically produce higher estimates than CC, consistent with the censoring bias."
+#| fig-cap: "So sánh các bộ ước lượng biến động cho VNM (Vinamilk). Biến động đóng cửa–đóng cửa (CC) chịu độ chệch do kiểm duyệt khi cổ phiếu chạm biên độ giá. Các bộ ước lượng range-based (Parkinson, Garman-Klass, Yang-Zhang) dùng giá cao–thấp ít bị ảnh hưởng bởi kiểm duyệt giá đóng cửa. Trong các giai đoạn biến động cao (vùng tô bóng), các bộ ước lượng range-based thường cho ước lượng cao hơn CC, phù hợp với độ chệch do kiểm duyệt."
 #| code-summary: "Plot and compare volatility estimators over time"
 fig, ax = plt.subplots(figsize=(14, 5))
 
@@ -716,9 +716,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### GARCH Models with Censored Returns
+### Mô hình GARCH với lợi nhuận bị kiểm duyệt
 
-Standard GARCH models assume returns are fully observed. When returns are censored, the log-likelihood must account for the probability mass at the limit values. We implement a censored GARCH(1,1):
+Các mô hình GARCH chuẩn giả định lợi nhuận được quan sát đầy đủ. Khi lợi nhuận bị kiểm duyệt, hàm log-hợp lý phải tính đến khối xác suất tại các giá trị biên. Chúng ta triển khai mô hình GARCH(1,1) có kiểm duyệt:
 
 $$
 r_t = \mu + \varepsilon_t, \quad \varepsilon_t = \sigma_t z_t, \quad z_t \sim N(0, 1)
@@ -728,7 +728,7 @@ $$
 \sigma_t^2 = \omega + \alpha \varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2
 $$ {#eq-garch-variance}
 
-The censored log-likelihood replaces the standard normal density for limit-hit observations:
+Hàm log-hợp lý có kiểm duyệt thay thế mật độ chuẩn tắc cho các quan sát chạm biên:
 
 $$
 \ell_t = \begin{cases}
@@ -873,7 +873,7 @@ print(f"{'Uncond σ':<12} "
 ```{python}
 #| label: fig-garch-comparison
 #| eval: false
-#| fig-cap: "Conditional volatility from standard GARCH(1,1) versus censored GARCH(1,1) for a frequently limit-hitting HOSE stock. The censored model consistently estimates higher conditional volatility because it recognizes that limit-hit returns understate the true price movement. The difference is most pronounced during high-volatility episodes when censoring is most frequent."
+#| fig-cap: "Biến động có điều kiện từ GARCH(1,1) chuẩn so với GARCH(1,1) có kiểm duyệt cho một cổ phiếu HOSE thường xuyên chạm biên. Mô hình có kiểm duyệt luôn ước lượng biến động có điều kiện cao hơn vì nhận ra rằng lợi nhuận chạm biên đánh giá thấp biến động giá thực. Sự khác biệt rõ rệt nhất trong các giai đoạn biến động cao khi kiểm duyệt xảy ra thường xuyên nhất."
 #| code-summary: "Plot standard vs censored GARCH conditional volatility"
 test_data = daily_hose[daily_hose['ticker'] == test_ticker].sort_values('date')
 dates = test_data['date'].values[-len(test_returns):]
@@ -911,11 +911,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Effects on Asset Pricing Tests {#sec-price-limit-asset-pricing}
+## Tác động lên các kiểm định định giá tài sản {#sec-price-limit-asset-pricing}
 
-### Beta Attenuation
+### Sự suy giảm của beta
 
-Price limits attenuate the covariance between stock returns and factor returns, biasing beta estimates toward zero. The intuition is simple: on days when the market moves 3% but a stock's true return would have been 6%, the observed return is capped at 7%, understating the stock's sensitivity.
+Biên độ giá làm suy giảm hiệp phương sai giữa lợi nhuận cổ phiếu và lợi nhuận nhân tố, khiến các ước lượng beta chệch về không. Trực giác rất đơn giản: vào những ngày thị trường biến động 3% nhưng lợi nhuận thực của một cổ phiếu lẽ ra là 6%, lợi nhuận quan sát được bị chặn ở 7%, làm đánh giá thấp độ nhạy của cổ phiếu.
 
 ```{python}
 #| label: beta-attenuation
@@ -981,7 +981,7 @@ print(f"  Correlation(diff, limit_freq): "
 ```{python}
 #| label: fig-beta-attenuation
 #| eval: false
-#| fig-cap: "Beta attenuation from price limit censoring. Panel A scatters the all-days beta against the interior-only beta (excluding limit-hit days). Points above the 45-degree line are stocks whose beta is *higher* when estimated without censored observations. Panel B shows that the magnitude of attenuation increases with the stock's limit-hit frequency—stocks that hit limits more often have more severely attenuated betas."
+#| fig-cap: "Sự suy giảm beta do kiểm duyệt biên độ giá. Panel A vẽ phân tán beta toàn bộ các ngày so với beta chỉ dùng các ngày nằm trong biên (loại trừ các ngày chạm biên). Các điểm nằm trên đường 45 độ là những cổ phiếu có beta *cao hơn* khi ước lượng không dùng các quan sát bị kiểm duyệt. Panel B cho thấy mức độ suy giảm tăng theo tần suất chạm biên của cổ phiếu—những cổ phiếu chạm biên thường xuyên hơn có beta bị suy giảm nghiêm trọng hơn."
 #| code-summary: "Visualize beta attenuation"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -1009,9 +1009,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Effect on Factor Premia
+### Tác động lên phần bù nhân tố
 
-If betas are attenuated by censoring, then cross-sectional Fama-MacBeth risk premia estimates are biased upward (because the denominator of the slope coefficient is too small). We quantify this effect:
+Nếu beta bị suy giảm do kiểm duyệt, thì các ước lượng phần bù rủi ro Fama-MacBeth chéo bị chệch lên (vì mẫu số của hệ số độ dốc quá nhỏ). Chúng ta định lượng hiệu ứng này:
 
 ```{python}
 #| label: factor-premium-bias
@@ -1045,13 +1045,13 @@ print(f"  Avg limit days per stock-month:     "
       f"{monthly_all['n_limit_days'].mean():.2f}")
 ```
 
-## The Magnet Effect {#sec-price-limit-magnet}
+## Hiệu ứng nam châm {#sec-price-limit-magnet}
 
-### Do Limits Attract Prices?
+### Biên độ có hút giá không?
 
-The *magnet effect* hypothesis posits that price limits, rather than cooling the market, actually attract prices to the limit as traders rush to execute before the stock becomes locked [@cho2003magnet]. If a stock is approaching the upper limit, buyers accelerate their orders to avoid being shut out, creating a self-fulfilling rush to the boundary.
+Giả thuyết *hiệu ứng nam châm* cho rằng biên độ giá, thay vì làm nguội thị trường, thực ra hút giá về phía biên khi các nhà giao dịch vội vàng đặt lệnh trước khi cổ phiếu bị khóa [@cho2003magnet]. Nếu một cổ phiếu đang tiến gần giá trần, người mua đẩy nhanh việc đặt lệnh để tránh không khớp được lệnh, tạo ra một cuộc đổ xô tự thực hiện về phía biên.
 
-We test for the magnet effect by examining the speed of price movement toward the limit conditional on approaching it:
+Chúng ta kiểm định hiệu ứng nam châm bằng cách xem xét tốc độ giá di chuyển về phía biên, có điều kiện khi tiến gần biên:
 
 ```{python}
 #| label: magnet-effect
@@ -1153,7 +1153,7 @@ print(magnet.round(4).to_string())
 ```{python}
 #| label: fig-magnet
 #| eval: false
-#| fig-cap: "Evidence on the magnet effect. Panel A shows the next-day return conditional on today's return proximity to the limits. If limits cool markets, next-day returns should reverse (negative after near-upper, positive after near-lower). If the magnet effect dominates, continuation should prevail. Panel B shows the probability of hitting the limit on the next day conditional on today's proximity. An increasing probability as the stock approaches the limit is consistent with the magnet effect."
+#| fig-cap: "Bằng chứng về hiệu ứng nam châm. Panel A cho thấy lợi nhuận ngày hôm sau có điều kiện theo mức độ gần biên của lợi nhuận hôm nay. Nếu biên độ làm nguội thị trường, lợi nhuận ngày hôm sau sẽ đảo chiều (âm sau khi gần giá trần, dương sau khi gần giá sàn). Nếu hiệu ứng nam châm chiếm ưu thế, xu hướng tiếp diễn sẽ thắng thế. Panel B cho thấy xác suất chạm biên vào ngày hôm sau có điều kiện theo mức độ gần biên hôm nay. Xác suất tăng dần khi cổ phiếu tiến gần biên phù hợp với hiệu ứng nam châm."
 #| code-summary: "Visualize magnet effect evidence"
 # More granular: bin today's return and compute next-day statistics
 bins = np.arange(-0.075, 0.08, 0.005)
@@ -1218,11 +1218,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## The Delayed Price Discovery Hypothesis {#sec-price-limit-delayed}
+## Giả thuyết khám phá giá bị trì hoãn {#sec-price-limit-delayed}
 
-### Volatility Spillover
+### Lan tỏa biến động
 
-If limits prevent full price adjustment on day $t$, the residual adjustment spills over to day $t+1$ (and possibly further). This predicts higher volatility on the day *after* a limit hit, and positive return autocorrelation (continuation in the direction of the limit hit). @kim1997price find strong evidence of this in the Tokyo Stock Exchange.
+Nếu biên độ ngăn cản việc điều chỉnh giá đầy đủ vào ngày $t$, phần điều chỉnh còn lại tràn sang ngày $t+1$ (và có thể xa hơn). Điều này dự báo biến động cao hơn vào ngày *sau* khi chạm biên, và tự tương quan lợi nhuận dương (tiếp diễn theo hướng của lần chạm biên). @kim1997price tìm thấy bằng chứng mạnh về điều này tại Sở Giao dịch Chứng khoán Tokyo.
 
 ```{python}
 #| label: spillover
@@ -1273,9 +1273,9 @@ print(f"  After lower limit: {f_down:.3f} "
       f"(p = {1 - stats.f.cdf(f_down, len(after_down)-1, len(normal)-1):.4f})")
 ```
 
-### Multi-Day Return Reconstruction
+### Tái dựng lợi nhuận nhiều ngày
 
-To recover the "true" return that would have occurred without price limits, we can compound returns over consecutive limit-hit days until the stock resumes normal trading:
+Để khôi phục lợi nhuận "thực" lẽ ra đã xảy ra nếu không có biên độ giá, chúng ta có thể tính lợi nhuận lũy kế (gộp kép) qua các ngày chạm biên liên tiếp cho đến khi cổ phiếu giao dịch bình thường trở lại:
 
 ```{python}
 #| label: return-reconstruction
@@ -1342,9 +1342,9 @@ if len(seq_df) > 0:
         print(f"    Max compound return: {subset['compound_return'].max()*100:.1f}%")
 ```
 
-## The Idiosyncratic Volatility Puzzle Under Price Limits {#sec-price-limit-ivol}
+## Câu đố biến động đặc thù dưới biên độ giá {#sec-price-limit-ivol}
 
-@ang2006cross document that stocks with high idiosyncratic volatility earn low subsequent returns—the IVOL puzzle. In Vietnam, price limits contaminate IVOL estimation: stocks that frequently hit limits have *understated* IVOL (because their returns are censored), which could create a mechanical relation between measured IVOL and returns.
+@ang2006cross ghi nhận rằng các cổ phiếu có biến động đặc thù cao đạt lợi nhuận thấp sau đó—câu đố IVOL. Tại Việt Nam, biên độ giá làm nhiễu việc ước lượng IVOL: các cổ phiếu thường xuyên chạm biên có IVOL bị *đánh giá thấp* (vì lợi nhuận của chúng bị kiểm duyệt), điều này có thể tạo ra mối quan hệ máy móc giữa IVOL đo được và lợi nhuận.
 
 ```{python}
 #| label: ivol-puzzle
@@ -1410,39 +1410,39 @@ print(f"  Correlation:         "
       f"{ivol_df['ivol_naive'].corr(ivol_df['ivol_corrected']):.3f}")
 ```
 
-## Practical Recommendations {#sec-price-limit-recommendations}
+## Khuyến nghị thực hành {#sec-price-limit-recommendations}
 
-For researchers working with Vietnamese equity data:
+Đối với các nhà nghiên cứu làm việc với dữ liệu cổ phiếu Việt Nam:
 
-**Always report limit-hit frequency.** Any study using Vietnamese daily returns should document the fraction of observations at the price limits, broken down by exchange and market cap quintile. This tells the reader the severity of the censoring problem in the specific sample.
+**Luôn báo cáo tần suất chạm biên.** Bất kỳ nghiên cứu nào dùng lợi nhuận hằng ngày của Việt Nam đều nên ghi nhận tỷ lệ quan sát nằm tại biên độ giá, chia theo sở giao dịch và ngũ phân vị vốn hóa thị trường. Điều này cho người đọc biết mức độ nghiêm trọng của vấn đề kiểm duyệt trong mẫu cụ thể.
 
-**Use Tobit-corrected variance estimates.** For volatility-related analyses (IVOL sorts, GARCH, risk modeling), the naive sample variance underestimates true variance by 5–20% depending on the stock's limit-hit frequency. The Tobit MLE provides a consistent estimator under the censored normal assumption.
+**Dùng ước lượng phương sai hiệu chỉnh Tobit.** Với các phân tích liên quan đến biến động (phân loại theo IVOL, GARCH, mô hình hóa rủi ro), phương sai mẫu thô đánh giá thấp phương sai thực 5–20% tùy theo tần suất chạm biên của cổ phiếu. Ước lượng hợp lý cực đại (MLE) Tobit cung cấp một bộ ước lượng nhất quán dưới giả định phân phối chuẩn bị kiểm duyệt.
 
-**Consider range-based estimators.** The @yang2000drift estimator using OHLC prices is partially robust to closing-price censoring and does not require distributional assumptions. It is a good default for individual-stock volatility estimation.
+**Cân nhắc các bộ ước lượng range-based.** Bộ ước lượng @yang2000drift dùng giá OHLC vững một phần trước kiểm duyệt giá đóng cửa và không đòi hỏi giả định về phân phối. Đây là lựa chọn mặc định tốt để ước lượng biến động của từng cổ phiếu.
 
-**Exclude limit-hit days for beta estimation.** Interior-only betas are less biased than all-day betas, though noisier. Report both and discuss the difference. For stocks with \>5% limit-hit frequency, the attenuation is economically meaningful.
+**Loại các ngày chạm biên khi ước lượng beta.** Beta chỉ dùng các ngày nằm trong biên ít chệch hơn beta dùng toàn bộ các ngày, dù nhiễu hơn. Hãy báo cáo cả hai và thảo luận sự khác biệt. Với các cổ phiếu có tần suất chạm biên \>5%, mức suy giảm có ý nghĩa kinh tế.
 
-**Compound multi-day returns for event studies.** When studying events that coincide with limit hits (earnings announcements, M&A, regulatory changes), use the compound return from the limit-hit sequence start to the first non-limit day. Single-day returns are censored and understate the market's reaction.
+**Tính lợi nhuận lũy kế nhiều ngày cho các nghiên cứu sự kiện.** Khi nghiên cứu các sự kiện trùng với việc chạm biên (công bố lợi nhuận, M&A, thay đổi quy định), hãy dùng lợi nhuận lũy kế từ đầu chuỗi chạm biên đến ngày đầu tiên không chạm biên. Lợi nhuận một ngày bị kiểm duyệt và đánh giá thấp phản ứng của thị trường.
 
-**Be cautious interpreting short-term return predictability.** The delayed price discovery effect creates positive return autocorrelation at the daily frequency. This is a mechanical consequence of censoring, not a market inefficiency. Monthly returns are largely free of this artifact because the censoring within a month averages out.
+**Thận trọng khi diễn giải khả năng dự báo lợi nhuận ngắn hạn.** Hiệu ứng khám phá giá bị trì hoãn tạo ra tự tương quan lợi nhuận dương ở tần suất hằng ngày. Đây là hệ quả máy móc của kiểm duyệt, không phải sự phi hiệu quả của thị trường. Lợi nhuận hằng tháng phần lớn không chịu ảnh hưởng này vì kiểm duyệt trong một tháng được bù trừ khi lấy trung bình.
 
-**Test robustness to HNX and UPCoM.** If a result is driven by limit-related distortions, it should appear differently (or not at all) on HNX ($\pm$ 10%) and UPCoM ($\pm$ 15%). Cross-exchange comparison is a natural placebo test.
+**Kiểm tra độ vững với HNX và UPCoM.** Nếu một kết quả bị chi phối bởi các méo mó liên quan đến biên độ, nó sẽ xuất hiện khác đi (hoặc không xuất hiện) trên HNX ($\pm$ 10%) và UPCoM ($\pm$ 15%). So sánh chéo giữa các sở giao dịch là một kiểm định giả dược (placebo) tự nhiên.
 
-## Summary {#sec-price-limit-summary}
+## Tóm tắt {#sec-price-limit-summary}
 
-| Issue | Bias Direction | Magnitude (HOSE) | Recommended Fix |
+| Vấn đề | Hướng chệch | Mức độ (HOSE) | Cách khắc phục khuyến nghị |
 |------------------|------------------|------------------|------------------|
-| Return variance | Understated | 5–20% for volatile stocks | Tobit MLE or range-based |
-| GARCH vol | Understated | 10–30% during crises | Censored GARCH |
-| Market beta | Attenuated (toward 0) | 3–10% for small-caps | Interior-only estimation |
-| IVOL | Understated | Varies; correlated with size | Corrected IVOL |
-| Return autocorrelation | Positive (spurious) | Significant at daily freq | Use weekly/monthly |
-| Event study CARs | Understated | Up to 50% of true effect | Compound multi-day |
-| Distribution shape | Pile-up at limits | 2–5% of obs at limits | Acknowledge or correct |
+| Phương sai lợi nhuận | Bị đánh giá thấp | 5–20% với cổ phiếu biến động mạnh | Tobit MLE hoặc range-based |
+| Biến động GARCH | Bị đánh giá thấp | 10–30% trong khủng hoảng | GARCH có kiểm duyệt |
+| Beta thị trường | Bị suy giảm (về 0) | 3–10% với cổ phiếu vốn hóa nhỏ | Ước lượng chỉ dùng các ngày trong biên |
+| IVOL | Bị đánh giá thấp | Thay đổi; tương quan với quy mô | IVOL đã hiệu chỉnh |
+| Tự tương quan lợi nhuận | Dương (giả tạo) | Có ý nghĩa ở tần suất hằng ngày | Dùng dữ liệu tuần/tháng |
+| CAR của nghiên cứu sự kiện | Bị đánh giá thấp | Lên đến 50% hiệu ứng thực | Lũy kế nhiều ngày |
+| Hình dạng phân phối | Dồn lại tại biên | 2–5% quan sát nằm tại biên | Thừa nhận hoặc hiệu chỉnh |
 
-: Summary of price limit effects on empirical estimates. {#tbl-price-limit-summary}
+: Tóm tắt các tác động của biên độ giá lên các ước lượng thực nghiệm. {#tbl-price-limit-summary}
 
-Price limits are not a minor institutional detail—they are a pervasive data-generating process that affects nearly every empirical quantity computed from Vietnamese daily returns. The corrections developed in this chapter—Tobit variance estimation, censored GARCH, interior-only betas, range-based volatility, and multi-day return compounding—form a toolkit that should be applied routinely. Ignoring censoring does not make it go away; it merely makes the resulting estimates quietly wrong.
+Biên độ giá không phải là một chi tiết thể chế nhỏ—chúng là một quá trình sinh dữ liệu lan rộng, ảnh hưởng đến hầu hết mọi đại lượng thực nghiệm tính từ lợi nhuận hằng ngày của Việt Nam. Các phương pháp hiệu chỉnh được phát triển trong chương này—ước lượng phương sai Tobit, GARCH có kiểm duyệt, beta chỉ dùng các ngày trong biên, biến động range-based và tính lợi nhuận lũy kế nhiều ngày—tạo thành một bộ công cụ nên được áp dụng thường xuyên. Bỏ qua kiểm duyệt không làm nó biến mất; nó chỉ khiến các ước lượng thu được sai một cách âm thầm.
 
 ```{=html}
 <!-- ## Exercises {#sec-price-limit-exercises}

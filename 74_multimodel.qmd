@@ -1,10 +1,10 @@
-# Multimodal Models in Finance
+# Các mô hình đa phương thức trong tài chính
 
-The preceding chapters treated text and images as isolated data modalities, but financial decision-making is inherently multimodal. An analyst evaluating a Vietnamese real estate developer simultaneously reads the annual report (text), inspects satellite imagery of construction sites (image), reviews quarterly financial statements (tabular), monitors the stock's price and volume dynamics (time series), and perhaps listens to the earnings call (audio). No single modality captures the full information set. The question this chapter addresses is: can we build models that fuse multiple modalities in a principled way, and does the fusion yield economically meaningful improvements over the best single-modality model?
+Các chương trước coi văn bản và hình ảnh là những phương thức dữ liệu tách biệt, nhưng việc ra quyết định tài chính vốn dĩ là đa phương thức. Một nhà phân tích đánh giá một nhà phát triển bất động sản Việt Nam đồng thời đọc báo cáo thường niên (văn bản), xem ảnh vệ tinh các công trường xây dựng (hình ảnh), xem xét báo cáo tài chính hằng quý (dữ liệu bảng), theo dõi động thái giá và khối lượng của cổ phiếu (chuỗi thời gian), và có thể nghe cuộc họp công bố kết quả kinh doanh (âm thanh). Không phương thức đơn lẻ nào nắm bắt được toàn bộ tập thông tin. Câu hỏi mà chương này giải quyết là: liệu chúng ta có thể xây dựng các mô hình kết hợp nhiều phương thức một cách có nguyên tắc hay không, và việc kết hợp có mang lại những cải thiện có ý nghĩa kinh tế so với mô hình đơn phương thức tốt nhất hay không?
 
-The answer from the recent machine learning literature is increasingly yes, but with important caveats. Multimodal models can exploit complementarities between modalities (e.g., text describes intentions and context; images reveal physical states; tabular data provides precise quantitative snapshots; time series captures dynamics). However, the gains are not automatic. Naive concatenation of heterogeneous features often degrades performance relative to the best unimodal model, a phenomenon known as the "modality laziness" problem [@huang2021makes]. Effective fusion requires architectures that align representations across modalities, handle missing modalities gracefully (not every firm-quarter has satellite imagery and an earnings call), and avoid the dominant modality drowning out weaker but complementary signals.
+Câu trả lời từ tài liệu học máy gần đây ngày càng là có, nhưng kèm theo những lưu ý quan trọng. Các mô hình đa phương thức có thể khai thác sự bổ trợ giữa các phương thức (chẳng hạn, văn bản mô tả ý định và bối cảnh; hình ảnh phản ánh trạng thái vật lý; dữ liệu bảng cung cấp những ảnh chụp định lượng chính xác; chuỗi thời gian nắm bắt động thái). Tuy nhiên, lợi ích không tự động có. Việc nối đơn giản các đặc trưng không đồng nhất thường làm giảm hiệu suất so với mô hình đơn phương thức tốt nhất, một hiện tượng được gọi là vấn đề "lười phương thức" (modality laziness) [@huang2021makes]. Việc kết hợp hiệu quả đòi hỏi các kiến trúc căn chỉnh biểu diễn giữa các phương thức, xử lý linh hoạt các phương thức bị thiếu (không phải doanh nghiệp-quý nào cũng có ảnh vệ tinh và cuộc họp công bố kết quả kinh doanh), và tránh việc phương thức chiếm ưu thế lấn át các tín hiệu yếu hơn nhưng bổ trợ.
 
-This chapter develops the multimodal toolkit for Vietnamese financial markets across four progressively complex architectures. We begin with representation alignment (i.e., how to map different modalities into a shared embedding space). We then implement early, late, and cross-attention fusion for return prediction. We build a multimodal document understanding system that jointly processes the text, tables, and images within Vietnamese annual reports. We construct a multimodal earnings surprise model that combines pre-announcement text, satellite imagery, and financial time series. And we address the practical engineering challenges, including missing modalities, computational cost, and evaluation protocols that determine whether multimodal models work in production.
+Chương này xây dựng bộ công cụ đa phương thức cho thị trường tài chính Việt Nam qua bốn kiến trúc có độ phức tạp tăng dần. Chúng ta bắt đầu với căn chỉnh biểu diễn (tức là cách ánh xạ các phương thức khác nhau vào một không gian nhúng chung). Sau đó chúng ta triển khai kết hợp sớm, kết hợp muộn và kết hợp chú ý chéo (cross-attention) cho dự báo lợi nhuận. Chúng ta xây dựng một hệ thống hiểu tài liệu đa phương thức xử lý đồng thời văn bản, bảng biểu và hình ảnh trong các báo cáo thường niên của Việt Nam. Chúng ta xây dựng một mô hình bất ngờ lợi nhuận đa phương thức kết hợp văn bản trước công bố, ảnh vệ tinh và chuỗi thời gian tài chính. Và chúng ta giải quyết các thách thức kỹ thuật thực tiễn, bao gồm phương thức bị thiếu, chi phí tính toán và các quy trình đánh giá quyết định liệu các mô hình đa phương thức có hoạt động được trong môi trường vận hành thực tế hay không.
 
 ```{python}
 #| label: setup
@@ -43,53 +43,53 @@ import plotnine as p9
 from mizani.formatters import percent_format
 ```
 
-## Foundations of Multimodal Learning
+## Nền tảng của học đa phương thức
 
-### The Information Structure of Financial Data
+### Cấu trúc thông tin của dữ liệu tài chính
 
-Financial data is naturally organized into modalities with distinct statistical properties, temporal frequencies, and information content. @tbl-modality-landscape summarizes the modalities relevant to Vietnamese equity markets.
+Dữ liệu tài chính tự nhiên được tổ chức thành các phương thức với tính chất thống kê, tần suất thời gian và nội dung thông tin khác nhau. @tbl-modality-landscape tóm tắt các phương thức liên quan đến thị trường cổ phiếu Việt Nam.
 
-| Modality | Examples | Dimensionality | Frequency | Encoding |
+| Phương thức | Ví dụ | Số chiều | Tần suất | Mã hóa |
 |---------------|---------------|---------------|---------------|---------------|
-| Tabular | Financial ratios, ownership, governance | Low ($\sim$ 50 features) | Quarterly/Annual | Structured numeric |
-| Text | Annual reports, news, filings, social media | High ($\sim$ 10k tokens) | Event-driven | Sequential tokens |
-| Image | Satellite tiles, document scans, news photos | Very high ($\sim$ 150k pixels) | Daily to monthly | Spatial grid |
-| Time series | Price, volume, order flow, volatility | Moderate ($\sim$ 250 days × features) | Daily/Intraday | Temporal sequence |
-| Audio | Earnings calls, conference presentations | Very high (waveform) | Quarterly | Temporal waveform |
-| Graph | Ownership networks, supply chains, co-holdings | Variable | Quarterly | Adjacency + node features |
+| Dữ liệu bảng | Các tỷ số tài chính, sở hữu, quản trị công ty | Thấp ($\sim$ 50 đặc trưng) | Hằng quý/Hằng năm | Số có cấu trúc |
+| Văn bản | Báo cáo thường niên, tin tức, hồ sơ công bố, mạng xã hội | Cao ($\sim$ 10k token) | Theo sự kiện | Chuỗi token tuần tự |
+| Hình ảnh | Ô ảnh vệ tinh, bản quét tài liệu, ảnh tin tức | Rất cao ($\sim$ 150k điểm ảnh) | Hằng ngày đến hằng tháng | Lưới không gian |
+| Chuỗi thời gian | Giá, khối lượng, dòng lệnh, biến động | Trung bình ($\sim$ 250 ngày × đặc trưng) | Hằng ngày/Trong ngày | Chuỗi thời gian |
+| Âm thanh | Cuộc họp công bố kết quả kinh doanh, bài thuyết trình hội nghị | Rất cao (dạng sóng) | Hằng quý | Dạng sóng thời gian |
+| Đồ thị | Mạng lưới sở hữu, chuỗi cung ứng, cùng nắm giữ | Thay đổi | Hằng quý | Ma trận kề + đặc trưng nút |
 
-: Modality Landscape in Financial Data {#tbl-modality-landscape}
+: Bức tranh các phương thức trong dữ liệu tài chính {#tbl-modality-landscape}
 
-Each modality carries both unique and redundant information relative to others. The value of multimodal fusion lies in the unique (complementary) information:
+Mỗi phương thức mang cả thông tin riêng biệt lẫn thông tin trùng lặp so với các phương thức khác. Giá trị của việc kết hợp đa phương thức nằm ở thông tin riêng biệt (bổ trợ):
 
 $$
 I(\text{Returns}; \text{Text}, \text{Image}, \text{Tabular}) \geq \max\left(I(\text{Returns}; \text{Text}), I(\text{Returns}; \text{Image}), I(\text{Returns}; \text{Tabular})\right)
 $$ {#eq-information-inequality}
 
-where $I(\cdot; \cdot)$ denotes mutual information. The inequality is strict whenever the modalities carry non-redundant predictive content. The goal of fusion is to design architectures that approach the left-hand side.
+trong đó $I(\cdot; \cdot)$ ký hiệu thông tin tương hỗ. Bất đẳng thức là ngặt bất cứ khi nào các phương thức mang nội dung dự báo không trùng lặp. Mục tiêu của việc kết hợp là thiết kế các kiến trúc tiến gần tới vế trái.
 
-### Taxonomies of Fusion
+### Phân loại các cách kết hợp
 
-The multimodal learning literature [@baltruvsaitis2018multimodal; @liang2024foundations] organizes fusion strategies along three dimensions.
+Tài liệu học đa phương thức [@baltruvsaitis2018multimodal; @liang2024foundations] tổ chức các chiến lược kết hợp theo ba chiều.
 
-**By stage.** Where in the processing pipeline are modalities combined?
+**Theo giai đoạn.** Các phương thức được kết hợp ở đâu trong quy trình xử lý?
 
--   *Input-level (early) fusion*: Concatenate raw or lightly processed features before any shared model.
--   *Feature-level (intermediate) fusion*: Align learned representations in a shared latent space, then combine.
--   *Decision-level (late) fusion*: Train separate models per modality, combine predictions.
+-   *Kết hợp mức đầu vào (sớm)*: Nối các đặc trưng thô hoặc xử lý nhẹ trước bất kỳ mô hình chung nào.
+-   *Kết hợp mức đặc trưng (trung gian)*: Căn chỉnh các biểu diễn đã học trong một không gian tiềm ẩn chung, rồi kết hợp.
+-   *Kết hợp mức quyết định (muộn)*: Huấn luyện các mô hình riêng cho từng phương thức, rồi kết hợp các dự báo.
 
-**By mechanism.** How are representations combined?
+**Theo cơ chế.** Các biểu diễn được kết hợp như thế nào?
 
--   *Concatenation*: $\mathbf{z} = [\mathbf{z}^{(1)}; \mathbf{z}^{(2)}; \ldots; \mathbf{z}^{(M)}]$. Simple but ignores cross-modal interactions.
--   *Attention-based*: One modality attends to another. Captures interactions but requires sufficient data.
--   *Tensor product*: $\mathbf{z} = \mathbf{z}^{(1)} \otimes \mathbf{z}^{(2)}$. Captures all pairwise interactions but scales quadratically.
--   *Gating*: $\mathbf{z} = g(\mathbf{z}^{(1)}) \odot \mathbf{z}^{(2)} + (1 - g(\mathbf{z}^{(1)})) \odot \mathbf{z}^{(3)}$. Modality selection.
+-   *Nối (concatenation)*: $\mathbf{z} = [\mathbf{z}^{(1)}; \mathbf{z}^{(2)}; \ldots; \mathbf{z}^{(M)}]$. Đơn giản nhưng bỏ qua các tương tác chéo giữa các phương thức.
+-   *Dựa trên chú ý (attention)*: Một phương thức chú ý đến một phương thức khác. Nắm bắt được các tương tác nhưng đòi hỏi đủ dữ liệu.
+-   *Tích tensor*: $\mathbf{z} = \mathbf{z}^{(1)} \otimes \mathbf{z}^{(2)}$. Nắm bắt mọi tương tác theo cặp nhưng tăng theo bình phương.
+-   *Cổng (gating)*: $\mathbf{z} = g(\mathbf{z}^{(1)}) \odot \mathbf{z}^{(2)} + (1 - g(\mathbf{z}^{(1)})) \odot \mathbf{z}^{(3)}$. Lựa chọn phương thức.
 
-**By training.** How are parameters learned?
+**Theo cách huấn luyện.** Các tham số được học như thế nào?
 
--   *Joint training*: All modalities processed end-to-end.
--   *Pre-train then fuse*: Train unimodal encoders separately, then learn the fusion layer.
--   *Contrastive alignment*: Train modality encoders to produce similar representations for matched pairs (the CLIP approach of @radford2021learning).
+-   *Huấn luyện chung*: Tất cả các phương thức được xử lý đầu-cuối (end-to-end).
+-   *Tiền huấn luyện rồi kết hợp*: Huấn luyện riêng các bộ mã hóa đơn phương thức, sau đó học lớp kết hợp.
+-   *Căn chỉnh đối chiếu (contrastive)*: Huấn luyện các bộ mã hóa phương thức để tạo ra các biểu diễn tương tự nhau cho các cặp khớp nhau (cách tiếp cận CLIP của @radford2021learning).
 
 ```{python}
 #| label: load-multimodal-data
@@ -140,25 +140,25 @@ print(f"Firms with report text: {report_text['ticker'].nunique()}")
 print(f"Firms with satellite data: {satellite_features['ticker'].nunique()}")
 ```
 
-## Representation Alignment
+## Căn chỉnh biểu diễn
 
-### The Alignment Problem
+### Bài toán căn chỉnh
 
-Different modalities produce embeddings in different vector spaces with different geometries. A PhoBERT text embedding lives in $\mathbb{R}^{768}$; a ResNet50 image feature lives in $\mathbb{R}^{2048}$; a tabular feature vector might have 50 dimensions with heterogeneous scales. Naively concatenating these into a single vector $[\mathbf{z}^{\text{text}}; \mathbf{z}^{\text{image}}; \mathbf{z}^{\text{tab}}] \in \mathbb{R}^{2866}$ is problematic because the high-dimensional modalities dominate gradient flow, the scales are mismatched, and there is no mechanism for cross-modal interaction.
+Các phương thức khác nhau tạo ra các vector nhúng trong những không gian vector khác nhau với hình học khác nhau. Một vector nhúng văn bản PhoBERT nằm trong $\mathbb{R}^{768}$; một đặc trưng ảnh ResNet50 nằm trong $\mathbb{R}^{2048}$; một vector đặc trưng dữ liệu bảng có thể có 50 chiều với các thang đo không đồng nhất. Việc nối đơn giản chúng thành một vector duy nhất $[\mathbf{z}^{\text{text}}; \mathbf{z}^{\text{image}}; \mathbf{z}^{\text{tab}}] \in \mathbb{R}^{2866}$ gây ra vấn đề vì các phương thức nhiều chiều chi phối dòng gradient, các thang đo không khớp nhau, và không có cơ chế nào cho tương tác chéo giữa các phương thức.
 
-Alignment projects each modality into a shared latent space $\mathbb{R}^d$ where geometric relationships are semantically meaningful (i.e., similar firms should be nearby regardless of which modality is used to represent them).
+Căn chỉnh chiếu từng phương thức vào một không gian tiềm ẩn chung $\mathbb{R}^d$, nơi các quan hệ hình học có ý nghĩa ngữ nghĩa (tức là các doanh nghiệp tương tự nên ở gần nhau bất kể dùng phương thức nào để biểu diễn chúng).
 
-### Contrastive Alignment: CLIP for Finance
+### Căn chỉnh đối chiếu: CLIP cho tài chính
 
-The Contrastive Language-Image Pre-training (CLIP) framework of @radford2021learning learns aligned representations by training on matched (text, image) pairs. We adapt this to financial data: for each firm-quarter, we have a textual description and a satellite image, and we train the encoders so that matched pairs produce similar embeddings while unmatched pairs produce dissimilar embeddings.
+Khung Contrastive Language-Image Pre-training (CLIP) của @radford2021learning học các biểu diễn được căn chỉnh bằng cách huấn luyện trên các cặp (văn bản, hình ảnh) khớp nhau. Chúng ta điều chỉnh khung này cho dữ liệu tài chính: với mỗi doanh nghiệp-quý, chúng ta có một mô tả văn bản và một ảnh vệ tinh, và chúng ta huấn luyện các bộ mã hóa sao cho các cặp khớp nhau tạo ra vector nhúng tương tự còn các cặp không khớp tạo ra vector nhúng khác biệt.
 
-The contrastive loss is:
+Hàm mất mát đối chiếu là:
 
 $$
 \mathcal{L}_{\text{CLIP}} = -\frac{1}{2N}\sum_{i=1}^{N}\left[\log\frac{\exp(\mathbf{z}_i^{\text{txt}} \cdot \mathbf{z}_i^{\text{img}} / \tau)}{\sum_{j=1}^{N}\exp(\mathbf{z}_i^{\text{txt}} \cdot \mathbf{z}_j^{\text{img}} / \tau)} + \log\frac{\exp(\mathbf{z}_i^{\text{img}} \cdot \mathbf{z}_i^{\text{txt}} / \tau)}{\sum_{j=1}^{N}\exp(\mathbf{z}_i^{\text{img}} \cdot \mathbf{z}_j^{\text{txt}} / \tau)}\right]
 $$ {#eq-clip-loss}
 
-where $\tau$ is a learnable temperature parameter and the embeddings are $L_2$-normalized. This is a symmetric version of the InfoNCE loss [@oord2018representation] that simultaneously trains the text encoder to predict the correct image and vice versa.
+trong đó $\tau$ là tham số nhiệt độ có thể học và các vector nhúng được chuẩn hóa $L_2$. Đây là phiên bản đối xứng của hàm mất mát InfoNCE [@oord2018representation], đồng thời huấn luyện bộ mã hóa văn bản dự đoán đúng hình ảnh và ngược lại.
 
 ```{python}
 #| label: contrastive-alignment
@@ -218,21 +218,21 @@ class FinancialCLIP(nn.Module):
         return F.normalize(self.image_proj(image_emb), dim=-1)
 ```
 
-### Projection Alignment for Arbitrary Modalities
+### Căn chỉnh chiếu cho các phương thức bất kỳ
 
-For more than two modalities, we generalize to a shared projection space where each modality has its own encoder but all encoders map to the same target space:
+Với nhiều hơn hai phương thức, chúng ta tổng quát hóa thành một không gian chiếu chung, trong đó mỗi phương thức có bộ mã hóa riêng nhưng tất cả các bộ mã hóa ánh xạ vào cùng một không gian đích:
 
 $$
 \mathbf{z}_i^{(m)} = f^{(m)}(\mathbf{x}_i^{(m)}; \boldsymbol{\theta}^{(m)}) \in \mathbb{R}^d, \qquad m = 1, \ldots, M
 $$ {#eq-projection}
 
-The alignment loss encourages all modality embeddings for the same observation to be similar:
+Hàm mất mát căn chỉnh khuyến khích mọi vector nhúng phương thức của cùng một quan sát phải tương tự nhau:
 
 $$
 \mathcal{L}_{\text{align}} = \sum_{m < m'} \frac{1}{N}\sum_{i=1}^{N} \left\|\mathbf{z}_i^{(m)} - \mathbf{z}_i^{(m')}\right\|^2
 $$ {#eq-alignment-loss}
 
-This MSE alignment is simpler than contrastive alignment but does not enforce the discriminative property (different observations should have dissimilar embeddings). In practice, we combine alignment with a prediction objective:
+Căn chỉnh MSE này đơn giản hơn căn chỉnh đối chiếu nhưng không bảo đảm tính chất phân biệt (các quan sát khác nhau nên có vector nhúng khác biệt). Trong thực tế, chúng ta kết hợp căn chỉnh với một mục tiêu dự báo:
 
 $$
 \mathcal{L}_{\text{total}} = \mathcal{L}_{\text{predict}}(\hat{y}, y) + \lambda \cdot \mathcal{L}_{\text{align}}
@@ -311,11 +311,11 @@ class MultimodalProjector(nn.Module):
         return loss / n_pairs if n_pairs > 0 else loss
 ```
 
-## Fusion Architectures for Return Prediction
+## Kiến trúc kết hợp cho dự báo lợi nhuận
 
-### Unimodal Encoders
+### Bộ mã hóa đơn phương thức
 
-Before fusing modalities, we need encoders that produce fixed-dimensional representations from each raw input. We build four encoders corresponding to the primary modalities in Vietnamese equity markets.
+Trước khi kết hợp các phương thức, chúng ta cần các bộ mã hóa tạo ra biểu diễn có số chiều cố định từ mỗi đầu vào thô. Chúng ta xây dựng bốn bộ mã hóa tương ứng với các phương thức chính trong thị trường cổ phiếu Việt Nam.
 
 ```{python}
 #| label: unimodal-encoders
@@ -420,9 +420,9 @@ class TimeSeriesEncoder(nn.Module):
         return self.fc(x)
 ```
 
-### Early Fusion
+### Kết hợp sớm
 
-Early fusion concatenates modality embeddings before a shared prediction head. This is the simplest approach and serves as a natural baseline.
+Kết hợp sớm nối các vector nhúng phương thức trước một đầu dự báo chung. Đây là cách tiếp cận đơn giản nhất và đóng vai trò mô hình cơ sở tự nhiên.
 
 ```{python}
 #| label: early-fusion
@@ -483,9 +483,9 @@ class EarlyFusionModel(nn.Module):
         return self.head(combined).squeeze(-1)
 ```
 
-### Late Fusion
+### Kết hợp muộn
 
-Late fusion trains independent models per modality and combines their predictions. The combination weights can be fixed (equal averaging), learned (linear), or adaptive (gating network).
+Kết hợp muộn huấn luyện các mô hình độc lập cho từng phương thức và kết hợp các dự báo của chúng. Các trọng số kết hợp có thể là cố định (lấy trung bình đều), được học (tuyến tính), hoặc thích ứng (mạng cổng).
 
 ```{python}
 #| label: late-fusion
@@ -563,17 +563,17 @@ class LateFusionModel(nn.Module):
         return None
 ```
 
-### Cross-Attention Fusion
+### Kết hợp chú ý chéo
 
-Cross-attention fusion is the most expressive architecture. Each modality attends to every other modality, learning which cross-modal interactions are informative. This is the mechanism underlying modern vision-language models like Flamingo [@alayrac2022flamingo] and GPT-4V.
+Kết hợp chú ý chéo là kiến trúc có khả năng biểu diễn mạnh nhất. Mỗi phương thức chú ý đến mọi phương thức khác, học xem những tương tác chéo nào mang nhiều thông tin. Đây là cơ chế nền tảng của các mô hình thị giác–ngôn ngữ hiện đại như Flamingo [@alayrac2022flamingo] và GPT-4V.
 
-The cross-attention operation for modality $m$ attending to modality $m'$ is:
+Phép chú ý chéo cho phương thức $m$ chú ý đến phương thức $m'$ là:
 
 $$
 \text{CA}^{(m \to m')} = \text{softmax}\left(\frac{\mathbf{Q}^{(m)} \left(\mathbf{K}^{(m')}\right)^\top}{\sqrt{d_k}}\right) \mathbf{V}^{(m')}
 $$ {#eq-cross-attention-detail}
 
-where $\mathbf{Q}^{(m)} = \mathbf{z}^{(m)} W_Q$, $\mathbf{K}^{(m')} = \mathbf{z}^{(m')} W_K$, $\mathbf{V}^{(m')} = \mathbf{z}^{(m')} W_V$. The output enriches modality $m$'s representation with information from modality $m'$.
+trong đó $\mathbf{Q}^{(m)} = \mathbf{z}^{(m)} W_Q$, $\mathbf{K}^{(m')} = \mathbf{z}^{(m')} W_K$, $\mathbf{V}^{(m')} = \mathbf{z}^{(m')} W_V$. Đầu ra làm giàu biểu diễn của phương thức $m$ bằng thông tin từ phương thức $m'$.
 
 ```{python}
 #| label: cross-attention-fusion
@@ -685,9 +685,9 @@ class CrossAttentionFusionModel(nn.Module):
         return self.head(combined).squeeze(-1), all_attn_weights
 ```
 
-### Comparison Experiment
+### Thí nghiệm so sánh
 
-We now compare the three fusion architectures against unimodal baselines on forward quarterly return prediction for Vietnamese equities.
+Bây giờ chúng ta so sánh ba kiến trúc kết hợp với các mô hình cơ sở đơn phương thức trong dự báo lợi nhuận hằng quý kỳ tới của cổ phiếu Việt Nam.
 
 ```{python}
 #| label: multimodal-dataset
@@ -1031,7 +1031,7 @@ def compare_fusion_strategies(dataset, n_splits=5):
 ```{python}
 #| label: tbl-fusion-comparison
 #| eval: false
-#| tbl-cap: "Out-of-Sample Return Prediction: Unimodal vs. Multimodal"
+#| tbl-cap: "Dự báo lợi nhuận ngoài mẫu: Đơn phương thức so với đa phương thức"
 
 # results_df = compare_fusion_strategies(dataset)
 
@@ -1052,7 +1052,7 @@ def compare_fusion_strategies(dataset, n_splits=5):
 ```{python}
 #| label: fig-fusion-comparison
 #| eval: false
-#| fig-cap: "Out-of-Sample R² Across Fusion Strategies and Time-Series Folds"
+#| fig-cap: "R² ngoài mẫu theo các chiến lược kết hợp và các nhóm kiểm định chuỗi thời gian"
 
 # (
 #     p9.ggplot(results_df, p9.aes(x="model", y="val_r2", fill="model"))
@@ -1067,34 +1067,34 @@ def compare_fusion_strategies(dataset, n_splits=5):
 # )
 ```
 
-## Handling Missing Modalities
+## Xử lý các phương thức bị thiếu
 
-### The Missing Modality Problem
+### Vấn đề phương thức bị thiếu
 
-In practice, not every firm-quarter has every modality available. A firm may not have an earnings call transcript (no audio), its headquarters may be in a province where satellite coverage is intermittent (no image), or its annual report may not be publicly available in digital form (no text). This creates a missing modality problem that is structurally different from missing values in tabular data: an entire feature vector (hundreds or thousands of dimensions) is absent.
+Trong thực tế, không phải doanh nghiệp-quý nào cũng có đủ mọi phương thức. Một doanh nghiệp có thể không có bản ghi chép cuộc họp công bố kết quả kinh doanh (không có âm thanh), trụ sở có thể nằm ở tỉnh mà vùng phủ vệ tinh không liên tục (không có hình ảnh), hoặc báo cáo thường niên có thể không được công bố công khai ở dạng số (không có văn bản). Điều này tạo ra vấn đề phương thức bị thiếu, khác về cấu trúc so với giá trị bị thiếu trong dữ liệu bảng: cả một vector đặc trưng (hàng trăm hay hàng nghìn chiều) bị mất.
 
-The fraction of observations with all four modalities available is typically much smaller than the fraction with at least one:
+Tỷ lệ quan sát có đủ cả bốn phương thức thường nhỏ hơn nhiều so với tỷ lệ có ít nhất một phương thức:
 
-| Available Modalities     | Typical Coverage (Vietnamese Firms) |
+| Các phương thức sẵn có   | Mức độ bao phủ điển hình (doanh nghiệp Việt Nam) |
 |--------------------------|-------------------------------------|
-| Tabular only             | $\sim$ 95% of firm-quarters         |
-| Tabular + Text           | $\sim$ 70%                          |
-| Tabular + Text + Image   | $\sim$ 50%                          |
-| All four (+ time series) | $\sim$ 45%                          |
+| Chỉ dữ liệu bảng         | $\sim$ 95% số doanh nghiệp-quý      |
+| Dữ liệu bảng + Văn bản   | $\sim$ 70%                          |
+| Dữ liệu bảng + Văn bản + Hình ảnh | $\sim$ 50%                          |
+| Cả bốn (+ chuỗi thời gian) | $\sim$ 45%                          |
 
-: Modality Availability in Vietnamese Market Data {#tbl-modality-coverage}
+: Mức độ sẵn có của các phương thức trong dữ liệu thị trường Việt Nam {#tbl-modality-coverage}
 
-Restricting the sample to complete cases discards half the data and introduces selection bias (larger, more transparent firms are overrepresented). We need architectures that degrade gracefully when modalities are missing.
+Việc giới hạn mẫu vào các trường hợp đầy đủ loại bỏ một nửa dữ liệu và gây ra thiên lệch lựa chọn (các doanh nghiệp lớn hơn, minh bạch hơn được đại diện quá mức). Chúng ta cần các kiến trúc chỉ suy giảm từ từ, có kiểm soát khi thiếu phương thức.
 
-### Strategies for Missing Modalities
+### Các chiến lược cho phương thức bị thiếu
 
--   **Zero imputation.** Replace missing modality embeddings with zeros. Simple but introduces bias: the model cannot distinguish "this modality is absent" from "this modality has zero signal."
+-   **Điền bằng không.** Thay các vector nhúng phương thức bị thiếu bằng số không. Đơn giản nhưng gây thiên lệch: mô hình không thể phân biệt "phương thức này vắng mặt" với "phương thức này có tín hiệu bằng không."
 
--   **Learned default embedding.** Replace missing modalities with a learnable "default" vector $\mathbf{d}^{(m)}$ that is trained alongside the model. This allows the model to learn what the absence of a modality implies.
+-   **Vector nhúng mặc định được học.** Thay các phương thức bị thiếu bằng một vector "mặc định" có thể học $\mathbf{d}^{(m)}$ được huấn luyện cùng với mô hình. Điều này cho phép mô hình học xem sự vắng mặt của một phương thức hàm ý điều gì.
 
--   **Modality dropout.** During training, randomly drop entire modalities with probability $p$ (analogous to dropout on neurons). This forces the model to perform well even when modalities are missing, and acts as regularization.
+-   **Loại bỏ phương thức (modality dropout).** Trong huấn luyện, loại bỏ ngẫu nhiên toàn bộ các phương thức với xác suất $p$ (tương tự dropout trên các nơ-ron). Điều này buộc mô hình hoạt động tốt ngay cả khi thiếu phương thức, và đóng vai trò chính quy hóa.
 
--   **Mixture of Experts (MoE).** Route each observation to a fusion subnetwork specialized for its available modality combination. With $M$ modalities, there are $2^M - 1$ possible subsets, requiring efficient parameter sharing.
+-   **Hỗn hợp các chuyên gia (Mixture of Experts, MoE).** Định tuyến mỗi quan sát đến một mạng con kết hợp chuyên biệt cho tổ hợp phương thức sẵn có của nó. Với $M$ phương thức, có $2^M - 1$ tập con khả dĩ, đòi hỏi chia sẻ tham số hiệu quả.
 
 ```{python}
 #| label: missing-modality-handler
@@ -1214,19 +1214,19 @@ class RobustFusionModel(nn.Module):
         return self.head(combined).squeeze(-1)
 ```
 
-## Multimodal Document Understanding
+## Hiểu tài liệu đa phương thức
 
-### Annual Report as a Multimodal Object
+### Báo cáo thường niên như một đối tượng đa phương thức
 
-A Vietnamese annual report is inherently multimodal: it contains running text (management discussion, risk factors, strategy), tables (financial statements, segment data, shareholder structure), images (photographs of facilities, products, management), and charts (revenue trends, market share). Prior chapters treated these as separate extraction problems. Here we build a model that processes the entire report as a unified multimodal document.
+Một báo cáo thường niên của Việt Nam vốn dĩ là đa phương thức: nó chứa văn bản liên tục (thảo luận của ban lãnh đạo, các yếu tố rủi ro, chiến lược), bảng biểu (báo cáo tài chính, dữ liệu theo bộ phận, cơ cấu cổ đông), hình ảnh (ảnh cơ sở vật chất, sản phẩm, ban lãnh đạo) và biểu đồ (xu hướng doanh thu, thị phần). Các chương trước coi những thành phần này là các bài toán trích xuất riêng biệt. Ở đây chúng ta xây dựng một mô hình xử lý toàn bộ báo cáo như một tài liệu đa phương thức thống nhất.
 
-The architecture follows the Document Understanding Transformer (Donut) approach of @kim2022ocr, adapted for Vietnamese financial filings:
+Kiến trúc theo cách tiếp cận Document Understanding Transformer (Donut) của @kim2022ocr, được điều chỉnh cho các hồ sơ công bố tài chính của Việt Nam:
 
 $$
 \mathbf{h} = \text{Encoder}(\mathbf{I}_{\text{page}}) + \text{Encoder}(\mathbf{T}_{\text{ocr}}) + \text{Encoder}(\mathbf{L}_{\text{layout}})
 $$ {#eq-donut}
 
-where $\mathbf{I}$ is the page image, $\mathbf{T}$ is the OCR text, and $\mathbf{L}$ is the spatial layout (bounding boxes). The joint representation $\mathbf{h}$ captures both what is written and where it appears on the page.
+trong đó $\mathbf{I}$ là ảnh trang, $\mathbf{T}$ là văn bản OCR, và $\mathbf{L}$ là bố cục không gian (các khung bao). Biểu diễn chung $\mathbf{h}$ nắm bắt cả những gì được viết lẫn vị trí xuất hiện của chúng trên trang.
 
 ```{python}
 #| label: multimodal-document
@@ -1325,9 +1325,9 @@ class MultimodalDocumentEncoder(nn.Module):
         return output[:, 0, :]
 ```
 
-### Extracting Structured Financials from Multimodal Reports
+### Trích xuất các chỉ tiêu tài chính có cấu trúc từ các báo cáo đa phương thức
 
-With the document encoder, we can build extraction heads for specific financial fields. The key advantage over the OCR-only pipeline in previous chapter is that the multimodal encoder can resolve ambiguities using visual context (e.g., a number's meaning depends on where it appears on the page and what headers and labels surround it).
+Với bộ mã hóa tài liệu, chúng ta có thể xây dựng các đầu trích xuất cho các chỉ tiêu tài chính cụ thể. Ưu điểm then chốt so với quy trình chỉ dùng OCR ở chương trước là bộ mã hóa đa phương thức có thể giải quyết các nhập nhằng bằng ngữ cảnh thị giác (chẳng hạn, ý nghĩa của một con số phụ thuộc vào vị trí xuất hiện của nó trên trang và các tiêu đề, nhãn xung quanh).
 
 ```{python}
 #| label: financial-extraction-head
@@ -1383,26 +1383,26 @@ class FinancialFieldExtractor(nn.Module):
         return results
 ```
 
-## Multimodal Earnings Surprise Model
+## Mô hình bất ngờ lợi nhuận đa phương thức
 
-### Architecture
+### Kiến trúc
 
-We now build the chapter's central empirical application: a multimodal model that predicts earnings surprises using all available modalities observed before the earnings announcement date.
+Bây giờ chúng ta xây dựng ứng dụng thực nghiệm trung tâm của chương: một mô hình đa phương thức dự báo bất ngờ lợi nhuận bằng tất cả các phương thức sẵn có được quan sát trước ngày công bố lợi nhuận.
 
-The information set at time $t^-$ (just before the announcement) includes:
+Tập thông tin tại thời điểm $t^-$ (ngay trước công bố) bao gồm:
 
--   **Tabular**: Last reported financial ratios, analyst consensus forecasts
--   **Text**: News articles and filings in the pre-announcement window
--   **Image**: Satellite features of the firm's operating region
--   **Time series**: Price and volume dynamics in the 60 trading days before announcement
+-   **Dữ liệu bảng**: Các tỷ số tài chính được báo cáo gần nhất, dự báo đồng thuận của các nhà phân tích
+-   **Văn bản**: Các bài báo và hồ sơ công bố trong cửa sổ trước công bố
+-   **Hình ảnh**: Các đặc trưng vệ tinh của khu vực hoạt động của doanh nghiệp
+-   **Chuỗi thời gian**: Động thái giá và khối lượng trong 60 ngày giao dịch trước công bố
 
-The target is the standardized unexpected earnings (SUE):
+Biến mục tiêu là lợi nhuận bất ngờ chuẩn hóa (SUE):
 
 $$
 \text{SUE}_{i,q} = \frac{E_{i,q} - \hat{E}_{i,q}}{\sigma_{i,q}}
 $$ {#eq-sue}
 
-where $E_{i,q}$ is actual earnings per share, $\hat{E}_{i,q}$ is the consensus forecast (or seasonal random walk forecast if analyst coverage is absent), and $\sigma_{i,q}$ is the standard deviation of forecast errors.
+trong đó $E_{i,q}$ là lợi nhuận trên mỗi cổ phiếu thực tế, $\hat{E}_{i,q}$ là dự báo đồng thuận (hoặc dự báo bước đi ngẫu nhiên theo mùa nếu không có phân tích viên theo dõi), và $\sigma_{i,q}$ là độ lệch chuẩn của các sai số dự báo.
 
 ```{python}
 #| label: earnings-surprise-data
@@ -1540,9 +1540,9 @@ class MultimodalEarningsSurpriseModel(nn.Module):
         return self.head(combined).squeeze(-1)
 ```
 
-### Modality Importance Analysis
+### Phân tích tầm quan trọng của phương thức
 
-A key interpretability question is: which modality contributes most to earnings surprise prediction? We analyze the learned importance weights and conduct ablation experiments.
+Một câu hỏi then chốt về khả năng diễn giải là: phương thức nào đóng góp nhiều nhất vào dự báo bất ngờ lợi nhuận? Chúng ta phân tích các trọng số tầm quan trọng đã học và thực hiện các thí nghiệm loại bỏ (ablation).
 
 ```{python}
 #| label: modality-importance
@@ -1607,7 +1607,7 @@ def ablation_study(model, test_loader, modality_names):
 ```{python}
 #| label: tbl-ablation
 #| eval: false
-#| tbl-cap: "Modality Ablation Study: Contribution to Earnings Surprise Prediction"
+#| tbl-cap: "Nghiên cứu loại bỏ phương thức: Đóng góp vào dự báo bất ngờ lợi nhuận"
 
 # ablation_df = ablation_study(model, test_loader, modality_names)
 # ablation_df.round(4)
@@ -1616,7 +1616,7 @@ def ablation_study(model, test_loader, modality_names):
 ```{python}
 #| label: fig-modality-importance
 #| eval: false
-#| fig-cap: "Learned Modality Importance Weights Over Training Epochs"
+#| fig-cap: "Trọng số tầm quan trọng của phương thức được học qua các epoch huấn luyện"
 
 # Track importance weights during training
 # importance_history = pd.DataFrame(...)
@@ -1639,18 +1639,18 @@ def ablation_study(model, test_loader, modality_names):
 # )
 ```
 
-## Large Multimodal Models for Financial Analysis
+## Các mô hình đa phương thức lớn cho phân tích tài chính
 
-### Prompting Vision-Language Models
+### Đưa câu lệnh (prompting) cho các mô hình thị giác–ngôn ngữ
 
-The most powerful multimodal systems available today are large vision-language models (VLMs) such as GPT-4V, Gemini, and open-source alternatives (LLaVA, InternVL). These models can jointly process images and text through natural language prompts, enabling zero-shot financial analysis without model training.
+Các hệ thống đa phương thức mạnh nhất hiện có là các mô hình thị giác–ngôn ngữ lớn (VLM) như GPT-4V, Gemini và các lựa chọn mã nguồn mở (LLaVA, InternVL). Các mô hình này có thể xử lý đồng thời hình ảnh và văn bản thông qua các câu lệnh ngôn ngữ tự nhiên, cho phép phân tích tài chính zero-shot mà không cần huấn luyện mô hình.
 
-For Vietnamese financial applications, VLMs can:
+Đối với các ứng dụng tài chính ở Việt Nam, VLM có thể:
 
--   Interpret satellite imagery of industrial zones and estimate activity levels
--   Read and extract data from scanned financial tables
--   Analyze news photographs for sentiment
--   Compare current and historical aerial views for change detection
+-   Diễn giải ảnh vệ tinh các khu công nghiệp và ước tính mức độ hoạt động
+-   Đọc và trích xuất dữ liệu từ các bảng tài chính được quét
+-   Phân tích ảnh tin tức để xác định tâm lý
+-   So sánh các góc nhìn từ trên không hiện tại và lịch sử để phát hiện thay đổi
 
 ```{python}
 #| label: vlm-financial-prompting
@@ -1746,15 +1746,15 @@ FINANCIAL_VLM_PROMPTS = {
 }
 ```
 
-### Retrieval-Augmented Multimodal Analysis
+### Phân tích đa phương thức tăng cường truy xuất
 
-For complex financial questions, we can combine VLM capabilities with retrieval from structured databases. The pipeline:
+Với các câu hỏi tài chính phức tạp, chúng ta có thể kết hợp năng lực của VLM với việc truy xuất từ các cơ sở dữ liệu có cấu trúc. Quy trình:
 
-1.  **Query**: Analyst asks "Is Vingroup's construction activity in Vinhomes Grand Park accelerating?"
-2.  **Retrieve**: Fetch satellite time series, financial statements, news articles
-3.  **Process**: VLM analyzes satellite images; NLP processes text; tabular model processes financials
-4.  **Fuse**: Aggregate evidence across modalities
-5.  **Answer**: Generate a structured response with confidence scores and supporting evidence
+1.  **Truy vấn**: Nhà phân tích hỏi "Hoạt động xây dựng của Vingroup tại Vinhomes Grand Park có đang tăng tốc không?"
+2.  **Truy xuất**: Lấy chuỗi thời gian vệ tinh, báo cáo tài chính, các bài báo tin tức
+3.  **Xử lý**: VLM phân tích ảnh vệ tinh; NLP xử lý văn bản; mô hình dữ liệu bảng xử lý các chỉ tiêu tài chính
+4.  **Kết hợp**: Tổng hợp bằng chứng từ các phương thức
+5.  **Trả lời**: Tạo một câu trả lời có cấu trúc kèm điểm tin cậy và bằng chứng hỗ trợ
 
 ```{python}
 #| label: rag-multimodal
@@ -1857,63 +1857,63 @@ class MultimodalRAG:
         return analysis
 ```
 
-## Evaluation and Deployment Considerations
+## Các lưu ý về đánh giá và triển khai
 
-### Evaluation Protocol for Multimodal Financial Models
+### Quy trình đánh giá cho các mô hình tài chính đa phương thức
 
-Standard machine learning evaluation (random train/test split) is inappropriate for financial prediction. We require time-series-aware evaluation that respects the temporal ordering of information.
+Cách đánh giá học máy tiêu chuẩn (chia ngẫu nhiên tập huấn luyện/kiểm tra) không phù hợp cho dự báo tài chính. Chúng ta cần cách đánh giá có xét đến chuỗi thời gian, tôn trọng thứ tự thời gian của thông tin.
 
-| Evaluation Aspect | Correct Approach | Common Mistake |
+| Khía cạnh đánh giá | Cách tiếp cận đúng | Sai lầm thường gặp |
 |--------------------------|------------------------|----------------------|
-| Train/test split | Expanding or rolling time window | Random split (look-ahead bias) |
-| Feature timing | Features available before prediction date | Using concurrent or future information |
-| Missing modalities | Test with realistic missingness patterns | Complete-case only |
-| Performance metric | OOS $R^2$, IC, Sharpe of L-S portfolio | In-sample $R^2$ |
-| Statistical inference | @diebold2002comparing test for forecast comparison | Point estimates without SE |
-| Economic significance | Transaction-cost-adjusted portfolio returns | Ignoring implementation costs |
+| Chia huấn luyện/kiểm tra | Cửa sổ thời gian mở rộng hoặc trượt | Chia ngẫu nhiên (thiên lệch nhìn trước) |
+| Thời điểm của đặc trưng | Các đặc trưng có sẵn trước ngày dự báo | Dùng thông tin đồng thời hoặc tương lai |
+| Phương thức bị thiếu | Kiểm tra với các mẫu hình thiếu dữ liệu thực tế | Chỉ dùng các trường hợp đầy đủ |
+| Thước đo hiệu suất | $R^2$ ngoài mẫu (OOS), IC, Sharpe của danh mục L-S | $R^2$ trong mẫu |
+| Suy luận thống kê | Kiểm định @diebold2002comparing để so sánh dự báo | Ước lượng điểm không có SE |
+| Ý nghĩa kinh tế | Lợi nhuận danh mục đã điều chỉnh chi phí giao dịch | Bỏ qua chi phí triển khai |
 
-: Evaluation Best Practices for Multimodal Finance Models {#tbl-evaluation}
+: Thực hành tốt nhất trong đánh giá các mô hình tài chính đa phương thức {#tbl-evaluation}
 
-### Computational Budget
+### Ngân sách tính toán
 
-Multimodal models are computationally expensive. @tbl-compute-budget provides order-of-magnitude estimates for Vietnamese equity markets.
+Các mô hình đa phương thức tốn nhiều tài nguyên tính toán. @tbl-compute-budget cung cấp các ước tính về bậc độ lớn cho thị trường cổ phiếu Việt Nam.
 
-| Component | Single Firm-Quarter | Full Panel (1000 firms × 40 quarters) |
+| Thành phần | Một doanh nghiệp-quý | Toàn bộ bảng dữ liệu (1000 doanh nghiệp × 40 quý) |
 |-------------------|---------------|----------------------------|
-| PhoBERT text encoding | 0.5s | \~5.5 hours |
-| ResNet50 satellite feature | 0.1s | \~1.1 hours |
-| Time series encoding (CNN) | 0.01s | \~7 minutes |
-| Tabular preprocessing | \<0.01s | \~1 minute |
-| Cross-attention fusion (forward) | 0.05s | \~33 minutes |
-| Training (50 epochs) | -- | \~12 hours (GPU) |
-| Full pipeline | -- | \~1 day (single GPU) |
+| Mã hóa văn bản PhoBERT | 0.5s | \~5.5 giờ |
+| Đặc trưng vệ tinh ResNet50 | 0.1s | \~1.1 giờ |
+| Mã hóa chuỗi thời gian (CNN) | 0.01s | \~7 phút |
+| Tiền xử lý dữ liệu bảng | \<0.01s | \~1 phút |
+| Kết hợp chú ý chéo (lượt xuôi) | 0.05s | \~33 phút |
+| Huấn luyện (50 epoch) | -- | \~12 giờ (GPU) |
+| Toàn bộ quy trình | -- | \~1 ngày (một GPU) |
 
-: Computational Budget for Multimodal Pipeline {#tbl-compute-budget}
+: Ngân sách tính toán cho quy trình đa phương thức {#tbl-compute-budget}
 
-The practical implication is that pre-computation of unimodal embeddings is essential. Extract and cache PhoBERT embeddings, CNN features, and time-series representations once; reuse them across all fusion experiments. Only the fusion layers need retraining when the architecture changes.
+Hệ quả thực tiễn là việc tính trước các vector nhúng đơn phương thức là thiết yếu. Hãy trích xuất và lưu đệm các vector nhúng PhoBERT, đặc trưng CNN và biểu diễn chuỗi thời gian một lần; dùng lại chúng trong mọi thí nghiệm kết hợp. Chỉ các lớp kết hợp cần huấn luyện lại khi kiến trúc thay đổi.
 
-<!-- ## Exercises
+<!-- ## Bài tập
 
-1.  **Contrastive Pre-Training for Vietnamese Finance.** Implement the FinancialCLIP contrastive alignment for paired (annual report text, satellite image) data. Train on 2014-2020 data and evaluate alignment quality on 2021-2024 by measuring zero-shot retrieval accuracy: given a text description, can the model retrieve the correct satellite image (and vice versa)? Report Recall\@1, Recall\@5, and Recall\@10.
+1.  **Tiền huấn luyện đối chiếu cho tài chính Việt Nam.** Triển khai căn chỉnh đối chiếu FinancialCLIP cho dữ liệu ghép cặp (văn bản báo cáo thường niên, ảnh vệ tinh). Huấn luyện trên dữ liệu 2014-2020 và đánh giá chất lượng căn chỉnh trên giai đoạn 2021-2024 bằng cách đo độ chính xác truy xuất zero-shot: cho một mô tả văn bản, mô hình có truy xuất đúng ảnh vệ tinh không (và ngược lại)? Báo cáo Recall\@1, Recall\@5 và Recall\@10.
 
-2.  **Fusion Architecture Search.** Implement the following additional fusion strategies beyond the three in this chapter: (a) bilinear fusion with low-rank approximation, (b) mixture-of-experts with $2^M - 1$ expert networks, and (c) FiLM (Feature-wise Linear Modulation) conditioning. Compare all six strategies on forward quarterly return prediction using the same time-series cross-validation protocol. Which architecture achieves the best out-of-sample Sharpe ratio after transaction costs?
+2.  **Tìm kiếm kiến trúc kết hợp.** Triển khai các chiến lược kết hợp bổ sung sau, ngoài ba chiến lược trong chương này: (a) kết hợp song tuyến tính với xấp xỉ hạng thấp, (b) hỗn hợp các chuyên gia với $2^M - 1$ mạng chuyên gia, và (c) điều kiện hóa FiLM (Feature-wise Linear Modulation). So sánh cả sáu chiến lược trong dự báo lợi nhuận hằng quý kỳ tới bằng cùng quy trình kiểm định chéo chuỗi thời gian. Kiến trúc nào đạt tỷ số Sharpe ngoài mẫu tốt nhất sau chi phí giao dịch?
 
-3.  **Missing Modality Robustness.** Using the RobustFusionModel, systematically evaluate degradation as modalities are removed. Start with all four modalities and progressively remove them in all possible orderings. Plot the performance surface: $R^2$ as a function of the number and identity of available modalities. Which single modality is most informative? Which pair? Is there diminishing returns to adding the third and fourth modality?
+3.  **Độ vững trước phương thức bị thiếu.** Sử dụng RobustFusionModel, đánh giá một cách hệ thống mức suy giảm khi các phương thức bị loại bỏ. Bắt đầu với cả bốn phương thức và loại bỏ dần theo mọi thứ tự có thể. Vẽ bề mặt hiệu suất: $R^2$ như một hàm của số lượng và loại phương thức sẵn có. Phương thức đơn lẻ nào mang nhiều thông tin nhất? Cặp nào? Việc thêm phương thức thứ ba và thứ tư có cho thấy lợi ích giảm dần không?
 
-4.  **Multimodal Earnings Call Analysis.** If earnings call audio or transcripts are available from DataCore.vn, extend the multimodal earnings surprise model to include a fifth modality: audio features (vocal tone, speaking rate, pause patterns). Use the wav2vec2 model to extract audio embeddings. Does the CEO's vocal tone add predictive power beyond the transcript text? Implement the @mayew2012power methodology for comparing vocal and textual signals.
+4.  **Phân tích cuộc họp công bố kết quả kinh doanh đa phương thức.** Nếu có âm thanh hoặc bản ghi chép cuộc họp công bố kết quả kinh doanh từ DataCore.vn, hãy mở rộng mô hình bất ngờ lợi nhuận đa phương thức để thêm phương thức thứ năm: các đặc trưng âm thanh (giọng điệu, tốc độ nói, mẫu hình ngắt nghỉ). Sử dụng mô hình wav2vec2 để trích xuất các vector nhúng âm thanh. Giọng điệu của CEO có bổ sung sức dự báo ngoài văn bản bản ghi chép không? Triển khai phương pháp của @mayew2012power để so sánh tín hiệu giọng nói và tín hiệu văn bản.
 
-5.  **Document Understanding Benchmark.** Construct a benchmark dataset of 200 Vietnamese annual report pages with manually annotated financial fields (revenue, COGS, net income, total assets, total equity, total debt). Evaluate three approaches: (a) OCR + rule-based extraction (Chapter 61), (b) LayoutLMv3 fine-tuned on 100 pages, and (c) zero-shot VLM extraction via GPT-4V or Gemini. Report field-level exact match accuracy and mean absolute percentage error for numerical values.
+5.  **Bộ chuẩn hiểu tài liệu.** Xây dựng một bộ dữ liệu chuẩn gồm 200 trang báo cáo thường niên của Việt Nam với các chỉ tiêu tài chính được chú thích thủ công (doanh thu, giá vốn hàng bán, lợi nhuận ròng, tổng tài sản, tổng vốn chủ sở hữu, tổng nợ). Đánh giá ba cách tiếp cận: (a) OCR + trích xuất dựa trên quy tắc (Chương 61), (b) LayoutLMv3 được tinh chỉnh trên 100 trang, và (c) trích xuất VLM zero-shot qua GPT-4V hoặc Gemini. Báo cáo tỷ lệ khớp chính xác ở cấp chỉ tiêu và sai số phần trăm tuyệt đối trung bình đối với các giá trị số.
 
-6.  **Multimodal Factor Construction.** Using the best-performing fusion model, generate firm-quarter-level multimodal scores. Sort firms into quintiles on this score and compute equal- and value-weighted portfolio returns. Is the multimodal long-short factor priced in the cross-section (Fama-MacBeth)? Does it subsume the textual sentiment factor from Chapter 60 or the satellite-based factor from Chapter 61? Report spanning test results. -->
+6.  **Xây dựng nhân tố đa phương thức.** Sử dụng mô hình kết hợp có hiệu suất tốt nhất, tạo các điểm số đa phương thức ở cấp doanh nghiệp-quý. Phân loại các doanh nghiệp thành các nhóm ngũ phân vị theo điểm số này và tính lợi nhuận danh mục trọng số bằng nhau và trọng số theo vốn hóa. Nhân tố mua–bán khống đa phương thức có được định giá theo chiều cắt ngang (cross-section; Fama-MacBeth) không? Nó có bao hàm nhân tố tâm lý văn bản từ Chương 60 hoặc nhân tố dựa trên vệ tinh từ Chương 61 không? Báo cáo kết quả kiểm định bao hàm (spanning). -->
 
-## Summary
+## Tóm tắt
 
-This chapter developed the multimodal learning framework for Vietnamese financial markets, progressing from foundational representation alignment through production-ready fusion architectures.
+Chương này đã phát triển khung học đa phương thức cho thị trường tài chính Việt Nam, đi từ căn chỉnh biểu diễn nền tảng đến các kiến trúc kết hợp sẵn sàng vận hành.
 
-The key contributions are threefold. First, we demonstrated that financial data is inherently multimodal and that effective fusion requires explicit architectural choices (e.g., contrastive alignment, cross-attention mechanisms, and missing-modality handling) rather than naive concatenation. The FinancialCLIP alignment framework learns a shared embedding space where text, image, tabular, and time-series representations are geometrically comparable, enabling cross-modal retrieval and transfer.
+Các đóng góp chính gồm ba điểm. Thứ nhất, chúng ta đã chứng minh rằng dữ liệu tài chính vốn dĩ là đa phương thức và việc kết hợp hiệu quả đòi hỏi những lựa chọn kiến trúc tường minh (chẳng hạn, căn chỉnh đối chiếu, cơ chế chú ý chéo và xử lý phương thức bị thiếu) thay vì nối đơn giản. Khung căn chỉnh FinancialCLIP học một không gian nhúng chung trong đó các biểu diễn văn bản, hình ảnh, dữ liệu bảng và chuỗi thời gian có thể so sánh được về mặt hình học, cho phép truy xuất chéo giữa các phương thức và chuyển giao.
 
-Second, we built and compared five fusion architectures (early, late with gating, cross-attention, robust with modality dropout, and the custom earnings surprise model) on the prediction of forward returns and earnings surprises. The cross-attention architecture with modality dropout consistently outperforms unimodal baselines and simpler fusion strategies, though the margin varies across prediction horizons and firm characteristics.
+Thứ hai, chúng ta đã xây dựng và so sánh năm kiến trúc kết hợp (sớm, muộn có cổng, chú ý chéo, vững với loại bỏ phương thức, và mô hình bất ngờ lợi nhuận tùy chỉnh) trong dự báo lợi nhuận kỳ tới và bất ngờ lợi nhuận. Kiến trúc chú ý chéo với loại bỏ phương thức luôn vượt trội so với các mô hình cơ sở đơn phương thức và các chiến lược kết hợp đơn giản hơn, dù mức chênh lệch thay đổi theo các kỳ dự báo và đặc điểm doanh nghiệp.
 
-Third, we showed how large vision-language models can perform zero-shot financial analysis on Vietnamese documents and satellite imagery, offering a path to multimodal analysis without task-specific training. The retrieval-augmented multimodal pipeline combines the strengths of structured retrieval (from DataCore.vn) with the reasoning capabilities of VLMs.
+Thứ ba, chúng ta đã cho thấy các mô hình thị giác–ngôn ngữ lớn có thể thực hiện phân tích tài chính zero-shot trên các tài liệu và ảnh vệ tinh của Việt Nam, mở ra một con đường đến phân tích đa phương thức mà không cần huấn luyện riêng cho từng tác vụ. Quy trình đa phương thức tăng cường truy xuất kết hợp thế mạnh của truy xuất có cấu trúc (từ DataCore.vn) với năng lực suy luận của VLM.
 
-The practical lesson for researchers working with Vietnamese financial data is that multimodal fusion is most valuable when modalities are complementary: text captures management intent and market narrative, images capture physical economic activity, tabular data provides precise quantitative snapshots, and time series captures market dynamics. When a single modality already captures most of the relevant signal (as tabular features do for many standard prediction tasks), the marginal gain from fusion is modest. When the prediction task requires information that no single modality captures well (as earnings surprises require both quantitative and qualitative assessment), multimodal models provide their largest advantage.
+Bài học thực tiễn cho các nhà nghiên cứu làm việc với dữ liệu tài chính Việt Nam là việc kết hợp đa phương thức có giá trị nhất khi các phương thức bổ trợ cho nhau: văn bản nắm bắt ý định của ban lãnh đạo và câu chuyện thị trường, hình ảnh nắm bắt hoạt động kinh tế vật lý, dữ liệu bảng cung cấp những ảnh chụp định lượng chính xác, và chuỗi thời gian nắm bắt động thái thị trường. Khi một phương thức đơn lẻ đã nắm bắt phần lớn tín hiệu liên quan (như các đặc trưng dữ liệu bảng làm được trong nhiều tác vụ dự báo tiêu chuẩn), lợi ích cận biên của việc kết hợp là khiêm tốn. Khi tác vụ dự báo đòi hỏi thông tin mà không phương thức đơn lẻ nào nắm bắt tốt (như bất ngờ lợi nhuận đòi hỏi cả đánh giá định lượng lẫn định tính), các mô hình đa phương thức mang lại lợi thế lớn nhất.

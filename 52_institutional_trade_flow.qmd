@@ -1,4 +1,4 @@
-# Institutional Trades, Flows, and Turnover Ratios
+# Giao dịch, dòng vốn và tỷ lệ vòng quay của nhà đầu tư tổ chức
 
 ```{python}
 #| label: setup
@@ -60,111 +60,164 @@ pd.set_option('display.width', 120)
 pd.set_option('display.float_format', '{:.4f}'.format)
 ```
 
-Institutional investors play a pivotal role in price discovery, corporate governance, and market liquidity. Understanding *how* institutions trade and *how much* they trade provides insights into both asset pricing dynamics and the real effects of institutional monitoring. The seminal work of @grinblatt1995momentum on mutual fund momentum trading, @wermers2000mutual on fund performance decomposition, and @yan2008liquidity on the relationship between turnover and future returns all rely on accurately measured institutional trades, flows, and turnover.
+Các nhà đầu tư tổ chức đóng vai trò then chốt trong quá trình khám phá giá, quản trị công ty và thanh khoản thị trường. Hiểu được tổ chức giao dịch *như thế nào* và giao dịch *nhiều đến mức nào* giúp chúng ta nắm được cả động lực định giá tài sản lẫn các tác động thực của việc giám sát từ tổ chức. Công trình nền tảng của @grinblatt1995momentum về giao dịch theo động lượng của quỹ tương hỗ, của @wermers2000mutual về phân rã hiệu quả hoạt động của quỹ, và của @yan2008liquidity về mối quan hệ giữa tỷ lệ vòng quay và lợi nhuận tương lai đều dựa vào việc đo lường chính xác các giao dịch, dòng vốn và tỷ lệ vòng quay của tổ chức.
 
-In the United States, this research is enabled by the mandatory quarterly 13F filing system administered by the Securities and Exchange Commission (SEC). Every institutional investment manager with at least \$100 million in qualifying assets must disclose their equity holdings within 45 days of each calendar quarter end. The Thomson-Reuters (now Refinitiv) 13F database, accessible through WRDS, provides the canonical data infrastructure for this literature.
+Tại Hoa Kỳ, nghiên cứu này được hỗ trợ bởi hệ thống báo cáo 13F hằng quý bắt buộc do Ủy ban Chứng khoán và Giao dịch Hoa Kỳ (SEC) quản lý. Mọi nhà quản lý đầu tư tổ chức có ít nhất \$100 triệu tài sản đủ điều kiện phải công bố danh mục cổ phiếu nắm giữ trong vòng 45 ngày kể từ cuối mỗi quý dương lịch. Cơ sở dữ liệu 13F của Thomson-Reuters (nay là Refinitiv), có thể truy cập qua WRDS, là hạ tầng dữ liệu chuẩn mực của dòng nghiên cứu này.
 
-Vietnam's equity market presents a fundamentally different institutional landscape. This chapter adapts the core methodology for the Vietnamese context, addressing five critical differences:
+Thị trường cổ phiếu Việt Nam có bối cảnh tổ chức khác biệt căn bản. Chương này điều chỉnh phương pháp cốt lõi cho phù hợp với bối cảnh Việt Nam, giải quyết năm điểm khác biệt quan trọng:
 
-1.  **Disclosure regime.** Vietnam has no 13F-equivalent mandatory quarterly filing. Ownership disclosure is a patchwork of event-driven reports (threshold crossings at 5%, 10%, etc.), annual/semi-annual reports with shareholder registers, and daily foreign ownership tracking by exchanges.
+1.  **Chế độ công bố thông tin.** Việt Nam không có chế độ báo cáo hằng quý bắt buộc tương đương 13F. Việc công bố sở hữu là một bức tranh chắp vá gồm các báo cáo theo sự kiện (vượt ngưỡng 5%, 10%, v.v.), báo cáo thường niên/bán niên kèm danh sách cổ đông, và việc các sở giao dịch theo dõi sở hữu nước ngoài hằng ngày.
 
-2.  **Corporate actions.** Vietnamese firms issue stock dividends and bonus shares at extremely high rates compared to US firms. A firm might issue 20-30% bonus shares in a single year, fundamentally altering the share count. Share adjustment is therefore critical and nontrivial.
+2.  **Sự kiện doanh nghiệp.** Các công ty Việt Nam phát hành cổ tức bằng cổ phiếu và cổ phiếu thưởng với tần suất cực cao so với các công ty Mỹ. Một công ty có thể phát hành 20-30% cổ phiếu thưởng trong một năm, làm thay đổi căn bản số lượng cổ phiếu. Do đó, việc điều chỉnh số cổ phiếu là then chốt và không hề đơn giản.
 
-3.  **Foreign ownership limits (FOLs).** Binding foreign ownership ceiling, typically 49% for most sectors, 30% for banking, and 0% for certain restricted sectors, create a unique institutional constraint. When a stock approaches its FOL, foreign buying becomes mechanically restricted, distorting standard trade inference.
+3.  **Giới hạn sở hữu nước ngoài (FOL).** Mức trần sở hữu nước ngoài mang tính ràng buộc, thường là 49% đối với hầu hết các ngành, 30% đối với ngân hàng, và 0% đối với một số ngành hạn chế, tạo ra một ràng buộc thể chế đặc thù. Khi một cổ phiếu tiến gần FOL, hoạt động mua của nhà đầu tư nước ngoài bị hạn chế một cách cơ học, làm sai lệch việc suy luận giao dịch theo cách chuẩn.
 
-4.  **State ownership.** The Vietnamese government retains significant ownership in many listed firms through the State Capital Investment Corporation (SCIC) and other state entities. This creates a distinct ownership category not present in the US 13F data.
+4.  **Sở hữu nhà nước.** Chính phủ Việt Nam duy trì tỷ lệ sở hữu đáng kể tại nhiều công ty niêm yết thông qua Tổng công ty Đầu tư và Kinh doanh vốn nhà nước (SCIC) và các đơn vị nhà nước khác. Điều này tạo ra một nhóm sở hữu riêng biệt không có trong dữ liệu 13F của Mỹ.
 
-5.  **Market microstructure.** Daily price limits ($\pm 7\%$ on HOSE, $\pm 10\%$ on HNX, $\pm 15\%$ on UPCOM), T+2 settlement, and the absence of short-selling all affect how institutional trades translate into market outcomes.
+5.  **Vi cấu trúc thị trường.** Biên độ giá hằng ngày ($\pm 7\%$ trên HOSE, $\pm 10\%$ trên HNX, $\pm 15\%$ trên UPCOM), thanh toán T+2 và việc không có bán khống đều ảnh hưởng đến cách các giao dịch của tổ chức chuyển hóa thành kết quả thị trường.
 
-## Measuring Institutional Ownership and Trading
+## Đo lường sở hữu và giao dịch của tổ chức
 
-The measurement of institutional ownership and trading activity has been a central concern in empirical finance since @gompers2003corporate documented the rise of institutional investors. The approach relies on comparing holdings snapshots across consecutive reporting periods to infer trades. If manager $j$ holds $h_{j,i,t}$ shares of stock $i$ at time $t$, then the inferred trade is:
+Việc đo lường sở hữu và hoạt động giao dịch của tổ chức là mối quan tâm trọng tâm của tài chính thực nghiệm kể từ khi @gompers2003corporate ghi nhận sự trỗi dậy của các nhà đầu tư tổ chức. Cách tiếp cận này dựa trên việc so sánh các ảnh chụp danh mục nắm giữ qua các kỳ báo cáo liên tiếp để suy ra giao dịch. Nếu nhà quản lý $j$ nắm giữ $h_{j,i,t}$ cổ phiếu $i$ tại thời điểm $t$, thì giao dịch được suy ra là:
 
 $$
 \Delta h_{j,i,t} = h_{j,i,t} - h_{j,i,t-1}
 $$ {#eq-trade-simple}
 
-where $\Delta h_{j,i,t} > 0$ indicates a buy and $\Delta h_{j,i,t} < 0$ indicates a sale. This simple differencing approach requires that holdings are observed at regular intervals (e.g., quarterly), share counts are adjusted for corporate actions between reporting dates, and entry and exit from the dataset are handled appropriately.
+trong đó $\Delta h_{j,i,t} > 0$ cho biết một giao dịch mua và $\Delta h_{j,i,t} < 0$ cho biết một giao dịch bán. Cách lấy sai phân đơn giản này đòi hỏi các danh mục nắm giữ được quan sát theo các khoảng đều đặn (ví dụ: hằng quý), số cổ phiếu được điều chỉnh theo các sự kiện doanh nghiệp giữa các ngày báo cáo, và việc gia nhập và rời khỏi bộ dữ liệu được xử lý thích hợp.
 
-@chen2000value introduced the concept of ownership *breadth* (i.e., the number of institutions holding a stock) and showed that changes in breadth predict future returns. @sias2004institutional decomposed institutional demand into a herding component and an information component. @yan2008liquidity linked fund turnover to information-based trading and documented that high-turnover funds outperform, challenging the view that turnover reflects noise trading.
+@chen2000value đưa ra khái niệm *độ rộng* sở hữu (tức là số lượng tổ chức nắm giữ một cổ phiếu) và chỉ ra rằng thay đổi về độ rộng dự báo lợi nhuận tương lai. @sias2004institutional phân rã nhu cầu của tổ chức thành thành phần hành vi bầy đàn và thành phần thông tin. @yan2008liquidity liên hệ tỷ lệ vòng quay của quỹ với giao dịch dựa trên thông tin và ghi nhận rằng các quỹ có tỷ lệ vòng quay cao đạt hiệu quả vượt trội, qua đó thách thức quan điểm cho rằng tỷ lệ vòng quay phản ánh giao dịch nhiễu.
 
-## Trade Classification
+## Phân loại giao dịch
 
-@tbl-trade-types shows four categories of trades:
+@tbl-trade-types trình bày bốn nhóm giao dịch:
 
-| Code | Type             | Description                            |
+| Mã | Loại             | Mô tả                                  |
 |:-----|:-----------------|:---------------------------------------|
-| $+1$ | Initiating Buy   | Manager enters a new position          |
-| $+2$ | Incremental Buy  | Manager increases an existing position |
-| $-1$ | Terminating Sale | Manager completely exits a position    |
-| $-2$ | Regular Sale     | Manager reduces an existing position   |
+| $+1$ | Mua khởi tạo     | Nhà quản lý thiết lập một vị thế mới   |
+| $+2$ | Mua gia tăng     | Nhà quản lý tăng một vị thế hiện có    |
+| $-1$ | Bán chấm dứt     | Nhà quản lý thoát hoàn toàn một vị thế |
+| $-2$ | Bán thông thường | Nhà quản lý giảm một vị thế hiện có    |
 
-: Trade Classification Taxonomy {#tbl-trade-types}
+: Hệ phân loại giao dịch {#tbl-trade-types}
 
-This classification is informative because initiating buys and terminating sales represent discrete portfolio decisions with different information content from marginal position adjustments [@alexander2007does].
+Cách phân loại này mang nhiều thông tin vì các giao dịch mua khởi tạo và bán chấm dứt thể hiện những quyết định danh mục rời rạc với nội dung thông tin khác với các điều chỉnh vị thế biên [@alexander2007does].
 
-## Turnover Measures
+## Các thước đo tỷ lệ vòng quay
 
-Three standard turnover definitions have been used in the literature:
+Có ba định nghĩa chuẩn về tỷ lệ vòng quay đã được sử dụng trong các nghiên cứu:
 
-**Carhart (1997) Turnover.** The minimum of aggregate buys and sales, normalized by average assets:
+**Tỷ lệ vòng quay của Carhart (1997).** Giá trị nhỏ hơn giữa tổng giao dịch mua và tổng giao dịch bán, được chuẩn hóa theo tài sản bình quân:
 
 $$
 \text{Turnover}^{C}_{j,t} = \frac{\min\left(\sum_i B_{j,i,t},\, \sum_i S_{j,i,t}\right)}
 {\frac{1}{2}\left(A_{j,t} + A_{j,t-1}\right)}
 $$ {#eq-turnover-carhart}
 
-where $B_{j,i,t}$ and $S_{j,i,t}$ are the dollar values of buys and sales of stock $i$ by manager $j$ in quarter $t$, and $A_{j,t}$ is total portfolio assets [@Carhart1997].
+trong đó $B_{j,i,t}$ và $S_{j,i,t}$ là giá trị bằng tiền của các giao dịch mua và bán cổ phiếu $i$ bởi nhà quản lý $j$ trong quý $t$, và $A_{j,t}$ là tổng tài sản danh mục [@Carhart1997].
 
-**Flow-Adjusted Turnover.** Adds back the absolute value of net flows to account for flow-driven trading:
+**Tỷ lệ vòng quay điều chỉnh theo dòng vốn.** Cộng thêm giá trị tuyệt đối của dòng vốn ròng để tính đến hoạt động giao dịch do dòng vốn thúc đẩy:
 
 $$
 \text{Turnover}^{F}_{j,t} = \frac{\min\left(\sum_i B_{j,i,t},\, \sum_i S_{j,i,t}\right) + |\text{NetFlow}_{j,t}|}
 {A_{j,t-1}}
 $$ {#eq-turnover-flow}
 
-**Symmetric Turnover.** Uses the sum of buys and sales minus the absolute net flow:
+**Tỷ lệ vòng quay đối xứng.** Sử dụng tổng giao dịch mua và bán trừ đi giá trị tuyệt đối của dòng vốn ròng:
 
 $$
 \text{Turnover}^{S}_{j,t} = \frac{\sum_i B_{j,i,t} + \sum_i S_{j,i,t} - |\text{NetFlow}_{j,t}|}
 {A_{j,t-1}}
 $$ {#eq-turnover-symmetric}
 
-The relationship between these measures depends on the correlation between discretionary trading and flow-induced trading [@pastor2003liquidity].
+Mối quan hệ giữa các thước đo này phụ thuộc vào tương quan giữa giao dịch tùy ý và giao dịch do dòng vốn gây ra [@pastor2003liquidity].
 
-## Institutional Ownership in Emerging Markets
+## Sở hữu tổ chức tại các thị trường mới nổi
 
-The emerging markets literature has documented several stylized facts about institutional ownership that differ from developed market findings. @aggarwal2011does documented that foreign institutional ownership improves corporate governance in emerging markets. For Vietnam specifically, @phung2016ownership examined the relationship between ownership structure and firm performance, while @vo2015foreign studied the impact of foreign ownership on stock market liquidity.
+Các nghiên cứu về thị trường mới nổi đã ghi nhận một số sự thật điển hình về sở hữu tổ chức khác với các phát hiện ở thị trường phát triển. @aggarwal2011does ghi nhận rằng sở hữu tổ chức nước ngoài cải thiện quản trị công ty tại các thị trường mới nổi. Riêng đối với Việt Nam, @phung2016ownership xem xét mối quan hệ giữa cơ cấu sở hữu và hiệu quả hoạt động của doanh nghiệp, trong khi @vo2015foreign nghiên cứu tác động của sở hữu nước ngoài đối với thanh khoản thị trường cổ phiếu.
 
-## Net Flows and Performance Attribution
+## Dòng vốn ròng và phân tích nguồn gốc hiệu quả hoạt động
 
-Net flows measure the dollar amount of new money entering or leaving a fund:
+Dòng vốn ròng đo lượng tiền mới chảy vào hoặc chảy ra khỏi một quỹ:
 
 $$
 \text{NetFlow}_{j,t} = A_{j,t} - A_{j,t-1}(1 + R_{j,t}^p)
 $$ {#eq-netflow}
 
-where $R_{j,t}^p$ is the portfolio return. This decomposition, due to @sirri1998costly, separates changes in fund assets into investment returns and investor capital allocation decisions. @coval2007asset showed that flow-driven trades create price pressure, with fire sales by funds experiencing redemptions generating significant negative abnormal returns.
+trong đó $R_{j,t}^p$ là lợi nhuận danh mục. Sự phân rã này, do @sirri1998costly đề xuất, tách các thay đổi trong tài sản của quỹ thành lợi nhuận đầu tư và các quyết định phân bổ vốn của nhà đầu tư. @coval2007asset chỉ ra rằng các giao dịch do dòng vốn thúc đẩy tạo ra áp lực giá, trong đó việc bán tháo của các quỹ bị rút vốn tạo ra lợi nhuận bất thường âm đáng kể.
 
-# Data Infrastructure {#sec-institutionaldata}
+## Áp lực giá do dòng vốn gây ra và phép tính số học khi đo lường nó {#sec-institutional-flow-pressure}
 
-@tbl-datacore-datasets summarizes the datasets used in this chapter.
+Kết quả của @coval2007asset không chỉ dừng lại ở một sự thật về bán tháo; nó nhanh chóng trở thành một chiến lược nhận diện. Nếu một quỹ tương hỗ đối mặt với các đợt rút vốn lớn phải huy động tiền mặt, và nếu các quyết định rút vốn của chính nhà đầu tư của quỹ đó không liên quan đến các yếu tố cơ bản của từng cổ phiếu mà quỹ tình cờ nắm giữ, thì áp lực bán truyền sang các cổ phiếu đó là một nguồn biến thiên giá có khả năng trực giao với giá trị doanh nghiệp. @edmans2012real biến logic này thành một công cụ cho biến động giá phi cơ bản và dùng nó để chỉ ra rằng giá bị suy giảm thu hút các lời chào mua thâu tóm. @khan2012mutual áp dụng nó cho thời điểm phát hành cổ phiếu thứ cấp, @lou2012flow xây dựng thước đo giao dịch do dòng vốn gây ra (FIT) có liên quan chặt chẽ và dùng nó để giải thích khả năng dự báo lợi nhuận, còn @lou2018flow và @dessaint2019noisy dùng áp lực do rút vốn để đặt câu hỏi liệu các nhà quản lý có học hỏi từ giá khi đưa ra quyết định đầu tư hay không. Trong vòng một thập kỷ, thước đo này đã trở thành một trong những công cụ được sử dụng nhiều nhất trong tài chính doanh nghiệp thực nghiệm, xuất hiện trong các nghiên cứu về đầu tư, đổi mới, công bố thông tin, chi trả cổ tức, thay đổi CEO và quản trị công ty.
 
-| Dataset | Content | Frequency | Key Variables |
+### Thước đo chuẩn {#sec-institutional-mfflow}
+
+Cách xây dựng quen thuộc là biến áp lực giá của quỹ tương hỗ của @edmans2012real:
+
+$$
+\text{MFFlow}_{i,t} = \sum_{j} \frac{F_{j,t} \times \text{SHARES}_{i,j,t-1} \times \text{PRC}_{i,t-1}}{\text{TA}_{j,t-1} \times \text{VOL}_{i,t}}
+$$ {#eq-mfflow}
+
+trong đó $j$ là chỉ số của các quỹ tương hỗ, $F_{j,t}$ là tổng dòng vốn ròng của quỹ $j$ trong quý $t$, $\text{TA}_{j,t-1}$ là tổng tài sản của quỹ vào cuối quý trước, $\text{SHARES}_{i,j,t-1}$ là số cổ phiếu $i$ mà quỹ nắm giữ vào cuối quý $t-1$, $\text{PRC}_{i,t-1}$ là giá cổ phiếu tại ngày đó, và $\text{VOL}_{i,t}$ là tổng khối lượng giao dịch tính bằng *tiền* của cổ phiếu trong quý $t$. Phép tổng chỉ chạy trên các quỹ có dòng vốn rút ra vượt một ngưỡng (5% tài sản trong bài báo gốc, dòng vốn ở phân vị thứ 10 trong phần lớn các nghiên cứu sau đó), và các quỹ ngành bị loại trừ để dòng vốn rút ra không thể phản ánh quan điểm về một ngành cụ thể. Tử số là giá trị bằng tiền mà quỹ *sẽ* bán nếu thanh lý danh mục theo tỷ lệ để đáp ứng yêu cầu rút vốn; mẫu số chuẩn hóa giao dịch giả định đó theo thanh khoản của cổ phiếu, với lập luận rằng cùng một đợt bán bắt buộc sẽ làm một cổ phiếu mỏng thanh khoản biến động mạnh hơn một cổ phiếu có thanh khoản cao.
+
+### Thước đo thực sự chứa đựng điều gì {#sec-institutional-wardlaw}
+
+@wardlaw2020measuring chỉ ra rằng @eq-mfflow không phải là một tỷ số như vẻ bề ngoài. Viết khối lượng giao dịch bằng tiền của quý bằng khối lượng cổ phiếu nhân với giá bình quân gia quyền theo khối lượng mà cổ phiếu thực sự được giao dịch, $\text{VOL}_{i,t} = \text{SHVOL}_{i,t} \times \bar{P}_{i,t}$. Thay vào @eq-mfflow và biến đổi ta được
+
+$$
+\text{MFFlow}_{i,t} = \underbrace{\left[ \sum_{j} \frac{F_{j,t} \times \text{SHARES}_{i,j,t-1}}{\text{TA}_{j,t-1} \times \text{SHVOL}_{i,t}} \right]}_{\text{trading pressure, in share space}} \times \underbrace{\frac{\text{PRC}_{i,t-1}}{\bar{P}_{i,t}}}_{= \; 1 / (1 + \bar{r}_{i,t})}
+$$ {#eq-mfflow-decomposition}
+
+trong đó $\bar{r}_{i,t} \equiv \bar{P}_{i,t} / \text{PRC}_{i,t-1} - 1$ là lợi nhuận thực hiện của cổ phiếu từ cuối quý $t-1$ đến mức giá bình quân mà cổ phiếu được chuyển nhượng trong quý $t$. Thước đo là tích của một số hạng áp lực giao dịch thực sự và một số hạng *chính là* lợi nhuận đồng thời. Vì các quan sát rút vốn có $F_{j,t} < 0$, một cổ phiếu có giá giảm trong quý sẽ nhận $\text{MFFlow}$ âm hơn một cách cơ học bất kể các quỹ tương hỗ đã làm gì, và một cổ phiếu có giá tăng sẽ nhận giá trị ít âm hơn. Do đó, việc hồi quy lợi nhuận quý $t$ theo $\text{MFFlow}_{i,t}$ cho ra đúng dấu mà giả thuyết bán tháo dự báo, ngay cả trong một thế giới mà tác động giá thực sự của việc bán do dòng vốn gây ra hoàn toàn bằng không. Đây là điều mà bài báo muốn nói khi kết luận rằng cách tiếp cận chuẩn tạo ra một thước đo vô tình là hàm trực tiếp của lợi nhuận thực hiện thực tế của cổ phiếu trong quý có dòng vốn rút ra.
+
+Hai hệ quả thực nghiệm theo sau, và hệ quả thứ hai gây tổn hại nhiều hơn. Thứ nhất, khi loại bỏ phần lợi nhuận bị gộp vào, dòng vốn rút ra chỉ gây ra một mức giảm nhỏ đồng thời trong lợi nhuận. Thứ hai, mức giảm đó *không được theo sau bởi sự đảo chiều nào*. Sự đảo chiều chưa bao giờ là một kiểm tra độ vững mang tính trang trí: nó là bằng chứng nhận diện. Một biến động giá do người bán có động cơ thanh khoản gây ra được cho là tạm thời và do đó sẽ tự đảo ngược, trong khi biến động giá do thông tin gây ra là vĩnh viễn. Nếu không có sự đảo chiều, kiểu hình thực nghiệm tương đương về mặt quan sát với việc các quỹ bán những cổ phiếu thực sự đang xấu đi, và giả định loại trừ mà toàn bộ chương trình nghiên cứu dựa vào mất đi bằng chứng hỗ trợ. @wardlaw2020measuring báo cáo rằng nhiều kết quả đã được thiết lập trong dòng nghiên cứu này không còn đứng vững khi thước đo được làm sạch.
+
+Cách khắc phục rất dễ phát biểu. Xây dựng thước đo trong không gian cổ phiếu: tính *số cổ phiếu* giả định bị bán và chuẩn hóa theo số cổ phiếu đang lưu hành tại $t-1$ (tỷ số dòng vốn trên lượng cổ phiếu), hoặc theo khối lượng cổ phiếu giao dịch, và giữ mọi mức giá trong cách xây dựng ở ngày $t-1$. Quy tắc chung mà ví dụ này minh họa đáng được mang theo xa hơn dòng nghiên cứu về dòng vốn: *không bao giờ lập một tỷ số có tử số là một đại lượng được định giá theo giá ngày $t-1$ và mẫu số là một đại lượng được định giá theo giá ngày $t$, vì khi đó tỷ số theo cấu trúc chứa lợi nhuận giữa hai ngày*. Chính phép tính số học này giải thích vì sao một mức giá nằm ở mẫu số của bất kỳ thước đo nào đều đáng được xem xét kỹ, tỷ số phi thanh khoản Amihud được thảo luận trong @sec-liquidity-amihud-original là ví dụ hiển nhiên. Sự khác biệt ở đó nằm ở mục đích chứ không phải đại số: Amihud là một thước đo mô tả có mẫu số cố ý tính bằng tiền, trong khi MFFlow là một công cụ mà toàn bộ luận điểm của nó là tính trực giao với kết quả mà nó được dùng để giải thích.
+
+### Vấn đề thứ hai, độc lập: thiên lệch chọn lọc {#sec-institutional-fire-sale-selection}
+
+Ngay cả một thước đo được chuẩn hóa đúng cũng thừa hưởng một giả định hành vi sai trong dữ liệu. @eq-mfflow gán các giao dịch bằng cách giả định quỹ bị rút vốn thanh lý *theo tỷ lệ*, chính điều này làm cho giao dịch giả định độc lập với thông tin của nhà quản lý. @berger2023selection chỉ ra rằng các nhà quản lý không hành xử như vậy: khi đối mặt với các yêu cầu rút vốn, họ ưu tiên bán các vị thế có thanh khoản cao, hoạt động tốt và giữ lại các vị thế thua lỗ kém thanh khoản. Do đó, giả định theo tỷ lệ phân bổ sai áp lực bán hàm ý sang các công ty mà các nhà quản lý có hệ thống từ chối bán, tức là những công ty hoạt động kém, kém thanh khoản và có tăng trưởng thấp. Các mô phỏng trong bài báo đó cho thấy thiên lệch chọn lọc phát sinh làm tăng khoảng gấp đôi độ lớn của các hệ số hồi quy ước lượng và các cách khắc phục chuẩn không loại bỏ được nó; sau khi tính đến thiên lệch này, tác giả không tìm thấy hiệu ứng phản hồi nào chạy từ việc định giá sai do dòng vốn gây ra đến đầu tư, phát hành cổ phiếu hay chi trả cổ tức của doanh nghiệp. Đọc cùng nhau, @wardlaw2020measuring và @berger2023selection nêu cùng một luận điểm phương pháp luận từ hai hướng: một giao dịch giả định được xây dựng từ một ảnh chụp danh mục nắm giữ và một đồng nhất thức kế toán là một *mô hình* về hành vi của tổ chức, không phải là một quan sát về hành vi đó, và cả việc chuẩn hóa lẫn giả định hành vi đều phải được bảo vệ.
+
+Một lưu ý thứ ba nằm ở thượng nguồn của cả hai. @li2025measuring ghi nhận rằng chính các dòng vốn của quỹ đưa vào tử số cũng là các ước lượng. Hầu hết các nghiên cứu suy ra dòng vốn từ thay đổi trong tổng tài sản ròng vượt quá lợi nhuận của quỹ, như trong @eq-netflow, thay vì từ dòng vốn được báo cáo, và hai cách này khác nhau do các khoản phân phối được tái đầu tư, quy ước về thời điểm áp dụng trong kỳ và cách xử lý việc sáp nhập quỹ. Các thước đo dòng vốn khác nhau tạo ra những suy luận khác biệt đáng kể về mối quan hệ giữa dòng vốn và hiệu quả hoạt động cũng như về cách dòng vốn làm dịch chuyển giá chứng khoán, điều này khiến việc lựa chọn thước đo là điều cần được ghi chép lại thay vì thừa hưởng.
+
+### Điều này có ý nghĩa gì đối với nghiên cứu về Việt Nam {#sec-institutional-flow-pressure-vietnam}
+
+Thiết kế của Mỹ khó có thể áp dụng trực tiếp, vì lý do đã nêu ở đầu chương này: không có tương đương 13F, nên bảng dữ liệu danh mục nắm giữ hằng quý mà @eq-mfflow đòi hỏi không tồn tại đối với hầu hết các nhà đầu tư tổ chức. Ngành quỹ mở trong nước có công bố danh mục nắm giữ còn nhỏ so với vốn hóa thị trường, nên ngay cả một đợt bán giả định được xây dựng đúng cũng chỉ chiếm một phần không đáng kể trong khối lượng giao dịch của một cổ phiếu HOSE điển hình. Đó là công thức cho một biến công cụ yếu, bất kể được chuẩn hóa cẩn thận đến đâu.
+
+Quan sát triển vọng hơn là Việt Nam có một bối cảnh trong đó giao dịch do dòng vốn gây ra không cần phải được gán một cách giả định. Các quỹ hoán đổi danh mục (ETF) bám sát các chỉ số của Việt Nam, trong nước là các quỹ DCVFMVN30, DCVFM VNDIAMOND và SSIAM VNFIN LEAD, còn ngoài nước là các ETF VanEck Vietnam và Fubon FTSE Vietnam, công bố các lệnh tạo lập và mua lại hằng ngày dựa trên các rổ cổ phiếu được công bố và theo quy tắc rõ ràng. Do đó, giao dịch mà một lệnh tạo lập hoặc mua lại buộc phải thực hiện là *quan sát được và mang tính cơ học* thay vì được giả định: quỹ phải giao dịch cả rổ, theo trọng số của chỉ số, theo một lịch trình đã biết. Điều này loại bỏ giả định theo tỷ lệ mà @berger2023selection phê phán, vì đối với một ETF chỉ số, giao dịch theo tỷ lệ chính là điều thực sự xảy ra, và loại bỏ vấn đề xấp xỉ theo quý, vì dòng vốn là hằng ngày. Các dòng vốn vào lớn do nhà đầu tư cá nhân Đài Loan thúc đẩy vào ETF Fubon FTSE Vietnam trong giai đoạn 2021 đến 2023 là một cú sốc nhu cầu đặc biệt rõ ràng, ở chỗ khẩu vị của nhà đầu tư cá nhân Đài Loan đối với một sản phẩm Việt Nam khó có thể được gắn với các yếu tố cơ bản của bất kỳ công ty Việt Nam riêng lẻ nào. Họ VNDIAMOND thú vị vì lý do ngược lại: các cổ phiếu thành phần của nó được chọn chính vì chúng nằm tại hoặc gần giới hạn sở hữu nước ngoài, nên nhu cầu do ETF thúc đẩy tương tác trực tiếp với ràng buộc đang có hiệu lực được phân tích trong @sec-institutionalfol-util và @sec-institutionalroom-premium.
+
+Biên độ giá của Việt Nam đưa ra thêm một lý do nữa để không đặt khối lượng giao dịch ở mẫu số, và lý do này đặc thù cho thị trường này. Khối lượng giao dịch sụt giảm mạnh vào các ngày chạm biên và có thể tiến gần về không khi một cổ phiếu bị khóa ở mức giá trần hoặc sàn với hàng đợi lệnh chưa được khớp, đúng vào lúc lợi nhuận trong ngày cực đoan nhất. Do đó, một thước đo áp lực được chuẩn hóa theo khối lượng sẽ bùng nổ đúng tại các quan sát chi phối hồi quy lợi nhuận, khiến mẫu số có thêm một kênh thứ hai để đưa biến kết quả vào. Mức độ thường xuyên của hiện tượng này trên HOSE và HNX được ghi nhận trong @sec-price-limit-prevalence, và hiện tượng lợi nhuận bị chặn (kiểm duyệt dữ liệu) mà nó gây ra được phân tích trong @sec-price-limit-distortion. Số cổ phiếu đang lưu hành, vốn không thể bị thay đổi bởi bất kỳ lượng giao dịch nào trong một ngày nhất định, là biến chuẩn hóa an toàn hơn ở đây, vì cùng lý do mà nó an toàn hơn trong dữ liệu Mỹ.
+
+Sáu quy tắc thực tiễn sau đây dành cho bất kỳ ai xây dựng thước đo áp lực dòng vốn trên dữ liệu Việt Nam.
+
+1.  **Xây dựng thước đo theo số cổ phiếu và chuẩn hóa theo số cổ phiếu đang lưu hành tại $t-1$.** Không chuẩn hóa theo khối lượng giao dịch bằng tiền đồng thời.
+2.  **Gắn mọi mức giá trong cách xây dựng với ngày $t-1$.** Nếu một mức giá của kỳ $t$ xuất hiện ở bất kỳ đâu trong công thức, thước đo sẽ chứa lợi nhuận của kỳ $t$.
+3.  **Báo cáo kiểm định đảo chiều như một kết quả chính, không phải một kiểm tra độ vững.** Đó là bằng chứng duy nhất phân biệt áp lực phi cơ bản với thông tin, và sau @wardlaw2020measuring, một kết quả về áp lực dòng vốn thiếu nó thì không đáng tin.
+4.  **Xác thực giao dịch được gán so với giao dịch quan sát được bất cứ khi nào có thể.** Việt Nam công bố giá trị mua và bán ròng của nhà đầu tư nước ngoài hằng ngày theo mã cổ phiếu, và các rổ ETF được công bố; cả hai đều cho phép kiểm tra xem hành vi giao dịch được giả định có khớp với các giao dịch thực hiện hay không.
+5.  **Chạy kiểm định placebo với dòng vốn kỳ vọng.** Thay dòng vốn thực hiện bằng dòng vốn dự báo, theo tinh thần của cách xây dựng giao dịch do dòng vốn kỳ vọng gây ra trong @lou2012flow, để kiểm tra xem kết quả được thúc đẩy bởi cú sốc dòng vốn hay bởi cơ cấu nắm giữ.
+6.  **Báo cáo độ mạnh của giai đoạn một.** Với mức sở hữu tổ chức còn nông như ở Việt Nam, biến công cụ yếu là kỳ vọng mặc định và phải được loại trừ một cách tường minh.
+
+Cần lưu ý dòng nghiên cứu này đã dịch chuyển đến đâu. Cuộc tranh luận về đo lường ở trên, về bản chất, là về việc một lượng giao dịch bắt buộc nhất định làm dịch chuyển giá bao nhiêu, tức là độ dốc của đường cầu tổng hợp. Câu hỏi đó hiện được tiếp cận trực tiếp bằng cách tiếp cận hệ thống cầu của @koijen2019demand và giả thuyết thị trường kém co giãn của @gabaix2021search, vốn suy ra tác động giá của dòng vốn từ cấu trúc nhu cầu của nhà đầu tư thay vì từ một biến công cụ duy nhất. @greenwood2011stock, với thước đo mức mong manh tổng hợp biến động dòng vốn của các chủ sở hữu cổ phiếu thay vì giá trị thực hiện của một quý, và @frazzini2008dumb, về các hệ quả lợi nhuận của việc nhà đầu tư cá nhân đuổi theo dòng vốn, là những bổ sung hữu ích từ truyền thống trước đó. Đối với một nhà nghiên cứu mới bước vào lĩnh vực này, trình tự đáng đọc là @coval2007asset và @edmans2012real cho thiết kế gốc, @wardlaw2020measuring và @berger2023selection cho những gì đã sai với nó, và @koijen2019demand và @gabaix2021search cho khung phân tích phần lớn đã thay thế nó.
+
+# Hạ tầng dữ liệu {#sec-institutionaldata}
+
+@tbl-datacore-datasets tóm tắt các bộ dữ liệu được sử dụng trong chương này.
+
+| Bộ dữ liệu | Nội dung | Tần suất | Biến chính |
 |:-----------------|:-----------------|:-----------------|:------------------|
-| Stock Prices | Daily/monthly OHLCV | Daily | `ticker`, `date`, `close`, `adjusted_close`, `volume`, `shares_outstanding` |
-| Ownership Structure | Shareholder composition | Quarterly/Annual | `ticker`, `date`, `shareholder_name`, `shares_held`, `pct`, `type` |
-| Major Shareholders | Holders $\geq$ 5% | Event-driven | `ticker`, `date`, `shareholder_name`, `shares`, `is_foreign`, `is_state` |
-| Corporate Actions | Splits, dividends, bonus | Event | `ticker`, `ex_date`, `action_type`, `ratio` |
-| Company Profile | Sector, exchange, FOL | Static/Annual | `ticker`, `exchange`, `industry`, `listing_date`, `fol_limit` |
-| Foreign Ownership | Daily foreign tracking | Daily | `ticker`, `date`, `foreign_shares`, `foreign_pct`, `fol_limit` |
-| Fund Holdings | Fund portfolio snapshots | Semi-annual | `fund_name`, `report_date`, `ticker`, `shares_held`, `market_value` |
+| Giá cổ phiếu | OHLCV hằng ngày/hằng tháng | Hằng ngày | `ticker`, `date`, `close`, `adjusted_close`, `volume`, `shares_outstanding` |
+| Cơ cấu sở hữu | Cơ cấu cổ đông | Hằng quý/Hằng năm | `ticker`, `date`, `shareholder_name`, `shares_held`, `pct`, `type` |
+| Cổ đông lớn | Các cổ đông nắm giữ $\geq$ 5% | Theo sự kiện | `ticker`, `date`, `shareholder_name`, `shares`, `is_foreign`, `is_state` |
+| Sự kiện doanh nghiệp | Chia tách, cổ tức, cổ phiếu thưởng | Sự kiện | `ticker`, `ex_date`, `action_type`, `ratio` |
+| Hồ sơ công ty | Ngành, sàn giao dịch, FOL | Tĩnh/Hằng năm | `ticker`, `exchange`, `industry`, `listing_date`, `fol_limit` |
+| Sở hữu nước ngoài | Theo dõi nước ngoài hằng ngày | Hằng ngày | `ticker`, `date`, `foreign_shares`, `foreign_pct`, `fol_limit` |
+| Danh mục nắm giữ của quỹ | Ảnh chụp danh mục quỹ | Bán niên | `fund_name`, `report_date`, `ticker`, `shares_held`, `market_value` |
 
-: DataCore.vn Datasets Used in This Chapter {#tbl-datacore-datasets}
+: Các bộ dữ liệu DataCore.vn sử dụng trong chương này {#tbl-datacore-datasets}
 
-## Data Reader Class {#sec-institutionalreader}
+## Lớp đọc dữ liệu {#sec-institutionalreader}
 
-We begin by defining a unified data reader that handles file loading, date parsing, and basic validation:
+Chúng ta bắt đầu bằng việc định nghĩa một bộ đọc dữ liệu thống nhất xử lý việc tải tệp, phân tích ngày tháng và kiểm tra cơ bản:
 
 ```{python}
 #| label: datacore-reader
@@ -288,23 +341,23 @@ class DataCoreReader:
 # dc = DataCoreReader('/path/to/datacore_data', file_format='parquet')
 ```
 
-# Stock Price and Return Processing {#sec-institutionalcrsp}
+# Xử lý giá cổ phiếu và lợi nhuận {#sec-institutionalcrsp}
 
-The first step processes stock data to obtain adjusted prices, shares outstanding, and quarterly returns.
+Bước đầu tiên xử lý dữ liệu cổ phiếu để thu được giá đã điều chỉnh, số cổ phiếu đang lưu hành và lợi nhuận hằng quý.
 
-## Price Data Extraction and Adjustment {#sec-institutionalprice-adj}
+## Trích xuất và điều chỉnh dữ liệu giá {#sec-institutionalprice-adj}
 
-Vietnamese stock data requires careful adjustment for frequent corporate actions. Unlike the US where CRSP provides a cumulative adjustment factor (`cfacpr`, `cfacshr`), in Vietnam we must construct adjustment factors from the corporate actions history.
+Dữ liệu cổ phiếu Việt Nam đòi hỏi điều chỉnh cẩn thận cho các sự kiện doanh nghiệp diễn ra thường xuyên. Khác với Mỹ, nơi CRSP cung cấp hệ số điều chỉnh tích lũy (`cfacpr`, `cfacshr`), tại Việt Nam chúng ta phải xây dựng các hệ số điều chỉnh từ lịch sử sự kiện doanh nghiệp.
 
 ::: callout-note
-## Vietnamese Corporate Actions
+## Các sự kiện doanh nghiệp tại Việt Nam
 
-Vietnamese firms commonly execute the following corporate actions, each requiring share count and/or price adjustment:
+Các công ty Việt Nam thường thực hiện các sự kiện doanh nghiệp sau, mỗi sự kiện đòi hỏi điều chỉnh số cổ phiếu và/hoặc giá:
 
--   **Stock dividend** (*co tuc bang co phieu*): e.g., 20% stock dividend means 100 shares become 120 shares
--   **Bonus shares** (*co phieu thuong*): free shares distributed from retained earnings
--   **Rights issue** (*phat hanh quyen mua*): right to buy new shares at a discount
--   **Stock split/reverse split** (*chia/gop co phieu*): rare but occasionally used
+-   **Cổ tức bằng cổ phiếu** (*cổ tức bằng cổ phiếu*): ví dụ, cổ tức bằng cổ phiếu 20% nghĩa là 100 cổ phiếu trở thành 120 cổ phiếu
+-   **Cổ phiếu thưởng** (*cổ phiếu thưởng*): cổ phiếu miễn phí được phân phối từ lợi nhuận giữ lại
+-   **Phát hành quyền mua** (*phát hành quyền mua*): quyền mua cổ phiếu mới với giá ưu đãi
+-   **Chia tách/gộp cổ phiếu** (*chia/gộp cổ phiếu*): hiếm gặp nhưng đôi khi được sử dụng
 :::
 
 ```{python}
@@ -412,7 +465,7 @@ def adjust_shares_between_dates(
     return shares * relative_factor
 ```
 
-## Monthly and Quarterly Price Processing {#sec-institutionalprice-processing}
+## Xử lý giá theo tháng và theo quý {#sec-institutionalprice-processing}
 
 ```{python}
 #| label: price-processing
@@ -512,9 +565,9 @@ def process_prices(
 ```
 
 ::: callout-tip
-## Performance Optimization
+## Tối ưu hóa hiệu năng
 
-The `get_cfacshr_at_date` function uses a row-wise lookup which can be slow for large datasets. For production use with millions of rows, vectorize using `pd.merge_asof()`:
+Hàm `get_cfacshr_at_date` sử dụng phép tra cứu theo từng dòng nên có thể chậm đối với các bộ dữ liệu lớn. Để dùng trong thực tế với hàng triệu dòng, hãy vector hóa bằng `pd.merge_asof()`:
 
 ``` python
 price_q = pd.merge_asof(
@@ -528,25 +581,25 @@ price_q = pd.merge_asof(
 ```
 :::
 
-The output is a quarterly panel of stock-level observations (\@tbl-institutional-price-vars)
+Đầu ra là một bảng dữ liệu hằng quý gồm các quan sát cấp cổ phiếu (\@tbl-institutional-price-vars)
 
-| Variable  | Description                          |
+| Biến      | Mô tả                                |
 |:----------|:-------------------------------------|
-| `ticker`  | Stock ticker (e.g., VNM, VCB, FPT)   |
-| `qdate`   | Quarter-end date                     |
-| `p`       | Adjusted closing price (VND)         |
-| `tso`     | Total shares outstanding             |
-| `mcap`    | Market capitalization (millions VND) |
-| `qret`    | Forward quarterly compounded return  |
-| `cfacshr` | Cumulative share adjustment factor   |
+| `ticker`  | Mã cổ phiếu (ví dụ: VNM, VCB, FPT)   |
+| `qdate`   | Ngày cuối quý                        |
+| `p`       | Giá đóng cửa đã điều chỉnh (VND)     |
+| `tso`     | Tổng số cổ phiếu đang lưu hành       |
+| `mcap`    | Vốn hóa thị trường (triệu VND)       |
+| `qret`    | Lợi nhuận ghép lãi của quý kế tiếp |
+| `cfacshr` | Hệ số điều chỉnh cổ phiếu tích lũy   |
 
-: Quarter-End Price Panel Variables {#tbl-institutional-price-vars}
+: Các biến của bảng giá cuối quý {#tbl-institutional-price-vars}
 
-# Ownership Data Processing {#sec-institutionalownership}
+# Xử lý dữ liệu sở hữu {#sec-institutionalownership}
 
-## Ownership Taxonomy {#sec-institutionaltaxonomy}
+## Hệ phân loại sở hữu {#sec-institutionaltaxonomy}
 
-We define a classification system for Vietnamese shareholders that maps to the categories available in DataCore.vn:
+Chúng ta định nghĩa một hệ thống phân loại cổ đông Việt Nam ánh xạ tới các nhóm có sẵn trong DataCore.vn:
 
 ```{python}
 #| label: ownership-taxonomy
@@ -612,14 +665,14 @@ class OwnershipType:
         return cls.INDIVIDUAL
 ```
 
-## Building the Holdings Panel {#sec-institutionalholdings-panel}
+## Xây dựng bảng danh mục nắm giữ {#sec-institutionalholdings-panel}
 
-We construct the holdings panel (i.e., the Vietnamese equivalent of merging the 13F Type 1 and Type 3 datasets). The key steps are:
+Chúng ta xây dựng bảng danh mục nắm giữ (tức là phiên bản Việt Nam của việc gộp các bộ dữ liệu 13F Loại 1 và Loại 3). Các bước chính là:
 
-1.  Identify the first available vintage for each shareholder-stock-report date combination.
-2.  Compute reporting gaps to flag first and last reports.
-3.  Classify shareholders.
-4.  Adjust shares for corporate actions.
+1.  Xác định phiên bản đầu tiên có sẵn cho mỗi tổ hợp cổ đông-cổ phiếu-ngày báo cáo.
+2.  Tính các khoảng trống báo cáo để đánh dấu các báo cáo đầu tiên và cuối cùng.
+3.  Phân loại cổ đông.
+4.  Điều chỉnh số cổ phiếu theo các sự kiện doanh nghiệp.
 
 ```{python}
 #| label: holdings-panel
@@ -753,19 +806,19 @@ def build_holdings_panel(
     return holdings
 ```
 
-# Institutional Ownership Metrics {#sec-institutionalio-metrics}
+# Các thước đo sở hữu tổ chức {#sec-institutionalio-metrics}
 
-Before computing trades, we establish the standard institutional ownership metrics that serve as both outputs and inputs to the trading analysis.
+Trước khi tính các giao dịch, chúng ta thiết lập các thước đo sở hữu tổ chức chuẩn, vừa là đầu ra vừa là đầu vào cho phân tích giao dịch.
 
-## Institutional Ownership Ratio {#sec-institutionalio-ratio}
+## Tỷ lệ sở hữu tổ chức {#sec-institutionalio-ratio}
 
-The institutional ownership ratio (IO) for stock $i$ at time $t$ is:
+Tỷ lệ sở hữu tổ chức (IO) của cổ phiếu $i$ tại thời điểm $t$ là:
 
 $$
 IO_{i,t} = \frac{\sum_{j \in \mathcal{J}} h_{j,i,t}}{TSO_{i,t}}
 $$ {#eq-io-ratio}
 
-where $\mathcal{J}$ is the set of institutional investors and $TSO_{i,t}$ is total shares outstanding. In Vietnam, we compute separate ratios for each ownership type:
+trong đó $\mathcal{J}$ là tập hợp các nhà đầu tư tổ chức và $TSO_{i,t}$ là tổng số cổ phiếu đang lưu hành. Ở Việt Nam, chúng ta tính các tỷ lệ riêng cho từng loại hình sở hữu:
 
 $$
 IO_{i,t}^{\text{type}} = \frac{\sum_{j \in \mathcal{J}^{\text{type}}} h_{j,i,t}}{TSO_{i,t}},
@@ -826,15 +879,15 @@ def compute_io_ratios(
     return io_wide
 ```
 
-## Ownership Concentration: Herfindahl-Hirschman Index {#sec-institutionalhhi}
+## Mức độ tập trung sở hữu: chỉ số Herfindahl-Hirschman {#sec-institutionalhhi}
 
-The HHI measures ownership concentration:
+HHI đo mức độ tập trung sở hữu:
 
 $$
 HHI_{i,t} = \sum_{j=1}^{N_{i,t}} \left(\frac{h_{j,i,t}}{\sum_{k=1}^{N_{i,t}} h_{k,i,t}}\right)^2
 $$ {#eq-hhi}
 
-where $N_{i,t}$ is the number of shareholders. HHI ranges from $1/N_{i,t}$ (equal) to 1 (single shareholder). In Vietnam, ownership tends to be highly concentrated due to large state and founding-family blocks.
+trong đó $N_{i,t}$ là số lượng cổ đông. HHI nằm trong khoảng từ $1/N_{i,t}$ (phân bổ đều) đến 1 (một cổ đông duy nhất). Ở Việt Nam, sở hữu có xu hướng tập trung cao do các khối cổ phần lớn của nhà nước và gia đình sáng lập.
 
 ```{python}
 #| label: hhi-computation
@@ -867,15 +920,15 @@ def compute_hhi(holdings: pd.DataFrame) -> pd.DataFrame:
     return hhi_overall.merge(hhi_inst, on=['ticker', 'rdate'], how='left')
 ```
 
-## Ownership Breadth {#sec-institutionalbreadth}
+## Độ rộng sở hữu {#sec-institutionalbreadth}
 
-Following @chen2000value, ownership breadth is the number of institutional holders:
+Theo @chen2000value, độ rộng sở hữu là số lượng các cổ đông tổ chức:
 
 $$
 \text{Breadth}_{i,t} = \#\{j : h_{j,i,t} > 0, \, j \in \mathcal{J}\}
 $$ {#eq-breadth}
 
-The *change* in breadth predicts future returns:
+*Thay đổi* về độ rộng dự báo lợi nhuận tương lai:
 
 $$
 \Delta\text{Breadth}_{i,t} = \text{Breadth}_{i,t} - \text{Breadth}_{i,t-1}
@@ -922,14 +975,14 @@ def compute_breadth(holdings: pd.DataFrame) -> pd.DataFrame:
     return breadth_wide
 ```
 
-($\text{BS} = -1$) is generated for the prior position, dated to the quarter after the last report.
+($\text{BS} = -1$) được tạo ra cho vị thế trước đó, được gán vào quý sau báo cáo cuối cùng.
 
-For intermediate gaps (reports at $t-2$ and $t$ but not $t-1$), we split into:
+Đối với các khoảng trống ở giữa (có báo cáo tại $t-2$ và $t$ nhưng không có tại $t-1$), chúng ta tách thành:
 
--   A terminating sale at $t-1$ of $-h_{j,i,t-2}^{\text{adj}}$;
--   An initiating buy at $t$ of $h_{j,i,t}$.
+-   Một giao dịch bán chấm dứt tại $t-1$ với giá trị $-h_{j,i,t-2}^{\text{adj}}$;
+-   Một giao dịch mua khởi tạo tại $t$ với giá trị $h_{j,i,t}$.
 
-## Implementation {#sec-institutionaltrade-impl}
+## Triển khai {#sec-institutionaltrade-impl}
 
 ```{python}
 #| label: trade-computation
@@ -1048,11 +1101,11 @@ def compute_trades(
     return trades
 ```
 
-### Trade Visualization {#sec-institutionaltrade-viz}
+### Trực quan hóa giao dịch {#sec-institutionaltrade-viz}
 
 ```{python}
 #| label: fig-trade-distribution
-#| fig-cap: "Distribution of institutional trade types across quarters. The figure shows initiating buys, incremental buys, regular sales, and terminating sales, providing insights into institutional entry/exit patterns in the Vietnamese market."
+#| fig-cap: "Phân phối các loại giao dịch của tổ chức qua các quý. Hình thể hiện các giao dịch mua khởi tạo, mua gia tăng, bán thông thường và bán chấm dứt, cung cấp góc nhìn về các kiểu hình gia nhập/rút lui của tổ chức trên thị trường Việt Nam."
 #| code-fold: true
 
 def plot_trade_distribution(trades: pd.DataFrame):
@@ -1103,7 +1156,7 @@ def plot_trade_distribution(trades: pd.DataFrame):
 
 ```{python}
 #| label: fig-net-trading-by-type
-#| fig-cap: "Net institutional trading (buys minus sales, billions VND) by ownership type. Foreign institutional investors exhibit countercyclical behavior, while state entities show more stable patterns consistent with strategic rather than portfolio objectives."
+#| fig-cap: "Giao dịch ròng của tổ chức (mua trừ bán, tỷ VND) theo loại hình sở hữu. Các nhà đầu tư tổ chức nước ngoài thể hiện hành vi ngược chu kỳ, trong khi các đơn vị nhà nước cho thấy kiểu hình ổn định hơn, phù hợp với các mục tiêu mang tính chiến lược thay vì mục tiêu danh mục."
 #| code-fold: true
 
 def plot_net_trading_by_type(trades: pd.DataFrame, price_q: pd.DataFrame):
@@ -1138,19 +1191,19 @@ def plot_net_trading_by_type(trades: pd.DataFrame, price_q: pd.DataFrame):
 # plot_net_trading_by_type(trades, price_q)
 ```
 
-# Portfolio Assets, Flows, and Returns {#sec-institutionalassets-flows}
+# Tài sản danh mục, dòng vốn và lợi nhuận {#sec-institutionalassets-flows}
 
-This section computes total portfolio assets, aggregates buys and sales, and portfolio-level returns for each institutional investor.
+Phần này tính tổng tài sản danh mục, tổng hợp các giao dịch mua và bán, và lợi nhuận cấp danh mục cho từng nhà đầu tư tổ chức.
 
-## Total Assets and Portfolio Returns {#sec-institutionalassets}
+## Tổng tài sản và lợi nhuận danh mục {#sec-institutionalassets}
 
-For each manager $j$ and quarter $t$, portfolio assets are:
+Với mỗi nhà quản lý $j$ và quý $t$, tài sản danh mục là:
 
 $$
 A_{j,t} = \sum_{i=1}^{N_{j,t}} h_{j,i,t} \cdot P_{i,t}
 $$ {#eq-assets}
 
-The portfolio return assuming buy-and-hold is:
+Lợi nhuận danh mục theo giả định mua và nắm giữ là:
 
 $$
 R_{j,t}^{p} = \frac{\sum_{i=1}^{N_{j,t}} h_{j,i,t} \cdot P_{i,t} \cdot r_{i,t+1}}
@@ -1197,16 +1250,16 @@ def compute_assets_and_returns(
     return assets
 ```
 
-## Aggregate Buys and Sales {#sec-institutionalaggregate-buysales}
+## Tổng hợp giao dịch mua và bán {#sec-institutionalaggregate-buysales}
 
-Total buys and sales for manager $j$ in quarter $t$:
+Tổng giao dịch mua và bán của nhà quản lý $j$ trong quý $t$:
 
 $$
 B_{j,t} = \sum_{i : \Delta h > 0} \Delta h_{j,i,t} \cdot P_{i,t}, \qquad
 S_{j,t} = \sum_{i : \Delta h < 0} |\Delta h_{j,i,t}| \cdot P_{i,t}
 $$ {#eq-total-buys-sales}
 
-The trade gain is:
+Lãi từ giao dịch là:
 
 $$
 G_{j,t} = \sum_{i=1}^{N_{j,t}} \Delta h_{j,i,t} \cdot P_{i,t} \cdot r_{i,t+1}
@@ -1253,23 +1306,23 @@ def compute_buys_sales(
     return flows
 ```
 
-# Net Flows and Turnover Ratios {#sec-institutionalturnover}
+# Dòng vốn ròng và tỷ lệ vòng quay {#sec-institutionalturnover}
 
-## Net Flows {#sec-institutionalnetflows}
+## Dòng vốn ròng {#sec-institutionalnetflows}
 
-Net flows separate capital allocation decisions from investment returns:
+Dòng vốn ròng tách các quyết định phân bổ vốn khỏi lợi nhuận đầu tư:
 
 $$
 \text{NetFlow}_{j,t} = A_{j,t} - A_{j,t-1}(1 + R_{j,t}^p)
 $$ {#eq-netflow-def}
 
 ::: callout-warning
-## Interpreting Net Flows in Vietnam
+## Diễn giải dòng vốn ròng tại Việt Nam
 
-For state entities or corporate cross-holders, "net flows" do not necessarily reflect investment decisions. State ownership changes often result from government policy (equitization, divestment programs). Interpretation should account for institutional context.
+Đối với các đơn vị nhà nước hoặc các cổ đông sở hữu chéo trong doanh nghiệp, "dòng vốn ròng" không nhất thiết phản ánh các quyết định đầu tư. Những thay đổi sở hữu nhà nước thường là kết quả của chính sách của Chính phủ (cổ phần hóa, các chương trình thoái vốn). Việc diễn giải cần tính đến bối cảnh thể chế.
 :::
 
-## Three Turnover Measures {#sec-institutionalturnover-measures}
+## Ba thước đo tỷ lệ vòng quay {#sec-institutionalturnover-measures}
 
 ```{python}
 #| label: turnover-computation
@@ -1352,11 +1405,11 @@ def compute_aggregates(
     return agg
 ```
 
-### Turnover Summary Statistics {#sec-institutionalturnover-stats}
+### Thống kê mô tả tỷ lệ vòng quay {#sec-institutionalturnover-stats}
 
 ```{python}
 #| label: tbl-turnover-summary
-#| tbl-cap: "Summary statistics for three turnover measures across institutional investor types in Vietnam. Turnover 1 follows @Carhart1997, Turnover 2 adds back absolute net flows, and Turnover 3 uses the symmetric definition."
+#| tbl-cap: "Thống kê mô tả của ba thước đo tỷ lệ vòng quay theo các loại nhà đầu tư tổ chức tại Việt Nam. Vòng quay 1 theo @Carhart1997, Vòng quay 2 cộng thêm giá trị tuyệt đối của dòng vốn ròng, và Vòng quay 3 sử dụng định nghĩa đối xứng."
 #| code-fold: true
 
 def turnover_summary_table(
@@ -1390,7 +1443,7 @@ def turnover_summary_table(
 
 ```{python}
 #| label: fig-turnover-timeseries
-#| fig-cap: "Quarterly average turnover ratios (Carhart definition) by ownership type, 2010--2024. Foreign institutional investors exhibit higher turnover than domestic institutions, consistent with shorter investment horizons and more active portfolio management."
+#| fig-cap: "Tỷ lệ vòng quay bình quân hằng quý (định nghĩa Carhart) theo loại hình sở hữu, 2010--2024. Các nhà đầu tư tổ chức nước ngoài có tỷ lệ vòng quay cao hơn các tổ chức trong nước, phù hợp với kỳ hạn đầu tư ngắn hơn và việc quản lý danh mục chủ động hơn."
 #| code-fold: true
 
 def plot_turnover_timeseries(
@@ -1425,17 +1478,17 @@ def plot_turnover_timeseries(
 # plot_turnover_timeseries(aggregates, holdings)
 ```
 
-# Foreign Ownership Analytics {#sec-institutionalforeign}
+# Phân tích sở hữu nước ngoài {#sec-institutionalforeign}
 
-Vietnam's foreign ownership limits create unique analytical dimensions absent from developed market studies.
+Giới hạn sở hữu nước ngoài của Việt Nam tạo ra những khía cạnh phân tích độc đáo không có trong các nghiên cứu về thị trường phát triển.
 
-## FOL Utilization {#sec-institutionalfol-util}
+## Mức sử dụng FOL {#sec-institutionalfol-util}
 
 $$
 \text{FOL\_Util}_{i,t} = \frac{FO_{i,t}}{FOL_i}
 $$ {#eq-fol-util}
 
-Stocks with $\text{FOL\_Util}_{i,t} \to 1$ face mechanical foreign buying restrictions.
+Các cổ phiếu có $\text{FOL\_Util}_{i,t} \to 1$ phải đối mặt với các hạn chế mua cơ học đối với nhà đầu tư nước ngoài.
 
 ```{python}
 #| label: fol-analytics
@@ -1464,16 +1517,16 @@ def compute_fol_analytics(
     return fo
 ```
 
-## Room Premium Regression {#sec-institutionalroom-premium}
+## Hồi quy phần bù room {#sec-institutionalroom-premium}
 
-When foreign ownership approaches the FOL, remaining "room" becomes scarce. We model:
+Khi sở hữu nước ngoài tiến gần FOL, "room" còn lại trở nên khan hiếm. Chúng ta mô hình hóa:
 
 $$
 r_{i,t+1} = \alpha + \beta_1 \cdot \text{FOL\_Util}_{i,t} +
 \beta_2 \cdot \text{FOL\_Util}_{i,t}^2 + \gamma \cdot X_{i,t} + \varepsilon_{i,t}
 $$ {#eq-room-premium}
 
-The quadratic term captures nonlinear acceleration of the premium as ownership approaches the limit.
+Số hạng bậc hai nắm bắt sự gia tốc phi tuyến của phần bù khi sở hữu tiến gần giới hạn.
 
 ```{python}
 #| label: room-premium-regression
@@ -1516,7 +1569,7 @@ def estimate_room_premium(
 
 ```{python}
 #| label: fig-fol-distribution
-#| fig-cap: "Distribution of FOL utilization across Vietnamese listed stocks. The bimodal distribution reflects two populations: stocks with minimal foreign interest (left mode) and stocks approaching their FOL ceiling (right mode)."
+#| fig-cap: "Phân phối mức sử dụng FOL của các cổ phiếu niêm yết Việt Nam. Phân phối hai đỉnh phản ánh hai nhóm: các cổ phiếu có sự quan tâm của nước ngoài tối thiểu (đỉnh bên trái) và các cổ phiếu tiến gần mức trần FOL (đỉnh bên phải)."
 #| code-fold: true
 
 def plot_fol_utilization(fol_analytics: pd.DataFrame):
@@ -1554,9 +1607,9 @@ def plot_fol_utilization(fol_analytics: pd.DataFrame):
 # plot_fol_utilization(fol_analytics)
 ```
 
-# Complete Pipeline {#sec-institutionalpipeline}
+# Quy trình hoàn chỉnh {#sec-institutionalpipeline}
 
-We integrate all steps into a single end-to-end function:
+Chúng ta tích hợp tất cả các bước vào một hàm đầu-cuối duy nhất:
 
 ```{python}
 #| label: complete-pipeline
@@ -1640,18 +1693,18 @@ def run_complete_pipeline(
 # results = run_complete_pipeline(dc, '2010-01-01', '2024-12-31')
 ```
 
-# Advanced Extensions {#sec-institutionalextensions}
+# Các mở rộng nâng cao {#sec-institutionalextensions}
 
-## Herding Measures {#sec-institutionalherding}
+## Các thước đo hành vi bầy đàn {#sec-institutionalherding}
 
-Following @sias2004institutional, the Lakonishok-Shleifer-Vishny herding measure is:
+Theo @sias2004institutional, thước đo hành vi bầy đàn Lakonishok-Shleifer-Vishny là:
 
 $$
 HM_{i,t} = \left|\frac{B_{i,t}}{B_{i,t} + S_{i,t}} - p_t\right|
 - E\left[\left|\frac{B_{i,t}}{B_{i,t} + S_{i,t}} - p_t\right|\right]
 $$ {#eq-herding}
 
-where $B_{i,t}$ is the number of managers buying stock $i$ in quarter $t$, $S_{i,t}$ the number selling, and $p_t$ the expected buyer proportion under independent trading.
+trong đó $B_{i,t}$ là số nhà quản lý mua cổ phiếu $i$ trong quý $t$, $S_{i,t}$ là số nhà quản lý bán, và $p_t$ là tỷ lệ người mua kỳ vọng khi giao dịch độc lập.
 
 ```{python}
 #| label: herding-measure
@@ -1701,9 +1754,9 @@ def compute_lsv_herding(
                'n_traders', 'herding', 'buy_herding', 'sell_herding']]
 ```
 
-## Demand Persistence {#sec-institutionalpersistence}
+## Tính bền vững của nhu cầu {#sec-institutionalpersistence}
 
-@sias2004institutional showed institutional demand is persistent:
+@sias2004institutional chỉ ra rằng nhu cầu của tổ chức có tính bền vững:
 
 $$
 \rho_t = \text{Corr}\left(\Delta IO_{i,t},\, \Delta IO_{i,t-1}\right)
@@ -1736,7 +1789,7 @@ def compute_demand_persistence(io_ratios: pd.DataFrame) -> pd.DataFrame:
 
 ```{python}
 #| label: fig-persistence
-#| fig-cap: "Cross-sectional persistence of institutional demand in Vietnam (rolling 5-year average). Positive values indicate momentum-like institutional trading patterns."
+#| fig-cap: "Tính bền vững theo mặt cắt ngang của nhu cầu tổ chức tại Việt Nam (trung bình trượt 5 năm). Giá trị dương cho thấy các mô hình giao dịch của tổ chức giống động lượng."
 #| code-fold: true
 
 def plot_demand_persistence(persistence: pd.DataFrame):
@@ -1753,9 +1806,9 @@ def plot_demand_persistence(persistence: pd.DataFrame):
     plt.show()
 ```
 
-## Information Content of Trades {#sec-institutionalinfo-content}
+## Hàm lượng thông tin của các giao dịch {#sec-institutionalinfo-content}
 
-Following @alexander2007does, the InfoTrade ratio measures the proportion of dollar trading from entry/exit decisions vs. position adjustments:
+Theo @alexander2007does, tỷ số InfoTrade đo tỷ trọng giá trị giao dịch bằng tiền đến từ các quyết định gia nhập/rút lui so với các điều chỉnh vị thế:
 
 $$
 \text{InfoTrade}_{i,t} = \frac{
@@ -1795,11 +1848,11 @@ def compute_info_trade_ratio(
     return info
 ```
 
-# Empirical Applications {#sec-institutionalapplications}
+# Các ứng dụng thực nghiệm {#sec-institutionalapplications}
 
-## Application 1: Institutional Ownership Changes and Future Returns {#sec-institutionalapp-returns}
+## Ứng dụng 1: Thay đổi sở hữu tổ chức và lợi nhuận tương lai {#sec-institutionalapp-returns}
 
-We test whether changes in institutional ownership predict future stock returns [@chen2000value] via Fama-MacBeth regressions:
+Chúng ta kiểm định xem thay đổi trong sở hữu tổ chức có dự báo lợi nhuận cổ phiếu tương lai hay không [@chen2000value] thông qua các hồi quy Fama-MacBeth:
 
 $$
 r_{i,t+1} = \alpha_t + \beta_{1,t} \cdot \Delta IO_{i,t} + \beta_{2,t} \cdot
@@ -1870,9 +1923,9 @@ def fama_macbeth_io_returns(
     return fm
 ```
 
-## Application 2: Turnover and Performance {#sec-institutionalapp-turnover}
+## Ứng dụng 2: Tỷ lệ vòng quay và hiệu quả hoạt động {#sec-institutionalapp-turnover}
 
-@yan2008liquidity documented a positive turnover-performance relationship. We test in Vietnam:
+@yan2008liquidity ghi nhận mối quan hệ dương giữa tỷ lệ vòng quay và hiệu quả hoạt động. Chúng ta kiểm định tại Việt Nam:
 
 $$
 \alpha_{j,t} = a + b \cdot \text{Turnover}_{j,t-1} + c \cdot
@@ -1912,7 +1965,7 @@ def turnover_performance_regression(
     return {'model': model, 'n': len(panel)}
 ```
 
-## Application 3: Foreign vs. Domestic Trading {#sec-institutionalapp-foreign-domestic}
+## Ứng dụng 3: Giao dịch của nước ngoài so với trong nước {#sec-institutionalapp-foreign-domestic}
 
 ```{python}
 #| label: foreign-domestic-comparison
@@ -1947,7 +2000,7 @@ def compare_foreign_domestic(
 
 ```{python}
 #| label: fig-cumulative-net-buying
-#| fig-cap: "Cumulative net buying by foreign vs. domestic institutional investors (billions VND). Divergent patterns reflect different investment mandates: foreign institutions respond to global risk cycles, while domestic institutions are more sensitive to local conditions."
+#| fig-cap: "Giá trị mua ròng tích lũy của các nhà đầu tư tổ chức nước ngoài so với trong nước (tỷ VND). Các xu hướng khác biệt phản ánh các nhiệm vụ đầu tư (mandate) khác nhau: các tổ chức nước ngoài phản ứng với chu kỳ rủi ro toàn cầu, trong khi các tổ chức trong nước nhạy cảm hơn với điều kiện địa phương."
 #| code-fold: true
 
 def plot_cumulative_net_buying(
@@ -1981,34 +2034,34 @@ def plot_cumulative_net_buying(
     plt.show()
 ```
 
-# Data Quality and Robustness {#sec-institutionalrobustness}
+# Chất lượng dữ liệu và độ vững {#sec-institutionalrobustness}
 
-## Common Pitfalls {#sec-institutionalpitfalls}
+## Các sai lầm thường gặp {#sec-institutionalpitfalls}
 
-### Corporate Action Misadjustment
+### Điều chỉnh sai sự kiện doanh nghiệp
 
 ::: callout-caution
-## Example: Phantom Trade from Unadjusted Stock Dividend
+## Ví dụ: Giao dịch ảo từ cổ tức bằng cổ phiếu chưa điều chỉnh
 
-Vinamilk (VNM) issues a 20% stock dividend with ex-date March 15, 2023.
+Vinamilk (VNM) phát hành cổ tức bằng cổ phiếu 20% với ngày giao dịch không hưởng quyền là 15 tháng 3 năm 2023.
 
--   Q4 2022: Fund X holds 1,000,000 shares of VNM
--   Q1 2023: Fund X holds 1,200,000 shares of VNM
+-   Quý 4 2022: Quỹ X nắm giữ 1.000.000 cổ phiếu VNM
+-   Quý 1 2023: Quỹ X nắm giữ 1.200.000 cổ phiếu VNM
 
-**Without adjustment:** Inferred buy of +200,000 shares (BS = +2) **With adjustment:** Prior holdings become 1,200,000 adjusted shares, trade = 0
+**Không điều chỉnh:** Suy ra giao dịch mua +200.000 cổ phiếu (BS = +2) **Có điều chỉnh:** Số cổ phiếu nắm giữ kỳ trước trở thành 1.200.000 cổ phiếu đã điều chỉnh, giao dịch = 0
 
-This phantom trade inflates measured turnover and creates spurious buying signals.
+Giao dịch ảo này làm tăng tỷ lệ vòng quay đo được và tạo ra các tín hiệu mua giả.
 :::
 
-### Disclosure Timing Mismatches
+### Lệch thời điểm công bố
 
-Vietnamese ownership disclosure dates may not align with calendar quarter ends. Our pipeline addresses this by aligning all disclosures to the nearest quarter-end.
+Ngày công bố sở hữu của Việt Nam có thể không trùng với ngày cuối quý dương lịch. Quy trình của chúng ta xử lý điều này bằng cách căn chỉnh mọi công bố về ngày cuối quý gần nhất.
 
-### Name Changes and Entity Mergers
+### Đổi tên và sáp nhập pháp nhân
 
-Vietnamese institutions frequently rename. Without a stable identifier, the same entity may appear as two different shareholders, creating phantom entries/exits. We recommend maintaining a master entity mapping table.
+Các tổ chức Việt Nam thường xuyên đổi tên. Nếu không có mã định danh ổn định, cùng một pháp nhân có thể xuất hiện như hai cổ đông khác nhau, tạo ra các lần gia nhập/rút lui ảo. Chúng tôi khuyến nghị duy trì một bảng ánh xạ pháp nhân chủ.
 
-## Validation Checks {#sec-institutionalvalidation}
+## Các kiểm tra xác thực {#sec-institutionalvalidation}
 
 ```{python}
 #| label: validation
@@ -2067,42 +2120,42 @@ def validate_pipeline_outputs(
 # validate_pipeline_outputs(results)
 ```
 
-# Summary {#sec-institutionalsummary}
+# Tóm tắt {#sec-institutionalsummary}
 
-This chapter developed a framework for computing institutional trades, flows, and turnover ratios in the Vietnamese equity market. The key contributions include:
+Chương này phát triển một khung để tính các giao dịch, dòng vốn và tỷ lệ vòng quay của tổ chức trên thị trường cổ phiếu Việt Nam. Các đóng góp chính gồm:
 
-1.  **Corporate action adjustment** for Vietnam's frequent stock dividends and bonus shares, preventing phantom trades that contaminate standard differencing.
+1.  **Điều chỉnh sự kiện doanh nghiệp** cho cổ tức bằng cổ phiếu và cổ phiếu thưởng diễn ra thường xuyên tại Việt Nam, ngăn chặn các giao dịch ảo làm nhiễu phép lấy sai phân chuẩn.
 
-2.  **Four-way ownership taxonomy** (state, foreign institutional, domestic institutional, individual) capturing Vietnam's unique ownership landscape.
+2.  **Hệ phân loại sở hữu bốn nhóm** (nhà nước, tổ chức nước ngoài, tổ chức trong nước, cá nhân) nắm bắt bức tranh sở hữu độc đáo của Việt Nam.
 
-3.  **FOL utilization analytics** for studying foreign ownership constraints absent from developed markets.
+3.  **Phân tích mức sử dụng FOL** để nghiên cứu các ràng buộc sở hữu nước ngoài không có ở các thị trường phát triển.
 
-4.  **Irregular disclosure handling** with correct gap splitting into terminating sales and initiating buys.
+4.  **Xử lý công bố không đều** với việc tách khoảng trống đúng cách thành các giao dịch bán chấm dứt và mua khởi tạo.
 
-5.  **Advanced extensions** including herding, demand persistence, and information content decomposition.
+5.  **Các mở rộng nâng cao** gồm hành vi bầy đàn, tính bền vững của nhu cầu và phân rã hàm lượng thông tin.
 
-The pipeline produces several output datasets (@tbl-institutional-outputs)
+Quy trình tạo ra nhiều bộ dữ liệu đầu ra (@tbl-institutional-outputs)
 
-| Output | Grain | Key Variables | Use Cases |
+| Đầu ra | Đơn vị quan sát | Biến chính | Trường hợp sử dụng |
 |:-----------------|:-----------------|:------------------|:-----------------|
-| `holdings` | Shareholder x Ticker x Quarter | `shares_adj`, `owner_type` | Cross-sectional ownership |
-| `io_ratios` | Ticker x Quarter | `io_state`, `io_foreign`, etc. | Governance, liquidity |
-| `trades` | Shareholder x Ticker x Quarter | `trade`, `buysale` | Informed trading, herding |
-| `aggregates` | Shareholder x Quarter | `assets`, `turnover`, `netflows` | Fund performance, flows |
-| `fol_analytics` | Ticker x Date | `fol_utilization`, `foreign_room` | FOL premium, foreign investment |
+| `holdings` | Cổ đông x Mã x Quý | `shares_adj`, `owner_type` | Sở hữu theo lát cắt ngang |
+| `io_ratios` | Mã x Quý | `io_state`, `io_foreign`, etc. | Quản trị công ty, thanh khoản |
+| `trades` | Cổ đông x Mã x Quý | `trade`, `buysale` | Giao dịch có thông tin, hành vi bầy đàn |
+| `aggregates` | Cổ đông x Quý | `assets`, `turnover`, `netflows` | Hiệu quả hoạt động của quỹ, dòng vốn |
+| `fol_analytics` | Mã x Ngày | `fol_utilization`, `foreign_room` | Phần bù FOL, đầu tư nước ngoài |
 
-: Summary of Pipeline Output Datasets {#tbl-institutional-outputs}
+: Tóm tắt các bộ dữ liệu đầu ra của quy trình {#tbl-institutional-outputs}
 
-<!-- # Exercises {#sec-institutionalexercises}
+<!-- # Bài tập {#sec-institutionalexercises}
 
-1.  **Corporate Action Sensitivity.** Download corporate action data for VNM from DataCore.vn and compute the cumulative share adjustment factor from 2010 to 2024. How many phantom trades would be generated without adjustment? Plot the factor.
+1.  **Độ nhạy với sự kiện doanh nghiệp.** Tải dữ liệu sự kiện doanh nghiệp của VNM từ DataCore.vn và tính hệ số điều chỉnh cổ phiếu tích lũy từ 2010 đến 2024. Sẽ có bao nhiêu giao dịch ảo được tạo ra nếu không điều chỉnh? Vẽ biểu đồ hệ số này.
 
-2.  **FOL Binding and Returns.** Construct a long-short portfolio: long FOL-binding stocks ($\text{FOL\_Util} > 0.95$), short non-binding ($< 0.50$). What is the average quarterly return spread? Is it statistically significant?
+2.  **FOL ràng buộc và lợi nhuận.** Xây dựng một danh mục mua–bán khống: mua các cổ phiếu bị FOL ràng buộc ($\text{FOL\_Util} > 0.95$), bán khống các cổ phiếu không bị ràng buộc ($< 0.50$). Chênh lệch lợi nhuận hằng quý trung bình là bao nhiêu? Nó có ý nghĩa thống kê không?
 
-3.  **Herding Asymmetry.** Compute LSV herding separately for large-cap (HOSE top 50) and small-cap stocks. Is herding stronger in small caps? Compare buy vs. sell herding.
+3.  **Bất đối xứng của hành vi bầy đàn.** Tính hành vi bầy đàn LSV riêng cho cổ phiếu vốn hóa lớn (top 50 HOSE) và vốn hóa nhỏ. Hành vi bầy đàn có mạnh hơn ở các cổ phiếu vốn hóa nhỏ không? So sánh hành vi bầy đàn khi mua và khi bán.
 
-4.  **State Divestment Events.** Identify quarters where SCIC conducted major divestments. What happens to breadth and foreign ownership post-divestment?
+4.  **Các sự kiện thoái vốn nhà nước.** Xác định các quý mà SCIC thực hiện các đợt thoái vốn lớn. Độ rộng và sở hữu nước ngoài thay đổi như thế nào sau thoái vốn?
 
-5.  **Turnover Quintile Portfolios.** Sort investors by lagged Carhart turnover into quintiles. Compare returns: is the turnover-performance relation positive (information) or negative (costs) in Vietnam?
+5.  **Danh mục theo ngũ phân vị tỷ lệ vòng quay.** Sắp xếp các nhà đầu tư theo tỷ lệ vòng quay Carhart trễ một kỳ thành các ngũ phân vị. So sánh lợi nhuận: mối quan hệ giữa tỷ lệ vòng quay và hiệu quả hoạt động ở Việt Nam là dương (thông tin) hay âm (chi phí)?
 
-6.  **Replication Exercise.** Replicate @chen2000value: do breadth changes predict future returns in the Vietnamese market? -->
+6.  **Bài tập tái lập.** Tái lập @chen2000value: thay đổi độ rộng có dự báo lợi nhuận tương lai trên thị trường Việt Nam không? -->

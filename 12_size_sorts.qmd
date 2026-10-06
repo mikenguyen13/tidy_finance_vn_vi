@@ -1,8 +1,8 @@
-# Size Sorts
+# Phân loại theo quy mô
 
-In this chapter, we continue with portfolio sorts in a univariate setting. Yet, we consider firm size as a sorting variable, which gives rise to a well-known return factor: the size premium. The size premium arises from buying small stocks and selling large stocks. Prominently, @Fama1993 include it as a factor in their three-factor model. Apart from that, asset managers commonly include size as a key firm characteristic when making investment decisions.
+Trong chương này, chúng ta tiếp tục với phân loại danh mục trong bối cảnh đơn biến. Tuy nhiên, chúng ta xét quy mô doanh nghiệp làm biến phân loại, từ đó hình thành một nhân tố lợi nhuận nổi tiếng: phần bù quy mô. Phần bù quy mô phát sinh từ việc mua cổ phiếu nhỏ và bán cổ phiếu lớn. Đáng chú ý, @Fama1993 đưa nó vào như một nhân tố trong mô hình ba nhân tố của họ. Ngoài ra, các nhà quản lý tài sản thường đưa quy mô vào như một đặc điểm then chốt của doanh nghiệp khi ra quyết định đầu tư.
 
-We also introduce new choices in the formation of portfolios. In particular, we discuss listing exchanges, industries, weighting regimes, and periods. These choices matter for the portfolio returns and result in different size premiums (see @Hasler2021, @Soebhag2022, and @Walter2022 for more insights into decision nodes and their effect on premiums).
+Chúng ta cũng giới thiệu các lựa chọn mới trong việc hình thành danh mục. Cụ thể, chúng ta thảo luận về sàn niêm yết, ngành, cách đặt trọng số và giai đoạn. Những lựa chọn này ảnh hưởng đến lợi nhuận danh mục và dẫn đến các phần bù quy mô khác nhau (xem @Hasler2021, @Soebhag2022 và @Walter2022 để hiểu thêm về các nút quyết định và tác động của chúng lên các phần bù).
 
 ```{python}
 import pandas as pd
@@ -15,9 +15,9 @@ from itertools import product
 from joblib import Parallel, delayed, cpu_count
 ```
 
-## Data Preparation
+## Chuẩn bị dữ liệu
 
-First, we retrieve the relevant data from our SQLite database introduced in Accessing and Managing Financial Data and DataCore Data. Firm size is defined as market equity in most asset pricing applications. We further use the Fama-French factor returns for performance evaluation.
+Trước hết, chúng ta lấy dữ liệu liên quan từ cơ sở dữ liệu SQLite đã được giới thiệu trong chương Truy cập và quản lý dữ liệu tài chính và Dữ liệu DataCore. Quy mô doanh nghiệp được định nghĩa là vốn chủ sở hữu theo giá thị trường trong hầu hết các ứng dụng định giá tài sản. Chúng ta còn dùng lợi nhuận nhân tố Fama-French để đánh giá hiệu quả.
 
 ```{python}
 tidy_finance = sqlite3.connect(
@@ -37,16 +37,16 @@ factors_ff3_monthly = pd.read_sql_query(
 )
 ```
 
-## Size Distribution
+## Phân phối quy mô
 
-Before we build our size portfolios, we investigate the distribution of the variable *firm size*. Visualizing the data is a valuable starting point to understand the input to the analysis. @fig-801 shows the fraction of total market capitalization concentrated in the largest firm. To produce this graph, we create monthly indicators that track whether a stock belongs to the largest x percent of the firms. Then, we aggregate the firms within each bucket and compute the buckets' share of total market capitalization.
+Trước khi xây dựng các danh mục theo quy mô, chúng ta khảo sát phân phối của biến *quy mô doanh nghiệp*. Trực quan hóa dữ liệu là điểm khởi đầu có giá trị để hiểu đầu vào của phân tích. @fig-801 cho thấy tỷ lệ tổng vốn hóa thị trường tập trung ở các doanh nghiệp lớn nhất. Để tạo biểu đồ này, chúng ta lập các chỉ báo theo tháng theo dõi xem một cổ phiếu có thuộc x phần trăm doanh nghiệp lớn nhất hay không. Sau đó, chúng ta gộp các doanh nghiệp trong mỗi nhóm và tính tỷ trọng của từng nhóm trong tổng vốn hóa thị trường.
 
-@fig-801 shows that the largest 1 percent of firms cover up to 50 percent of the total market capitalization, and holding just the 25 percent largest firms in the universe essentially replicates the market portfolio. The distribution of firm size thus implies that the largest firms of the market dominate many small firms whenever we use value-weighted benchmarks.
+@fig-801 cho thấy 1 phần trăm doanh nghiệp lớn nhất chiếm tới 50 phần trăm tổng vốn hóa thị trường, và chỉ cần nắm giữ 25 phần trăm doanh nghiệp lớn nhất trong tập hợp về cơ bản đã tái tạo được danh mục thị trường. Do đó, phân phối quy mô doanh nghiệp hàm ý rằng các doanh nghiệp lớn nhất của thị trường lấn át nhiều doanh nghiệp nhỏ mỗi khi chúng ta dùng các chuẩn so sánh theo trọng số vốn hóa.
 
 ```{python}
 #| label: fig-801
-#| fig-cap: "The figure shows the percentage of total market capitalization in largest stocks. We report the aggregate market capitalization of all stocks that belong to the 1, 5, 10, and 25 percent quantile of the largest firms in the monthly cross-section relative to the market capitalization of all stocks during the month."
-#| fig-alt: "Title: Percentage of total market capitalization in largest stocks. The figure shows a line chart with four different lines that are relatively stable during the entire sample period. The largest 1 percent of all stocks on average comprise around 40 percent of the entire market capitalization. For the largest 25 percent, the share is around 90 percent."
+#| fig-cap: "Hình cho thấy tỷ lệ phần trăm tổng vốn hóa thị trường nằm ở các cổ phiếu lớn nhất. Chúng ta báo cáo tổng vốn hóa thị trường của tất cả cổ phiếu thuộc nhóm phân vị 1, 5, 10 và 25 phần trăm doanh nghiệp lớn nhất trong mặt cắt ngang hằng tháng, so với vốn hóa thị trường của tất cả cổ phiếu trong tháng đó."
+#| fig-alt: "Tiêu đề: Tỷ lệ phần trăm tổng vốn hóa thị trường nằm ở các cổ phiếu lớn nhất. Hình cho thấy biểu đồ đường với bốn đường khác nhau tương đối ổn định trong toàn bộ giai đoạn mẫu. 1 phần trăm cổ phiếu lớn nhất trung bình chiếm khoảng 40 phần trăm toàn bộ vốn hóa thị trường. Với 25 phần trăm lớn nhất, tỷ trọng vào khoảng 90 phần trăm."
 #| fig-pos: "htb"
 
 market_cap_concentration = (prices_monthly
@@ -78,12 +78,12 @@ market_cap_concentration_figure = (
 market_cap_concentration_figure.show()
 ```
 
-Next, firm sizes also differ across listing exchanges. The primary listings of stocks were important in the past and are potentially still relevant today. 
+Tiếp theo, quy mô doanh nghiệp cũng khác nhau giữa các sàn niêm yết. Sàn niêm yết chính của cổ phiếu từng quan trọng trong quá khứ và có thể vẫn còn liên quan hiện nay.
 
 ```{python}
 #| label: fig-802
 #| eval: false
-#| fig-cap: "The figure shows the share of total market capitalization per listing exchange. Years are on the horizontal axis and the corresponding share of total market capitalization per listing exchange on the vertical axis."
+#| fig-cap: "Hình cho thấy tỷ trọng trong tổng vốn hóa thị trường theo từng sàn niêm yết. Các năm nằm trên trục hoành và tỷ trọng tương ứng trong tổng vốn hóa thị trường theo sàn niêm yết nằm trên trục tung."
 #| fig.alt: "Title: Share of total market capitalization per listing exchange."
 #| fig-pos: "htb"
 market_cap_share = (prices_monthly
@@ -114,7 +114,7 @@ plot_market_cap_share = (
 plot_market_cap_share.draw()
 ```
 
-Finally, we consider the distribution of firm size across listing exchanges and create summary statistics. The function `describe()` does not include all statistics we are interested in, which is why we create the function `compute_summary()` that adds the standard deviation and the number of observations. Then, we apply it to the most current month of our data on each listing exchange. We also add a row with the overall summary statistics. In the following, we use this distinction to update our portfolio sort procedure.
+Cuối cùng, chúng ta xem xét phân phối quy mô doanh nghiệp giữa các sàn niêm yết và lập các thống kê tóm tắt. Hàm `describe()` không bao gồm mọi thống kê mà chúng ta quan tâm, vì vậy chúng ta tạo hàm `compute_summary()` bổ sung độ lệch chuẩn và số quan sát. Sau đó, chúng ta áp dụng hàm này cho tháng gần nhất trong dữ liệu trên từng sàn niêm yết. Chúng ta cũng thêm một dòng chứa các thống kê tóm tắt chung. Dưới đây, chúng ta dùng sự phân biệt này để cập nhật quy trình phân loại danh mục.
 
 ```{python}
 #| eval: false
@@ -144,11 +144,11 @@ compute_summary(
 )
 ```
 
-## Univariate Size Portfolios with Flexible Breakpoints
+## Danh mục quy mô đơn biến với các điểm cắt linh hoạt
 
-In Univariate Portfolio Sorts, we construct portfolios with a varying number of breakpoints and different sorting variables. Here, we extend the framework such that we compute breakpoints on a subset of the data, for instance, based on selected listing exchanges. 
+Trong chương Phân loại danh mục đơn biến, chúng ta xây dựng các danh mục với số lượng điểm cắt thay đổi và các biến phân loại khác nhau. Ở đây, chúng ta mở rộng khung phân tích để tính các điểm cắt trên một tập con của dữ liệu, chẳng hạn dựa trên một số sàn niêm yết được chọn.
 
-We introduce `exchanges` as an argument in our `assign_portfolio()` function from Univariate Portfolio Sorts. The exchange-specific argument then enters in the filter `data["exchanges"].isin(exchanges)`. For example, if `exchanges='HOSE'` is specified, only stocks listed on HOSE are used to compute the breakpoints. Alternatively, you could specify `exchanges=["HOSE", "HNX", "UPCoM"]`, which keeps all stocks listed on either of these exchanges.
+Chúng ta đưa `exchanges` vào làm một đối số trong hàm `assign_portfolio()` từ chương Phân loại danh mục đơn biến. Đối số theo sàn này sau đó đi vào bộ lọc `data["exchanges"].isin(exchanges)`. Ví dụ, nếu chỉ định `exchanges='HOSE'`, chỉ các cổ phiếu niêm yết trên HOSE được dùng để tính các điểm cắt. Ngoài ra, bạn có thể chỉ định `exchanges=["HOSE", "HNX", "UPCoM"]`, giữ lại tất cả cổ phiếu niêm yết trên một trong các sàn này.
 
 ```{python}
 #| eval: false
@@ -175,11 +175,11 @@ def assign_portfolio(data, exchanges, sorting_variable, n_portfolios):
     return assigned_portfolios
 ```
 
-## Weighting Schemes for Portfolios
+## Các cách đặt trọng số cho danh mục
 
-Apart from computing breakpoints on different samples, researchers often use different portfolio weighting schemes. So far, we weighted each portfolio constituent by its relative market equity of the previous period. This protocol is called *value-weighting*. The alternative protocol is *equal-weighting*, which assigns each stock's return the same weight, i.e., a simple average of the constituents' returns. Notice that equal-weighting is difficult in practice as the portfolio manager needs to rebalance the portfolio monthly, while value-weighting is a truly passive investment.
+Ngoài việc tính các điểm cắt trên những mẫu khác nhau, các nhà nghiên cứu thường dùng các cách đặt trọng số danh mục khác nhau. Cho đến nay, chúng ta đã đặt trọng số cho mỗi thành phần danh mục theo vốn chủ sở hữu thị trường tương đối của kỳ trước. Quy ước này được gọi là *trọng số theo vốn hóa*. Quy ước thay thế là *trọng số bằng nhau*, gán cho lợi nhuận của mỗi cổ phiếu cùng một trọng số, tức là trung bình giản đơn của lợi nhuận các thành phần. Lưu ý rằng trọng số bằng nhau khó thực hiện trong thực tế vì nhà quản lý danh mục cần tái cân bằng danh mục hằng tháng, trong khi trọng số theo vốn hóa là một khoản đầu tư thụ động đúng nghĩa.
 
-We implement the two weighting schemes in the function `compute_portfolio_returns()` that takes a logical argument to weight the returns by firm value. Additionally, the long-short portfolio is long in the smallest firms and short in the largest firms, consistent with research showing that small firms outperform their larger counterparts. Apart from these two changes, the function is similar to the procedure in Univariate Portfolio Sorts.
+Chúng ta triển khai hai cách đặt trọng số trong hàm `compute_portfolio_returns()`, hàm này nhận một đối số logic để đặt trọng số lợi nhuận theo giá trị doanh nghiệp. Ngoài ra, danh mục mua–bán khống mua các doanh nghiệp nhỏ nhất và bán khống các doanh nghiệp lớn nhất, nhất quán với nghiên cứu cho thấy doanh nghiệp nhỏ vượt trội hơn các doanh nghiệp lớn. Ngoài hai thay đổi này, hàm tương tự quy trình trong chương Phân loại danh mục đơn biến.
 
 ```{python}
 #| eval: false
@@ -220,7 +220,7 @@ def compute_portfolio_returns(n_portfolios=10,
     return returns
 ```
 
-To see how the function `compute_portfolio_returns()` works, we consider a simple median breakpoint example with value-weighted returns. We are interested in the effect of restricting listing exchanges on the estimation of the size premium. In the first function call, we compute returns based on breakpoints from all listing exchanges. Then, we computed returns based on breakpoints from HOSE-listed stocks.
+Để thấy hàm `compute_portfolio_returns()` hoạt động ra sao, chúng ta xét một ví dụ đơn giản với điểm cắt là trung vị và lợi nhuận theo trọng số vốn hóa. Chúng ta quan tâm đến tác động của việc giới hạn sàn niêm yết lên ước lượng phần bù quy mô. Ở lần gọi hàm đầu tiên, chúng ta tính lợi nhuận dựa trên các điểm cắt từ tất cả các sàn niêm yết. Sau đó, chúng ta tính lợi nhuận dựa trên các điểm cắt từ các cổ phiếu niêm yết trên HOSE.
 
 ```{python}
 #| eval: false
@@ -245,17 +245,17 @@ data.round(2)
 ```
 
 
-## P-Hacking and Non-Standard Errors
+## P-Hacking và sai số phi chuẩn
 
-Since the choice of the listing exchange has a significant impact, the next step is to investigate the effect of other data processing decisions researchers have to make along the way. In particular, any portfolio sort analysis has to decide at least on the number of portfolios, the listing exchanges to form breakpoints, and equal- or value-weighting. Further, one may exclude firms that are active in the finance industry or restrict the analysis to some parts of the time series. All of the variations of these choices that we discuss here are part of scholarly articles published in the top finance journals. We refer to @Walter2022 for an extensive set of other decision nodes at the discretion of researchers.
+Vì việc chọn sàn niêm yết có tác động đáng kể, bước tiếp theo là khảo sát ảnh hưởng của các quyết định xử lý dữ liệu khác mà nhà nghiên cứu phải đưa ra trong quá trình thực hiện. Cụ thể, mọi phân tích phân loại danh mục đều phải quyết định ít nhất về số lượng danh mục, các sàn niêm yết dùng để hình thành điểm cắt, và trọng số bằng nhau hay trọng số theo vốn hóa. Hơn nữa, người ta có thể loại các doanh nghiệp hoạt động trong ngành tài chính hoặc giới hạn phân tích ở một số phần của chuỗi thời gian. Tất cả các biến thể của những lựa chọn này mà chúng ta thảo luận ở đây đều là một phần của các bài báo học thuật đã công bố trên các tạp chí tài chính hàng đầu. Xem @Walter2022 để biết thêm một tập hợp rộng các nút quyết định khác thuộc quyền quyết định của nhà nghiên cứu.
 
-The intention of this application is to show that the different ways to form portfolios result in different estimated size premiums. Despite the effects of this multitude of choices, there is no correct way. It should also be noted that none of the procedures is wrong. The aim is simply to illustrate the changes that can arise due to the variation in the evidence-generating process [@Menkveld2022]. The term *non-standard errors* refers to the variation due to (suitable) choices made by researchers. Interestingly, in a large-scale study, @Menkveld2022 find that the magnitude of non-standard errors is similar to the estimation uncertainty based on a chosen model. This shows how important it is to adjust for the seemingly innocent choices in the data preparation and evaluation workflow. Moreover, it seems that this methodology-related uncertainty should be embraced rather than hidden away.
+Mục đích của ứng dụng này là cho thấy các cách hình thành danh mục khác nhau dẫn đến các phần bù quy mô ước lượng khác nhau. Dù có vô số lựa chọn như vậy, không có một cách duy nhất nào là đúng. Cũng cần lưu ý rằng không có quy trình nào là sai. Mục tiêu đơn giản là minh họa những thay đổi có thể phát sinh do sự biến thiên trong quá trình tạo ra bằng chứng [@Menkveld2022]. Thuật ngữ *sai số phi chuẩn* (non-standard errors) chỉ sự biến thiên do các lựa chọn (hợp lý) của nhà nghiên cứu. Thú vị là, trong một nghiên cứu quy mô lớn, @Menkveld2022 phát hiện rằng độ lớn của sai số phi chuẩn tương đương với độ bất định ước lượng dựa trên một mô hình đã chọn. Điều này cho thấy việc điều chỉnh cho những lựa chọn tưởng chừng vô hại trong quy trình chuẩn bị và đánh giá dữ liệu quan trọng đến mức nào. Hơn nữa, có vẻ sự bất định liên quan đến phương pháp luận này nên được đón nhận hơn là che giấu.
 
-From a malicious perspective, these modeling choices give the researcher multiple *chances* to find statistically significant results. Yet this is considered *p-hacking*, which renders the statistical inference invalid due to multiple testing [@Harvey2016].
+Từ góc nhìn ác ý, các lựa chọn mô hình hóa này cho nhà nghiên cứu nhiều *cơ hội* để tìm ra kết quả có ý nghĩa thống kê. Tuy nhiên, điều này bị coi là *p-hacking*, làm cho suy luận thống kê mất hiệu lực do kiểm định đa giả thuyết [@Harvey2016].
 
-Nevertheless, the multitude of options creates a problem since there is no single correct way of sorting portfolios. How should a researcher convince a reader that their results do not come from a p-hacking exercise? To circumvent this dilemma, academics are encouraged to present evidence from different sorting schemes as *robustness tests* and report multiple approaches to show that a result does not depend on a single choice. Thus, the robustness of premiums is a key feature.
+Tuy vậy, vô số lựa chọn tạo ra một vấn đề vì không có cách phân loại danh mục nào duy nhất đúng. Làm thế nào một nhà nghiên cứu thuyết phục người đọc rằng kết quả của mình không phải do p-hacking? Để tránh thế tiến thoái lưỡng nan này, giới học thuật được khuyến khích trình bày bằng chứng từ các cách phân loại khác nhau dưới dạng *kiểm định độ vững* và báo cáo nhiều cách tiếp cận để cho thấy kết quả không phụ thuộc vào một lựa chọn duy nhất. Do đó, độ vững của các phần bù là một đặc điểm then chốt.
 
-Below, we conduct a series of robustness tests, which could also be interpreted as a p-hacking exercise. To do so, we examine the size premium in different specifications presented in the table `p_hacking_setup`. The function `itertools.product()` produces all possible permutations of its arguments. Note that we use the argument `data` to exclude financial firms and truncate the time series.
+Dưới đây, chúng ta thực hiện một loạt kiểm định độ vững, cũng có thể được diễn giải như một bài tập p-hacking. Để làm vậy, chúng ta khảo sát phần bù quy mô trong các đặc tả khác nhau được trình bày trong bảng `p_hacking_setup`. Hàm `itertools.product()` tạo ra mọi hoán vị có thể của các đối số. Lưu ý rằng chúng ta dùng đối số `data` để loại các doanh nghiệp tài chính và cắt ngắn chuỗi thời gian.
 
 ```{python}
 #| eval: false
@@ -273,7 +273,7 @@ p_hacking_setup = list(
 )
 ```
 
-To speed the computation up, we parallelize the (many) different sorting procedures. Finally, we report the resulting size premiums in descending order. There are indeed substantial size premiums possible in our data, in particular when we use equal-weighted portfolios.
+Để tăng tốc tính toán, chúng ta song song hóa (rất nhiều) quy trình phân loại khác nhau. Cuối cùng, chúng ta báo cáo các phần bù quy mô thu được theo thứ tự giảm dần. Quả thật có thể có những phần bù quy mô đáng kể trong dữ liệu của chúng ta, đặc biệt khi dùng các danh mục trọng số bằng nhau.
 
 ```{python}
 #| eval: false
@@ -287,15 +287,15 @@ p_hacking_results = pd.concat(
 p_hacking_results = p_hacking_results.reset_index(name="size_premium")
 ```
 
-## Size-Premium Variation
+## Biến thiên của phần bù quy mô
 
-We provide a graph in @fig-803 that shows the different premiums. The figure also shows the relation to the average Fama-French SMB (small minus big) premium used in the literature, which we include as a dotted vertical line.
+Chúng ta cung cấp một biểu đồ trong @fig-803 cho thấy các phần bù khác nhau. Hình cũng cho thấy mối quan hệ với phần bù SMB (small minus big) trung bình của Fama-French được dùng trong tài liệu, mà chúng ta đưa vào dưới dạng đường thẳng đứng chấm chấm.
 
 ```{python}
 #| label: fig-803
 #| eval: false
-#| fig-cap: "The figure shows the distribution of size premiums for various sorting choices. The dashed vertical line indicates the average Fama-French SMB premium."
-#| fig-alt: "Title: Distribution of size premiums for different sorting choices. The figure shows a histogram of size premiums based on different sorting choices. The variation is huge, but the estimated coefficients are positive for all choices."
+#| fig-cap: "Hình cho thấy phân phối của các phần bù quy mô theo nhiều lựa chọn phân loại khác nhau. Đường thẳng đứng nét đứt biểu thị phần bù SMB trung bình của Fama-French."
+#| fig-alt: "Tiêu đề: Phân phối của các phần bù quy mô theo các lựa chọn phân loại khác nhau. Hình cho thấy biểu đồ tần suất của các phần bù quy mô dựa trên các lựa chọn phân loại khác nhau. Biến thiên rất lớn, nhưng các hệ số ước lượng đều dương với mọi lựa chọn."
 #| fig-pos: "htb"
 p_hacking_results_figure = (
   ggplot(
@@ -315,17 +315,17 @@ p_hacking_results_figure = (
 p_hacking_results_figure.show()
 ```
 
-## Key Takeaways
+## Những điểm chính
 
--   Firm size is a crucial factor in asset pricing, and sorting stocks by size reveals the size premium, where small-cap stocks tend to outperform large-cap stocks.
--   Portfolio returns are sensitive to research design choices like exchange filters, weighting schemes, and the number of portfolios—decisions that can meaningfully shift results.
--   Methodological flexibility can lead to non-standard errors and potential p-hacking.
--   Validate results by varying assumptions and show that findings hold across multiple specifications.
+-   Quy mô doanh nghiệp là một nhân tố quan trọng trong định giá tài sản, và việc phân loại cổ phiếu theo quy mô cho thấy phần bù quy mô, trong đó cổ phiếu vốn hóa nhỏ có xu hướng vượt trội so với cổ phiếu vốn hóa lớn.
+-   Lợi nhuận danh mục nhạy cảm với các lựa chọn thiết kế nghiên cứu như bộ lọc sàn niêm yết, cách đặt trọng số và số lượng danh mục, những quyết định có thể làm thay đổi kết quả đáng kể.
+-   Sự linh hoạt về phương pháp luận có thể dẫn đến sai số phi chuẩn và nguy cơ p-hacking.
+-   Hãy kiểm chứng kết quả bằng cách thay đổi các giả định và cho thấy các phát hiện đứng vững qua nhiều đặc tả.
 
-<!-- ## Exercises
+<!-- ## Bài tập
 
-1.  We gained several insights on the size distribution above. However, we did not analyze the average size across listing exchanges and industries. Which listing exchanges/industries have the largest firms? Plot the average firm size for the three listing exchanges over time. What do you conclude?
-2.  We compute breakpoints but do not take a look at them in the exposition above. This might cover potential data errors. Plot the breakpoints for ten size portfolios over time. Then, take the difference between the two extreme portfolios and plot it. Describe your results.
-3.  The returns that we analyze above do not account for differences in the exposure to market risk, i.e., the CAPM beta. Change the function `compute_portfolio_returns()` to output the CAPM alpha or beta instead of the average excess return.
-4.  While you saw the spread in returns from the p-hacking exercise, we did not show which choices led to the largest effects. Find a way to investigate which choice variable has the largest impact on the estimated size premium.
-5.  We computed several size premiums, but they do not follow the definition of @Fama1993. Which of our approaches comes closest to their SMB premium? -->
+1.  Chúng ta đã có một số hiểu biết về phân phối quy mô ở trên. Tuy nhiên, chúng ta chưa phân tích quy mô trung bình giữa các sàn niêm yết và các ngành. Sàn niêm yết/ngành nào có các doanh nghiệp lớn nhất? Vẽ biểu đồ quy mô doanh nghiệp trung bình của ba sàn niêm yết theo thời gian. Bạn rút ra kết luận gì?
+2.  Chúng ta tính các điểm cắt nhưng không xem xét chúng trong phần trình bày ở trên. Điều này có thể che giấu các lỗi dữ liệu tiềm tàng. Vẽ biểu đồ các điểm cắt cho mười danh mục quy mô theo thời gian. Sau đó, lấy chênh lệch giữa hai danh mục cực trị và vẽ biểu đồ. Mô tả kết quả của bạn.
+3.  Lợi nhuận mà chúng ta phân tích ở trên không tính đến sự khác biệt về mức phơi nhiễm với rủi ro thị trường, tức là beta CAPM. Hãy thay đổi hàm `compute_portfolio_returns()` để xuất ra alpha hoặc beta CAPM thay cho lợi nhuận vượt mức trung bình.
+4.  Dù bạn đã thấy độ chênh lệch lợi nhuận từ bài tập p-hacking, chúng ta chưa chỉ ra những lựa chọn nào dẫn đến tác động lớn nhất. Hãy tìm cách khảo sát biến lựa chọn nào có tác động lớn nhất lên phần bù quy mô ước lượng.
+5.  Chúng ta đã tính nhiều phần bù quy mô, nhưng chúng không tuân theo định nghĩa của @Fama1993. Cách tiếp cận nào của chúng ta gần nhất với phần bù SMB của họ? -->

@@ -12,7 +12,7 @@ Chương này giới thiệu [Datacore](https://datacore.vn/), nền tảng dữ
 
 ## Tổng quan chương
 
-Chương này được tổ chức như sau. Trước tiên, cần thiết lập kết nối với cơ sở hạ tầng lưu trữ đám mây của Datacore. Sau đó, tải xuống và chuẩn bị dữ liệu cơ bản của công ty, bao gồm các khoản mục bảng cân đối kế toán, các biến số báo cáo kết quả kinh doanh và các chỉ số phái sinh cần thiết cho nghiên cứu định giá tài sản. Tiếp theo, truy xuất và xử lý dữ liệu giá cổ phiếu, tính toán lợi nhuận, vốn hóa thị trường và lợi nhuận vượt trội. Cuối cùng, kết hợp các tập dữ liệu này và cung cấp số liệu thống kê mô tả đặc trưng cho thị trường chứng khoán Việt Nam.
+Chương này được tổ chức như sau. Trước tiên, cần thiết lập kết nối với cơ sở hạ tầng lưu trữ đám mây của Datacore. Sau đó, tải xuống và chuẩn bị dữ liệu cơ bản của công ty, bao gồm các khoản mục bảng cân đối kế toán, các biến số báo cáo kết quả kinh doanh và các chỉ số dẫn xuất cần thiết cho nghiên cứu định giá tài sản. Tiếp theo, truy xuất và xử lý dữ liệu giá cổ phiếu, tính toán lợi nhuận, vốn hóa thị trường và lợi nhuận vượt mức. Cuối cùng, kết hợp các tập dữ liệu này và cung cấp số liệu thống kê mô tả đặc trưng cho thị trường chứng khoán Việt Nam.
 
 ## Thiết lập môi trường
 
@@ -121,7 +121,7 @@ bucket_name = os.environ["MINIO_BUCKET"]
 
 ## Dữ liệu cơ bản của công ty
 
-Dữ liệu kế toán của các công ty là yếu tố thiết yếu cho việc phân tích danh mục đầu tư, xây dựng yếu tố và nghiên cứu định giá. Datacore cung cấp dữ liệu cơ bản toàn diện cho các công ty niêm yết của Việt Nam, bao gồm báo cáo tài chính hàng năm và hàng quý được lập theo Chuẩn mực Kế toán Việt Nam (VAS).
+Dữ liệu kế toán của các công ty là yếu tố thiết yếu cho việc phân tích danh mục đầu tư, xây dựng nhân tố và nghiên cứu định giá. Datacore cung cấp dữ liệu cơ bản toàn diện cho các công ty niêm yết của Việt Nam, bao gồm báo cáo tài chính hàng năm và hàng quý được lập theo Chuẩn mực Kế toán Việt Nam (VAS).
 
 ### Hiểu về Báo cáo Tài chính Việt Nam
 
@@ -131,7 +131,7 @@ Trước khi xử lý dữ liệu, điều quan trọng là phải hiểu cấu 
 
 2. **Tần suất báo cáo**: Các công ty niêm yết phải công bố báo cáo tài chính hàng quý trong vòng 20 ngày kể từ ngày kết thúc quý và báo cáo kiểm toán hàng năm trong vòng 90 ngày kể từ ngày kết thúc năm tài chính.
 
-3. **Các định dạng đặc thù theo ngành**: Các công ty trong lĩnh vực ngân hàng, bảo hiểm và chứng khoán tuân theo các định dạng báo cáo chuyên biệt, khác với định dạng tiêu chuẩn của ngành.
+3. **Các định dạng đặc thù theo ngành**: Các công ty trong lĩnh vực ngân hàng, bảo hiểm và chứng khoán tuân theo các định dạng báo cáo chuyên biệt, khác với mẫu báo cáo tiêu chuẩn dành cho doanh nghiệp phi tài chính.
 
 4. **Tiền tệ**: Tất cả các số liệu được báo cáo bằng Đồng Việt Nam (VND). Do giá trị danh nghĩa lớn (hàng triệu đến hàng nghìn tỷ VND), chúng ta thường quy đổi các số liệu thành hàng triệu hoặc hàng tỷ để dễ đọc hơn.
 
@@ -158,7 +158,7 @@ df_fundamentals_raw = pd.concat(fundamentals_list, ignore_index=True)
 print(f"\nTotal observations: {len(df_fundamentals_raw):,}")
 ```
 
-### Nguyên tắc cơ bản về vệ sinh và tiêu chuẩn hóa
+### Làm sạch và chuẩn hóa dữ liệu cơ bản
 
 Dữ liệu cơ bản thô cần trải qua nhiều bước làm sạch để đảm bảo tính nhất quán và khả năng sử dụng. Chúng ta chuẩn hóa tên biến, xử lý các giá trị thiếu và tạo ra các biến dẫn xuất thường được sử dụng trong nghiên cứu định giá tài sản.
 
@@ -288,9 +288,9 @@ def create_standard_variables(df):
 df_fundamentals = create_standard_variables(df_fundamentals)
 ```
 
-### Tính toán giá trị sổ sách và lợi nhuận
+### Tính toán giá trị sổ sách và khả năng sinh lời
 
-Giá trị sổ sách là một biến số quan trọng đối với các chiến lược đầu tư giá trị và việc xây dựng danh mục đầu tư theo yếu tố HML (Cao Trừ Thấp). Chúng ta tuân theo định nghĩa từ thư viện dữ liệu của Kenneth French, có tính đến thuế hoãn lại và cổ phiếu ưu đãi.
+Giá trị sổ sách là một biến số quan trọng đối với các chiến lược đầu tư giá trị và việc xây dựng danh mục đầu tư theo nhân tố HML (Cao Trừ Thấp). Chúng ta tuân theo định nghĩa từ thư viện dữ liệu của Kenneth French, có tính đến thuế hoãn lại và cổ phiếu ưu đãi.
 
 ```{python}
 def compute_book_equity(df):
@@ -352,7 +352,7 @@ print("Book Equity Summary Statistics (in million VND):")
 print(df_fundamentals["be"].describe().round(2))
 ```
 
-Lợi nhuận hoạt động, được giới thiệu bởi @fama2015five, đo lường lợi nhuận của một công ty so với vốn chủ sở hữu trên sổ sách. Các công ty có lợi nhuận hoạt động cao hơn thường có tỷ suất sinh lời kỳ vọng cao hơn.
+Khả năng sinh lời hoạt động, được giới thiệu bởi @fama2015five, đo lường lợi nhuận của một công ty so với vốn chủ sở hữu trên sổ sách. Các công ty có khả năng sinh lời hoạt động cao hơn thường có tỷ suất sinh lời kỳ vọng cao hơn.
 
 ```{python}
 def compute_profitability(df):
@@ -396,7 +396,7 @@ df_fundamentals = compute_profitability(df_fundamentals)
 
 ### Tính toán Đầu tư
 
-Đầu tư, được đo lường bằng sự tăng trưởng tài sản, nắm bắt hành vi đầu tư của các công ty. @fama2015five ghi nhận rằng các công ty có tốc độ tăng trưởng tài sản cao (đầu tư tháo vát) thường có tỷ suất sinh lời trong tương lai thấp hơn.
+Đầu tư, được đo lường bằng sự tăng trưởng tài sản, nắm bắt hành vi đầu tư của các công ty. @fama2015five ghi nhận rằng các công ty có tốc độ tăng trưởng tài sản cao (đầu tư tích cực) thường có tỷ suất sinh lời trong tương lai thấp hơn.
 
 ```{python}
 def compute_investment(df):
@@ -519,11 +519,11 @@ print("Company fundamentals saved to database.")
 
 ## Dữ liệu giá cổ phiếu
 
-Dữ liệu giá cổ phiếu là nền tảng của các phân tích dựa trên lợi nhuận trong tài chính thực nghiệm. Datacore cung cấp dữ liệu giá lịch sử toàn diện cho tất cả các chứng khoán được giao dịch trên HOSE, HNX và UPCoM, bao gồm cả giá điều chỉnh có tính đến các hành động của công ty.
+Dữ liệu giá cổ phiếu là nền tảng của các phân tích dựa trên lợi nhuận trong tài chính thực nghiệm. Datacore cung cấp dữ liệu giá lịch sử toàn diện cho tất cả các chứng khoán được giao dịch trên HOSE, HNX và UPCoM, bao gồm cả giá điều chỉnh có tính đến các sự kiện doanh nghiệp.
 
 ### Tải xuống dữ liệu giá
 
-Chúng ta tải xuống dữ liệu giá lịch sử từ hệ thống lưu trữ của Datacore. Dữ liệu bao gồm các quan sát hàng ngày với giá mở cửa, giá cao nhất, giá thấp nhất, giá đóng cửa, khối lượng giao dịch và các yếu tố điều chỉnh.
+Chúng ta tải xuống dữ liệu giá lịch sử từ hệ thống lưu trữ của Datacore. Dữ liệu bao gồm các quan sát hàng ngày với giá mở cửa, giá cao nhất, giá thấp nhất, giá đóng cửa, khối lượng giao dịch và các hệ số điều chỉnh.
 
 
 ```{python}
@@ -540,7 +540,7 @@ print(f"Date range: {prices_raw['date'].min()} to {prices_raw['date'].max()}")
 
 ### Xử lý dữ liệu giá
 
-Chúng ta làm sạch dữ liệu giá và tính toán giá điều chỉnh có tính đến việc chia tách cổ phiếu, cổ tức bằng cổ phiếu và các hành động khác của công ty.
+Chúng ta làm sạch dữ liệu giá và tính toán giá điều chỉnh có tính đến việc chia tách cổ phiếu, cổ tức bằng cổ phiếu và các sự kiện doanh nghiệp khác.
 
 ```{python}
 def process_price_data(df):
@@ -580,9 +580,9 @@ prices = process_price_data(prices_raw)
 ```
 
 
-### Tính toán Số lượng Cổ phiếu Hoạt động và Giá trị Thị trường
+### Tính toán số lượng cổ phiếu đang lưu hành và vốn hóa thị trường
 
-Giá trị thị trường được tính bằng sản phẩm của giá và số lượng cổ phiếu hoạt động. Vì Datacore cung cấp lợi nhuận trên mỗi cổ phiếu và lợi nhuận sau thuế, chúng ta có thể suy ra số lượng cổ phiếu hoạt động từ các biến số này.
+Vốn hóa thị trường được tính bằng tích của giá và số lượng cổ phiếu đang lưu hành. Vì Datacore cung cấp lợi nhuận trên mỗi cổ phiếu và lợi nhuận sau thuế, chúng ta có thể suy ra số lượng cổ phiếu đang lưu hành từ các biến số này.
 
 ```{python}
 def compute_shares_outstanding(fundamentals_df):
@@ -618,8 +618,8 @@ prices = add_market_cap(prices, shares_outstanding)
 ```
 
 
-### Tính Lợi Nhuận và Lợi Nhuận Kỳ Lượng
-Chúng ta tính toán lợi nhuận sử dụng giá đóng cửa điều chỉnh để đảm bảo lợi nhuận phản ánh chính xác lợi nhuận tổng của cổ đông bao gồm cả cổ tức và các hành động của công ty.
+### Tính Lợi Nhuận và Lợi Nhuận Vượt Mức
+Chúng ta tính toán lợi nhuận sử dụng giá đóng cửa điều chỉnh để đảm bảo lợi nhuận phản ánh chính xác lợi nhuận tổng của cổ đông bao gồm cả cổ tức và các sự kiện doanh nghiệp.
 
 #### Tạo Bộ Dữ Liệu Hàng Ngày
 
@@ -751,7 +751,7 @@ print(f"\nFinal daily sample: {len(prices_daily):,} observations")
 
 #### Tạo Dữ liệu Tháng
 
-Đối với lợi nhuận hàng tháng, chúng ta tính toán lợi nhuận trực tiếp từ giá điều chỉnh cuối tháng thay vì lãi kép lợi nhuận hàng ngày. Điều này tránh được sai sót do lãi kép từ các ngày thiếu và là phương pháp tiêu chuẩn trong tài chính thực nghiệm.
+Đối với lợi nhuận hàng tháng, chúng ta tính toán lợi nhuận trực tiếp từ giá điều chỉnh cuối tháng thay vì ghép lãi các lợi nhuận hàng ngày. Điều này tránh được sai sót do ghép lãi qua các ngày bị thiếu dữ liệu và là phương pháp tiêu chuẩn trong tài chính thực nghiệm.
 
 1. Phiên bản tuần tự
 
@@ -952,7 +952,7 @@ print("Monthly price data saved to database.")
 
 ## Thống kê mô tả
 
-Trước khi tiến hành phân tích giá tài sản, chúng ta xem xét các đặc điểm của mẫu để hiểu sự phát triển và thành phần của thị trường chứng khoán Việt Nam.
+Trước khi tiến hành phân tích định giá tài sản, chúng ta xem xét các đặc điểm của mẫu để hiểu sự phát triển và thành phần của thị trường chứng khoán Việt Nam.
 
 ### Sự phát triển của thị trường theo thời gian
 
@@ -971,8 +971,8 @@ securities_over_time = (prices_monthly
 
 ```{python}
 #| label: fig-securities-over-time
-#| fig-cap: "The figure shows the monthly number of securities in the Vietnamese stock market sample."
-#| fig-alt: "Line chart showing the growth in number of listed securities over time."
+#| fig-cap: "Hình cho thấy số lượng chứng khoán hằng tháng trong mẫu thị trường chứng khoán Việt Nam."
+#| fig-alt: "Biểu đồ đường thể hiện sự tăng trưởng số lượng chứng khoán niêm yết theo thời gian."
 securities_figure = (
     ggplot(securities_over_time, aes(x="date", y="n_securities"))
     + geom_line(color="steelblue", size=1)
@@ -994,8 +994,8 @@ Tổng vốn hóa thị trường phản ánh quy mô và sự phát triển chu
 
 ```{python}
 #| label: fig-market-cap-over-time
-#| fig-cap: "The figure shows the total market capitalization of Vietnamese listed companies over time."
-#| fig-alt: "Line chart showing total market capitalization growth."
+#| fig-cap: "Hình cho thấy tổng vốn hóa thị trường của các công ty niêm yết tại Việt Nam theo thời gian."
+#| fig-alt: "Biểu đồ đường thể hiện sự tăng trưởng của tổng vốn hóa thị trường."
 mktcap_figure = (
     ggplot(securities_over_time, aes(x="date", y="total_mktcap / 1000"))
     + geom_line(color="darkgreen", size=1)
@@ -1017,8 +1017,8 @@ Việc hiểu rõ sự phân bố lợi nhuận hàng tháng giúp xác định 
 
 ```{python}
 #| label: fig-return-distribution
-#| fig-cap: "Distribution of monthly excess returns for Vietnamese stocks."
-#| fig-alt: "Histogram showing the distribution of monthly excess returns."
+#| fig-cap: "Phân phối lợi nhuận vượt mức hằng tháng của các cổ phiếu Việt Nam."
+#| fig-alt: "Biểu đồ histogram thể hiện phân phối lợi nhuận vượt mức hằng tháng."
 return_distribution = (
     ggplot(prices_monthly, aes(x="ret_excess"))
     + geom_histogram(
@@ -1041,15 +1041,15 @@ return_distribution.show()
 
 
 
-### Phạm vi Giá Trị Sổ Sách của Vốn Chủ Sở Hữu
+### Độ phủ của Dữ liệu Giá Trị Sổ Sách Vốn Chủ Sở Hữu
 
 Vốn chủ sở hữu sổ sách là điều cần thiết để xây dựng danh mục đầu tư giá trị. Chúng ta kiểm tra phần nào trong mẫu của chúng ta có dữ liệu vốn chủ sở hữu sổ sách theo thời gian.
 
 
 ```{python}
 #| label: fig-book-equity-coverage
-#| fig-cap: "Share of securities with available book equity data by year."
-#| fig-alt: "Line chart showing the coverage of book equity data over time."
+#| fig-cap: "Tỷ lệ chứng khoán có dữ liệu vốn chủ sở hữu sổ sách theo năm."
+#| fig-alt: "Biểu đồ đường thể hiện độ phủ của dữ liệu vốn chủ sở hữu sổ sách theo thời gian."
 # Merge prices with fundamentals
 coverage_data = (prices_monthly
     .assign(year=lambda x: x["date"].dt.year)
@@ -1087,7 +1087,7 @@ coverage_figure.show()
 
 ## Hợp nhất cổ phiếu và dữ liệu cơ bản
 
-Bước cuối cùng liên kết dữ liệu giá với dữ liệu cơ bản bằng cách sử dụng biểu tượng chứng khoán làm mã định danh chung. Bộ dữ liệu hợp nhất này tạo cơ sở để xây dựng danh mục đầu tư được sắp xếp theo đặc điểm của công ty.
+Bước cuối cùng liên kết dữ liệu giá với dữ liệu cơ bản bằng cách sử dụng mã chứng khoán làm mã định danh chung. Bộ dữ liệu hợp nhất này tạo cơ sở để xây dựng danh mục đầu tư được sắp xếp theo đặc điểm của công ty.
 
 ```{python}
 # Example: Create merged dataset for end-of-June each year
@@ -1194,7 +1194,7 @@ scatter_data = (
 
 3. **Cách tính giá trị sổ sách** tuân theo phương pháp Fama-French, có tính đến thuế hoãn lại và cổ phiếu ưu đãi để đảm bảo tính tương đồng với các nghiên cứu tại Hoa Kỳ.
 
-4. **Dữ liệu giá cổ phiếu** bao gồm các yếu tố điều chỉnh cho các hoạt động của công ty, cho phép tính toán lợi nhuận chính xác trong thời gian dài.
+4. **Dữ liệu giá cổ phiếu** bao gồm các hệ số điều chỉnh cho các sự kiện doanh nghiệp, cho phép tính toán lợi nhuận chính xác trong thời gian dài.
 
 5. **Tần suất hàng tháng** là tiêu chuẩn trong nghiên cứu định giá tài sản, giúp giảm nhiễu trong khi vẫn duy trì đủ số liệu quan sát để suy luận thống kê.
 

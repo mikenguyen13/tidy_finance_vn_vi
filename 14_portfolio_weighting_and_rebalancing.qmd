@@ -1,74 +1,74 @@
-# Portfolio Weighting and Rebalancing
+# Trọng số danh mục đầu tư và tái cân bằng danh mục
 
 ::: callout-note
-In this chapter, we systematically compare portfolio weighting schemes (e.g., value-weighted, equal-weighted, and several risk-based alternativesin the Vietnamese equity market. We quantify the impact of rebalancing frequency and transaction costs on realized performance, and develop practical tools for constructing implementable portfolios under the frictions characteristic of an emerging market.
+Trong chương này, chúng ta so sánh một cách có hệ thống các phương pháp xác định trọng số danh mục đầu tư (ví dụ: trọng số theo vốn hóa, trọng số bằng nhau và một số phương pháp thay thế dựa trên rủi ro) trên thị trường chứng khoán Việt Nam. Chúng ta định lượng tác động của tần suất tái cân bằng danh mục và chi phí giao dịch đến hiệu quả đầu tư thực tế, đồng thời xây dựng các công cụ thực tiễn để lập danh mục có thể triển khai được trong điều kiện các ma sát đặc trưng của một thị trường mới nổi.
 :::
 
-Every portfolio construction decision ultimately reduces to two choices: which assets to hold, and how much to allocate to each. While earlier chapters have focused on the first question, using factor models, anomalies, and fundamental analysis to select stocks, this chapter addresses the second. The weighting scheme a researcher or investor applies can fundamentally alter the conclusions drawn from portfolio-level tests and the returns earned from an investment strategy.
+Mọi quyết định xây dựng danh mục đầu tư rốt cuộc đều quy về hai lựa chọn: nắm giữ những tài sản nào, và phân bổ bao nhiêu cho mỗi tài sản. Trong khi các chương trước tập trung vào câu hỏi thứ nhất, tức là dùng các mô hình nhân tố, các hiện tượng bất thường và phân tích cơ bản để chọn cổ phiếu, thì chương này giải quyết câu hỏi thứ hai. Phương pháp xác định trọng số mà nhà nghiên cứu hay nhà đầu tư áp dụng có thể làm thay đổi căn bản các kết luận rút ra từ kiểm định ở cấp độ danh mục đầu tư cũng như lợi nhuận thu được từ một chiến lược đầu tư.
 
-The distinction matters more in Vietnam than in large, liquid markets. The Vietnamese equity market features extreme skewness in the market capitalization distribution: the top 10 firms on HOSE account for roughly 50% of total market capitalization, while hundreds of small firms contribute negligible weight. Under value-weighting, a portfolio's performance is dominated by a handful of large-cap names (Vinhomes, Vingroup, Vietcombank, FPT). Under equal-weighting, every firm contributes equally, tilting the portfolio toward small, illiquid stocks that may be expensive or impossible to trade at scale. Neither scheme is inherently correct; the choice depends on the question being asked.
+Sự khác biệt này quan trọng ở Việt Nam hơn so với các thị trường lớn và có tính thanh khoản cao. Thị trường chứng khoán Việt Nam có phân phối vốn hóa thị trường lệch cực mạnh: 10 doanh nghiệp lớn nhất trên HOSE chiếm khoảng 50% tổng vốn hóa thị trường, trong khi hàng trăm doanh nghiệp nhỏ đóng góp tỷ trọng không đáng kể. Với trọng số theo vốn hóa, hiệu quả của danh mục bị chi phối bởi một số ít cổ phiếu vốn hóa lớn (Vinhomes, Vingroup, Vietcombank, FPT). Với trọng số bằng nhau, mọi doanh nghiệp đóng góp như nhau, khiến danh mục nghiêng về các cổ phiếu nhỏ, kém thanh khoản, vốn có thể tốn kém hoặc không thể giao dịch ở quy mô lớn. Không phương pháp nào đúng một cách tuyệt đối; sự lựa chọn phụ thuộc vào câu hỏi đang được đặt ra.
 
-This chapter develops the analytical framework for making that choice. We begin with the theoretical properties of weighting schemes, implement each scheme in practice with Vietnamese data, quantify the transaction costs of rebalancing, and extend the analysis to risk-based alternatives that explicitly incorporate the covariance structure of returns.
+Chương này xây dựng khung phân tích để đưa ra lựa chọn đó. Chúng ta bắt đầu với các tính chất lý thuyết của các phương pháp xác định trọng số, triển khai từng phương pháp trên dữ liệu Việt Nam, định lượng chi phí giao dịch của việc tái cân bằng, và mở rộng phân tích sang các phương pháp thay thế dựa trên rủi ro, vốn tính đến một cách tường minh cấu trúc hiệp phương sai của lợi nhuận.
 
-## Theoretical Framework {#sec-weight-theory}
+## Khung lý thuyết {#sec-weight-theory}
 
-### Value-Weighted Portfolios
+### Danh mục trọng số theo vốn hóa
 
-A value-weighted (VW) portfolio allocates to each stock in proportion to its market capitalization:
+Danh mục trọng số theo vốn hóa (VW) phân bổ cho mỗi cổ phiếu một tỷ trọng tỷ lệ thuận với vốn hóa thị trường của nó:
 
 $$
 w_{i,t}^{VW} = \frac{\text{MCap}_{i,t}}{\sum_{j=1}^{N_t} \text{MCap}_{j,t}}
 $$ {#eq-vw}
 
-where $\text{MCap}_{i,t} = P_{i,t} \times \text{Shares}_{i,t}$ is the market capitalization of stock $i$ at time $t$.
+trong đó $\text{MCap}_{i,t} = P_{i,t} \times \text{Shares}_{i,t}$ là vốn hóa thị trường của cổ phiếu $i$ tại thời điểm $t$.
 
-The VW portfolio has a unique theoretical status: it is the portfolio that all investors collectively hold (the "market portfolio" in CAPM). Its key properties are:
+Danh mục VW có một vị thế lý thuyết đặc biệt: đó là danh mục mà tất cả các nhà đầu tư cùng nắm giữ (tức "danh mục thị trường" trong CAPM). Các tính chất chính của nó là:
 
-1.  **Self-rebalancing.** As prices move, weights adjust automatically. A VW portfolio requires trading only when constituents enter or leave the index, or when corporate actions (splits, issuances) change shares outstanding.
-2.  **Low turnover.** Because weights drift with prices rather than being reset to targets, VW portfolios have minimal rebalancing costs.
-3.  **Large-cap bias.** Returns are dominated by the largest firms. In Vietnam, this means the portfolio's risk-return profile is heavily influenced by banking, real estate, and technology conglomerates.
+1.  **Tự tái cân bằng.** Khi giá thay đổi, các trọng số tự điều chỉnh. Danh mục VW chỉ cần giao dịch khi các cổ phiếu cấu thành được thêm vào hoặc loại khỏi chỉ số, hoặc khi các sự kiện doanh nghiệp (corporate actions: chia tách, phát hành thêm) làm thay đổi số cổ phiếu đang lưu hành.
+2.  **Tỷ lệ vòng quay thấp.** Vì các trọng số trôi theo giá thay vì được đặt lại về mục tiêu, danh mục VW có chi phí tái cân bằng tối thiểu.
+3.  **Thiên lệch về vốn hóa lớn.** Lợi nhuận bị chi phối bởi các doanh nghiệp lớn nhất. Ở Việt Nam, điều này có nghĩa là hồ sơ rủi ro–lợi nhuận của danh mục chịu ảnh hưởng nặng nề từ ngân hàng, bất động sản và các tập đoàn công nghệ.
 
-@hsu2004cap argues that VW portfolios are sub-optimal because they mechanically overweight overpriced stocks and underweight underpriced stocks (i.e., any deviation of price from fundamental value creates a systematic drag on VW performance relative to a fundamentally weighted alternative).
+@hsu2004cap lập luận rằng các danh mục VW là dưới mức tối ưu vì chúng, một cách máy móc, nắm giữ quá nhiều cổ phiếu bị định giá cao và quá ít cổ phiếu bị định giá thấp (tức là, bất kỳ sự chênh lệch nào của giá so với giá trị cơ bản đều tạo ra một lực cản mang tính hệ thống đối với hiệu quả của danh mục VW so với phương án xác định trọng số theo yếu tố cơ bản).
 
-### Equal-Weighted Portfolios
+### Danh mục trọng số bằng nhau
 
-An equal-weighted (EW) portfolio assigns the same weight to each constituent:
+Danh mục trọng số bằng nhau (EW) gán cùng một trọng số cho mỗi cổ phiếu cấu thành:
 
 $$
 w_{i,t}^{EW} = \frac{1}{N_t}
 $$ {#eq-ew}
 
-@demiguel2009optimal show that the 1/N portfolio is surprisingly competitive with mean-variance optimized portfolios, particularly when estimation windows are short and the number of assets is large (conditions that closely describe the Vietnamese market). The intuition is that estimation error in expected returns and covariances can overwhelm the gains from optimization, making the "naive" equal-weight scheme a robust default.
+@demiguel2009optimal chỉ ra rằng danh mục 1/N cạnh tranh được một cách đáng ngạc nhiên với các danh mục tối ưu hóa trung bình–phương sai, đặc biệt khi các cửa sổ ước lượng ngắn và số lượng tài sản lớn (những điều kiện mô tả sát thị trường Việt Nam). Trực giác là sai số ước lượng của lợi nhuận kỳ vọng và hiệp phương sai có thể lấn át lợi ích từ việc tối ưu hóa, khiến phương pháp trọng số bằng nhau "ngây thơ" trở thành một mặc định vững chắc.
 
-@plyakha2021equal decompose the EW outperformance over VW into two components:
+@plyakha2021equal phân tách phần vượt trội của EW so với VW thành hai thành phần:
 
-1.  **Size tilt.** EW allocates more to small firms, which historically earn a size premium.
-2.  **Rebalancing bonus.** Monthly rebalancing back to equal weights is a contrarian strategy: it sells recent winners and buys recent losers, profiting from mean reversion in individual stock returns.
+1.  **Thiên lệch quy mô.** EW phân bổ nhiều hơn cho các doanh nghiệp nhỏ, vốn trong lịch sử đem lại phần bù quy mô.
+2.  **Phần thưởng tái cân bằng.** Việc tái cân bằng hằng tháng về trọng số bằng nhau là một chiến lược đầu tư ngược xu hướng: bán những cổ phiếu thắng cuộc gần đây và mua những cổ phiếu thua cuộc gần đây, thu lợi từ sự hồi quy về giá trị trung bình trong lợi nhuận của từng cổ phiếu.
 <!-- 3.  **Diversification.** EW provides lower concentration and higher effective diversification. -->
 
-However, the EW portfolio has practical disadvantages that are particularly severe in Vietnam:
+Tuy nhiên, danh mục EW có những bất lợi thực tiễn đặc biệt nghiêm trọng ở Việt Nam:
 
--   **High turnover.** Every rebalancing date requires trading every stock back to equal weight.
--   **Illiquidity exposure.** Equal weighting of micro-cap stocks that trade VND 100 million/day alongside large-caps trading VND 500 billion/day creates severe implementation challenges.
--   **Price impact.** In a market with daily price limits ($\pm$ 7% on HOSE, $\pm$ 10% on HNX), rebalancing trades for illiquid names may hit limit-up or limit-down, preventing full execution.
+-   **Tỷ lệ vòng quay cao.** Mỗi thời điểm tái cân bằng đều đòi hỏi phải giao dịch mọi cổ phiếu để đưa về trọng số bằng nhau.
+-   **Mức độ phơi nhiễm với tính kém thanh khoản.** Việc đặt trọng số bằng nhau cho các cổ phiếu vốn hóa siêu nhỏ chỉ giao dịch 100 triệu VND/ngày bên cạnh các cổ phiếu vốn hóa lớn giao dịch 500 tỷ VND/ngày gây ra những khó khăn nghiêm trọng khi triển khai.
+-   **Tác động giá.** Trong một thị trường có biên độ giá hằng ngày ($\pm$ 7% trên HOSE, $\pm$ 10% trên HNX), các lệnh tái cân bằng đối với những cổ phiếu kém thanh khoản có thể chạm giá trần hoặc giá sàn, khiến lệnh không thể khớp đầy đủ.
 
-### The Weighting Spectrum
+### Phổ các phương pháp xác định trọng số
 
-Between VW and EW lies a continuum of weighting schemes. @tbl-weight-schemes summarizes the major alternatives.
+Giữa VW và EW là một dải liên tục các phương pháp xác định trọng số. @tbl-weight-schemes tóm tắt các phương án chính.
 
-| Scheme | Weight Formula | Key Property | Key Risk |
+| Phương pháp | Công thức trọng số | Tính chất chính | Rủi ro chính |
 |------------------|------------------|------------------|------------------|
-| Value-weighted | $w_i \propto \text{MCap}_i$ | Self-rebalancing, low turnover | Large-cap concentration |
-| Equal-weighted | $w_i = 1/N$ | Maximum naive diversification | High turnover, illiquidity |
-| Fundamental | $w_i \propto F_i$ (revenue, book equity, etc.) | Breaks price-value link | Requires accounting data |
-| Minimum variance | $\mathbf{w} = \arg\min \mathbf{w}'\boldsymbol{\Sigma}\mathbf{w}$ | Lowest portfolio volatility | Estimation error in $\boldsymbol{\Sigma}$ |
-| Risk parity | $w_i \sigma_i = w_j \sigma_j \; \forall \, i,j$ | Equal risk contribution | Leverages low-vol assets |
-| Maximum diversification | $\max \frac{\mathbf{w}'\boldsymbol{\sigma}}{\sqrt{\mathbf{w}'\boldsymbol{\Sigma}\mathbf{w}}}$ | Maximizes diversification ratio | Sensitive to correlation estimates |
-| Capped VW | $w_i \propto \text{MCap}_i$, $w_i \leq \bar{w}$ | Reduces concentration | Arbitrary cap threshold |
+| Trọng số theo vốn hóa | $w_i \propto \text{MCap}_i$ | Tự tái cân bằng, vòng quay thấp | Tập trung vào vốn hóa lớn |
+| Trọng số bằng nhau | $w_i = 1/N$ | Đa dạng hóa ngây thơ tối đa | Vòng quay cao, kém thanh khoản |
+| Theo yếu tố cơ bản | $w_i \propto F_i$ (doanh thu, vốn chủ sở hữu sổ sách, v.v.) | Phá vỡ mối liên hệ giữa giá và giá trị | Đòi hỏi dữ liệu kế toán |
+| Phương sai tối thiểu | $\mathbf{w} = \arg\min \mathbf{w}'\boldsymbol{\Sigma}\mathbf{w}$ | Biến động danh mục thấp nhất | Sai số ước lượng của $\boldsymbol{\Sigma}$ |
+| Ngang bằng rủi ro | $w_i \sigma_i = w_j \sigma_j \; \forall \, i,j$ | Đóng góp rủi ro bằng nhau | Dùng đòn bẩy cho các tài sản biến động thấp |
+| Đa dạng hóa tối đa | $\max \frac{\mathbf{w}'\boldsymbol{\sigma}}{\sqrt{\mathbf{w}'\boldsymbol{\Sigma}\mathbf{w}}}$ | Tối đa hóa tỷ số đa dạng hóa | Nhạy với các ước lượng tương quan |
+| VW có giới hạn trần | $w_i \propto \text{MCap}_i$, $w_i \leq \bar{w}$ | Giảm mức độ tập trung | Ngưỡng trần mang tính tùy ý |
 
-: Summary of portfolio weighting schemes. {#tbl-weight-schemes}
+: Tóm tắt các phương pháp xác định trọng số danh mục đầu tư. {#tbl-weight-schemes}
 
-## Data Construction {#sec-weight-data}
+## Xây dựng dữ liệu {#sec-weight-data}
 
 ```{python}
 #| label: setup
@@ -149,9 +149,9 @@ print(f"Monthly observations: {monthly.shape[0]:,}")
 print(f"Unique tickers: {monthly['ticker'].nunique()}")
 ```
 
-### Universe Construction and Liquidity Filters
+### Xác định tập hợp đầu tư và bộ lọc thanh khoản
 
-A critical pre-processing step is defining the investable universe. Including all listed stocks, regardless of liquidity, inflates the apparent benefits of equal-weighting and other small-cap-tilted schemes because it implicitly assumes the ability to trade illiquid stocks without friction. We apply graduated liquidity filters and track how results change.
+Một bước tiền xử lý then chốt là xác định tập hợp có thể đầu tư. Việc đưa vào mọi cổ phiếu niêm yết, bất kể thanh khoản, làm thổi phồng lợi ích biểu kiến của trọng số bằng nhau và các phương pháp khác nghiêng về cổ phiếu nhỏ, vì nó ngầm giả định rằng ta có thể giao dịch các cổ phiếu kém thanh khoản mà không có ma sát. Chúng ta áp dụng các bộ lọc thanh khoản theo từng mức và theo dõi kết quả thay đổi ra sao.
 
 ```{python}
 # | label: universe-construction
@@ -204,14 +204,14 @@ for name, univ in [
     print(f"{name}: median {n_stocks:.0f} stocks/month")
 ```
 
-### Market Capitalization Concentration
+### Mức độ tập trung vốn hóa thị trường
 
-Before comparing weighting schemes, it is instructive to document how concentrated the Vietnamese market actually is.
+Trước khi so sánh các phương pháp xác định trọng số, cần ghi nhận thị trường Việt Nam thực sự tập trung đến mức nào.
 
 ```{python}
 #| label: fig-concentration
 #| eval: false
-#| fig-cap: "Market capitalization concentration on HOSE and HNX. Panel A shows the cumulative market cap share of stocks ranked by size. Panel B shows the Herfindahl-Hirschman Index (HHI) of VW portfolio weights over time. The Vietnamese market is highly concentrated: the top 10 stocks account for approximately 40–50% of total capitalization."
+#| fig-cap: "Mức độ tập trung vốn hóa thị trường trên HOSE và HNX. Panel A cho thấy tỷ trọng vốn hóa thị trường tích lũy của các cổ phiếu được xếp hạng theo quy mô. Panel B cho thấy chỉ số Herfindahl-Hirschman (HHI) của các trọng số danh mục VW theo thời gian. Thị trường Việt Nam có mức độ tập trung cao: 10 cổ phiếu lớn nhất chiếm khoảng 40–50% tổng vốn hóa."
 #| code-summary: "Visualize market cap concentration"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -256,11 +256,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Implementing Weighting Schemes {#sec-weight-implementation}
+## Triển khai các phương pháp xác định trọng số {#sec-weight-implementation}
 
-We now implement each weighting scheme and compute monthly portfolio returns. All implementations follow a common structure: at each rebalancing date, compute target weights from available information, then compute the weighted return over the subsequent holding period.
+Bây giờ chúng ta triển khai từng phương pháp xác định trọng số và tính lợi nhuận danh mục hằng tháng. Mọi phần triển khai đều theo một cấu trúc chung: tại mỗi ngày tái cân bằng, tính các trọng số mục tiêu từ thông tin sẵn có, rồi tính lợi nhuận có trọng số trong kỳ nắm giữ tiếp theo.
 
-### Core Portfolio Engine
+### Bộ máy cốt lõi của danh mục
 
 ```{python}
 #| label: portfolio-engine
@@ -394,7 +394,7 @@ def compute_portfolio_returns(
     return pd.DataFrame(results)
 ```
 
-### Value-Weighted Portfolio
+### Danh mục trọng số theo vốn hóa
 
 ```{python}
 #| label: vw-portfolio
@@ -411,7 +411,7 @@ print(f"Mean turnover: {vw_returns['turnover'].mean():.4f}")
 print(f"Mean effective N: {vw_returns['effective_n'].mean():.1f}")
 ```
 
-### Equal-Weighted Portfolio
+### Danh mục trọng số bằng nhau
 
 ```{python}
 #| label: ew-portfolio
@@ -444,9 +444,9 @@ for name, df in [('EW Monthly', ew_monthly),
           f"turnover = {df['turnover'].mean():.4f}")
 ```
 
-### Capped Value-Weighted Portfolio
+### Danh mục trọng số theo vốn hóa có giới hạn trần
 
-To mitigate the concentration of pure VW while retaining its low-turnover properties, we impose a cap on individual stock weights. A common choice is 5% or 10%, mimicking the construction rules of capped indices such as the MSCI Capped indices.
+Để giảm bớt mức độ tập trung của VW thuần túy trong khi vẫn giữ các đặc tính vòng quay thấp của nó, chúng ta áp đặt giới hạn trần lên trọng số của từng cổ phiếu. Lựa chọn phổ biến là 5% hoặc 10%, mô phỏng các quy tắc xây dựng của những chỉ số có giới hạn trần như các chỉ số MSCI Capped.
 
 ```{python}
 #| label: capped-vw
@@ -478,9 +478,9 @@ print(f"Capped 10%: eff_N = {capped10['effective_n'].mean():.1f}, "
       f"turnover = {capped10['turnover'].mean():.4f}")
 ```
 
-### Fundamental-Weighted Portfolio
+### Danh mục trọng số theo yếu tố cơ bản
 
-@arnott2005fundamental propose weighting stocks by fundamental measures (revenue, book equity, dividends, cash flow) rather than market cap. The logic is that fundamental weights are not contaminated by pricing errors, breaking the mechanical overweighting of overvalued stocks inherent in VW. We construct a composite fundamental weight using the average rank across four measures:
+@arnott2005fundamental đề xuất xác định trọng số cổ phiếu theo các thước đo cơ bản (doanh thu, vốn chủ sở hữu sổ sách, cổ tức, dòng tiền) thay vì vốn hóa thị trường. Lập luận là các trọng số cơ bản không bị nhiễu bởi sai số định giá, nhờ đó phá vỡ việc nắm giữ quá mức một cách máy móc các cổ phiếu bị định giá cao vốn có trong VW. Chúng ta xây dựng một trọng số cơ bản tổng hợp bằng thứ hạng trung bình của bốn thước đo:
 
 $$
 w_{i,t}^{FW} \propto \frac{1}{4}\left(\text{Rank}_{i,t}^{\text{Rev}} + \text{Rank}_{i,t}^{\text{BE}} + \text{Rank}_{i,t}^{\text{Div}} + \text{Rank}_{i,t}^{\text{CFO}}\right)
@@ -524,19 +524,19 @@ print(
 )
 ```
 
-## Risk-Based Weighting Schemes {#sec-weight-risk-based}
+## Các phương pháp xác định trọng số dựa trên rủi ro {#sec-weight-risk-based}
 
-The weighting schemes above use only market cap or accounting data. Risk-based schemes incorporate the covariance structure of returns, aiming to produce portfolios with better risk-adjusted performance. The trade-off is that they require estimating the covariance matrix (i.e., a high-dimensional object that is notoriously difficult to estimate precisely with short time series).
+Các phương pháp xác định trọng số ở trên chỉ sử dụng vốn hóa thị trường hoặc dữ liệu kế toán. Các phương pháp dựa trên rủi ro tính đến cấu trúc hiệp phương sai của lợi nhuận, nhằm tạo ra các danh mục có hiệu quả điều chỉnh theo rủi ro tốt hơn. Cái giá phải trả là chúng đòi hỏi ước lượng ma trận hiệp phương sai (tức là một đối tượng nhiều chiều vốn nổi tiếng là khó ước lượng chính xác với chuỗi thời gian ngắn).
 
-### Covariance Estimation
+### Ước lượng hiệp phương sai
 
-With $N \approx 300$ stocks and $T \approx 60$ months, the sample covariance matrix is severely ill-conditioned. We use the @ledoit2004well shrinkage estimator, which pulls the sample covariance toward a structured target (the identity matrix scaled by the average variance):
+Với $N \approx 300$ cổ phiếu và $T \approx 60$ tháng, ma trận hiệp phương sai mẫu có điều kiện xấu nghiêm trọng (ill-conditioned). Chúng ta dùng bộ ước lượng co rút của @ledoit2004well, kéo hiệp phương sai mẫu về một mục tiêu có cấu trúc (ma trận đơn vị nhân với phương sai trung bình):
 
 $$
 \hat{\boldsymbol{\Sigma}}^{\text{shrink}} = \delta \mathbf{F} + (1 - \delta) \mathbf{S}
 $$ {#eq-shrinkage}
 
-where $\mathbf{S}$ is the sample covariance, $\mathbf{F}$ is the shrinkage target, and $\delta \in [0,1]$ is the optimal shrinkage intensity derived analytically.
+trong đó $\mathbf{S}$ là hiệp phương sai mẫu, $\mathbf{F}$ là mục tiêu co rút, và $\delta \in [0,1]$ là cường độ co rút tối ưu được suy ra theo phương pháp giải tích.
 
 ```{python}
 #| label: covariance-estimation
@@ -593,15 +593,15 @@ def estimate_covariance(monthly_df, month, lookback=60, min_obs=36):
     return cov_matrix, list(valid_cols)
 ```
 
-### Minimum Variance Portfolio
+### Danh mục phương sai tối thiểu
 
-The global minimum variance (GMV) portfolio minimizes portfolio variance without targeting a specific return level [@clarke2011minimum]:
+Danh mục phương sai tối thiểu toàn cục (GMV) cực tiểu hóa phương sai danh mục mà không nhắm đến một mức lợi nhuận cụ thể [@clarke2011minimum]:
 
 $$
 \mathbf{w}^{MV} = \arg\min_{\mathbf{w}} \; \mathbf{w}'\hat{\boldsymbol{\Sigma}}\mathbf{w} \quad \text{s.t.} \quad \mathbf{1}'\mathbf{w} = 1, \; w_i \geq 0
 $$ {#eq-minvar}
 
-The long-only constraint ($w_i \geq 0$) is essential in practice and also acts as an implicit shrinkage that improves out-of-sample performance [@jagannathan2003risk].
+Ràng buộc chỉ mua ($w_i \geq 0$) là thiết yếu trong thực tế và cũng đóng vai trò như một dạng co rút ngầm, giúp cải thiện hiệu quả ngoài mẫu [@jagannathan2003risk].
 
 ```{python}
 #| label: minimum-variance
@@ -667,15 +667,15 @@ print(f"Min Variance: mean ret = {mv_returns['port_return'].mean():.4f}, "
       f"std = {mv_returns['port_return'].std():.4f}")
 ```
 
-### Risk Parity (Equal Risk Contribution)
+### Ngang bằng rủi ro (đóng góp rủi ro bằng nhau)
 
-Risk parity allocates so that each asset contributes equally to total portfolio risk [@maillard2010properties]. The risk contribution of asset $i$ is:
+Phương pháp ngang bằng rủi ro (risk parity) phân bổ sao cho mỗi tài sản đóng góp như nhau vào tổng rủi ro của danh mục [@maillard2010properties]. Đóng góp rủi ro của tài sản $i$ là:
 
 $$
 RC_i = w_i \cdot \frac{(\boldsymbol{\Sigma} \mathbf{w})_i}{\sqrt{\mathbf{w}'\boldsymbol{\Sigma}\mathbf{w}}}
 $$ {#eq-risk-contribution}
 
-The risk parity portfolio solves $RC_i = RC_j$ for all $i, j$:
+Danh mục ngang bằng rủi ro giải $RC_i = RC_j$ với mọi $i, j$:
 
 ```{python}
 #| label: risk-parity
@@ -741,15 +741,15 @@ print(f"Risk Parity: mean ret = {rp_returns['port_return'].mean():.4f}, "
       f"std = {rp_returns['port_return'].std():.4f}")
 ```
 
-### Maximum Diversification Portfolio
+### Danh mục đa dạng hóa tối đa
 
-@choueifaty2008towards define the diversification ratio as the ratio of weighted average volatility to portfolio volatility:
+@choueifaty2008towards định nghĩa tỷ số đa dạng hóa là tỷ số giữa biến động trung bình có trọng số và biến động của danh mục:
 
 $$
 DR(\mathbf{w}) = \frac{\mathbf{w}'\boldsymbol{\sigma}}{\sqrt{\mathbf{w}'\boldsymbol{\Sigma}\mathbf{w}}}
 $$ {#eq-div-ratio}
 
-where $\boldsymbol{\sigma}$ is the vector of individual asset volatilities. The maximum diversification portfolio maximizes this ratio:
+trong đó $\boldsymbol{\sigma}$ là vectơ biến động của từng tài sản. Danh mục đa dạng hóa tối đa cực đại hóa tỷ số này:
 
 ```{python}
 #| label: max-diversification
@@ -787,9 +787,9 @@ def max_diversification_weights(cov_matrix, max_weight=0.05):
         return pd.Series(1.0 / n, index=cov_matrix.index)
 ```
 
-## Comprehensive Performance Comparison {#sec-weight-comparison}
+## So sánh toàn diện hiệu quả đầu tư {#sec-weight-comparison}
 
-We now compare all schemes on a common universe with consistent methodology.
+Bây giờ chúng ta so sánh tất cả các phương pháp trên cùng một tập hợp đầu tư với phương pháp luận nhất quán.
 
 ```{python}
 #| label: all-portfolios
@@ -822,7 +822,7 @@ print(f"Common period: {common_start} to {common_end}")
 print(f"Number of months: {len(portfolios['VW'])}")
 ```
 
-### Performance Metrics
+### Các thước đo hiệu quả
 
 ```{python}
 #| label: performance-metrics
@@ -901,7 +901,7 @@ print(metrics_df[display_cols].round(3).to_string())
 ```{python}
 #| label: fig-cumulative-returns
 #| eval: false
-#| fig-cap: "Cumulative wealth paths for different weighting schemes applied to Vietnamese equities (2012–2024). The chart shows that the choice of weighting scheme has a material effect on cumulative performance. Equal-weighted portfolios outperform value-weighted portfolios in gross terms, but this advantage must be weighed against higher turnover costs."
+#| fig-cap: "Đường tích lũy tài sản của các phương pháp xác định trọng số khác nhau áp dụng cho cổ phiếu Việt Nam (2012–2024). Biểu đồ cho thấy lựa chọn phương pháp xác định trọng số có tác động đáng kể đến hiệu quả tích lũy. Các danh mục trọng số bằng nhau vượt trội so với các danh mục trọng số theo vốn hóa tính theo giá trị gộp (trước chi phí), nhưng lợi thế này phải được cân nhắc với chi phí vòng quay cao hơn."
 #| code-summary: "Plot cumulative returns for all weighting schemes"
 fig, ax = plt.subplots(figsize=(12, 7))
 
@@ -935,12 +935,12 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Risk-Return Trade-Off
+### Đánh đổi giữa rủi ro và lợi nhuận
 
 ```{python}
 #| label: fig-risk-return
 #| eval: false
-#| fig-cap: "Annualized risk-return scatter plot for all weighting schemes. Risk-based methods (minimum variance, risk parity) cluster in the lower-left with lower volatility, while equal-weighted schemes offer higher returns at the cost of higher turnover and volatility."
+#| fig-cap: "Biểu đồ phân tán rủi ro–lợi nhuận quy năm của tất cả các phương pháp xác định trọng số. Các phương pháp dựa trên rủi ro (phương sai tối thiểu, ngang bằng rủi ro) tập trung ở góc dưới bên trái với biến động thấp hơn, trong khi các phương pháp trọng số bằng nhau cho lợi nhuận cao hơn với cái giá là vòng quay và biến động cao hơn."
 #| code-summary: "Risk-return scatter plot"
 fig, ax = plt.subplots(figsize=(9, 7))
 
@@ -966,29 +966,29 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Transaction Costs and Net-of-Cost Performance {#sec-weight-transaction-costs}
+## Chi phí giao dịch và hiệu quả sau chi phí {#sec-weight-transaction-costs}
 
-### Estimating Trading Costs in Vietnam
+### Ước lượng chi phí giao dịch ở Việt Nam
 
-Transaction costs in Vietnam include explicit components (brokerage commissions, exchange fees, taxes) and implicit components (bid-ask spread, price impact). The explicit cost structure as of 2024 is approximately:
+Chi phí giao dịch ở Việt Nam bao gồm các thành phần tường minh (phí môi giới, phí sàn giao dịch, thuế) và các thành phần ngầm (chênh lệch giá mua–bán, tác động giá). Cấu trúc chi phí tường minh tính đến năm 2024 xấp xỉ như sau:
 
-| Component               | Rate       | Notes                            |
+| Thành phần              | Mức phí    | Ghi chú                          |
 |-------------------------|------------|----------------------------------|
-| Brokerage commission    | 0.15–0.35% | Varies by broker and volume tier |
-| Exchange & clearing fee | 0.003%     | Fixed by exchange                |
-| Selling tax             | 0.10%      | Levied on gross sale proceeds    |
+| Phí môi giới            | 0.15–0.35% | Tùy công ty môi giới và mức khối lượng |
+| Phí sàn và bù trừ       | 0.003%     | Do sàn giao dịch quy định cố định |
+| Thuế bán                | 0.10%      | Đánh trên tổng giá trị bán       |
 
-: Explicit transaction cost components for Vietnamese equities. {#tbl-weight-costs}
+: Các thành phần chi phí giao dịch tường minh đối với cổ phiếu Việt Nam. {#tbl-weight-costs}
 
-The total explicit round-trip cost (buy + sell) ranges from approximately 0.30% to 0.80%. Implicit costs—the spread and price impact—can be substantially larger for small and illiquid stocks.
+Tổng chi phí tường minh cho một vòng giao dịch (mua + bán) dao động từ khoảng 0.30% đến 0.80%. Các chi phí ngầm, tức chênh lệch giá và tác động giá, có thể lớn hơn đáng kể đối với các cổ phiếu nhỏ và kém thanh khoản.
 
-We model total transaction costs as a function of trade size and stock liquidity:
+Chúng ta mô hình hóa tổng chi phí giao dịch như một hàm của quy mô lệnh và thanh khoản của cổ phiếu:
 
 $$
 TC_{i,t} = c_{\text{fixed}} + \frac{1}{2} \text{Spread}_{i,t} + \lambda \sqrt{\frac{|\Delta w_{i,t}| \cdot \text{AUM}}{ADV_{i,t}}}
 $$ {#eq-tc-model}
 
-where $c_{\text{fixed}} \approx 0.25\%$ is the explicit cost per trade, $\text{Spread}_{i,t}$ is the quoted bid-ask spread, $\Delta w_{i,t}$ is the weight change, $\text{AUM}$ is portfolio size, $ADV_{i,t}$ is average daily volume in VND, and $\lambda$ is the price impact coefficient estimated from the @amihud2002illiquidity model.
+trong đó $c_{\text{fixed}} \approx 0.25\%$ là chi phí tường minh trên mỗi giao dịch, $\text{Spread}_{i,t}$ là chênh lệch giá mua–bán niêm yết, $\Delta w_{i,t}$ là mức thay đổi trọng số, $\text{AUM}$ là quy mô danh mục, $ADV_{i,t}$ là khối lượng giao dịch trung bình hằng ngày tính theo VND, và $\lambda$ là hệ số tác động giá được ước lượng từ mô hình @amihud2002illiquidity.
 
 ```{python}
 #| label: transaction-cost-model
@@ -1056,9 +1056,9 @@ def estimate_transaction_costs(weight_changes, stock_data,
     return total_cost, cost_df
 ```
 
-### Net-of-Cost Performance
+### Hiệu quả sau chi phí
 
-We apply the transaction cost model to compute net-of-cost returns for each weighting scheme at different assumed AUM levels. This is critical because strategies that appear attractive in gross terms may be unimplementable at scale due to the illiquidity of small-cap Vietnamese stocks.
+Chúng ta áp dụng mô hình chi phí giao dịch để tính lợi nhuận sau chi phí của từng phương pháp xác định trọng số tại các mức AUM giả định khác nhau. Điều này rất quan trọng vì những chiến lược có vẻ hấp dẫn khi tính gộp có thể không thể triển khai ở quy mô lớn do tính kém thanh khoản của các cổ phiếu vốn hóa nhỏ Việt Nam.
 
 ```{python}
 #| label: net-returns
@@ -1102,7 +1102,7 @@ for cost_name, cost_rate in cost_scenarios.items():
 ```{python}
 #| label: fig-turnover-comparison
 #| eval: false
-#| fig-cap: "Monthly portfolio turnover by weighting scheme. Value-weighted portfolios have the lowest turnover because weights drift naturally with prices. Equal-weighted portfolios with monthly rebalancing have the highest turnover. Risk-based schemes with quarterly rebalancing fall in between."
+#| fig-cap: "Tỷ lệ vòng quay danh mục hằng tháng theo phương pháp xác định trọng số. Các danh mục trọng số theo vốn hóa có vòng quay thấp nhất vì trọng số trôi tự nhiên theo giá. Các danh mục trọng số bằng nhau tái cân bằng hằng tháng có vòng quay cao nhất. Các phương pháp dựa trên rủi ro tái cân bằng hằng quý nằm ở mức trung gian."
 #| code-summary: "Compare turnover distributions across schemes"
 fig, ax = plt.subplots(figsize=(12, 5))
 
@@ -1132,14 +1132,14 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Cost Erosion at Scale
+### Sự bào mòn do chi phí ở quy mô lớn
 
-The relationship between portfolio AUM and implementable performance is non-linear because price impact costs grow with trade size. We simulate performance at different AUM levels:
+Mối quan hệ giữa AUM của danh mục và hiệu quả có thể triển khai là phi tuyến vì chi phí tác động giá tăng theo quy mô lệnh. Chúng ta mô phỏng hiệu quả tại các mức AUM khác nhau:
 
 ```{python}
 #| label: fig-aum-scaling
 #| eval: false
-#| fig-cap: "Sharpe ratio as a function of portfolio AUM for selected weighting schemes. Value-weighted portfolios are nearly scale-invariant due to their tilt toward liquid large-caps. Equal-weighted portfolios degrade rapidly as AUM increases because rebalancing trades in small-cap names face prohibitive price impact."
+#| fig-cap: "Tỷ số Sharpe như một hàm của AUM danh mục đối với một số phương pháp xác định trọng số được chọn. Các danh mục trọng số theo vốn hóa gần như không đổi theo quy mô nhờ thiên lệch về các cổ phiếu vốn hóa lớn có thanh khoản cao. Các danh mục trọng số bằng nhau suy giảm nhanh khi AUM tăng vì các lệnh tái cân bằng đối với cổ phiếu vốn hóa nhỏ chịu tác động giá quá lớn."
 #| code-summary: "Simulate performance degradation with AUM for different schemes"
 aum_levels = [10, 50, 100, 500, 1000, 5000]  # VND billions
 
@@ -1185,18 +1185,18 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Rebalancing Frequency Analysis {#sec-weight-rebalancing}
+## Phân tích tần suất tái cân bằng {#sec-weight-rebalancing}
 
-### The Rebalancing Trade-Off
+### Sự đánh đổi trong tái cân bằng
 
-Rebalancing serves two purposes: (i) restoring target weights to maintain the desired risk profile, and (ii) harvesting the "rebalancing bonus"—the systematic profit from buying low and selling high that arises when weights are reset to targets in the presence of mean-reverting cross-sectional returns.
+Việc tái cân bằng phục vụ hai mục đích: (i) khôi phục các trọng số mục tiêu để duy trì hồ sơ rủi ro mong muốn, và (ii) thu về "phần thưởng tái cân bằng", tức khoản lợi nhuận mang tính hệ thống từ việc mua thấp bán cao phát sinh khi các trọng số được đặt lại về mục tiêu trong điều kiện lợi nhuận chéo giữa các cổ phiếu có tính hồi quy về giá trị trung bình.
 
-The trade-off is clear: more frequent rebalancing maintains tighter adherence to target weights and captures more of the rebalancing bonus, but incurs higher transaction costs. The optimal frequency depends on the magnitude of mean reversion (which determines the gross rebalancing bonus), the level of transaction costs, and the rate at which weights drift from targets.
+Sự đánh đổi là rõ ràng: tái cân bằng càng thường xuyên thì càng bám sát các trọng số mục tiêu và nắm bắt được nhiều phần thưởng tái cân bằng hơn, nhưng đồng thời phát sinh chi phí giao dịch cao hơn. Tần suất tối ưu phụ thuộc vào mức độ hồi quy về giá trị trung bình (quyết định phần thưởng tái cân bằng gộp), mức chi phí giao dịch, và tốc độ các trọng số trôi khỏi mục tiêu.
 
 ```{python}
 #| label: fig-rebal-frequency
 #| eval: false
-#| fig-cap: "Impact of rebalancing frequency on the equal-weighted portfolio. Panel A shows the gross and net Sharpe ratios. Panel B shows the decomposition of the rebalancing bonus. Quarterly rebalancing offers the best trade-off between capturing the rebalancing bonus and controlling costs in the Vietnamese market."
+#| fig-cap: "Tác động của tần suất tái cân bằng đối với danh mục trọng số bằng nhau. Panel A cho thấy tỷ số Sharpe gộp và tỷ số Sharpe sau chi phí. Panel B cho thấy sự phân tách phần thưởng tái cân bằng. Tái cân bằng hằng quý mang lại sự đánh đổi tốt nhất giữa việc nắm bắt phần thưởng tái cân bằng và kiểm soát chi phí trên thị trường Việt Nam."
 #| code-summary: "Analyze rebalancing frequency impact on EW portfolio"
 frequencies = {
     'Monthly': 'M',
@@ -1253,9 +1253,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Threshold-Based Rebalancing
+### Tái cân bằng dựa trên ngưỡng
 
-An alternative to calendar-based rebalancing is to rebalance only when portfolio weights drift beyond a tolerance band. This "no-trade zone" approach is motivated by @garleanu2013dynamic, who derive the optimal dynamic trading strategy under quadratic transaction costs and show that the optimal portfolio is a weighted average of the current holdings and the frictionless target.
+Một phương án thay thế cho tái cân bằng theo lịch là chỉ tái cân bằng khi các trọng số danh mục trôi vượt quá một dải dung sai. Cách tiếp cận "vùng không giao dịch" này bắt nguồn từ @garleanu2013dynamic, các tác giả đã suy ra chiến lược giao dịch động tối ưu với chi phí giao dịch dạng toàn phương và chỉ ra rằng danh mục tối ưu là trung bình có trọng số của danh mục đang nắm giữ và mục tiêu không có ma sát.
 
 ```{python}
 #| label: threshold-rebalancing
@@ -1338,15 +1338,15 @@ for t in thresholds:
     )
 ```
 
-## The Rebalancing Bonus: Decomposition {#sec-weight-rebalancing-bonus}
+## Phần thưởng tái cân bằng: Phân tách {#sec-weight-rebalancing-bonus}
 
-The excess return of the rebalanced EW portfolio over a buy-and-hold EW portfolio (which starts equal-weighted but drifts) can be decomposed following @plyakha2021equal. Define $r_i$ as the return of stock $i$ over one period:
+Lợi nhuận vượt mức của danh mục EW được tái cân bằng so với danh mục EW mua và nắm giữ (bắt đầu với trọng số bằng nhau nhưng sau đó trôi) có thể được phân tách theo @plyakha2021equal. Định nghĩa $r_i$ là lợi nhuận của cổ phiếu $i$ trong một kỳ:
 
 $$
 R^{EW}_{\text{rebal}} - R^{EW}_{\text{drift}} \approx \frac{1}{2N} \sum_{i=1}^N \text{Var}(r_i) - \frac{1}{2N^2}\sum_{i}\sum_{j}\text{Cov}(r_i, r_j)
 $$ {#eq-rebal-bonus}
 
-The first term captures the "buy low, sell high" effect from resetting weights after return dispersion. The second term is the cost of undoing covariance-induced drift. The rebalancing bonus is larger when cross-sectional return dispersion is high (which it is in Vietnam) and when pairwise correlations are low.
+Số hạng thứ nhất nắm bắt hiệu ứng "mua thấp, bán cao" từ việc đặt lại trọng số sau khi lợi nhuận phân tán. Số hạng thứ hai là chi phí của việc đảo ngược sự trôi do hiệp phương sai gây ra. Phần thưởng tái cân bằng lớn hơn khi độ phân tán lợi nhuận chéo giữa các cổ phiếu cao (điều đúng ở Việt Nam) và khi các tương quan theo cặp thấp.
 
 ```{python}
 #| label: rebalancing-bonus
@@ -1384,7 +1384,7 @@ print(f"Mean cross-sectional dispersion: {bonus_df['cs_dispersion'].mean():.4f}"
 ```{python}
 #| label: fig-rebal-bonus-time
 #| eval: false
-#| fig-cap: "Monthly rebalancing bonus (EW monthly minus EW annual) alongside cross-sectional return dispersion. The bonus is higher in periods of high dispersion, consistent with the theoretical prediction that rebalancing profits from mean reversion in individual stock returns."
+#| fig-cap: "Phần thưởng tái cân bằng hằng tháng (EW hằng tháng trừ EW hằng năm) cùng với độ phân tán lợi nhuận chéo giữa các cổ phiếu. Phần thưởng cao hơn trong các giai đoạn phân tán cao, phù hợp với dự đoán lý thuyết rằng việc tái cân bằng thu lợi từ sự hồi quy về giá trị trung bình trong lợi nhuận của từng cổ phiếu."
 #| code-summary: "Plot rebalancing bonus over time"
 fig, ax1 = plt.subplots(figsize=(12, 5))
 
@@ -1410,9 +1410,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Factor Exposure Analysis {#sec-weight-factor-exposure}
+## Phân tích mức độ phơi nhiễm nhân tố {#sec-weight-factor-exposure}
 
-Different weighting schemes induce different factor exposures, which may explain their return differences. We regress each portfolio's excess returns on the Vietnamese Fama-French factors:
+Các phương pháp xác định trọng số khác nhau tạo ra các mức độ phơi nhiễm nhân tố khác nhau, điều này có thể giải thích sự khác biệt về lợi nhuận giữa chúng. Chúng ta hồi quy lợi nhuận vượt mức của từng danh mục theo các nhân tố Fama-French của Việt Nam:
 
 $$
 R_{p,t} - R_{f,t} = \alpha_p + \beta_p^{MKT}(R_{m,t} - R_{f,t}) + \beta_p^{SMB} \text{SMB}_t + \beta_p^{HML} \text{HML}_t + \varepsilon_{p,t}
@@ -1463,7 +1463,7 @@ print(factor_df.round(3).to_string())
 ```{python}
 #| label: fig-factor-exposures
 #| eval: false
-#| fig-cap: "Factor loadings by weighting scheme. Equal-weighted portfolios have large positive SMB loadings, confirming their mechanical size tilt. Minimum variance portfolios load negatively on the market factor (beta < 1 by construction). The annualized alpha column reveals whether each scheme generates risk-adjusted returns beyond its factor exposures."
+#| fig-cap: "Hệ số tải nhân tố theo phương pháp xác định trọng số. Các danh mục trọng số bằng nhau có hệ số tải SMB dương lớn, xác nhận thiên lệch quy mô mang tính cơ học của chúng. Các danh mục phương sai tối thiểu có hệ số tải âm trên nhân tố thị trường (beta < 1 theo cấu tạo). Cột alpha quy năm cho thấy liệu mỗi phương pháp có tạo ra lợi nhuận điều chỉnh theo rủi ro vượt quá mức độ phơi nhiễm nhân tố của nó hay không."
 #| code-summary: "Heatmap of factor exposures across weighting schemes"
 fig, ax = plt.subplots(figsize=(10, 6))
 
@@ -1490,33 +1490,512 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Practical Guidance for Vietnam {#sec-weight-practical}
+## Học máy và đường biên hiệu quả có thể triển khai {#sec-weight-ief}
 
-The preceding analysis yields several practical recommendations for researchers and investors working with Vietnamese equities:
+Mọi phương pháp trong chương này đều được chọn trước rồi mới tính phí giao dịch sau. @jensen2026machine lập luận rằng thứ tự này là ngược đối với bất kỳ chiến lược nào giao dịch dựa trên tín hiệu, và đối tượng đánh giá đúng đắn là **đường biên hiệu quả có thể triển khai** (implementable efficient frontier): lợi nhuận kỳ vọng cao nhất *sau chi phí giao dịch* có thể đạt được tại mỗi mức rủi ro. Họ xây dựng một phương pháp danh mục xoay quanh mục tiêu đó, áp dụng học máy vào nó, và chỉ ra rằng thứ hạng của các chiến lược cũng như của các đặc điểm thúc đẩy chúng thay đổi một khi chi phí được đưa vào hàm mục tiêu thay vì chỉ nằm trong sổ sách kế toán.
 
-**For academic factor research:** VW portfolios remain the default for asset pricing tests because they represent the investable opportunity set and avoid inflating alpha estimates with small-cap illiquidity premia. When EW portfolios are used (e.g., to give equal influence to each stock in cross-sectional sorts), researchers should report both VW and EW results and discuss the sensitivity. @fama2008dissecting follow this practice systematically.
+### Bài toán {#sec-weight-ief-problem}
 
-**For fund management:** The choice depends on AUM and mandate. At AUM below VND 500 billion, capped VW or fundamental weighting offers a practical compromise between diversification and implementability. At larger AUM, pure VW or sector-capped VW is more realistic. Risk parity and minimum variance are suitable for low-volatility mandates but require robust covariance estimation and quarterly rebalancing.
+Một nhà đầu tư có tài sản $W_t$ nắm giữ các trọng số danh mục $\pi_t$ trong $N$ cổ phiếu. Giữa các ngày tái cân bằng, các trọng số trôi theo lợi nhuận, do đó danh mục kế thừa tại $t$ là $g_t \pi_{t-1}$, trong đó $g_t$ là ma trận đường chéo với các phần tử $(1 + r^f_t + r_{i,t})/(1 + g^W_t)$ và $g^W_t$ là tốc độ tăng của tài sản. Chuyển sang $\pi_t$ đòi hỏi giao dịch $W_t(\pi_t - g_t\pi_{t-1})$ tính theo đơn vị tiền tệ, và giao dịch làm giá dịch chuyển tuyến tính theo quy mô lệnh, với ma trận tác động giá đường chéo $\Lambda_t$. Lợi nhuận sau khi trừ lãi suất phi rủi ro và chi phí giao dịch là
 
-**For index construction:** Vietnamese index providers (VN30, VNINDEX) use variants of capped VW. The analysis suggests that the cap level significantly affects the index's diversification properties and tracking error relative to the uncapped VW market. A 10% cap balances concentration reduction against turnover.
+$$
+r^{\text{net}}_{t+1} = \pi_t^\top r_{t+1} - \frac{W_t}{2}\left(\pi_t - g_t\pi_{t-1}\right)^\top \Lambda_t \left(\pi_t - g_t\pi_{t-1}\right),
+$$ {#eq-weight-ief-net}
 
-**For transaction cost management:** In all schemes, the marginal benefit of rebalancing declines faster than the marginal cost as frequency increases beyond quarterly. Calendar-based quarterly rebalancing or threshold-based rebalancing (with a 1–2% tolerance band) provides the best cost-benefit trade-off in the Vietnamese market.
+và nhà đầu tư tối đa hóa giá trị trung bình của lợi nhuận này trừ $\gamma/2$ lần phương sai của nó. Hai đặc điểm của @eq-weight-ief-net đáng chú ý. Chi phí giao dịch có dạng toàn phương theo quy mô lệnh, đó là đặc tả tác động giá tuyến tính của @garleanu2013dynamic chứ không phải mô hình căn bậc hai trong @eq-tc-model; lựa chọn này đổi lấy tính khả giải với cái giá là đánh giá thấp chi phí của các lệnh nhỏ. Và chi phí tỷ lệ theo tài sản: cùng các trọng số đó tốn kém hơn đối với nhà đầu tư lớn hơn. Các tác giả hiệu chỉnh tác động giá sao cho giao dịch 1% giá trị giao dịch hằng ngày của một cổ phiếu làm giá dịch chuyển 0.1%, điều này cho ra $\lambda_{i,t} = 0.2 / \text{ADV}_{i,t}$.
 
-## Summary {#sec-weight-summary}
+Đường biên được vạch ra bằng cách thay đổi $\gamma$ có một tính chất mà đường biên trong sách giáo khoa không có. Khi không có chi phí, mọi điểm trên đường thị trường vốn đều đạt được bằng cách sử dụng đòn bẩy với danh mục tiếp tuyến, do đó tỷ số Sharpe không đổi dọc theo đường đó. Khi có chi phí, vị thế lớn hơn đồng nghĩa với lệnh lớn hơn, nên tỷ số Sharpe sau chi phí *giảm dần* dọc theo đường biên có thể triển khai. Vì vậy, nhà đầu tư không thể tối đa hóa tỷ số Sharpe sau chi phí rồi mới chọn đòn bẩy; rủi ro, lợi nhuận và chi phí phải được chọn cùng nhau. Và đường biên của nhà đầu tư lớn hơn luôn nằm dưới đường biên của nhà đầu tư nhỏ hơn ở mọi điểm.
 
-| Dimension | VW | EW | Capped VW | Fundamental | Min Var | Risk Parity |
+### Lời giải: Giao dịch hướng về một mục tiêu {#sec-weight-ief-solution}
+
+Khái quát hóa @garleanu2013dynamic cho lợi nhuận dừng và cho lợi nhuận kỳ vọng là các hàm bất kỳ của các đặc điểm, các tác giả chỉ ra rằng danh mục tối ưu có dạng
+
+$$
+\pi_t = m\, g_t \pi_{t-1} + (I - m)\, A_t ,
+$$ {#eq-weight-ief-rule}
+
+do đó nhà đầu tư xuất phát từ danh mục kế thừa và giao dịch một phần $I - m$ của quãng đường hướng về một **danh mục mục tiêu** (aim portfolio) $A_t$. Ma trận $m$ là nghiệm của một phương trình điểm bất động theo $\gamma\Sigma$ và $W\Lambda$ và quyết định tốc độ giao dịch: nó tiến dần về ma trận đơn vị, nghĩa là giao dịch chậm hơn, khi tài sản hoặc tác động giá tăng và khi mức e ngại rủi ro giảm. Danh mục mục tiêu là tổng chiết khấu của các danh mục Markowitz hiện tại *và kỳ vọng trong tương lai*,
+
+$$
+A_t \approx (I - m)^{-1} \sum_{\tau = 0}^{\infty} (m\bar{g})^{\tau}\, c\; \mathbb{E}_t\!\left[\frac{1}{\gamma}\Sigma^{-1}\mu_{t+\tau}\right],
+$$ {#eq-weight-ief-aim}
+
+với $c$ là một ma trận phụ thuộc vào $m$. Vì nhà đầu tư sẽ nắm giữ bất cứ thứ gì mình mua hôm nay trong một thời gian, một tín hiệu dự báo lợi nhuận trong nhiều tháng có giá trị hơn một tín hiệu mạnh tương đương nhưng suy giảm trong vòng một tháng. Đây là nội dung kinh tế của "sự suy giảm alpha", và đó chính xác là điều mà một danh mục không quan tâm đến chi phí hoặc một danh mục tĩnh có nhận thức về chi phí bỏ qua. Phương án tĩnh, giao dịch hướng về danh mục Markowitz của hôm nay đồng thời phạt lệnh giao dịch của hôm nay, có cùng dạng điều chỉnh từng phần nhưng nhắm sai mục tiêu.
+
+### Portfolio-ML: Học trực tiếp danh mục mục tiêu {#sec-weight-ief-pfml}
+
+Triển khai @eq-weight-ief-aim đòi hỏi dự báo lợi nhuận ở mọi kỳ hạn dự báo. Phương pháp ưa thích của các tác giả, **Portfolio-ML**, bỏ qua hoàn toàn việc dự báo lợi nhuận và học trực tiếp danh mục mục tiêu. Nó tham số hóa danh mục mục tiêu như một hàm tuyến tính của các đặc trưng Fourier ngẫu nhiên của các đặc điểm, được chia theo biến động của từng cổ phiếu,
+
+$$
+A_t = \operatorname{diag}(\sigma_t)^{-1}\, \text{RF}(s_t)\,\beta ,
+$$ {#eq-weight-ief-parametric}
+
+một ý tưởng mở rộng các chính sách danh mục tham số của @brandt2009parametric sang bài toán động có chi phí giao dịch. Các đặc trưng ngẫu nhiên, $\cos(s_{i,t}^\top w_j)$ và $\sin(s_{i,t}^\top w_j)$ với các vectơ Gauss ngẫu nhiên $w_j$, cho phép một mô hình tuyến tính xấp xỉ các hàm phi tuyến và các tương tác của các đặc điểm, một thủ thuật mà các tính chất thống kê của nó trong dự báo lợi nhuận được @kelly2024virtue nghiên cứu. Thay @eq-weight-ief-parametric vào @eq-weight-ief-rule làm cho danh mục xấp xỉ tuyến tính theo $\beta$, $\pi_t \approx \Omega_t\beta$, trong đó $\Omega_t$ là trung bình có trọng số theo độ bền vững và tăng trưởng của các tín hiệu đã chia thang hiện tại và quá khứ. Khi đó mức thỏa dụng thực hiện là hàm toàn phương theo $\beta$, và các hệ số tối ưu có dạng đóng:
+
+$$
+\hat{\beta} = \left(\frac{1}{T}\sum_t D_t + \ell I\right)^{-1} \frac{1}{T}\sum_t \Omega_t^\top r_{t+1},
+\qquad
+D_t = \gamma\, \Omega_t^\top \Sigma_t \Omega_t + W\, \Delta\Omega_t^\top \Lambda_t\, \Delta\Omega_t ,
+$$ {#eq-weight-ief-beta}
+
+trong đó $\Delta\Omega_t = \Omega_t - g_t\Omega_{t-1}$ là lệnh giao dịch hàm ý và $\ell$ là hệ số phạt ridge. Số lượng đặc trưng ngẫu nhiên, thang đo của chúng và $\ell$ được chọn mỗi năm bằng cách kiểm định theo cửa sổ mở rộng trên mức thỏa dụng thực hiện. Không cần lớp tinh chỉnh thứ hai, vì hàm mục tiêu dùng để khớp $\beta$ chính là hàm mục tiêu của nhà đầu tư.
+
+### Bằng chứng {#sec-weight-ief-evidence}
+
+Ứng dụng sử dụng các cổ phiếu Mỹ có vốn hóa trên trung vị của NYSE, 115 đặc điểm từ @jensen2023there, một ma trận hiệp phương sai theo mô hình nhân tố theo phong cách của các mô hình rủi ro thương mại, và giai đoạn ngoài mẫu từ 1981 đến 2020 cho một nhà đầu tư có mức e ngại rủi ro 10 với quỹ tăng cùng thị trường lên 10 tỷ USD vào năm 2020. Các con số dưới đây lấy từ phiên bản bài báo thảo luận của các tác giả và có thể khác đôi chút so với bài báo đã xuất bản.
+
+-   **Học máy không quan tâm đến chi phí thì không thể triển khai được.** Danh mục Markowitz xây dựng trên các dự báo lợi nhuận bằng học máy có tỷ số Sharpe gộp là 2.0 nhưng vòng quay cực đoan đến mức lợi nhuận sau chi phí âm một cách thảm hại. Một phép phân loại thập phân vị mua–bán khống chuẩn trên cùng các dự báo đó có vòng quay 260% vốn mỗi tháng và tỷ số Sharpe sau chi phí khoảng −12.
+-   **Nhận thức tĩnh về chi phí có ích nhưng đặt nhà đầu tư sai vị trí.** Phương pháp tĩnh đạt tỷ số Sharpe sau chi phí dương là 0.94 nhưng mức thỏa dụng thực hiện âm, vì rủi ro thực hiện của nó vượt xa rủi ro ex ante.
+-   **Portfolio-ML vượt trội.** Nó đạt tỷ số Sharpe sau chi phí là 1.38 với vòng quay hằng tháng là 32%, và mức thỏa dụng thực hiện cao nhất. Ngay cả sau khi các tác giả trao cho các phương pháp dựa trên dự báo một lớp tinh chỉnh thứ hai để điều chỉnh lại thang đo đầu vào của chúng, Portfolio-ML vẫn vượt chúng khoảng 20% về tỷ số Sharpe sau chi phí và 60% về mức thỏa dụng.
+-   **Chi phí làm thay đổi đặc điểm nào là quan trọng.** Đo bằng mức thỏa dụng bị mất khi một đặc điểm bị loại bỏ, "tầm quan trọng kinh tế của đặc điểm" của đảo chiều ngắn hạn, vốn chi phối các mô hình không quan tâm đến chi phí, sụp đổ, còn giá trị và chất lượng trở thành các đặc điểm quan trọng nhất.
+
+Mã nguồn tái lập của các tác giả được công khai ([GitHub: theisij/ml-and-the-implementable-efficient-frontier](https://github.com/theisij/ml-and-the-implementable-efficient-frontier)). Mã được viết bằng R, đòi hỏi dữ liệu đặc điểm của @jensen2023there từ WRDS, và được thiết kế cho một cụm máy tính. Kho mã không kèm giấy phép, vì vậy chúng tôi không sao chép lại ở đây. Mã dưới đây là một phần triển khai Portfolio-ML độc lập bằng Python, bám theo các công thức ở trên, được kiểm tra trước tiên trong một mô phỏng rồi áp dụng cho dữ liệu Việt Nam.
+
+### Một phần triển khai độc lập {#sec-weight-ief-code}
+
+Cốt lõi của phương pháp gồm năm hàm nhỏ: ma trận tốc độ giao dịch $m$, việc chia thang tín hiệu, các đặc trưng Fourier ngẫu nhiên, ma trận trọng số hàm ý $\Omega_t$, và các hệ số dạng đóng của @eq-weight-ief-beta.
+
+```{python}
+#| label: portfolio-ml-core
+#| code-summary: "Core functions for Portfolio-ML"
+def trading_speed(sigma, lam, wealth, gamma, mu=0.007, rf=0.0, iters=10):
+    """
+    Persistence matrix m in the optimal rule pi_t = m g_t pi_{t-1} + (I - m) A_t.
+
+    Solves the fixed point m~ = (x + I + diag(G) - m~ o G)^{-1}, where
+    x = (gamma / wealth) Lambda^{-1/2} Sigma Lambda^{-1/2}, G is the second
+    moment of portfolio-weight growth, and m = Lambda^{-1/2} m~ Lambda^{1/2}.
+    `lam` is the diagonal of the price-impact matrix (per unit of currency).
+    """
+    n = len(lam)
+    G = np.ones((n, n)) + sigma / (1 + rf + mu) ** 2
+    lam_isqrt = 1 / np.sqrt(lam)
+    x = (gamma / wealth) * sigma * np.outer(lam_isqrt, lam_isqrt)
+    # Start from the closed-form solution when weight growth is deterministic
+    ev, evec = np.linalg.eigh(x + 2 * np.eye(n))
+    m_tilde = evec @ np.diag(0.5 * (ev - np.sqrt(ev**2 - 4))) @ evec.T
+    base = x + np.eye(n) + np.diag(np.diag(G))
+    for _ in range(iters):
+        m_tilde = np.linalg.inv(base - m_tilde * G)
+    return lam_isqrt[:, None] * m_tilde * np.sqrt(lam)[None, :]
+
+
+def scale_signals(features, vol):
+    """Demean features, add a constant, give each column unit length, divide rows by volatility."""
+    f = features - features.mean(axis=0)
+    f = np.column_stack([np.ones(len(f)), f])
+    f = f / np.sqrt((f**2).sum(axis=0))
+    return f / vol[:, None]
+
+
+def random_fourier_features(features, W):
+    """Random Fourier features: cos and sin of random projections of the features."""
+    z = features @ W
+    return np.hstack([np.cos(z), np.sin(z)])
+
+
+def implied_weights(S_hist, g_hist, m):
+    """
+    Omega_t such that the portfolio implied by aim coefficients beta is Omega_t beta.
+    S_hist[i] is the scaled signal matrix i months ago (i = 0 is today);
+    g_hist[i] is the weight-growth vector realized over the month ending i months ago.
+    """
+    n = m.shape[0]
+    M, num, den = np.eye(n), np.zeros_like(S_hist[0]), np.zeros((n, n))
+    for i, S_i in enumerate(S_hist):
+        num += M @ S_i
+        den += M
+        if i < len(g_hist):
+            M = M @ m @ np.diag(g_hist[i])
+    return np.linalg.solve(den, num)
+
+
+def portfolio_ml_moments(S, g, ret, sigma, lam, m, wealth, gamma, months, lookback=11):
+    """Per-month ingredients of the Portfolio-ML objective: r_tilde_t and D_t."""
+    r_tilde, D = {}, {}
+    for t in months:
+        om = implied_weights([S[t - i] for i in range(lookback + 1)],
+                             [g[t - 1 - i] for i in range(lookback)], m)
+        om_prev = implied_weights([S[t - 1 - i] for i in range(lookback + 1)],
+                                  [g[t - 2 - i] for i in range(lookback)], m)
+        trade = om - g[t - 1][:, None] * om_prev
+        r_tilde[t] = om.T @ ret[t]
+        D[t] = gamma * om.T @ sigma @ om + wealth * trade.T @ (lam[:, None] * trade)
+    return r_tilde, D
+
+
+def fit_aim_coefficients(r_tilde, D, months, ridge):
+    """Closed-form Portfolio-ML coefficients: (mean D + ridge I)^{-1} mean r_tilde."""
+    r_bar = np.mean([r_tilde[t] for t in months], axis=0)
+    D_bar = np.mean([D[t] for t in months], axis=0)
+    return np.linalg.solve(D_bar + ridge * np.eye(len(r_bar)), r_bar)
+
+
+def objective(beta, r_tilde, D, months):
+    """Average realized utility r_tilde' beta - beta' D beta / 2 over the given months."""
+    return np.mean([r_tilde[t] @ beta - 0.5 * beta @ D[t] @ beta for t in months])
+```
+
+Để quan sát phương pháp hoạt động ở nơi ta biết sự thật, mô phỏng dưới đây tạo ra các thị trường gồm 60 cổ phiếu trong 35 năm với hai tín hiệu có độ bền vững rất khác nhau: một tín hiệu kiểu giá trị với tự tương quan hằng tháng là 0.97 và một tín hiệu kiểu đảo chiều độc lập từ tháng này sang tháng khác nhưng có khả năng dự báo gấp ba lần trên mỗi đơn vị. Thanh khoản thay đổi giữa các cổ phiếu ở mức ba bậc độ lớn, và nhà đầu tư có 10 tỷ USD và mức e ngại rủi ro 10. Bốn quy tắc cạnh tranh trong mười năm cuối. Ba trong số đó là các *oracle* (mô hình biết trước), tức biết lợi nhuận kỳ vọng thật: danh mục Markowitz không quan tâm đến chi phí, danh mục tĩnh có nhận thức về chi phí, và phương án tối ưu động của @eq-weight-ief-rule và @eq-weight-ief-aim được tính từ động học tín hiệu đã biết. Portfolio-ML không biết gì về quá trình sinh dữ liệu và học các hệ số của nó từ 25 năm đầu, một lần chỉ với hai tín hiệu và một lần với thêm thứ hạng thanh khoản cùng các tương tác của nó với các tín hiệu làm đặc trưng. Lặp lại bài tập trên 20 thị trường mô phỏng giúp tránh việc đọc quá nhiều vào một lần rút mẫu.
+
+```{python}
+#| label: portfolio-ml-simulation
+#| code-summary: "Simulated markets with persistent and fleeting signals"
+GAMMA, WEALTH, LOOKBACK = 10.0, 1e10, 11
+N_STOCKS, N_MONTHS = 60, 420
+TRAIN_END, TEST_START = 240, 300
+RIDGES = [0.0] + list(np.exp(np.arange(-10, 7)))
+
+
+def simulate_market(seed, phi_slow=0.97, b_slow=0.04, b_fast=0.12):
+    """A market with one persistent and one fleeting signal and heterogeneous liquidity."""
+    rng = np.random.default_rng(seed)
+    n, T = N_STOCKS, N_MONTHS
+    dolvol = np.exp(rng.normal(np.log(2e8), 1.2, n))   # daily dollar volume
+    lam = 0.2 / dolvol                                  # 1% of volume moves price 0.1%
+    beta_mkt = rng.uniform(0.6, 1.4, n)
+    ivol = rng.uniform(0.06, 0.12, n)
+    sigma = 0.045**2 * np.outer(beta_mkt, beta_mkt) + np.diag(ivol**2)
+    vol = np.sqrt(np.diag(sigma))
+
+    s_slow = np.zeros((T, n))
+    s_slow[0] = rng.normal(size=n)
+    for t in range(1, T):
+        s_slow[t] = phi_slow * s_slow[t - 1] + np.sqrt(1 - phi_slow**2) * rng.normal(size=n)
+    s_fast = rng.normal(size=(T, n))
+
+    mu = vol * (b_slow * s_slow + b_fast * s_fast)      # E_t[r_{t+1}]
+    ret = mu + (np.linalg.cholesky(sigma) @ rng.normal(size=(n, T))).T
+    g = (1 + ret) / (1 + ret.mean(axis=1))[:, None]     # weight growth
+    liq = (np.argsort(np.argsort(dolvol)) + 0.5) / n - 0.5
+    return dict(lam=lam, sigma=sigma, vol=vol, s_slow=s_slow, s_fast=s_fast,
+                mu=mu, ret=ret, g=g, liq=liq, phi_slow=phi_slow,
+                b_slow=b_slow, b_fast=b_fast)
+
+
+def backtest(mkt, weight_rule, months):
+    """Realized gross return, trading cost, and turnover of a weight rule."""
+    rows, w_prev = [], np.zeros(N_STOCKS)
+    for t in months:
+        w_start = mkt["g"][t - 1] * w_prev
+        w = weight_rule(t, w_start)
+        trade = w - w_start
+        rows.append({"gross": w @ mkt["ret"][t],
+                     "tc": 0.5 * WEALTH * np.sum(mkt["lam"] * trade**2),
+                     "turnover": np.abs(trade).sum()})
+        w_prev = w
+    out = pd.DataFrame(rows)
+    out["net"] = out["gross"] - out["tc"]
+    return out
+
+
+def run_one(seed):
+    mkt = simulate_market(seed)
+    T, n = N_MONTHS, N_STOCKS
+    sigma, lam, vol = mkt["sigma"], mkt["lam"], mkt["vol"]
+    m = trading_speed(sigma, lam, WEALTH, GAMMA)
+    I_n, I_m = np.eye(n), np.eye(n) - m
+    sig_inv = np.linalg.inv(sigma)
+
+    # Oracle benchmarks that know the true expected returns
+    markowitz = np.einsum("ij,tj->ti", sig_inv, mkt["mu"]) / GAMMA
+    static_inv = np.linalg.inv(GAMMA * sigma + WEALTH * np.diag(lam))
+    mk_fast = np.einsum("ij,tj->ti", sig_inv, vol * mkt["b_fast"] * mkt["s_fast"]) / GAMMA
+    mk_slow = np.einsum("ij,tj->ti", sig_inv, vol * mkt["b_slow"] * mkt["s_slow"]) / GAMMA
+    slow_boost = np.linalg.solve(I_n - mkt["phi_slow"] * m, I_m)
+    rules = {
+        "Markowitz (oracle, cost-agnostic)": lambda t, w0: markowitz[t],
+        "Static (oracle)": lambda t, w0: static_inv @ (mkt["mu"][t] + WEALTH * lam * w0),
+        "Dynamic optimum (oracle)":
+            lambda t, w0: m @ w0 + I_m @ (I_m @ mk_fast[t] + slow_boost @ mk_slow[t]),
+    }
+
+    # Portfolio-ML learned from data, with and without liquidity interactions
+    liq = np.tile(mkt["liq"], (T, 1))
+    feature_sets = {
+        "Portfolio-ML: signals only": np.stack([mkt["s_slow"], mkt["s_fast"]], axis=2),
+        "Portfolio-ML: signals x liquidity": np.stack(
+            [mkt["s_slow"], mkt["s_fast"], liq,
+             mkt["s_slow"] * liq, mkt["s_fast"] * liq], axis=2),
+    }
+    months_fit = range(LOOKBACK + 2, T - 1)
+    train = [t for t in months_fit if t < TRAIN_END]
+    valid = [t for t in months_fit if TRAIN_END <= t < TEST_START]
+    for name, feats in feature_sets.items():
+        S = np.stack([scale_signals(feats[t], vol) for t in range(T)])
+        r_tilde, D = portfolio_ml_moments(S, mkt["g"], mkt["ret"], sigma, lam, m,
+                                          WEALTH, GAMMA, months_fit, LOOKBACK)
+        ridge = max(RIDGES, key=lambda l: objective(
+            fit_aim_coefficients(r_tilde, D, train, l), r_tilde, D, valid))
+        beta = fit_aim_coefficients(r_tilde, D, train + valid, ridge)
+        rules[name] = (lambda S_, b_: lambda t, w0: m @ w0 + I_m @ (S_[t] @ b_))(S, beta)
+
+    test = list(range(TEST_START, T - 1))
+    rows = []
+    for name, rule in rules.items():
+        bt = backtest(mkt, rule, test)
+        rows.append({"seed": seed, "Method": name,
+                     "Net Sharpe": np.sqrt(12) * bt["net"].mean() / bt["net"].std(),
+                     "Trading cost": 12 * bt["tc"].mean(),
+                     "Utility": 12 * (bt["net"].mean() - 0.5 * GAMMA * bt["net"].var()),
+                     "Turnover": bt["turnover"].mean()})
+    return pd.DataFrame(rows)
+
+
+sim_results = pd.concat([run_one(seed) for seed in range(20)],
+                        ignore_index=True)
+```
+
+```{python}
+#| label: tbl-portfolio-ml-simulation
+#| tbl-cap: "Hiệu quả ngoài mẫu trong các thị trường mô phỏng: Trung vị trên 20 thị trường (mức e ngại rủi ro 10, tài sản 10 tỷ)"
+order = ["Markowitz (oracle, cost-agnostic)", "Static (oracle)",
+         "Portfolio-ML: signals only", "Portfolio-ML: signals x liquidity",
+         "Dynamic optimum (oracle)"]
+summary = (sim_results.groupby("Method")[["Net Sharpe", "Trading cost", "Utility", "Turnover"]]
+           .median().loc[order])
+wide = sim_results.pivot(index="seed", columns="Method", values="Utility")
+summary["Beats static oracle (share of seeds)"] = [
+    (wide[name] > wide["Static (oracle)"]).mean() for name in order]
+summary.round(3)
+```
+
+Mô phỏng tái hiện logic của bài báo ở quy mô thu nhỏ. Danh mục Markowitz không quan tâm đến chi phí bị phá hủy bởi chính hoạt động giao dịch của nó dù nó biết lợi nhuận kỳ vọng thật. Phương án tối ưu động đánh bại oracle tĩnh trong hầu hết các thị trường mặc dù cả hai đều có cùng các dự báo một tháng hoàn hảo: nhắm vào danh mục Markowitz của hôm nay bỏ qua tính bền vững của tín hiệu kiểu giá trị và trả giá quá cao để đuổi theo tín hiệu kiểu đảo chiều. Portfolio-ML, vốn phải học mọi thứ từ dữ liệu, đạt tỷ số Sharpe sau chi phí cao hơn oracle tĩnh với vòng quay chỉ bằng khoảng một nửa, và mức thỏa dụng tương đương. Nó thua phương án tối ưu động vì nó ước lượng có nhiễu những gì oracle đã biết.
+
+Hai biến thể Portfolio-ML đem lại một bài học về các đặc trưng. Danh mục mục tiêu tối ưu đối xử với cổ phiếu thanh khoản và kém thanh khoản một cách khác nhau: nó giao dịch hướng theo tín hiệu nhanh ở các cổ phiếu thanh khoản và chậm ở các cổ phiếu kém thanh khoản, và sẵn sàng nắm giữ các tín hiệu bền vững ở các cổ phiếu kém thanh khoản nhưng không nắm giữ các tín hiệu thoáng qua. Một quy tắc chỉ tuyến tính theo các tín hiệu không thể biểu diễn điều này, nên nó chỉ có thể thu nhỏ mọi thứ, biểu hiện là vòng quay rất thấp và mức thỏa dụng thấp hơn. Thêm thanh khoản và các tương tác của nó sẽ khôi phục phần lớn khoảng cách. Trong bài báo, các đặc trưng Fourier ngẫu nhiên của 115 đặc điểm, một số trong đó đo thanh khoản, tự động sinh ra các tương tác như vậy.
+
+Khi áp dụng phương pháp cho cổ phiếu Việt Nam, chúng ta sử dụng tập hợp đầu tư thanh khoản và bộ ước lượng hiệp phương sai Ledoit-Wolf đã định nghĩa ở phần trước của chương này, bảng đặc điểm từ chương xây dựng nhân tố, và tác động giá được hiệu chỉnh theo giá trị giao dịch trung bình hằng ngày của từng cổ phiếu tính bằng VND. Mã không được chạy ở đây: việc tìm kiếm siêu tham số phải khớp lại mô hình cho mọi tổ hợp của số đặc trưng ngẫu nhiên, thang đo đặc trưng và hệ số phạt ridge, và mất vài phút cho mỗi cặp tài sản và mức e ngại rủi ro.
+
+```{python}
+#| label: pfml-vn-data
+#| eval: false
+#| code-summary: "Characteristics and wide panels for Portfolio-ML"
+# Characteristics panel from the factor-construction chapter
+characteristics = client.get_characteristics_panel(
+    exchanges=["HOSE", "HNX"],
+    start_date="2008-01-01",
+    end_date="2024-12-31",
+    include_delisted=True,
+)
+char_cols = [c for c in characteristics.columns if c not in ["ticker", "month_end"]]
+
+# Rank-standardize each characteristic to [0, 1] within month; missing -> 0.5
+ranked = characteristics.copy()
+ranked[char_cols] = (ranked.groupby("month_end")[char_cols]
+                     .rank(pct=True).fillna(0.5))
+
+# Wide month x ticker panels on the liquid universe
+ret_wide = universe_liquid.pivot(index="month_end", columns="ticker",
+                                 values="monthly_return").sort_index()
+adv_wide = universe_liquid.pivot(index="month_end", columns="ticker",
+                                 values="turnover_value_avg_20d").reindex(ret_wide.index)
+mcap_wide = universe_liquid.pivot(index="month_end", columns="ticker",
+                                  values="market_cap").reindex(ret_wide.index)
+char_wide = {c: ranked.pivot(index="month_end", columns="ticker", values=c)
+                     .reindex(index=ret_wide.index, columns=ret_wide.columns)
+             for c in char_cols}
+
+# Value-weighted market return drives the growth of portfolio weights
+lag_mcap = mcap_wide.shift(1).where(ret_wide.notna())
+mkt_ret = (ret_wide * lag_mcap).sum(axis=1) / lag_mcap.sum(axis=1)
+months = ret_wide.index
+```
+
+```{python}
+#| label: pfml-vn-inputs
+#| eval: false
+#| code-summary: "Monthly universe, covariance, and price impact"
+LOOKBACK = 11
+_base_cache = {}
+
+
+def base_state(i, lookback=LOOKBACK):
+    """
+    Universe, covariance, and price impact at month i (no look-ahead).
+    A stock is investable if it has returns over the last lookback + 2 months.
+    Next month's return is used only to evaluate the decision; a missing
+    value (for example, a delisting) is recorded as zero.
+    """
+    if i in _base_cache:
+        return _base_cache[i]
+    window = ret_wide.iloc[i - lookback - 1:i + 1]
+    tickers = window.columns[window.notna().all()]
+    cov, cov_tickers = estimate_covariance(universe_liquid, months[i])
+    state = None
+    if cov is not None:
+        adv = adv_wide.iloc[i]
+        tickers = [t for t in tickers if t in cov_tickers and adv.get(t, 0) > 0]
+        if len(tickers) >= 30:
+            sigma = cov.loc[tickers, tickers].values
+            # growth[k] = growth of portfolio weights over month i - k
+            growth = ((1 + window[tickers].values)
+                      / (1 + mkt_ret.iloc[i - lookback - 1:i + 1].values)[:, None])[::-1]
+            state = dict(tickers=tickers, sigma=sigma, vol=np.sqrt(np.diag(sigma)),
+                         lam=0.2 / adv[tickers].values,   # 1% of ADV moves price 0.1%
+                         growth=growth,
+                         ret_next=ret_wide.iloc[i + 1][tickers].fillna(0).values)
+    _base_cache[i] = state
+    return state
+
+
+def month_signals(i, tickers, vol, W, lookback=LOOKBACK):
+    """Scaled random-feature signals for months i, i-1, ..., i-lookback-1."""
+    out = []
+    for lag in range(lookback + 2):
+        X = np.column_stack([char_wide[c].iloc[i - lag][tickers].fillna(0.5).values
+                             for c in char_cols])
+        out.append(scale_signals(random_fourier_features(X, W), vol))
+    return out
+```
+
+```{python}
+#| label: pfml-vn-backtest
+#| eval: false
+#| code-summary: "Tuning and out-of-sample backtest of Portfolio-ML"
+def run_portfolio_ml(wealth, gamma, first_val_year=2017, first_test_year=2020,
+                     p_grid=(16, 32, 64), g_grid=(np.exp(-3), np.exp(-2)),
+                     ridges=(0.0, *np.exp(np.arange(-10, 7))),
+                     cost_mult=1.0, long_only=False, seed=1, lookback=LOOKBACK):
+    """Portfolio-ML with yearly expanding-window tuning and an out-of-sample backtest."""
+    rng = np.random.default_rng(seed)
+    states = {}
+    for i in range(lookback + 2, len(months) - 1):
+        st = base_state(i, lookback)
+        if st is None:
+            continue
+        lam = cost_mult * st["lam"]
+        m = trading_speed(st["sigma"], lam, wealth, gamma, mu=mkt_ret.iloc[:i].mean())
+        states[i] = {**st, "lam": lam, "m": m}
+    year = {i: months[i].year for i in states}
+    last_year = max(year.values())
+
+    # Step 1: objective ingredients for every (p, g) and month
+    candidates = {}
+    for p in p_grid:
+        for g_rff in g_grid:
+            W = rng.normal(0, np.sqrt(g_rff), size=(len(char_cols), p // 2))
+            r_tilde, D, S_now = {}, {}, {}
+            for i, st in states.items():
+                S_hist = month_signals(i, st["tickers"], st["vol"], W, lookback)
+                om = implied_weights(S_hist[:lookback + 1],
+                                     st["growth"][:lookback], st["m"])
+                om_prev = implied_weights(S_hist[1:],
+                                          st["growth"][1:lookback + 1], st["m"])
+                trade = om - st["growth"][0][:, None] * om_prev
+                r_tilde[i] = om.T @ st["ret_next"]
+                D[i] = (gamma * om.T @ st["sigma"] @ om
+                        + wealth * trade.T @ (st["lam"][:, None] * trade))
+                S_now[i] = S_hist[0]
+            # Step 2: expanding-window validation, one year at a time
+            for l in ridges:
+                val = {}
+                for y in range(first_val_year, last_year + 1):
+                    fit_m = [i for i in states if year[i] < y]
+                    eval_m = [i for i in states if year[i] == y]
+                    if fit_m and eval_m:
+                        beta = fit_aim_coefficients(r_tilde, D, fit_m, l)
+                        val[y] = objective(beta, r_tilde, D, eval_m)
+                candidates[(p, g_rff, l)] = dict(r=r_tilde, D=D, S=S_now, val=val)
+
+    # Step 3: each test year, use the best hyperparameters so far and trade
+    rows, w_prev, lam_prev = [], pd.Series(dtype=float), pd.Series(dtype=float)
+    for y in range(first_test_year, last_year + 1):
+        best = max(candidates, key=lambda h: np.mean(
+            [v for yy, v in candidates[h]["val"].items() if yy < y] or [-np.inf]))
+        c = candidates[best]
+        beta = fit_aim_coefficients(c["r"], c["D"],
+                                    [i for i in states if year[i] < y], best[2])
+        for i in [i for i in states if year[i] == y]:
+            st, tick = states[i], states[i]["tickers"]
+            w_start = w_prev.reindex(tick).fillna(0).values   # already grown
+            aim = c["S"][i] @ beta
+            w = st["m"] @ w_start + (np.eye(len(tick)) - st["m"]) @ aim
+            if long_only:
+                w = np.clip(w, 0, None)
+            trade = w - w_start
+            exits = w_prev.index.difference(tick)               # forced liquidations
+            tc = (0.5 * wealth * np.sum(st["lam"] * trade**2)
+                  + 0.5 * wealth * np.sum(lam_prev.reindex(exits).fillna(0).values
+                                          * w_prev.reindex(exits).fillna(0).values**2))
+            rows.append({"month": months[i + 1], "gross": w @ st["ret_next"], "tc": tc,
+                         "turnover": np.abs(trade).sum(), "leverage": np.abs(w).sum(),
+                         "p": best[0], "ridge": best[2]})
+            w_prev = pd.Series(w * (1 + st["ret_next"]) / (1 + mkt_ret.iloc[i + 1]),
+                               index=tick)
+            lam_prev = pd.Series(st["lam"], index=tick)
+    bt = pd.DataFrame(rows)
+    bt["net"] = bt["gross"] - bt["tc"]
+    return bt
+
+
+def summarize(bt, gamma):
+    return pd.Series({
+        "Gross return": 12 * bt["gross"].mean(),
+        "Trading cost": 12 * bt["tc"].mean(),
+        "Net return": 12 * bt["net"].mean(),
+        "Volatility": np.sqrt(12) * bt["net"].std(),
+        "Net Sharpe": np.sqrt(12) * bt["net"].mean() / bt["net"].std(),
+        "Utility": 12 * (bt["net"].mean() - 0.5 * gamma * bt["net"].var()),
+        "Turnover": bt["turnover"].mean(),
+        "Leverage": bt["leverage"].mean(),
+    })
+```
+
+```{python}
+#| label: tbl-pfml-vn
+#| eval: false
+#| tbl-cap: "Đường biên hiệu quả có thể triển khai cho cổ phiếu Việt Nam: Portfolio-ML theo quy mô quỹ và mức e ngại rủi ro"
+# Points on the implementable efficient frontier for three fund sizes
+frontier = {}
+for wealth in [1e11, 1e12, 1e13]:            # VND 100 billion, 1 trillion, 10 trillion
+    for gamma in [5, 10, 20]:
+        for long_only in [False, True]:
+            bt = run_portfolio_ml(wealth, gamma, long_only=long_only)
+            frontier[(f"{wealth / 1e9:,.0f}bn", gamma,
+                      "long-only" if long_only else "long-short")] = summarize(bt, gamma)
+frontier = pd.DataFrame(frontier).T
+frontier.index.names = ["Wealth (VND)", "Risk aversion", "Positions"]
+frontier.round(3)
+```
+
+### Ý nghĩa đối với nghiên cứu về Việt Nam {#sec-weight-ief-vietnam}
+
+Lập luận ủng hộ phương pháp này ở Việt Nam mạnh hơn so với tập hợp cổ phiếu vốn hóa lớn của Mỹ mà các tác giả nghiên cứu, vì các lực mà nó được thiết kế để xử lý ở đây lớn hơn: thanh khoản tập trung vào vài chục cổ phiếu (@sec-weight-data), và nhiều hiện tượng bất thường được ghi nhận cho cổ phiếu Việt Nam nằm chính ở các cổ phiếu nhỏ, kém thanh khoản, nơi chi phí có tác động mạnh. Cần có một số điều chỉnh.
+
+1.  **Không có bán khống.** Portfolio-ML như được đặc tả là một danh mục mua–bán khống, và ở Việt Nam nó là một đối tượng nghiên cứu chứ không phải một quỹ: nó đo xem đặc điểm nào mang lại giá trị sau chi phí và đường biên co lại như thế nào theo quy mô. Biến thể chỉ mua trong mã đơn giản đặt các trọng số âm về không sau mỗi lần tái cân bằng. Đó là một phép chiếu mang tính kinh nghiệm, không phải nghiệm tối ưu có ràng buộc. Một phiên bản được ràng buộc đúng đắn sẽ tối đa hóa cùng hàm mục tiêu bằng phương pháp số với $\pi_t \geq 0$, hoặc làm việc với các trọng số chủ động quanh một chuẩn so sánh như VN30, trong đó việc nắm giữ thấp hơn trọng số chuẩn (mức thấp hơn tối đa bằng chính trọng số chuẩn) thay thế cho vị thế bán khống.
+2.  **Hiệu chỉnh tác động giá cho Việt Nam và kiểm tra áp lực.** Hiệu chỉnh của Mỹ (tác động 0.1% cho 1% khối lượng hằng ngày) gần như chắc chắn đánh giá thấp tác động đối với các cổ phiếu vốn hóa trung bình của Việt Nam. Hãy báo cáo kết quả với các hệ số nhân chi phí 1, 2 và 4 (đối số `cost_mult`), và so sánh các chi phí hàm ý với mô hình chi phí giao dịch trong @eq-tc-model.
+3.  **Mô hình thiếu các chi phí tỷ lệ.** Phí môi giới và thuế bán 0.1% là tuyến tính theo quy mô lệnh (@tbl-weight-costs), và các chi phí tuyến tính tạo ra một vùng không giao dịch mà mô hình toàn phương không thể tạo ra. Ít nhất hãy trừ chúng trong kiểm định ngược; coi một kết quả chỉ tồn tại khi không có chúng là không thể triển khai.
+4.  **Tôn trọng các quy tắc của thị trường.** Biên độ giá hằng ngày giới hạn lượng vị thế có thể giao dịch trong một ngày khi cổ phiếu biến động mạnh, và giới hạn sở hữu nước ngoài khiến một số cổ phiếu không thể mua được đối với nhà đầu tư nước ngoài. Với phiên bản dành cho nhà đầu tư nước ngoài, hãy loại các cổ phiếu đang chạm giới hạn khỏi phía mua.
+5.  **Mẫu ngắn.** Với các đặc điểm từ năm 2008, cửa sổ hiệp phương sai 60 tháng và kiểm định theo năm, chỉ một vài năm kiểm định cung cấp thông tin cho việc chọn siêu tham số. Hãy giữ số đặc trưng ngẫu nhiên ở mức nhỏ, để hệ số phạt ridge phát huy tác dụng, và báo cáo mức độ nhạy của kết quả với hạt giống ngẫu nhiên dùng để rút các đặc trưng.
+6.  **Dùng tầm quan trọng kinh tế của đặc điểm làm kiểm định hiện tượng bất thường.** Việc loại bỏ từng đặc điểm một và đo mức giảm thỏa dụng sau chi phí sẽ trả lời câu hỏi mà vườn thú nhân tố (factor zoo, @sec-factor-zoo-multiple-testing) không trả lời được: hiện tượng bất thường nào của Việt Nam đáng để giao dịch đối với một nhà đầu tư có quy mô nhất định sau khi đã trả chi phí. Câu trả lời sẽ khác nhau theo quy mô quỹ, và đường biên trên các mức 100 tỷ, 1 nghìn tỷ và 10 nghìn tỷ VND cho thấy tập hợp cơ hội thu hẹp nhanh đến mức nào về phía các cổ phiếu thanh khoản nhất.
+
+## Hướng dẫn thực tiễn cho Việt Nam {#sec-weight-practical}
+
+Phân tích ở trên đưa ra một số khuyến nghị thực tiễn cho các nhà nghiên cứu và nhà đầu tư làm việc với cổ phiếu Việt Nam:
+
+**Đối với nghiên cứu nhân tố học thuật:** Danh mục VW vẫn là mặc định cho các kiểm định định giá tài sản vì chúng đại diện cho tập hợp cơ hội có thể đầu tư và tránh làm thổi phồng các ước lượng alpha bằng phần bù phi thanh khoản của cổ phiếu nhỏ. Khi dùng danh mục EW (ví dụ để mỗi cổ phiếu có ảnh hưởng ngang nhau trong các phép phân loại theo mặt cắt ngang), nhà nghiên cứu nên báo cáo cả kết quả VW và EW và thảo luận về độ nhạy. @fama2008dissecting tuân theo thông lệ này một cách có hệ thống.
+
+**Đối với quản lý quỹ:** Lựa chọn phụ thuộc vào AUM và ủy thác đầu tư. Ở mức AUM dưới 500 tỷ VND, VW có giới hạn trần hoặc trọng số theo yếu tố cơ bản đem lại một sự dung hòa thực tiễn giữa đa dạng hóa và khả năng triển khai. Ở mức AUM lớn hơn, VW thuần túy hoặc VW có giới hạn trần theo ngành thực tế hơn. Ngang bằng rủi ro và phương sai tối thiểu phù hợp với các ủy thác biến động thấp nhưng đòi hỏi ước lượng hiệp phương sai vững và tái cân bằng hằng quý.
+
+**Đối với xây dựng chỉ số:** Các nhà cung cấp chỉ số của Việt Nam (VN30, VNINDEX) dùng các biến thể của VW có giới hạn trần. Phân tích gợi ý rằng mức trần ảnh hưởng đáng kể đến đặc tính đa dạng hóa và sai số bám sát của chỉ số so với thị trường VW không giới hạn. Mức trần 10% cân bằng giữa việc giảm tập trung và vòng quay.
+
+**Đối với quản lý chi phí giao dịch:** Ở mọi phương pháp, lợi ích biên của việc tái cân bằng giảm nhanh hơn chi phí biên khi tần suất vượt quá hằng quý. Tái cân bằng hằng quý theo lịch hoặc tái cân bằng dựa trên ngưỡng (với dải dung sai 1–2%) mang lại sự đánh đổi chi phí–lợi ích tốt nhất trên thị trường Việt Nam.
+
+## Tóm tắt {#sec-weight-summary}
+
+| Khía cạnh | VW | EW | VW có trần | Theo yếu tố cơ bản | Phương sai tối thiểu | Ngang bằng rủi ro |
 |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
-| Turnover | Very low | High | Low | Low | Moderate | Moderate |
-| Concentration | High | None | Moderate | Moderate | Variable | Low |
-| Size tilt | Large | Small | Moderate | Large-mid | Low-vol | Mixed |
-| Data required | Prices | None | Prices | Accounting | Returns cov. | Returns cov. |
-| Scale sensitivity | Low | High | Low | Low | Moderate | Moderate |
-| Rebal. frequency | Passive | Monthly | Monthly/Quarterly | Annual | Quarterly | Quarterly |
-| Best use case | Benchmarks, large AUM | Cross-sectional tests | Index tracking | Long-term investing | Low-vol mandates | Balanced risk |
+| Vòng quay | Rất thấp | Cao | Thấp | Thấp | Trung bình | Trung bình |
+| Mức tập trung | Cao | Không | Trung bình | Trung bình | Thay đổi | Thấp |
+| Thiên lệch quy mô | Lớn | Nhỏ | Trung bình | Lớn–trung bình | Biến động thấp | Hỗn hợp |
+| Dữ liệu cần thiết | Giá | Không | Giá | Kế toán | Hiệp phương sai lợi nhuận | Hiệp phương sai lợi nhuận |
+| Độ nhạy theo quy mô | Thấp | Cao | Thấp | Thấp | Trung bình | Trung bình |
+| Tần suất tái cân bằng | Thụ động | Hằng tháng | Hằng tháng/Hằng quý | Hằng năm | Hằng quý | Hằng quý |
+| Trường hợp sử dụng tốt nhất | Chuẩn so sánh, AUM lớn | Kiểm định theo mặt cắt ngang | Bám sát chỉ số | Đầu tư dài hạn | Ủy thác biến động thấp | Rủi ro cân bằng |
 
-: Summary comparison of weighting schemes for Vietnamese equities. {#tbl-weight-final-comparison}
+: So sánh tóm tắt các phương pháp xác định trọng số đối với cổ phiếu Việt Nam. {#tbl-weight-final-comparison}
 
-The choice of weighting scheme is not merely a technical detail—it reflects a substantive economic decision about the relative importance of diversification, investability, and cost control. In the Vietnamese market, where the capitalization distribution is highly skewed and small-cap liquidity is thin, this choice has larger consequences than in developed markets. Researchers who report results under only one weighting scheme risk conclusions that are specific to that scheme rather than reflective of a genuine economic relationship.
+Việc lựa chọn phương pháp xác định trọng số không chỉ là một chi tiết kỹ thuật, mà phản ánh một quyết định kinh tế thực chất về tầm quan trọng tương đối của đa dạng hóa, khả năng đầu tư và kiểm soát chi phí. Trên thị trường Việt Nam, nơi phân phối vốn hóa lệch mạnh và thanh khoản của cổ phiếu vốn hóa nhỏ mỏng, lựa chọn này có hệ quả lớn hơn so với các thị trường phát triển. Những nhà nghiên cứu chỉ báo cáo kết quả theo một phương pháp xác định trọng số duy nhất có nguy cơ rút ra các kết luận đặc thù cho phương pháp đó thay vì phản ánh một mối quan hệ kinh tế thực sự.
 
 ```{=html}
 <!-- ## Exercises {#sec-weight-exercises}

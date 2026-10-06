@@ -11,53 +11,53 @@ execute:
   message: false
 ---
 
-This chapter introduces one of the most fundamental concepts in financial economics: the exposure of an individual stock to systematic market risk. According to the Capital Asset Pricing Model (CAPM) developed by @Sharpe1964, @Lintner1965, and @Mossin1966, cross-sectional variation in expected asset returns should be determined by the covariance between an asset's excess return and the excess return on the market portfolio. The regression coefficient that captures this relationship (commonly known as market beta) serves as the cornerstone of modern portfolio theory and remains widely used in practice for cost of capital estimation, performance attribution, and risk management.
+Chương này giới thiệu một trong những khái niệm cơ bản nhất của kinh tế học tài chính: mức độ phơi nhiễm của một cổ phiếu riêng lẻ trước rủi ro thị trường mang tính hệ thống. Theo mô hình định giá tài sản vốn (CAPM) do @Sharpe1964, @Lintner1965 và @Mossin1966 phát triển, sự khác biệt theo chiều ngang trong lợi nhuận kỳ vọng của các tài sản phải được quyết định bởi hiệp phương sai giữa lợi nhuận vượt mức của tài sản và lợi nhuận vượt mức của danh mục thị trường. Hệ số hồi quy nắm bắt mối quan hệ này (thường được gọi là beta thị trường) là nền tảng của lý thuyết danh mục đầu tư hiện đại và vẫn được sử dụng rộng rãi trong thực tiễn để ước lượng chi phí vốn, phân tích đóng góp hiệu quả đầu tư và quản trị rủi ro.
 
-In this chapter, we develop a complete framework for estimating market betas for Vietnamese stocks. We begin with a conceptual overview of the CAPM and its empirical implementation. We then demonstrate beta estimation using ordinary least squares regression, first for individual stocks and then scaled to the entire market using rolling-window estimation. To handle the computational demands of estimating betas for hundreds of stocks across many time periods, we introduce parallelization techniques that dramatically reduce processing time. Finally, we compare beta estimates derived from monthly versus daily returns and examine how betas vary across industries and over time in the Vietnamese market.
+Trong chương này, chúng ta xây dựng một khung phân tích hoàn chỉnh để ước lượng beta thị trường cho các cổ phiếu Việt Nam. Chúng ta bắt đầu bằng một tổng quan khái niệm về CAPM và việc triển khai mô hình này trong thực nghiệm. Sau đó, chúng ta minh họa việc ước lượng beta bằng hồi quy bình phương nhỏ nhất thông thường, trước hết cho từng cổ phiếu riêng lẻ, rồi mở rộng ra toàn thị trường bằng ước lượng cửa sổ trượt. Để đáp ứng yêu cầu tính toán khi ước lượng beta cho hàng trăm cổ phiếu qua nhiều kỳ, chúng ta giới thiệu các kỹ thuật song song hóa giúp giảm đáng kể thời gian xử lý. Cuối cùng, chúng ta so sánh các ước lượng beta thu được từ lợi nhuận tháng với lợi nhuận ngày, và xem xét beta thay đổi như thế nào giữa các ngành và theo thời gian trên thị trường Việt Nam.
 
-The chapter leverages several important computational concepts that extend beyond beta estimation itself. Rolling-window estimation is a technique applicable to any time-varying parameter, while parallelization provides a general solution for computationally intensive tasks that can be divided into independent subtasks.
+Chương này vận dụng một số khái niệm tính toán quan trọng vượt ra ngoài phạm vi ước lượng beta. Ước lượng cửa sổ trượt là kỹ thuật có thể áp dụng cho mọi tham số biến thiên theo thời gian, còn song song hóa là giải pháp chung cho các tác vụ đòi hỏi nhiều tính toán nhưng có thể chia thành các tác vụ con độc lập.
 
-## Theoretical Foundation
+## Nền tảng lý thuyết
 
-### The Capital Asset Pricing Model
+### Mô hình định giá tài sản vốn
 
-The CAPM provides a theoretical framework linking expected returns to systematic risk. Under the model's assumptions—including mean-variance optimizing investors, homogeneous expectations, and frictionless markets—the expected excess return on any asset $i$ is proportional to its covariance with the market portfolio:
+CAPM cung cấp một khung lý thuyết liên kết lợi nhuận kỳ vọng với rủi ro hệ thống. Theo các giả định của mô hình, bao gồm nhà đầu tư tối ưu hóa trung bình–phương sai, kỳ vọng đồng nhất và thị trường không có ma sát, lợi nhuận vượt mức kỳ vọng của bất kỳ tài sản $i$ nào tỷ lệ thuận với hiệp phương sai của nó với danh mục thị trường:
 
 $$
 E[r_i - r_f] = \beta_i \cdot E[r_m - r_f]
 $$
 
-where $r_i$ is the return on asset $i$, $r_f$ is the risk-free rate, $r_m$ is the return on the market portfolio, and $\beta_i$ is defined as:
+trong đó $r_i$ là lợi nhuận của tài sản $i$, $r_f$ là lãi suất phi rủi ro, $r_m$ là lợi nhuận của danh mục thị trường, và $\beta_i$ được định nghĩa như sau:
 
 $$
 \beta_i = \frac{\text{Cov}(r_i, r_m)}{\text{Var}(r_m)}
 $$
 
-The market beta $\beta_i$ measures the sensitivity of asset $i$'s returns to market movements. A beta greater than one indicates the asset amplifies market movements, while a beta less than one indicates dampened sensitivity. A beta of zero would imply no systematic risk exposure, leaving only idiosyncratic risk that can be diversified away.
+Beta thị trường $\beta_i$ đo độ nhạy của lợi nhuận tài sản $i$ trước các biến động của thị trường. Beta lớn hơn một cho thấy tài sản khuếch đại các biến động của thị trường, trong khi beta nhỏ hơn một cho thấy độ nhạy thấp hơn. Beta bằng không hàm ý không có phơi nhiễm rủi ro hệ thống, chỉ còn lại rủi ro đặc thù có thể được triệt tiêu thông qua đa dạng hóa.
 
-### Empirical Implementation
+### Triển khai trong thực nghiệm
 
-In practice, we estimate beta by regressing excess stock returns on excess market returns:
+Trong thực tế, chúng ta ước lượng beta bằng cách hồi quy lợi nhuận vượt mức của cổ phiếu theo lợi nhuận vượt mức của thị trường:
 
 $$
 r_{i,t} - r_{f,t} = \alpha_i + \beta_i(r_{m,t} - r_{f,t}) + \varepsilon_{i,t}
 $$ {#eq-capm-regression}
 
-where $\alpha_i$ represents abnormal return (Jensen's alpha), $\beta_i$ is the market beta we seek to estimate, and $\varepsilon_{i,t}$ is the idiosyncratic error term. Under the CAPM, $\alpha_i$ should equal zero for all assets—any non-zero alpha represents a deviation from the model's predictions.
+trong đó $\alpha_i$ biểu diễn lợi nhuận bất thường (alpha của Jensen), $\beta_i$ là beta thị trường cần ước lượng, và $\varepsilon_{i,t}$ là số hạng sai số đặc thù. Theo CAPM, $\alpha_i$ phải bằng không đối với mọi tài sản; bất kỳ alpha khác không nào cũng là sự lệch khỏi dự báo của mô hình.
 
-Several practical considerations affect beta estimation:
+Một số cân nhắc thực tiễn ảnh hưởng đến việc ước lượng beta:
 
-1.  **Estimation Window**: Longer windows provide more observations and thus more precise estimates, but may include outdated information if betas change over time. Common choices range from 36 to 60 months for monthly data.
+1.  **Cửa sổ ước lượng**: Cửa sổ dài hơn cho nhiều quan sát hơn và do đó ước lượng chính xác hơn, nhưng có thể chứa thông tin lỗi thời nếu beta thay đổi theo thời gian. Lựa chọn phổ biến nằm trong khoảng 36 đến 60 tháng đối với dữ liệu tháng.
 
-2.  **Return Frequency**: Monthly returns reduce noise but provide fewer observations. Daily returns offer more data points but may introduce microstructure effects and non-synchronous trading biases.
+2.  **Tần suất lợi nhuận**: Lợi nhuận tháng giảm nhiễu nhưng cho ít quan sát hơn. Lợi nhuận ngày cho nhiều điểm dữ liệu hơn nhưng có thể gây ra các hiệu ứng vi cấu trúc và thiên lệch do giao dịch không đồng bộ.
 
-3.  **Market Proxy**: The theoretical market portfolio includes all assets, but in practice we use a broad equity index. For Vietnam, we use the value-weighted market return constructed from our stock universe.
+3.  **Đại diện thị trường**: Danh mục thị trường lý thuyết bao gồm mọi tài sản, nhưng trong thực tế chúng ta dùng một chỉ số cổ phiếu rộng. Đối với Việt Nam, chúng ta dùng lợi nhuận thị trường trọng số theo vốn hóa được xây dựng từ tập hợp cổ phiếu của chúng ta.
 
-4.  **Minimum Observations**: Requiring a minimum number of observations (e.g., 48 out of 60 months) helps avoid unreliable estimates from sparse data.
+4.  **Số quan sát tối thiểu**: Yêu cầu một số quan sát tối thiểu (ví dụ 48 trên 60 tháng) giúp tránh các ước lượng thiếu tin cậy do dữ liệu thưa.
 
-## Setting Up the Environment
+## Thiết lập môi trường
 
-We begin by loading the necessary Python packages. The core packages handle data manipulation, statistical modeling, and database operations. We also import parallelization tools that will be essential when scaling our estimation to the full market.
+Chúng ta bắt đầu bằng việc nạp các gói Python cần thiết. Các gói cốt lõi đảm nhiệm xử lý dữ liệu, mô hình thống kê và các thao tác với cơ sở dữ liệu. Chúng ta cũng nhập các công cụ song song hóa, vốn sẽ rất cần thiết khi mở rộng việc ước lượng ra toàn thị trường.
 
 ```{python}
 import pandas as pd
@@ -72,17 +72,17 @@ from joblib import Parallel, delayed, cpu_count
 from dateutil.relativedelta import relativedelta
 ```
 
-We connect to our SQLite database containing the processed Vietnamese financial data from previous chapters.
+Chúng ta kết nối với cơ sở dữ liệu SQLite chứa dữ liệu tài chính Việt Nam đã xử lý từ các chương trước.
 
 ```{python}
 tidy_finance = sqlite3.connect(database="data/tidy_finance_python.sqlite")
 ```
 
-## Loading and Preparing Data
+## Nạp và chuẩn bị dữ liệu
 
-### Stock Returns Data
+### Dữ liệu lợi nhuận cổ phiếu
 
-We load the monthly stock returns data prepared in the Datacore chapter. The data includes excess returns (returns minus the risk-free rate) for all Vietnamese listed stocks.
+Chúng ta nạp dữ liệu lợi nhuận cổ phiếu theo tháng đã được chuẩn bị trong chương Datacore. Dữ liệu bao gồm lợi nhuận vượt mức (lợi nhuận trừ đi lãi suất phi rủi ro) của tất cả cổ phiếu niêm yết tại Việt Nam.
 
 ```{python}
 prices_monthly = pd.read_sql_query(
@@ -113,9 +113,9 @@ prices_daily = pd.read_sql_query(
 )
 ```
 
-### Company Information
+### Thông tin doanh nghiệp
 
-We load company information to enable industry-level analysis of beta estimates.
+Chúng ta nạp thông tin doanh nghiệp để phục vụ phân tích các ước lượng beta ở cấp độ ngành.
 
 ```{python}
 comp_vn = pd.read_sql_query(
@@ -133,9 +133,9 @@ comp_vn["year"] = comp_vn["datadate"].dt.year
 print(f"Company data: {comp_vn['symbol'].nunique():,} firms")
 ```
 
-### Market Excess Returns
+### Lợi nhuận vượt mức của thị trường
 
-For the market portfolio proxy, we use the value-weighted market excess return. If you have constructed Fama-French factors in a previous chapter, load them here. Otherwise, we can construct a simple market return from our stock data.
+Làm đại diện cho danh mục thị trường, chúng ta dùng lợi nhuận vượt mức của thị trường theo trọng số vốn hóa. Nếu bạn đã xây dựng các nhân tố Fama-French ở một chương trước, hãy nạp chúng tại đây. Nếu không, chúng ta có thể xây dựng một lợi nhuận thị trường đơn giản từ dữ liệu cổ phiếu của mình.
 
 ```{python}
 # Option 1: Load pre-computed market factor
@@ -169,9 +169,9 @@ def compute_market_return(prices_df):
     return market_return
 ```
 
-### Merging Datasets
+### Hợp nhất các bộ dữ liệu
 
-We combine the stock returns with market returns and company information to create our estimation dataset.
+Chúng ta kết hợp lợi nhuận cổ phiếu với lợi nhuận thị trường và thông tin doanh nghiệp để tạo ra bộ dữ liệu phục vụ ước lượng.
 
 ```{python}
 # Merge stock returns with market returns
@@ -194,9 +194,9 @@ prices_monthly = prices_monthly.dropna(subset=["ret_excess", "mkt_excess"])
 print(f"Final estimation sample: {len(prices_monthly):,} observations")
 ```
 
-### Handling Outliers
+### Xử lý các giá trị ngoại lai
 
-Extreme returns can unduly influence regression estimates. We apply winsorization to limit the impact of outliers while preserving the general distribution of returns. Winsorization at the 1% level replaces values below the 1st percentile with the 1st percentile value, and values above the 99th percentile with the 99th percentile value.
+Các mức lợi nhuận cực đoan có thể ảnh hưởng quá mức đến kết quả ước lượng hồi quy. Chúng ta áp dụng winsorization (cắt đuôi giá trị cực đoan) để hạn chế tác động của các giá trị ngoại lai trong khi vẫn giữ nguyên phân phối chung của lợi nhuận. Winsorization ở mức 1% thay các giá trị thấp hơn phân vị thứ 1 bằng giá trị phân vị thứ 1, và các giá trị cao hơn phân vị thứ 99 bằng giá trị phân vị thứ 99.
 
 ```{python}
 def winsorize_returns(df, columns, limits=(0.01, 0.01)):
@@ -232,11 +232,11 @@ print("Return distributions after winsorization:")
 print(prices_monthly[["ret_excess", "mkt_excess"]].describe().round(4))
 ```
 
-## Estimating Beta for Individual Stocks
+## Ước lượng beta cho từng cổ phiếu
 
-### Single Stock Example
+### Ví dụ với một cổ phiếu
 
-Before scaling to the full market, we demonstrate beta estimation for a single well-known Vietnamese stock. We use Vingroup (VIC), one of the largest conglomerates in Vietnam with significant exposure to real estate, retail, and automotive sectors.
+Trước khi mở rộng ra toàn thị trường, chúng ta minh họa việc ước lượng beta cho một cổ phiếu nổi tiếng của Việt Nam. Chúng ta dùng Vingroup (VIC), một trong những tập đoàn lớn nhất Việt Nam với mức độ hiện diện đáng kể trong các lĩnh vực bất động sản, bán lẻ và ô tô.
 
 ```{python}
 # Filter data for Vingroup
@@ -246,7 +246,7 @@ print(f"VIC observations: {len(vic_data)}")
 print(f"Date range: {vic_data['date'].min():%Y-%m} to {vic_data['date'].max():%Y-%m}")
 ```
 
-We estimate the CAPM regression using ordinary least squares via the `statsmodels` package. The formula interface provides a convenient way to specify regression models.
+Chúng ta ước lượng hồi quy CAPM bằng phương pháp bình phương nhỏ nhất thông thường thông qua gói `statsmodels`. Giao diện công thức (formula) cung cấp một cách thuận tiện để chỉ định các mô hình hồi quy.
 
 ```{python}
 # Estimate CAPM for Vingroup
@@ -259,12 +259,12 @@ model_vic = smf.ols(
 print(model_vic.summary())
 ```
 
-The regression output provides several important pieces of information:
+Kết quả hồi quy cung cấp một số thông tin quan trọng:
 
--   **Beta (mkt_excess coefficient)**: The estimated market sensitivity. A beta above 1 indicates VIC amplifies market movements.
--   **Alpha (Intercept)**: The abnormal return not explained by market exposure. Under CAPM, this should be zero.
--   **R-squared**: The proportion of return variation explained by market movements.
--   **t-statistics**: Test whether coefficients differ significantly from zero.
+-   **Beta (hệ số của mkt_excess)**: Độ nhạy thị trường ước lượng được. Beta lớn hơn 1 cho thấy VIC khuếch đại các biến động của thị trường.
+-   **Alpha (Intercept)**: Lợi nhuận bất thường không được giải thích bởi mức độ phơi nhiễm thị trường. Theo CAPM, giá trị này phải bằng không.
+-   **R-squared**: Tỷ lệ biến thiên của lợi nhuận được giải thích bởi các biến động của thị trường.
+-   **Thống kê t**: Kiểm định xem các hệ số có khác không một cách có ý nghĩa hay không.
 
 ```{python}
 # Extract key estimates
@@ -276,9 +276,9 @@ print(f"  Alpha: {coefficients.loc['Intercept', 'Coef.']:.4f}")
 print(f"  R²:    {model_vic.rsquared:.3f}")
 ```
 
-### CAPM Estimation Function
+### Hàm ước lượng CAPM
 
-We create a reusable function that estimates the CAPM and returns results in a standardized format. The function includes a minimum observations requirement to avoid unreliable estimates from sparse data.
+Chúng ta tạo một hàm có thể tái sử dụng, ước lượng CAPM và trả về kết quả theo định dạng chuẩn hóa. Hàm này bao gồm yêu cầu về số quan sát tối thiểu để tránh các ước lượng thiếu tin cậy do dữ liệu thưa.
 
 ```{python}
 def estimate_capm(data, min_obs=48):
@@ -335,22 +335,22 @@ def estimate_capm(data, min_obs=48):
         return pd.DataFrame()
 ```
 
-## Rolling-Window Estimation
+## Ước lượng cửa sổ trượt
 
-### Motivation for Rolling Windows
+### Động cơ của cửa sổ trượt
 
-Stock betas are not constant over time. A company's business mix, leverage, and operating environment evolve, causing its systematic risk exposure to change. To capture this time variation, we use rolling-window estimation: at each point in time, we estimate beta using only data from a fixed lookback period (e.g., the past 60 months).
+Beta của cổ phiếu không cố định theo thời gian. Cơ cấu kinh doanh, đòn bẩy và môi trường hoạt động của doanh nghiệp thay đổi, khiến mức độ phơi nhiễm rủi ro hệ thống của nó cũng thay đổi. Để nắm bắt sự biến thiên theo thời gian này, chúng ta dùng ước lượng cửa sổ trượt: tại mỗi thời điểm, chúng ta ước lượng beta chỉ bằng dữ liệu từ một giai đoạn nhìn lại cố định (ví dụ 60 tháng gần nhất).
 
-Rolling-window estimation involves a trade-off:
+Ước lượng cửa sổ trượt đòi hỏi một sự đánh đổi:
 
--   **Longer windows** provide more observations and thus more precise estimates, but may include stale information.
--   **Shorter windows** are more responsive to changes but produce noisier estimates.
+-   **Cửa sổ dài hơn** cho nhiều quan sát hơn và do đó ước lượng chính xác hơn, nhưng có thể chứa thông tin cũ.
+-   **Cửa sổ ngắn hơn** phản ứng nhanh hơn với các thay đổi nhưng cho ước lượng nhiễu hơn.
 
-A common choice in academic research is 60 months (5 years) of monthly data, requiring at least 48 valid observations for estimation.
+Một lựa chọn phổ biến trong nghiên cứu học thuật là 60 tháng (5 năm) dữ liệu tháng, đòi hỏi ít nhất 48 quan sát hợp lệ để ước lượng.
 
-### Rolling Window Implementation
+### Triển khai cửa sổ trượt
 
-The following function implements rolling-window CAPM estimation. For each month in the sample, it looks back over the specified window and estimates beta using all available data within that window.
+Hàm sau triển khai ước lượng CAPM theo cửa sổ trượt. Với mỗi tháng trong mẫu, hàm nhìn lại trong cửa sổ đã chỉ định và ước lượng beta bằng toàn bộ dữ liệu sẵn có trong cửa sổ đó.
 
 ```{python}
 def roll_capm_estimation(data, look_back=60, min_obs=48):
@@ -407,9 +407,9 @@ def roll_capm_estimation(data, look_back=60, min_obs=48):
         return pd.DataFrame()
 ```
 
-### Example: Rolling Betas for Selected Stocks
+### Ví dụ: beta trượt của một số cổ phiếu được chọn
 
-We demonstrate rolling-window estimation for several well-known Vietnamese stocks spanning different industries.
+Chúng ta minh họa ước lượng cửa sổ trượt cho một số cổ phiếu nổi tiếng của Việt Nam thuộc các ngành khác nhau.
 
 ```{python}
 # Define example stocks
@@ -460,16 +460,16 @@ beta_examples = (capm_examples
 print(f"Rolling beta estimates: {len(beta_examples):,} observations")
 ```
 
-### Visualizing Rolling Betas
+### Trực quan hóa beta trượt
 
-@fig-rolling-betas displays the time series of beta estimates for our example stocks. The figure reveals how systematic risk exposure evolves differently across industries.
+@fig-rolling-betas thể hiện chuỗi thời gian các ước lượng beta của các cổ phiếu ví dụ. Hình cho thấy mức độ phơi nhiễm rủi ro hệ thống biến đổi khác nhau như thế nào giữa các ngành.
 
 ```{python}
 #| label: fig-rolling-betas
 #| out-width: "90%"
 #| fig-align: "center"
-#| fig-cap: "Monthly rolling beta estimates for selected Vietnamese stocks using a 60-month estimation window. Different industries exhibit distinct patterns of market sensitivity over time."
-#| fig-alt: "Line chart showing time series of beta estimates for five Vietnamese stocks from different industries."
+#| fig-cap: "Ước lượng beta trượt theo tháng của một số cổ phiếu Việt Nam được chọn, dùng cửa sổ ước lượng 60 tháng. Các ngành khác nhau thể hiện những mô hình độ nhạy thị trường khác biệt theo thời gian."
+#| fig-alt: "Biểu đồ đường thể hiện chuỗi thời gian các ước lượng beta của năm cổ phiếu Việt Nam thuộc các ngành khác nhau."
 rolling_beta_figure = (
     ggplot(
         beta_examples,
@@ -490,23 +490,23 @@ rolling_beta_figure = (
 rolling_beta_figure.show()
 ```
 
-Several patterns emerge from the figure:
+Một số quy luật xuất hiện từ hình:
 
-1.  **Industry differences**: Technology and banking stocks may exhibit different beta patterns than real estate or consumer goods companies.
+1.  **Khác biệt giữa các ngành**: Cổ phiếu công nghệ và ngân hàng có thể thể hiện mô hình beta khác với doanh nghiệp bất động sản hay hàng tiêu dùng.
 
-2.  **Time variation**: Betas are not constant. They respond to changes in business conditions, leverage, and market regimes.
+2.  **Biến thiên theo thời gian**: Beta không cố định. Chúng phản ứng với những thay đổi của điều kiện kinh doanh, đòn bẩy và trạng thái thị trường.
 
-3.  **Crisis periods**: Market stress periods (e.g., 2008 financial crisis, 2020 COVID-19) often see beta estimates change as correlations across stocks increase.
+3.  **Giai đoạn khủng hoảng**: Các giai đoạn thị trường căng thẳng (ví dụ khủng hoảng tài chính 2008, COVID-19 năm 2020) thường làm các ước lượng beta thay đổi khi tương quan giữa các cổ phiếu tăng lên.
 
-## Parallelized Estimation for the Full Market
+## Ước lượng song song cho toàn thị trường
 
-### The Computational Challenge
+### Thách thức về tính toán
 
-Estimating rolling betas for all stocks in our database is computationally intensive. With hundreds of stocks, each requiring rolling estimation across many time periods, sequential processing would take considerable time. Fortunately, beta estimation for different stocks is independent (i.e., the estimate for stock A does not depend on the estimate for stock B). This independence makes the problem ideal for parallelization.
+Ước lượng beta trượt cho tất cả cổ phiếu trong cơ sở dữ liệu của chúng ta đòi hỏi nhiều tính toán. Với hàng trăm cổ phiếu, mỗi cổ phiếu cần ước lượng trượt qua nhiều kỳ, việc xử lý tuần tự sẽ mất khá nhiều thời gian. May mắn là việc ước lượng beta của các cổ phiếu khác nhau độc lập với nhau (tức là ước lượng của cổ phiếu A không phụ thuộc vào ước lượng của cổ phiếu B). Tính độc lập này khiến bài toán rất phù hợp để song song hóa.
 
-### Setting Up Parallel Processing
+### Thiết lập xử lý song song
 
-We use the `joblib` library to distribute computation across multiple CPU cores. The `Parallel` class manages worker processes, while `delayed` wraps function calls for deferred execution.
+Chúng ta dùng thư viện `joblib` để phân phối tính toán trên nhiều nhân CPU. Lớp `Parallel` quản lý các tiến trình làm việc, còn `delayed` bọc các lời gọi hàm để thực thi trì hoãn.
 
 ```{python}
 # Determine available cores (reserve one for system operations)
@@ -514,9 +514,9 @@ n_cores = max(1, cpu_count() - 1)
 print(f"Available cores for parallel processing: {n_cores}")
 ```
 
-### Parallel Beta Estimation
+### Ước lượng beta song song
 
-The following code estimates rolling betas for all stocks in parallel. Each stock is processed independently by a separate worker.
+Đoạn mã sau ước lượng beta trượt cho tất cả cổ phiếu một cách song song. Mỗi cổ phiếu được xử lý độc lập bởi một tiến trình làm việc riêng.
 
 ```{python}
 def estimate_all_betas_parallel(data, n_cores, look_back=60, min_obs=48):
@@ -578,9 +578,9 @@ print(f"\nCompleted: {len(capm_monthly):,} coefficient estimates")
 print(f"Unique stocks: {capm_monthly['symbol'].nunique():,}")
 ```
 
-### Storing Results
+### Lưu kết quả
 
-We save the CAPM estimates to our database for use in subsequent chapters.
+Chúng ta lưu các ước lượng CAPM vào cơ sở dữ liệu để dùng trong các chương sau.
 
 ```{python}
 #| eval: false
@@ -594,7 +594,7 @@ capm_monthly.to_sql(
 print("CAPM estimates saved to database.")
 ```
 
-For subsequent analysis, we load the pre-computed estimates:
+Cho các phân tích tiếp theo, chúng ta nạp các ước lượng đã được tính sẵn:
 
 ```{python}
 capm_monthly = pd.read_sql_query(
@@ -606,23 +606,23 @@ capm_monthly = pd.read_sql_query(
 print(f"Loaded {len(capm_monthly):,} CAPM estimates")
 ```
 
-## Beta Estimation Using Daily Returns
+## Ước lượng beta bằng lợi nhuận ngày
 
-While monthly returns are standard in academic research, some applications benefit from higher-frequency data:
+Mặc dù lợi nhuận tháng là chuẩn mực trong nghiên cứu học thuật, một số ứng dụng được lợi từ dữ liệu có tần suất cao hơn:
 
--   **Shorter estimation windows**: Daily data allows meaningful estimation over shorter periods (e.g., 3 months rather than 5 years).
--   **More responsive estimates**: Daily betas capture changes more quickly.
--   **Event studies**: High-frequency betas are useful for analyzing market reactions to specific events.
+-   **Cửa sổ ước lượng ngắn hơn**: Dữ liệu ngày cho phép ước lượng có ý nghĩa trong các giai đoạn ngắn hơn (ví dụ 3 tháng thay vì 5 năm).
+-   **Ước lượng phản ứng nhanh hơn**: Beta ngày nắm bắt các thay đổi nhanh hơn.
+-   **Nghiên cứu sự kiện**: Beta tần suất cao hữu ích để phân tích phản ứng của thị trường trước các sự kiện cụ thể.
 
-However, daily data introduces additional challenges:
+Tuy nhiên, dữ liệu ngày kéo theo những thách thức bổ sung:
 
--   **Microstructure noise**: Bid-ask bounce and other trading frictions add noise to returns.
--   **Non-synchronous trading**: Less liquid stocks may not trade every day, biasing beta estimates downward.
--   **Computational burden**: Daily data is roughly 21 times larger than monthly data.
+-   **Nhiễu vi cấu trúc**: Hiệu ứng nảy giá mua–bán và các ma sát giao dịch khác làm tăng nhiễu cho lợi nhuận.
+-   **Giao dịch không đồng bộ**: Các cổ phiếu kém thanh khoản có thể không giao dịch mỗi ngày, làm ước lượng beta bị thiên lệch xuống.
+-   **Gánh nặng tính toán**: Dữ liệu ngày lớn hơn dữ liệu tháng khoảng 21 lần.
 
-### Batch Processing for Daily Data
+### Xử lý theo lô cho dữ liệu ngày
 
-Given the size of daily data, we process stocks in batches to manage memory constraints. This approach loads and processes a subset of stocks, saves results, and proceeds to the next batch.
+Do quy mô lớn của dữ liệu ngày, chúng ta xử lý cổ phiếu theo từng lô để kiểm soát giới hạn bộ nhớ. Cách tiếp cận này nạp và xử lý một tập con các cổ phiếu, lưu kết quả, rồi chuyển sang lô tiếp theo.
 
 ```{python}
 def compute_market_return_daily(tidy_finance):
@@ -785,7 +785,7 @@ capm_daily.to_sql(
 print("CAPM estimates saved to database.")
 ```
 
-For subsequent analysis, we load the pre-computed estimates:
+Cho các phân tích tiếp theo, chúng ta nạp các ước lượng đã được tính sẵn:
 
 ```{python}
 capm_daily = pd.read_sql_query(
@@ -797,11 +797,11 @@ capm_daily = pd.read_sql_query(
 print(f"Loaded {len(capm_daily):,} CAPM estimates")
 ```
 
-## Analyzing Beta Estimates
+## Phân tích các ước lượng beta
 
-### Extracting Beta Estimates
+### Trích xuất các ước lượng beta
 
-We extract the beta coefficient estimates from our CAPM results for analysis.
+Chúng ta trích xuất các hệ số beta ước lượng từ kết quả CAPM để phân tích.
 
 ```{python}
 # Extract monthly betas
@@ -833,9 +833,9 @@ beta_monthly = pd.read_sql_query(
 )
 ```
 
-### Summary Statistics
+### Thống kê mô tả
 
-We examine the distribution of beta estimates to verify their reasonableness.
+Chúng ta xem xét phân phối của các ước lượng beta để kiểm tra tính hợp lý của chúng.
 
 ```{python}
 print("Beta Summary Statistics:")
@@ -846,9 +846,9 @@ print(f"\nStocks with negative average beta: {(beta_monthly.groupby('symbol')['b
 print(f"Stocks with beta > 2: {(beta_monthly.groupby('symbol')['beta'].mean() > 2).sum()}")
 ```
 
-### Beta Distribution Across Industries
+### Phân phối beta giữa các ngành
 
-Different industries have different exposures to systematic market risk based on their business models, operating leverage, and financial leverage. @fig-beta-by-industry shows the distribution of firm-level average betas across Vietnamese industries.
+Các ngành khác nhau có mức độ phơi nhiễm khác nhau trước rủi ro thị trường hệ thống, tùy theo mô hình kinh doanh, đòn bẩy hoạt động và đòn bẩy tài chính. @fig-beta-by-industry thể hiện phân phối beta trung bình của từng doanh nghiệp giữa các ngành ở Việt Nam.
 
 ```{python}
 # Merge betas with industry information
@@ -889,8 +889,8 @@ beta_by_industry_filtered = beta_by_industry.query("icb_name_vi in @top_industri
 
 ```{python}
 #| label: fig-beta-by-industry
-#| fig-cap: "Distribution of firm-level average betas across Vietnamese industries. Box plots show the median, interquartile range, and outliers for each industry."
-#| fig-alt: "Box plots showing beta distributions by industry, ordered by median beta."
+#| fig-cap: "Phân phối beta trung bình cấp doanh nghiệp giữa các ngành ở Việt Nam. Biểu đồ hộp thể hiện trung vị, khoảng tứ phân vị và các giá trị ngoại lai của từng ngành."
+#| fig-alt: "Biểu đồ hộp thể hiện phân phối beta theo ngành, sắp xếp theo beta trung vị."
 beta_industry_figure = (
     ggplot(
         beta_by_industry_filtered,
@@ -909,14 +909,14 @@ beta_industry_figure = (
 beta_industry_figure.show()
 ```
 
-### Time Variation in Cross-Sectional Beta Distribution
+### Biến thiên theo thời gian của phân phối beta theo chiều ngang
 
-Betas vary not only across stocks but also over time. @fig-beta-quantiles shows how the cross-sectional distribution of betas has evolved in the Vietnamese market.
+Beta không chỉ khác nhau giữa các cổ phiếu mà còn thay đổi theo thời gian. @fig-beta-quantiles cho thấy phân phối beta theo chiều ngang đã tiến triển như thế nào trên thị trường Việt Nam.
 
 ```{python}
 #| label: fig-beta-quantiles
-#| fig-cap: "Monthly quantiles of beta estimates over time. Each line represents a decile of the cross-sectional beta distribution."
-#| fig-alt: "Line chart showing time series of beta deciles, illustrating how the distribution of betas has changed over time."
+#| fig-cap: "Các phân vị theo tháng của ước lượng beta theo thời gian. Mỗi đường biểu diễn một thập phân vị của phân phối beta theo chiều ngang."
+#| fig-alt: "Biểu đồ đường thể hiện chuỗi thời gian các thập phân vị beta, minh họa phân phối beta đã thay đổi như thế nào theo thời gian."
 # Compute monthly quantiles
 beta_quantiles = (beta_monthly
     .groupby("date")["beta"]
@@ -945,22 +945,22 @@ beta_quantiles_figure = (
 beta_quantiles_figure.show()
 ```
 
-The figure reveals several interesting patterns:
+Hình cho thấy một số quy luật đáng chú ý:
 
-1.  **Level shifts**: The entire distribution of betas can shift over time, reflecting changes in market-wide correlation.
+1.  **Dịch chuyển mức**: Toàn bộ phân phối beta có thể dịch chuyển theo thời gian, phản ánh sự thay đổi của tương quan trên toàn thị trường.
 
-2.  **Dispersion changes**: During market stress, the spread between high and low beta stocks may change as correlations move.
+2.  **Thay đổi độ phân tán**: Trong giai đoạn thị trường căng thẳng, khoảng cách giữa các cổ phiếu beta cao và beta thấp có thể thay đổi khi các tương quan dịch chuyển.
 
-3.  **Trends**: Some periods show trending behavior in betas, possibly reflecting structural changes in the economy.
+3.  **Xu hướng**: Một số giai đoạn cho thấy hành vi có xu hướng của beta, có thể phản ánh những thay đổi cấu trúc trong nền kinh tế.
 
-### Coverage Analysis
+### Phân tích độ phủ
 
-We verify that our estimation procedure produces reasonable coverage across the sample. @fig-beta-coverage shows the fraction of stocks with available beta estimates over time.
+Chúng ta kiểm tra rằng quy trình ước lượng cho độ phủ hợp lý trên toàn mẫu. @fig-beta-coverage thể hiện tỷ lệ cổ phiếu có sẵn ước lượng beta theo thời gian.
 
 ```{python}
 #| label: fig-beta-coverage
-#| fig-cap: "Share of stocks with available beta estimates over time. Coverage increases as more stocks accumulate sufficient return history."
-#| fig-alt: "Line chart showing the percentage of stocks with beta estimates available each month."
+#| fig-cap: "Tỷ lệ cổ phiếu có sẵn ước lượng beta theo thời gian. Độ phủ tăng lên khi ngày càng nhiều cổ phiếu tích lũy đủ lịch sử lợi nhuận."
+#| fig-alt: "Biểu đồ đường thể hiện phần trăm cổ phiếu có sẵn ước lượng beta mỗi tháng."
 # Count stocks with and without betas
 coverage = (prices_monthly
     .groupby("date")["symbol"]
@@ -990,11 +990,11 @@ coverage_figure = (
 coverage_figure.show()
 ```
 
-Coverage is lower in early years because stocks need sufficient return history (at least 48 months) before their betas can be estimated. As the market matures and stocks accumulate longer histories, coverage approaches 100%.
+Độ phủ thấp hơn ở những năm đầu vì cổ phiếu cần có đủ lịch sử lợi nhuận (ít nhất 48 tháng) trước khi beta của chúng có thể được ước lượng. Khi thị trường trưởng thành và các cổ phiếu tích lũy lịch sử dài hơn, độ phủ tiến gần 100%.
 
-## Comparing Monthly and Daily Beta Estimates
+## So sánh ước lượng beta tháng và ngày
 
-When both monthly and daily beta estimates are available, we can compare them to understand how estimation frequency affects results.
+Khi cả ước lượng beta tháng và ngày đều sẵn có, chúng ta có thể so sánh chúng để hiểu tần suất ước lượng ảnh hưởng đến kết quả như thế nào.
 
 ```{python}
 # Combine monthly and daily estimates
@@ -1010,8 +1010,8 @@ beta_combined = pd.concat([beta_monthly, beta_daily], ignore_index=True)
 
 ```{python}
 #| label: fig-beta-comparison
-#| fig-cap: "Comparison of beta estimates using monthly versus daily returns for selected stocks. Daily estimates are smoother due to more observations per estimation window."
-#| fig-alt: "Line chart comparing monthly and daily beta estimates over time for example stocks."
+#| fig-cap: "So sánh ước lượng beta dùng lợi nhuận tháng với lợi nhuận ngày cho một số cổ phiếu được chọn. Ước lượng ngày mượt hơn do có nhiều quan sát hơn trong mỗi cửa sổ ước lượng."
+#| fig-alt: "Biểu đồ đường so sánh ước lượng beta tháng và ngày theo thời gian cho các cổ phiếu ví dụ."
 # Filter to example stocks
 beta_comparison = (beta_combined
     .merge(examples, on="symbol")
@@ -1039,7 +1039,7 @@ comparison_figure = (
 comparison_figure.show()
 ```
 
-The comparison reveals that daily-based estimates are generally smoother due to the larger number of observations in each window. However, the level and trend of estimates are similar across frequencies, providing validation that both approaches capture the same underlying systematic risk exposure.
+Phép so sánh cho thấy các ước lượng dựa trên dữ liệu ngày nhìn chung mượt hơn nhờ số quan sát trong mỗi cửa sổ lớn hơn. Tuy nhiên, mức và xu hướng của các ước lượng tương tự nhau giữa hai tần suất, qua đó xác nhận rằng cả hai cách tiếp cận đều nắm bắt cùng một mức phơi nhiễm rủi ro hệ thống nền tảng.
 
 ```{python}
 # Correlation between monthly and daily estimates
@@ -1051,31 +1051,31 @@ correlation_data = (beta_combined
 print(f"Correlation between monthly and daily betas: {correlation_data.corr().iloc[0,1]:.3f}")
 ```
 
-| Factor | Effect |
+| Yếu tố | Tác động |
 |------------------------------------|------------------------------------|
-| Non-synchronous trading | Daily betas can be biased downward for illiquid stocks |
-| Microstructure noise | Bid-ask bounce adds noise to daily estimates |
-| Different effective windows | Same calendar period but \~20x more observations for daily |
-| Mean reversion speed | Daily captures faster-moving risk dynamics |
+| Giao dịch không đồng bộ | Beta ngày có thể bị thiên lệch xuống đối với cổ phiếu kém thanh khoản |
+| Nhiễu vi cấu trúc | Hiệu ứng nảy giá mua–bán làm tăng nhiễu cho ước lượng ngày |
+| Cửa sổ hiệu dụng khác nhau | Cùng một giai đoạn lịch nhưng dữ liệu ngày có số quan sát nhiều hơn \~20 lần |
+| Tốc độ hồi quy về trung bình | Dữ liệu ngày nắm bắt các động thái rủi ro biến đổi nhanh hơn |
 
-: Theoretical Reasons for Imperfect Correlation {#tbl-imperfect-cor}
+: Các lý do lý thuyết dẫn đến tương quan không hoàn hảo {#tbl-imperfect-cor}
 
-@tbl-imperfect-cor shows several reasons why we might observe imperfect correlation.
+@tbl-imperfect-cor cho thấy một số lý do khiến chúng ta có thể quan sát thấy tương quan không hoàn hảo.
 
-## Key Takeaways
+## Những điểm chính
 
-1.  **CAPM beta** measures a stock's sensitivity to systematic market risk and is fundamental to modern portfolio theory, cost of capital estimation, and risk management.
+1.  **Beta CAPM** đo độ nhạy của một cổ phiếu trước rủi ro thị trường hệ thống và là nền tảng của lý thuyết danh mục đầu tư hiện đại, ước lượng chi phí vốn và quản trị rủi ro.
 
-2.  **Rolling-window estimation** captures time variation in betas, which reflects changes in companies' business models, leverage, and market conditions.
+2.  **Ước lượng cửa sổ trượt** nắm bắt sự biến thiên theo thời gian của beta, phản ánh những thay đổi trong mô hình kinh doanh, đòn bẩy của doanh nghiệp và điều kiện thị trường.
 
-3.  **Parallelization** dramatically reduces computation time for large-scale estimation tasks by distributing work across multiple CPU cores.
+3.  **Song song hóa** giảm đáng kể thời gian tính toán cho các tác vụ ước lượng quy mô lớn bằng cách phân chia công việc trên nhiều nhân CPU.
 
-4.  **Estimation choices matter**: Window length, return frequency, and minimum observation requirements all affect beta estimates. Researchers should choose parameters appropriate for their specific application.
+4.  **Các lựa chọn ước lượng đều quan trọng**: Độ dài cửa sổ, tần suất lợi nhuận và yêu cầu về số quan sát tối thiểu đều ảnh hưởng đến các ước lượng beta. Nhà nghiên cứu nên chọn các tham số phù hợp với ứng dụng cụ thể của mình.
 
-5.  **Industry patterns**: Vietnamese stocks show systematic differences in market sensitivity across industries, with cyclical sectors exhibiting higher betas than defensive sectors.
+5.  **Quy luật theo ngành**: Cổ phiếu Việt Nam cho thấy sự khác biệt có hệ thống về độ nhạy thị trường giữa các ngành, trong đó các ngành chu kỳ có beta cao hơn các ngành phòng thủ.
 
-6.  **Time variation**: The cross-sectional distribution of betas in Vietnam has evolved over time, with notable shifts during market stress periods.
+6.  **Biến thiên theo thời gian**: Phân phối beta theo chiều ngang ở Việt Nam đã tiến triển theo thời gian, với những dịch chuyển đáng chú ý trong các giai đoạn thị trường căng thẳng.
 
-7.  **Frequency comparison**: Monthly and daily beta estimates are positively correlated but not identical. Daily estimates are smoother while monthly estimates may better capture lower-frequency variation.
+7.  **So sánh tần suất**: Các ước lượng beta tháng và ngày có tương quan dương nhưng không giống hệt nhau. Ước lượng ngày mượt hơn trong khi ước lượng tháng có thể nắm bắt tốt hơn các biến thiên tần suất thấp.
 
-8.  **Data quality checks**: Coverage analysis and summary statistics help identify potential issues in estimation procedures before using results in downstream analyses.
+8.  **Kiểm tra chất lượng dữ liệu**: Phân tích độ phủ và thống kê mô tả giúp phát hiện các vấn đề tiềm ẩn trong quy trình ước lượng trước khi dùng kết quả cho các phân tích tiếp theo.

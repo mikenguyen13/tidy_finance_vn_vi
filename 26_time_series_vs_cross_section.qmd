@@ -1,70 +1,70 @@
-# Time-Series vs. Cross-Sectional Factor Tests
+# Kiểm định nhân tố theo chuỗi thời gian và theo mặt cắt ngang
 
 ::: callout-note
-In this chapter, we implement and compare the two dominant approaches to testing asset pricing models: time-series regressions (do factors explain individual stock or portfolio returns?) and cross-sectional regressions (do factor exposures explain expected returns?), and develop the diagnostic tools to understand when and why they disagree.
+Trong chương này, chúng ta triển khai và so sánh hai cách tiếp cận chủ đạo để kiểm định các mô hình định giá tài sản: hồi quy chuỗi thời gian (các nhân tố có giải thích được lợi nhuận của từng cổ phiếu hoặc danh mục không?) và hồi quy mặt cắt ngang (mức độ phơi nhiễm nhân tố có giải thích được lợi nhuận kỳ vọng không?), đồng thời xây dựng các công cụ chẩn đoán để hiểu khi nào và vì sao hai cách tiếp cận này bất đồng.
 :::
 
-Every factor model makes two distinct claims. The **time-series claim** is that a set of factors explains the common variation in individual stock returns (i.e., when the factors move, stocks move with them in proportion to their exposures). The **cross-sectional claim** is that differences in average returns across stocks are explained by differences in their factor exposures (i.e., stocks that load more heavily on a factor earn higher (or lower) average returns in proportion to the factor's risk premium).
+Mỗi mô hình nhân tố đưa ra hai khẳng định riêng biệt. **Khẳng định chuỗi thời gian** là một tập hợp các nhân tố giải thích biến động chung trong lợi nhuận của từng cổ phiếu (tức là khi các nhân tố dịch chuyển, cổ phiếu dịch chuyển theo tỷ lệ với mức độ phơi nhiễm của chúng). **Khẳng định mặt cắt ngang** là chênh lệch về lợi nhuận trung bình giữa các cổ phiếu được giải thích bởi chênh lệch về mức độ phơi nhiễm nhân tố (tức là cổ phiếu có hệ số tải lớn hơn trên một nhân tố sẽ có lợi nhuận trung bình cao hơn (hoặc thấp hơn) tương ứng với phần bù rủi ro của nhân tố đó).
 
-These claims are logically related but empirically distinct. A factor can explain time-series variation without explaining the cross-section (if the factor's risk premium is zero, exposure to it creates no return differential). Conversely, a characteristic can predict the cross-section of returns without operating through a traded factor (if the characteristic captures mispricing rather than risk).
+Hai khẳng định này có liên hệ logic với nhau nhưng khác biệt về mặt thực nghiệm. Một nhân tố có thể giải thích biến động chuỗi thời gian mà không giải thích mặt cắt ngang (nếu phần bù rủi ro của nhân tố bằng không, việc phơi nhiễm với nó không tạo ra chênh lệch lợi nhuận). Ngược lại, một đặc điểm có thể dự báo mặt cắt ngang của lợi nhuận mà không thông qua một nhân tố giao dịch được (nếu đặc điểm đó phản ánh định giá sai chứ không phải rủi ro).
 
-@fama2020comparing formalize this distinction and show that the two approaches can give materially different answers about which factors matter. @goyal2018cross go further and demonstrate that time-series and cross-sectional tests can disagree about the same model (e.g., a factor can have a significant time-series alpha in one test and an insignificant cross-sectional premium in the other, or vice versa). Understanding *why* they disagree is essential for interpreting asset pricing evidence.
+@fama2020comparing chính thức hóa sự phân biệt này và chỉ ra rằng hai cách tiếp cận có thể cho những câu trả lời khác nhau đáng kể về việc nhân tố nào quan trọng. @goyal2018cross đi xa hơn và chứng minh rằng kiểm định chuỗi thời gian và kiểm định mặt cắt ngang có thể bất đồng về cùng một mô hình (chẳng hạn, một nhân tố có thể có alpha chuỗi thời gian có ý nghĩa trong một kiểm định và phần bù mặt cắt ngang không có ý nghĩa trong kiểm định kia, hoặc ngược lại). Hiểu *vì sao* chúng bất đồng là điều thiết yếu để diễn giải bằng chứng định giá tài sản.
 
-This chapter equips the reader with both toolkits, applied to Vietnamese data, and develops the intuition for when each is appropriate.
+Chương này trang bị cho người đọc cả hai bộ công cụ, áp dụng vào dữ liệu Việt Nam, và xây dựng trực giác về việc khi nào nên dùng cách nào.
 
-## The Two Testing Frameworks {#sec-ts-cs-framework}
+## Hai khung kiểm định {#sec-ts-cs-framework}
 
-### Time-Series Regressions
+### Hồi quy chuỗi thời gian
 
-The time-series approach tests whether a factor model explains the returns of a set of test assets (typically portfolios). For each test asset $i$, estimate:
+Cách tiếp cận chuỗi thời gian kiểm định xem một mô hình nhân tố có giải thích được lợi nhuận của một tập tài sản kiểm định (thường là các danh mục) hay không. Với mỗi tài sản kiểm định $i$, ước lượng:
 
 $$
 R_{i,t} - R_{f,t} = \alpha_i + \beta_{i,1} f_{1,t} + \beta_{i,2} f_{2,t} + \ldots + \beta_{i,K} f_{K,t} + \varepsilon_{i,t}
 $$ {#eq-ts-regression}
 
-where $f_{k,t}$ are the $K$ factor returns. The intercept $\alpha_i$ measures the average return of asset $i$ that is *not* explained by the factors. Under the null that the model correctly prices asset $i$, $\alpha_i = 0$.
+trong đó $f_{k,t}$ là lợi nhuận của $K$ nhân tố. Hệ số chặn $\alpha_i$ đo lường lợi nhuận trung bình của tài sản $i$ mà các nhân tố *không* giải thích được. Dưới giả thuyết không rằng mô hình định giá đúng tài sản $i$, $\alpha_i = 0$.
 
-The joint test of $H_0: \alpha_1 = \alpha_2 = \ldots = \alpha_N = 0$ across all $N$ test assets is performed using the @gibbons1989test (GRS) test statistic:
+Kiểm định đồng thời $H_0: \alpha_1 = \alpha_2 = \ldots = \alpha_N = 0$ trên tất cả $N$ tài sản kiểm định được thực hiện bằng thống kê kiểm định @gibbons1989test (GRS):
 
 $$
 \text{GRS} = \frac{T - N - K}{N} \cdot \frac{1}{1 + \bar{f}' \hat{\Sigma}_f^{-1} \bar{f}} \cdot \hat{\alpha}' \hat{\Sigma}_\varepsilon^{-1} \hat{\alpha} \sim F(N, T - N - K)
 $$ {#eq-grs}
 
-where $\bar{f}$ is the vector of factor means, $\hat{\Sigma}_f$ is the factor covariance matrix, and $\hat{\Sigma}_\varepsilon$ is the residual covariance matrix. A large GRS statistic rejects the model.
+trong đó $\bar{f}$ là vectơ các trung bình nhân tố, $\hat{\Sigma}_f$ là ma trận hiệp phương sai của nhân tố, và $\hat{\Sigma}_\varepsilon$ là ma trận hiệp phương sai của phần dư. Thống kê GRS lớn sẽ bác bỏ mô hình.
 
-### Cross-Sectional Regressions (Fama-MacBeth)
+### Hồi quy mặt cắt ngang (Fama-MacBeth)
 
-The @fama1973risk cross-sectional approach tests whether factor exposures are priced (i.e., whether stocks with higher betas on a factor earn higher average returns). The procedure has two stages:
+Cách tiếp cận mặt cắt ngang của @fama1973risk kiểm định xem mức độ phơi nhiễm nhân tố có được định giá hay không (tức là cổ phiếu có beta cao hơn trên một nhân tố có lợi nhuận trung bình cao hơn hay không). Thủ tục gồm hai giai đoạn:
 
-**Stage 1 (Time-Series).** For each asset, estimate factor betas from a time-series regression over a rolling or full-sample window:
+**Giai đoạn 1 (chuỗi thời gian).** Với mỗi tài sản, ước lượng các beta nhân tố từ một hồi quy chuỗi thời gian trên cửa sổ trượt hoặc toàn mẫu:
 
 $$
 R_{i,t} - R_{f,t} = \alpha_i + \beta_{i,1} f_{1,t} + \ldots + \beta_{i,K} f_{K,t} + \varepsilon_{i,t}
 $$ {#eq-fm-stage1}
 
-**Stage 2 (Cross-Section).** Each month $t$, regress the cross-section of realized excess returns on the estimated betas:
+**Giai đoạn 2 (mặt cắt ngang).** Mỗi tháng $t$, hồi quy mặt cắt ngang của lợi nhuận vượt mức thực tế theo các beta đã ước lượng:
 
 $$
 R_{i,t} - R_{f,t} = \gamma_{0,t} + \gamma_{1,t} \hat{\beta}_{i,1} + \ldots + \gamma_{K,t} \hat{\beta}_{i,K} + \eta_{i,t}
 $$ {#eq-fm-stage2}
 
-The time-series averages $\bar{\gamma}_k = \frac{1}{T} \sum_t \gamma_{k,t}$ estimate the risk premia, and the standard errors use the time-series standard deviation of $\{\gamma_{k,t}\}$.
+Các trung bình theo thời gian $\bar{\gamma}_k = \frac{1}{T} \sum_t \gamma_{k,t}$ ước lượng các phần bù rủi ro, và các sai số chuẩn sử dụng độ lệch chuẩn theo thời gian của $\{\gamma_{k,t}\}$.
 
-### Key Differences
+### Những khác biệt chính
 
-| Dimension | Time-Series | Cross-Section |
+| Khía cạnh | Chuỗi thời gian | Mặt cắt ngang |
 |------------------------|------------------------|------------------------|
-| What it tests | Do factors explain return variation? | Do factor exposures explain average returns? |
-| Key statistic | Alpha (intercept) | Risk premium ($\gamma$) |
-| Joint test | GRS F-test | Chi-squared on $\gamma$'s |
-| Test assets | Portfolios (usually) | Individual stocks or portfolios |
-| Factors | Must be traded returns | Can be non-traded (macro, characteristics) |
-| Null hypothesis | $\alpha_i = 0$ for all $i$ | $\gamma_k$ equals factor mean return |
-| Errors-in-variables | Not an issue (factors observed) | Estimated betas create EIV bias |
+| Kiểm định điều gì | Các nhân tố có giải thích biến động lợi nhuận không? | Mức độ phơi nhiễm nhân tố có giải thích lợi nhuận trung bình không? |
+| Thống kê then chốt | Alpha (hệ số chặn) | Phần bù rủi ro ($\gamma$) |
+| Kiểm định đồng thời | Kiểm định F GRS | Chi bình phương trên các $\gamma$ |
+| Tài sản kiểm định | Danh mục (thường là vậy) | Cổ phiếu riêng lẻ hoặc danh mục |
+| Nhân tố | Phải là lợi nhuận giao dịch được | Có thể không giao dịch được (vĩ mô, đặc điểm) |
+| Giả thuyết không | $\alpha_i = 0$ với mọi $i$ | $\gamma_k$ bằng lợi nhuận trung bình của nhân tố |
+| Sai số trong biến độc lập (EIV) | Không phải vấn đề (nhân tố quan sát được) | Beta ước lượng gây ra thiên lệch EIV |
 
-: Comparison of time-series and cross-sectional testing frameworks. {#tbl-ts-cs-comparison}
+: So sánh các khung kiểm định chuỗi thời gian và mặt cắt ngang. {#tbl-ts-cs-comparison}
 
-## Data Construction {#sec-ts-cs-data}
+## Xây dựng dữ liệu {#sec-ts-cs-data}
 
 ```{python}
 #| label: setup
@@ -184,11 +184,11 @@ print(f"Industry test assets: {excess_10_ind.shape[1]} portfolios, "
       f"{excess_10_ind.shape[0]} months")
 ```
 
-## Time-Series Tests {#sec-ts-cs-ts-tests}
+## Các kiểm định chuỗi thời gian {#sec-ts-cs-ts-tests}
 
-### Full-Sample Time-Series Regressions
+### Hồi quy chuỗi thời gian toàn mẫu
 
-We begin by running full-sample time-series regressions of each test portfolio on the Fama-French five-factor model plus momentum:
+Chúng ta bắt đầu bằng việc chạy các hồi quy chuỗi thời gian toàn mẫu của từng danh mục kiểm định theo mô hình năm nhân tố Fama-French cộng động lượng:
 
 ```{python}
 #| label: ts-regressions
@@ -263,7 +263,7 @@ for model_name, factor_cols in models.items():
     print(f"  Mean R²: {mean_r2:.3f}")
 ```
 
-### The GRS Test
+### Kiểm định GRS
 
 ```{python}
 #| label: grs-test
@@ -359,7 +359,7 @@ for model_name, factor_cols in models.items():
 ```{python}
 #| label: fig-alpha-patterns
 #| eval: false
-#| fig-cap: "Time-series alphas from the Fama-French five-factor model for the 25 size-BM portfolios. Each cell represents a portfolio formed by independently sorting on size (rows, small to big) and book-to-market (columns, growth to value). Significant alphas (|t| > 2) are marked with asterisks. Systematic patterns in the alpha matrix reveal dimensions of expected returns that the model fails to capture."
+#| fig-cap: "Alpha chuỗi thời gian từ mô hình năm nhân tố Fama-French cho 25 danh mục quy mô-BM. Mỗi ô đại diện cho một danh mục được hình thành bằng cách sắp xếp độc lập theo quy mô (hàng, từ nhỏ đến lớn) và tỷ số giá trị sổ sách trên giá trị thị trường (cột, từ tăng trưởng đến giá trị). Các alpha có ý nghĩa (|t| > 2) được đánh dấu bằng dấu sao. Các mẫu hình có hệ thống trong ma trận alpha cho thấy những chiều của lợi nhuận kỳ vọng mà mô hình không nắm bắt được."
 #| code-summary: "Plot the alpha matrix for Size-BM portfolios"
 ff5_result = ts_results['FF5']
 
@@ -411,12 +411,12 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Model Comparison via GRS
+### So sánh mô hình qua GRS
 
 ```{python}
 #| label: fig-grs-comparison
 #| eval: false
-#| fig-cap: "GRS test statistics across models and test asset sets. Lower GRS values indicate better model performance (fewer unexplained pricing errors). The FF5+WML model generally produces the lowest GRS, but no model fully prices all test asset sets—consistent with the U.S. evidence that no existing model eliminates all alphas."
+#| fig-cap: "Thống kê kiểm định GRS giữa các mô hình và các tập tài sản kiểm định. Giá trị GRS thấp hơn cho thấy mô hình hoạt động tốt hơn (ít sai số định giá không giải thích được hơn). Mô hình FF5+WML nhìn chung cho GRS thấp nhất, nhưng không mô hình nào định giá đầy đủ mọi tập tài sản kiểm định, phù hợp với bằng chứng từ Mỹ rằng không mô hình hiện có nào loại bỏ được mọi alpha."
 #| code-summary: "Visualize GRS statistics across models and test assets"
 fig, ax = plt.subplots(figsize=(12, 5))
 
@@ -447,11 +447,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Cross-Sectional Tests {#sec-ts-cs-cs-tests}
+## Các kiểm định mặt cắt ngang {#sec-ts-cs-cs-tests}
 
-### Fama-MacBeth with Portfolio Test Assets
+### Fama-MacBeth với tài sản kiểm định là danh mục
 
-We implement the Fama-MacBeth two-pass procedure using the 25 size-BM portfolios as test assets:
+Chúng ta triển khai thủ tục hai bước Fama-MacBeth sử dụng 25 danh mục quy mô-BM làm tài sản kiểm định:
 
 ```{python}
 #| label: fama-macbeth-portfolios
@@ -633,9 +633,9 @@ for model_name, factor_cols in models.items():
             print(f"  Avg CS R²: {res.loc['avg_cs_r2', 'estimate']:.3f}")
 ```
 
-### The Shanken Correction
+### Hiệu chỉnh Shanken
 
-The @shanken1992estimation correction addresses the errors-in-variables (EIV) problem inherent in the two-pass procedure. Because betas are estimated with error in Stage 1, the Stage 2 standard errors are understated. The correction inflates the standard errors by a factor that depends on the estimated risk premia and the factor covariance matrix:
+Hiệu chỉnh @shanken1992estimation giải quyết vấn đề sai số trong biến độc lập (EIV) vốn có trong thủ tục hai bước. Vì các beta được ước lượng có sai số ở Giai đoạn 1, các sai số chuẩn ở Giai đoạn 2 bị ước lượng thấp hơn thực tế. Hiệu chỉnh này làm tăng các sai số chuẩn theo một hệ số phụ thuộc vào các phần bù rủi ro ước lượng và ma trận hiệp phương sai của nhân tố:
 
 $$
 \text{Var}(\hat{\gamma})_{\text{Shanken}} = \text{Var}(\hat{\gamma})_{\text{FM}} \times \left(1 + \hat{\gamma}' \hat{\Sigma}_f^{-1} \hat{\gamma}\right)
@@ -664,9 +664,9 @@ for model_name in models:
                   f"{t_sh:>12.2f} {ratio:>8.2f}")
 ```
 
-### Fama-MacBeth with Individual Stocks
+### Fama-MacBeth với cổ phiếu riêng lẻ
 
-Using individual stocks instead of portfolios as test assets avoids the @lewellen2010skeptical critique that sorted portfolios create artificially strong factor structure:
+Sử dụng cổ phiếu riêng lẻ thay vì danh mục làm tài sản kiểm định giúp tránh phê phán của @lewellen2010skeptical rằng các danh mục sắp xếp tạo ra cấu trúc nhân tố mạnh một cách nhân tạo:
 
 ```{python}
 #| label: fm-individual
@@ -770,19 +770,19 @@ fm_ind_results, fm_ind_gamma = fama_macbeth_individual(
 print(fm_ind_results.round(4).to_string())
 ```
 
-## When Do the Tests Disagree? {#sec-ts-cs-disagreement}
+## Khi nào các kiểm định bất đồng? {#sec-ts-cs-disagreement}
 
-### Theoretical Sources of Disagreement
+### Các nguồn bất đồng về mặt lý thuyết
 
-@goyal2018cross identify three sources of discrepancy between time-series and cross-sectional tests:
+@goyal2018cross xác định ba nguồn gây ra chênh lệch giữa kiểm định chuỗi thời gian và kiểm định mặt cắt ngang:
 
-**1. Factor structure of test assets.** If test assets have a strong factor structure (as sorted portfolios do by construction), the cross-sectional $R^2$ will be high regardless of whether the factors truly price the assets. @lewellen2010skeptical show that even random factors can achieve high cross-sectional $R^2$ when test assets are size-BM sorted portfolios, because such portfolios have a strong linear structure in the size-value space.
+**1. Cấu trúc nhân tố của tài sản kiểm định.** Nếu các tài sản kiểm định có cấu trúc nhân tố mạnh (như các danh mục sắp xếp vốn có do cách xây dựng), $R^2$ mặt cắt ngang sẽ cao bất kể các nhân tố có thực sự định giá tài sản hay không. @lewellen2010skeptical chỉ ra rằng ngay cả các nhân tố ngẫu nhiên cũng có thể đạt $R^2$ mặt cắt ngang cao khi tài sản kiểm định là các danh mục sắp xếp theo quy mô-BM, vì những danh mục này có cấu trúc tuyến tính mạnh trong không gian quy mô-giá trị.
 
-**2. Time-variation in betas.** The time-series regression assumes constant betas. If betas vary over time and co-move with the factor risk premium, the unconditional time-series alpha can be nonzero even if the conditional model holds [@jagannathan1996conditional].
+**2. Biến động theo thời gian của beta.** Hồi quy chuỗi thời gian giả định beta không đổi. Nếu beta thay đổi theo thời gian và đồng biến động với phần bù rủi ro của nhân tố, alpha chuỗi thời gian vô điều kiện có thể khác không ngay cả khi mô hình có điều kiện đúng [@jagannathan1996conditional].
 
-**3. Misspecified risk premia.** The Fama-MacBeth cross-sectional regression estimates the risk premium from the data. The time-series regression implicitly sets the risk premium equal to the factor's sample mean return. When these differ (e.g., because the factor is not a perfect proxy for the underlying risk), the two approaches disagree.
+**3. Phần bù rủi ro bị đặc tả sai.** Hồi quy mặt cắt ngang Fama-MacBeth ước lượng phần bù rủi ro từ dữ liệu. Hồi quy chuỗi thời gian ngầm đặt phần bù rủi ro bằng lợi nhuận trung bình mẫu của nhân tố. Khi hai giá trị này khác nhau (chẳng hạn vì nhân tố không phải là đại diện hoàn hảo cho rủi ro nền tảng), hai cách tiếp cận sẽ bất đồng.
 
-### Empirical Comparison for Vietnam
+### So sánh thực nghiệm cho Việt Nam
 
 ```{python}
 #| label: ts-vs-cs
@@ -814,7 +814,7 @@ if fm_full:
 ```{python}
 #| label: fig-ts-vs-cs
 #| eval: false
-#| fig-cap: "Comparison of time-series alphas and cross-sectional pricing errors for the 25 size-BM portfolios under the FF5 model. Panel A plots the two measures against each other; perfect agreement would place all points on the 45-degree line. Panel B shows actual vs predicted average returns from the Fama-MacBeth second pass. Systematic deviations reveal where the two approaches disagree about model adequacy."
+#| fig-cap: "So sánh alpha chuỗi thời gian và sai số định giá mặt cắt ngang cho 25 danh mục quy mô-BM theo mô hình FF5. Panel A vẽ hai thước đo này theo nhau; sự đồng thuận hoàn hảo sẽ đặt mọi điểm trên đường 45 độ. Panel B hiển thị lợi nhuận trung bình thực tế so với dự đoán từ bước hai của Fama-MacBeth. Các độ lệch có hệ thống cho thấy hai cách tiếp cận bất đồng ở đâu về mức độ phù hợp của mô hình."
 #| code-summary: "Scatter plot comparing TS alphas and CS pricing errors"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -856,13 +856,13 @@ plt.tight_layout()
 plt.show()
 ```
 
-### The Lewellen-Nagel-Shanken Critique
+### Phê phán Lewellen-Nagel-Shanken
 
-@lewellen2010skeptical demonstrate that the high cross-sectional $R^2$ from Fama-MacBeth regressions on sorted portfolios can be misleading. Sorted portfolios have a strong factor structure by construction, so even irrelevant factors can produce high $R^2$. They recommend:
+@lewellen2010skeptical chứng minh rằng $R^2$ mặt cắt ngang cao từ các hồi quy Fama-MacBeth trên các danh mục sắp xếp có thể gây hiểu lầm. Các danh mục sắp xếp có cấu trúc nhân tố mạnh theo cách xây dựng, nên ngay cả các nhân tố không liên quan cũng có thể tạo ra $R^2$ cao. Họ khuyến nghị:
 
-1.  Including industry portfolios alongside sorted portfolios to break the mechanical factor structure.
-2.  Constraining the estimated risk premia to equal the factor mean returns (this is what the time-series test implicitly does).
-3.  Reporting the cross-sectional $R^2$ from the *constrained* model alongside the unconstrained estimate.
+1.  Đưa các danh mục ngành vào cùng với các danh mục sắp xếp để phá vỡ cấu trúc nhân tố cơ học.
+2.  Ràng buộc các phần bù rủi ro ước lượng bằng lợi nhuận trung bình của nhân tố (đây là điều mà kiểm định chuỗi thời gian ngầm thực hiện).
+3.  Báo cáo $R^2$ mặt cắt ngang từ mô hình *có ràng buộc* cùng với ước lượng không ràng buộc.
 
 ```{python}
 #| label: lns-critique
@@ -929,7 +929,7 @@ for model_name, factor_cols in models.items():
 ```{python}
 #| label: fig-lns
 #| eval: false
-#| fig-cap: "Lewellen-Nagel-Shanken diagnostic for the FF5 model. Panel A shows the unconstrained cross-sectional fit (estimated risk premia), where high R² may be spurious. Panel B shows the constrained fit (premia set to factor means). A large drop in R² from unconstrained to constrained indicates that the model's apparent success relies on implausible risk premia, and the factors are not truly pricing the test assets."
+#| fig-cap: "Chẩn đoán Lewellen-Nagel-Shanken cho mô hình FF5. Panel A hiển thị mức độ khớp mặt cắt ngang không ràng buộc (các phần bù rủi ro ước lượng), trong đó R² cao có thể là giả tạo. Panel B hiển thị mức độ khớp có ràng buộc (phần bù đặt bằng trung bình nhân tố). Sự sụt giảm lớn của R² từ không ràng buộc sang có ràng buộc cho thấy thành công bề ngoài của mô hình dựa trên các phần bù rủi ro phi thực tế, và các nhân tố không thực sự định giá các tài sản kiểm định."
 #| code-summary: "Visualize constrained vs unconstrained cross-sectional fit"
 diag_ff5 = lns_diagnostic(excess_25_bm, factors,
                             ['mkt_excess', 'smb', 'hml', 'rmw', 'cma'])
@@ -981,29 +981,29 @@ plt.tight_layout()
 plt.show()
 ```
 
-## GMM-Based Tests {#sec-ts-cs-gmm}
+## Các kiểm định dựa trên GMM {#sec-ts-cs-gmm}
 
-### The Stochastic Discount Factor Framework
+### Khung nhân tố chiết khấu ngẫu nhiên
 
-Both time-series and cross-sectional tests are special cases of the @hansen1982large Generalized Method of Moments (GMM) framework. The fundamental pricing equation is:
+Cả kiểm định chuỗi thời gian lẫn kiểm định mặt cắt ngang đều là các trường hợp đặc biệt của khung Phương pháp Moment Tổng quát (GMM) của @hansen1982large. Phương trình định giá cơ bản là:
 
 $$
 E[M_t R_{i,t}^e] = 0 \quad \text{for all } i
 $$ {#eq-sdf}
 
-where $M_t$ is the stochastic discount factor (SDF) and $R_{i,t}^e$ is the excess return of asset $i$. A linear factor model parameterizes the SDF as:
+trong đó $M_t$ là nhân tố chiết khấu ngẫu nhiên (SDF) và $R_{i,t}^e$ là lợi nhuận vượt mức của tài sản $i$. Một mô hình nhân tố tuyến tính tham số hóa SDF như sau:
 
 $$
 M_t = 1 - b' (f_t - \mu_f)
 $$ {#eq-linear-sdf}
 
-where $b$ is the vector of SDF loadings and $f_t$ are the factors. The GMM approach estimates $b$ by minimizing the quadratic form of the pricing errors:
+trong đó $b$ là vectơ các hệ số tải SDF và $f_t$ là các nhân tố. Phương pháp GMM ước lượng $b$ bằng cách cực tiểu hóa dạng toàn phương của các sai số định giá:
 
 $$
 \hat{b} = \arg\min_b \ g(b)' W \ g(b)
 $$ {#eq-gmm-objective}
 
-where $g(b) = \frac{1}{T} \sum_t M_t(b) R_t^e$ is the sample analog of the moment conditions.
+trong đó $g(b) = \frac{1}{T} \sum_t M_t(b) R_t^e$ là đại lượng mẫu tương ứng của các điều kiện moment.
 
 ```{python}
 #| label: gmm-sdf
@@ -1114,11 +1114,11 @@ for model_name, factor_cols in models.items():
                   f"(factor mean: {factors[f].mean()*12:.4f})")
 ```
 
-## Model Comparison {#sec-ts-cs-model-comparison}
+## So sánh mô hình {#sec-ts-cs-model-comparison}
 
-### The Barillas-Shanken Framework
+### Khung Barillas-Shanken
 
-@barillas2018comparing propose a Bayesian framework for comparing non-nested factor models. The key insight is that model comparison should be based on the factors' ability to explain each other's returns, not on their ability to price a fixed set of test assets. Two models differ only in their excluded factors, so the relevant comparison is whether the factors unique to each model have alpha with respect to the other model.
+@barillas2018comparing đề xuất một khung Bayes để so sánh các mô hình nhân tố không lồng nhau. Điểm mấu chốt là việc so sánh mô hình nên dựa trên khả năng của các nhân tố trong việc giải thích lợi nhuận của nhau, chứ không phải khả năng định giá một tập tài sản kiểm định cố định. Hai mô hình chỉ khác nhau ở các nhân tố bị loại trừ, nên phép so sánh thích hợp là liệu các nhân tố riêng của mỗi mô hình có alpha đối với mô hình kia hay không.
 
 ```{python}
 #| label: barillas-shanken
@@ -1197,12 +1197,12 @@ bs_3wv5w = barillas_shanken_compare(
 print(bs_3wv5w.round(4).to_string())
 ```
 
-### Comprehensive Model Scorecard
+### Bảng điểm mô hình toàn diện
 
 ```{python}
 #| label: fig-scorecard
 #| eval: false
-#| fig-cap: "Comprehensive model comparison scorecard across all test statistics and test asset sets. Each cell reports the value of the diagnostic; color intensity reflects performance (green = better, red = worse). The scorecard integrates time-series (GRS, mean |α|, mean R²), cross-sectional (CS R², constrained CS R²), and GMM (J-stat, HJ distance) evidence."
+#| fig-cap: "Bảng điểm so sánh mô hình toàn diện trên mọi thống kê kiểm định và các tập tài sản kiểm định. Mỗi ô báo cáo giá trị của chỉ số chẩn đoán; cường độ màu phản ánh hiệu quả (xanh lá = tốt hơn, đỏ = kém hơn). Bảng điểm tích hợp bằng chứng chuỗi thời gian (GRS, |α| trung bình, R² trung bình), mặt cắt ngang (R² mặt cắt ngang, R² mặt cắt ngang có ràng buộc) và GMM (thống kê J, khoảng cách HJ)."
 #| code-summary: "Build comprehensive model comparison table"
 scorecard = {}
 
@@ -1242,11 +1242,238 @@ print("Model Scorecard:")
 print(scorecard_df.round(3).to_string())
 ```
 
-## Conditional vs. Unconditional Tests {#sec-ts-cs-conditional}
+## Lựa chọn mô hình nhân tố theo từng bước {#sec-ts-cs-stepwise}
 
-### Time-Varying Betas
+Khung Barillas-Shanken so sánh hai mô hình mỗi lần. Nhưng vườn thú nhân tố (@sec-factor-zoo-scale) cung cấp hàng chục nhân tố ứng viên, và câu hỏi thực tế không phải là "mô hình A có tốt hơn mô hình B không?" mà là "tập con nào trong tất cả các nhân tố có sẵn tạo thành mô hình tốt nhất?" @feng2026selecting trả lời câu hỏi này bằng một thủ tục **lựa chọn theo từng bước** (stepwise selection), xây dựng mô hình nhân tố tuần tự, thêm và loại bỏ các nhân tố dựa trên các kiểm định định giá tài sản, và kiểm định mô hình kết quả đối với cả các tài sản kiểm định lẫn các nhân tố bị bỏ ra ngoài. Áp dụng vào dữ liệu Mỹ, thủ tục của họ bác bỏ các mô hình quen thuộc (CAPM, các mô hình ba và năm nhân tố Fama-French) và chọn ra một mô hình tám nhân tố vượt qua các kiểm định định giá và hoạt động vững ngoài mẫu. Mục này phát triển phương pháp từ các nguyên lý cơ bản và cung cấp một cách triển khai hoàn chỉnh, có thể chạy được.
 
-Unconditional tests assume constant betas. In practice, Vietnamese stock betas vary substantially over time due to changing market conditions, foreign ownership shifts, and sectoral rotations. We estimate rolling betas to assess the degree of time-variation:
+Cần nêu rõ mạch phát triển tri thức. @feng2020taming ("Taming the Factor Zoo") dùng LASSO chọn kép (double-selection) để kiểm định xem một nhân tố *mới* có mang lại phần bù rủi ro hay không sau khi kiểm soát một tập nhân tố hiện có nhiều chiều. @feng2026selecting thay vào đó chọn chính *mô hình*, và quy tắc dừng của họ dựa trên nhận xét, được @barillas2018comparing chính thức hóa, rằng việc so sánh các mô hình nhân tố quy về so sánh các tỷ số Sharpe bình phương tối đa mà các nhân tố của chúng đạt được.
+
+### Tính đối ngẫu giữa tỷ số Sharpe bình phương và phép hồi quy bao phủ (spanning) {#sec-ts-cs-stepwise-duality}
+
+Cốt lõi của phương pháp là tính đối ngẫu giữa hiệu quả trung bình-phương sai và các hồi quy bao phủ (spanning) của mục trước. Với một tập nhân tố $F$ có vectơ trung bình $\boldsymbol{\mu}_F$ và hiệp phương sai $\boldsymbol{\Sigma}_F$, **tỷ số Sharpe bình phương tối đa** có thể đạt được từ các nhân tố đó là
+
+$$
+\text{Sh}^2(F) = \boldsymbol{\mu}_F' \boldsymbol{\Sigma}_F^{-1} \boldsymbol{\mu}_F .
+$$ {#eq-max-sharpe-sq}
+
+@barillas2018comparing chỉ ra rằng mức tăng của tỷ số Sharpe bình phương tối đa khi thêm một nhân tố ứng viên $g$ vào mô hình $F$ có dạng đóng đơn giản theo hồi quy bao phủ $g_t = \alpha_g + \boldsymbol{\beta}' F_t + \varepsilon_t$:
+
+$$
+\text{Sh}^2(F \cup \{g\}) - \text{Sh}^2(F) = \frac{\alpha_g^2}{\sigma^2(\varepsilon_g)} .
+$$ {#eq-sharpe-increment}
+
+Phương trình này chính là toàn bộ phương pháp ở dạng thu nhỏ. Vế trái là điều chúng ta muốn cực đại hóa (một mô hình bao phủ được nhiều phần hơn của đường biên hiệu quả sẽ định giá được nhiều tài sản hơn). Vế phải cho biết việc cực đại hóa nó tương đương với việc tìm nhân tố ứng viên có tỷ số lớn nhất giữa alpha bao phủ bình phương và phương sai phần dư, và một nhân tố *không đóng góp gì* cho đường biên khi và chỉ khi alpha bao phủ của nó bằng không. Do đó, kiểm định $\alpha_g = 0$ (phiên bản một phương trình của kiểm định GRS ở @sec-ts-cs-ts-tests) vừa là **tiêu chí lựa chọn** (thêm nhân tố có alpha có ý nghĩa nhất, tức mức tăng lớn nhất) vừa là **quy tắc dừng** (dừng khi không còn ứng viên nào chưa chọn có alpha khác không, tức là khi mô hình đã bao phủ tất cả chúng).
+
+Đây chính xác là logic của phép so sánh Barillas-Shanken ở @sec-ts-cs-model-comparison, được nâng từ một kiểm định theo cặp thành một cuộc tìm kiếm trên mọi nhân tố ứng viên.
+
+### Triển khai thuật toán từng bước {#sec-ts-cs-stepwise-algo}
+
+Trước hết chúng ta định nghĩa ba hàm trợ giúp độc lập: tỷ số Sharpe bình phương tối đa của @eq-max-sharpe-sq, kiểm định alpha bao phủ điều khiển việc lựa chọn (trả về mức tăng mẫu $\hat\alpha^2 / \widehat{\sigma}^2(\varepsilon)$ của @eq-sharpe-increment), và kiểm định GRS dùng để đánh giá mô hình cuối cùng.
+
+```{python}
+#| label: stepwise-helpers
+#| code-summary: "Squared Sharpe ratio, spanning-alpha test, and GRS test"
+def squared_sharpe(R):
+    """Maximum squared Sharpe ratio of a set of excess-return columns."""
+    mu = R.mean(axis=0).values
+    Sigma = np.cov(R.values, rowvar=False, ddof=1)
+    if R.shape[1] == 1:
+        return float(mu[0] ** 2 / Sigma)
+    return float(mu @ np.linalg.inv(Sigma) @ mu)
+
+
+def spanning_alpha(g, F, maxlags=6):
+    """Regress candidate factor g on model factors F; HAC alpha test.
+    The sample SR^2 increment from adding g equals alpha^2 / var(residual)."""
+    common = g.dropna().index.intersection(F.dropna().index)
+    res = sm.OLS(g.loc[common], sm.add_constant(F.loc[common])).fit(
+        cov_type='HAC', cov_kwds={'maxlags': maxlags})
+    alpha = res.params['const']
+    return {'alpha': alpha, 't': res.tvalues['const'], 'p': res.pvalues['const'],
+            'sr2_increment': alpha ** 2 / res.resid.var(ddof=1)}
+
+
+def grs_test(excess_assets, factor_df, factor_cols):
+    """Gibbons-Ross-Shanken (1989) test that all alphas are jointly zero."""
+    common = excess_assets.dropna().index.intersection(factor_df.dropna().index)
+    Y = excess_assets.loc[common].values
+    F = factor_df.loc[common, factor_cols].values
+    T, N = Y.shape
+    K = F.shape[1]
+    Fc = np.column_stack([np.ones(T), F])
+    B = np.linalg.inv(Fc.T @ Fc) @ Fc.T @ Y
+    alpha, resid = B[0, :], Y - Fc @ B
+    Sig_e = resid.T @ resid / (T - K - 1)
+    fbar, Sig_f = F.mean(0), np.cov(F, rowvar=False, ddof=1)
+    sh2_a = alpha @ np.linalg.inv(Sig_e) @ alpha
+    sh2_f = (fbar @ np.linalg.inv(np.atleast_2d(Sig_f)) @ fbar
+             if K > 1 else fbar[0] ** 2 / Sig_f)
+    grs = ((T - N - K) / N) * (1 / (1 + sh2_f)) * sh2_a
+    return {'GRS': grs, 'p_value': 1 - stats.f.cdf(grs, N, T - N - K),
+            'mean_abs_alpha': np.abs(alpha).mean()}
+```
+
+Hàm lựa chọn triển khai các lượt tiến và lùi. Lượt **tiến** xếp hạng mọi ứng viên chưa chọn theo mức tăng Sharpe bình phương của chúng và thêm ứng viên dẫn đầu nếu alpha bao phủ của nó có ý nghĩa; lượt **lùi** loại bỏ bất kỳ nhân tố đã chọn trước đó mà nay trở nên dư thừa khi có các nhân tố khác (alpha của nó trên mô hình còn lại không còn có ý nghĩa). Vòng lặp dừng khi không còn ứng viên nào chưa được bao phủ, khi đó các nhân tố được chọn bao phủ đường biên hiệu quả chung của chính chúng và mọi ứng viên bị loại.
+
+```{python}
+#| label: stepwise-select
+#| code-summary: "Forward/backward stepwise model selection"
+def stepwise_select(factors, candidate_cols, baseline_cols, test_assets=None,
+                    add_threshold=0.05, verbose=True):
+    """Forward/backward stepwise asset-pricing-model selection (Feng et al. 2026).
+
+    Forward: add the unselected candidate with the largest SR^2 increment
+             (equivalently, the most significant spanning alpha) while some
+             candidate remains unspanned by the current model.
+    Backward: drop any selected non-baseline factor that has become redundant.
+    """
+    selected = list(baseline_cols)
+    remaining = [c for c in candidate_cols if c not in selected]
+    history = [{'action': 'baseline', 'model': list(selected),
+                'sharpe_ann': np.sqrt(squared_sharpe(factors[selected]) * 12)}]
+    while remaining:
+        scored = sorted(
+            ((g, spanning_alpha(factors[g], factors[selected])) for g in remaining),
+            key=lambda kv: kv[1]['sr2_increment'], reverse=True)
+        g, s = scored[0]
+        if s['p'] > add_threshold:
+            break                      # no unspanned candidate -> frontier spanned
+        selected.append(g); remaining.remove(g)
+        sr2 = squared_sharpe(factors[selected])
+        history.append({'action': f'+{g}', 'model': list(selected),
+                        'sharpe_ann': np.sqrt(sr2 * 12), 't_alpha': s['t']})
+        if verbose:
+            print(f"  + {g:>4}  t(alpha)={s['t']:5.2f}  SR2_incr={s['sr2_increment']:.4f}"
+                  f"  -> model SR2={sr2:.3f}  Sharpe(ann)={np.sqrt(sr2*12):.2f}")
+        for f in [x for x in selected if x not in baseline_cols and x != g]:
+            s2 = spanning_alpha(factors[f], factors[[x for x in selected if x != f]])
+            if s2['p'] > add_threshold:
+                selected.remove(f); remaining.append(f)
+                if verbose:
+                    print(f"  - {f:>4}  dropped (now spanned, alpha p={s2['p']:.3f})")
+    diag = {'selected': selected, 'history': history,
+            'sharpe_ann': np.sqrt(squared_sharpe(factors[selected]) * 12)}
+    if test_assets is not None:
+        diag['grs'] = grs_test(test_assets, factors, selected)
+    diag['unselected'] = {g: spanning_alpha(factors[g], factors[selected])
+                          for g in candidate_cols if g not in selected}
+    return diag
+```
+
+Một lưu ý về quy tắc dừng. Với một số ít ứng viên, ngưỡng ý nghĩa cho từng nhân tố đối với alpha bao phủ là đủ. Khi tập ứng viên lớn, các kiểm định riêng lẻ gặp phải vấn đề kiểm định đa giả thuyết của @sec-factor-zoo-multiple-testing, và @feng2026selecting thay vào đó dừng theo **kiểm định alpha nhiều chiều** của @pesaran2024testing, được thiết kế để kiểm định giả thuyết đồng thời tất cả alpha bằng không khi số tài sản kiểm định lớn so với mẫu. Trong phần triển khai ở trên, việc siết chặt `add_threshold` (chẳng hạn xuống mức Bonferroni $0.05 / \#\text{candidates}$) là một cách thay thế đơn giản và thận trọng.
+
+### Tái lập: khôi phục một mô hình đã biết {#sec-ts-cs-stepwise-sim}
+
+Trước khi tin tưởng thủ tục trên dữ liệu thực, chúng ta kiểm chứng nó trên dữ liệu mô phỏng, nơi câu trả lời đúng đã biết theo cách xây dựng. Chúng ta tạo ra một thế giới bốn nhân tố thực sự, gồm một nhân tố thị trường cộng ba nhân tố được định giá, gần trực giao với nhau, có tỷ số Sharpe ở mức thực tế của các hiện tượng bất thường, và làm nhiễu tập ứng viên bằng hai nhân tố **dư thừa** (các tổ hợp tuyến tính của các nhân tố thực cộng nhiễu, nên có lợi nhuận trung bình dương nhưng alpha bằng không một khi đã đưa các nhân tố gốc vào) và một nhân tố **mồi nhử** hoàn toàn không có phần bù rủi ro. Hai mươi danh mục kiểm định được định giá bởi bốn nhân tố thực với alpha bằng không.
+
+```{python}
+#| label: stepwise-simulate
+#| code-summary: "Simulate a known four-factor world with redundant and decoy candidates"
+rng = np.random.default_rng(2026)
+T = 480
+idx = pd.date_range('1986-01-31', periods=T, freq='ME')
+mkt = rng.normal(0.006, 0.043, T)
+f2 = rng.normal(0.0050, 0.020, T)   # value-like
+f3 = rng.normal(0.0045, 0.018, T)   # profitability-like
+f4 = rng.normal(0.0050, 0.021, T)   # momentum-like
+r1 = 0.8 * f2 + rng.normal(0, 0.012, T)              # redundant shadow of f2
+r2 = 0.5 * f3 + 0.5 * f4 + rng.normal(0, 0.012, T)   # redundant combo of f3, f4
+d1 = rng.normal(0.0002, 0.025, T)                    # zero-Sharpe decoy
+sim_factors = pd.DataFrame(
+    {'mkt': mkt, 'f2': f2, 'f3': f3, 'f4': f4,
+     'r1': r1, 'r2': r2, 'd1': d1}, index=idx)
+
+N = 20
+loadings = rng.uniform(-0.6, 1.4, size=(N, 4))
+sim_test = pd.DataFrame(
+    np.column_stack([mkt, f2, f3, f4]) @ loadings.T + rng.normal(0, 0.015, (T, N)),
+    index=idx, columns=[f'P{i:02d}' for i in range(N)])
+
+candidates = ['f2', 'f3', 'f4', 'r1', 'r2', 'd1']
+
+print("GRS on the 20 test assets (workhorse baselines):")
+for name, cols in [('CAPM', ['mkt']),
+                   ('true 4-factor', ['mkt', 'f2', 'f3', 'f4']),
+                   ('all-7 kitchen sink', ['mkt'] + candidates)]:
+    g = grs_test(sim_test, sim_factors, cols)
+    verdict = 'REJECTED' if g['p_value'] < 0.05 else 'not rejected'
+    print(f"  {name:<20} GRS={g['GRS']:.2f}  p={g['p_value']:.3f}  ->  {verdict}")
+```
+
+CAPM bị bác bỏ dứt khoát trên các tài sản kiểm định này, trong khi mô hình bốn nhân tố thực (và mô hình "bỏ tất cả vào" dư thừa bao hàm nó) thì không, đúng mẫu hình mà @feng2026selecting ghi nhận đối với các mô hình quen thuộc trên dữ liệu Mỹ thực. Bây giờ chúng ta để thuật toán tự khám phá mô hình, bắt đầu từ CAPM:
+
+```{python}
+#| label: stepwise-run
+#| code-summary: "Run stepwise selection and test the result"
+diag = stepwise_select(sim_factors, candidates, ['mkt'], sim_test)
+
+print(f"\nSelected model : {diag['selected']}")
+print(f"Final Sharpe   : {diag['sharpe_ann']:.2f} (annualized)")
+print(f"GRS on assets  : {diag['grs']['GRS']:.2f}  p={diag['grs']['p_value']:.3f}")
+print("Unselected candidates' spanning alphas (should be insignificant):")
+for k, v in diag['unselected'].items():
+    print(f"   {k:>3}: alpha_ann={v['alpha']*12:+.4f}  t={v['t']:+.2f}  p={v['p']:.3f}")
+```
+
+Thủ tục khôi phục chính xác mô hình thực `['mkt', 'f2', 'f3', 'f4']`: nó thêm ba nhân tố được định giá theo thứ tự mức tăng Sharpe bình phương của chúng (mỗi nhân tố có thống kê $t$ bao phủ lớn và có ý nghĩa) rồi dừng, vì mọi ứng viên còn lại giờ đều đã được bao phủ. Hai nhân tố dư thừa và nhân tố mồi nhử bị loại ra, và các alpha bao phủ sau lựa chọn của chúng nhỏ và không có ý nghĩa, tức là mô hình định giá được chúng, đây là tính chất mà @feng2026selecting đòi hỏi ở một mô hình hợp lệ. Kiểm định GRS cuối cùng trên các tài sản kiểm định không bị bác bỏ một cách rõ ràng.
+
+Nội dung kinh tế của việc lựa chọn là sự mở rộng của đường biên hiệu quả, mà chúng ta vẽ dưới dạng tỷ số Sharpe hằng năm của mô hình được chọn ở mỗi bước.
+
+```{python}
+#| label: fig-stepwise-frontier
+#| fig-cap: "Mở rộng đường biên hiệu quả theo lựa chọn từng bước. Mỗi điểm là tỷ số Sharpe hằng năm tối đa có thể đạt được từ mô hình sau bước đó; nhãn đánh dấu nhân tố được thêm vào. Đường cong phẳng dần vì các nhân tố được thêm vào bao phủ ngày càng ít đường biên phần dư, và việc lựa chọn dừng khi không ứng viên nào cải thiện nó một cách có ý nghĩa."
+#| code-summary: "Plot the frontier expansion across stepwise iterations"
+hist = pd.DataFrame(diag['history'])
+fig, ax = plt.subplots(figsize=(9, 5))
+ax.plot(range(len(hist)), hist['sharpe_ann'], 'o-', lw=2, color='#2C5282')
+for i, row in hist.iterrows():
+    ax.annotate(row['action'], (i, row['sharpe_ann']),
+                textcoords='offset points', xytext=(0, 10), ha='center')
+ax.set_xlabel('Stepwise iteration')
+ax.set_ylabel('Annualized Sharpe ratio of selected model')
+ax.set_title('Efficient-frontier expansion as factors are added')
+plt.tight_layout()
+plt.show()
+```
+
+### Ứng dụng cho các mô hình nhân tố Việt Nam {#sec-ts-cs-stepwise-vietnam}
+
+Thủ tục áp dụng trực tiếp cho dữ liệu Việt Nam: thay `sim_factors` bằng bảng nhân tố được xây dựng từ dữ liệu trong nước ở @sec-factor-zoo-zoo (thị trường, quy mô, giá trị, khả năng sinh lời, đầu tư, động lượng, và bất kỳ lợi nhuận mua–bán khống của hiện tượng bất thường bổ sung nào vượt qua bộ lọc kiểm định đa giả thuyết ở @sec-factor-zoo-corrections) và thay `sim_test` bằng một tập các danh mục kiểm định của Việt Nam (các cách sắp xếp quy mô-BM và quy mô-động lượng ở @sec-ts-cs-data). Cơ sở là nhân tố thị trường; tập ứng viên là mọi nhân tố hiện tượng bất thường có độ phủ dữ liệu đủ.
+
+```{python}
+#| label: stepwise-vietnam
+#| eval: false
+#| code-summary: "Stepwise selection on Vietnamese factors (real data)"
+# `factors` and the test-portfolio frames come from the DataCore pipeline
+# built earlier in this chapter (see the data-load chunk).
+vn_candidates = ['smb', 'hml', 'rmw', 'cma', 'wml']  # extend with local anomalies
+
+vn_result = stepwise_select(
+    factors=factors,
+    candidate_cols=vn_candidates,
+    baseline_cols=['mkt_excess'],
+    test_assets=excess_25_bm,        # 25 size-BM Vietnamese portfolios
+    add_threshold=0.05 / len(vn_candidates)  # Bonferroni-style, see caveat below
+)
+print("Vietnamese stepwise model:", vn_result['selected'])
+print(f"GRS p-value: {vn_result['grs']['p_value']:.3f}")
+```
+
+Ba lưu ý đặc thù cho bối cảnh Việt Nam đáng được nhấn mạnh, và mỗi lưu ý là hệ quả trực tiếp của các đặc điểm thể chế của thị trường được phát triển ở những phần khác trong cuốn sách này:
+
+1.  **Mẫu ngắn làm giảm sức mạnh kiểm định.** Dữ liệu nhân tố đáng tin cậy của Việt Nam bắt đầu vào khoảng năm 2008 (@sec-ts-cs-data), cho dưới 200 quan sát hằng tháng. Các thống kê $t$ của alpha bao phủ và kiểm định GRS đều mất sức mạnh khi $T$ giảm, nên thủ tục sẽ có xu hướng chọn các mô hình **nhỏ hơn** so với trên các mẫu dài của Mỹ trong @feng2026selecting. Một nhân tố bị bỏ qua trên dữ liệu Việt Nam được định giá yếu *trong mẫu hiện có*, chứ không nhất thiết là không được định giá. Việc báo cáo mức tăng Sharpe bình phương cùng với giá trị $p$ (cả hai đều được các hàm trợ giúp ở trên trả về) giúp độ lớn kinh tế vẫn hiện rõ ngay cả khi ý nghĩa thống kê ở mức biên.
+
+2.  **Các nhân tố tương quan làm mất ổn định lộ trình.** Các tín hiệu giá trị, chất lượng và khả năng sinh lời của Việt Nam trên thực nghiệm có cộng tuyến cao hơn so với ở Mỹ vì chúng cùng tập trung vào một nhóm nhỏ các doanh nghiệp lớn có liên hệ với nhà nước. Cộng tuyến cao làm tăng phương sai phần dư trong @eq-sharpe-increment và khiến thứ tự thêm vào nhạy cảm với mẫu, nên mô hình được chọn cần được kiểm chứng bằng cách chạy lại trên các mẫu bootstrap (@sec-factor-zoo-bootstrap) và bằng cách kiểm tra độ ổn định ngoài mẫu (@sec-factor-zoo-oos), chứ không nên đọc trực tiếp từ một lộ trình trong mẫu duy nhất.
+
+3.  **Việc chọn tài sản kiểm định quan trọng hơn ở các thị trường mỏng.** Với tương đối ít cổ phiếu thanh khoản, các danh mục kiểm định phân chia mịn (chẳng hạn 25 danh mục sắp xếp kép) chứa các danh mục nhiễu, giao dịch thưa có thể chi phối thống kê GRS. Các cách sắp xếp thô hơn ($2\times3$ hoặc danh mục thập phân vị) và cách xây dựng lợi nhuận có tính đến biên độ giá của chương vi cấu trúc thị trường cho các quyết định dừng đáng tin cậy hơn.
+
+Khi được dùng cùng những lưu ý này, cách tiếp cận từng bước biến vườn thú nhân tố Việt Nam rối rắm thành một mô hình có kỷ luật, kiểm định được: thay vì mặc định dùng một đặc tả Fama-French nhập khẩu, nhà nghiên cứu để dữ liệu trong nước chọn ra các nhân tố thực sự bao phủ đường biên hiệu quả của Việt Nam, và thu được một kiểm định định giá tường minh cho kết quả đó.
+
+## Kiểm định có điều kiện và vô điều kiện {#sec-ts-cs-conditional}
+
+### Beta biến thiên theo thời gian
+
+Các kiểm định vô điều kiện giả định beta không đổi. Trong thực tế, beta của cổ phiếu Việt Nam biến động đáng kể theo thời gian do điều kiện thị trường thay đổi, sự dịch chuyển về sở hữu nước ngoài và luân chuyển ngành. Chúng ta ước lượng beta trượt để đánh giá mức độ biến thiên theo thời gian:
 
 ```{python}
 #| label: rolling-betas
@@ -1287,7 +1514,7 @@ for port in representative:
 ```{python}
 #| label: fig-rolling-betas
 #| eval: false
-#| fig-cap: "Rolling 36-month market betas for four representative portfolios (corners of the 5×5 size-BM sort). Betas vary substantially over time, particularly for the small-cap portfolios. This time-variation means that unconditional time-series tests may reject a correctly specified conditional model, and that cross-sectional Fama-MacBeth regressions with rolling betas may give different results from those with full-sample betas."
+#| fig-cap: "Beta thị trường trượt 36 tháng cho bốn danh mục đại diện (các góc của cách sắp xếp quy mô-BM 5×5). Beta biến động đáng kể theo thời gian, đặc biệt đối với các danh mục vốn hóa nhỏ. Sự biến thiên theo thời gian này có nghĩa là các kiểm định chuỗi thời gian vô điều kiện có thể bác bỏ một mô hình có điều kiện được đặc tả đúng, và các hồi quy Fama-MacBeth mặt cắt ngang với beta trượt có thể cho kết quả khác với beta toàn mẫu."
 #| code-summary: "Plot rolling betas over time"
 fig, axes = plt.subplots(2, 2, figsize=(14, 8))
 axes = axes.flatten()
@@ -1323,51 +1550,51 @@ for port, label in zip(representative, labels):
     print(f"  {label:<15}: σ(β_MKT) = {mkt_std:.3f}, σ(β_HML) = {hml_std:.3f}")
 ```
 
-## Practical Recommendations {#sec-ts-cs-recommendations}
+## Khuyến nghị thực hành {#sec-ts-cs-recommendations}
 
-The analysis in this chapter yields the following guidelines for Vietnamese asset pricing research:
+Phân tích trong chương này đưa ra các hướng dẫn sau cho nghiên cứu định giá tài sản ở Việt Nam:
 
-**Use both approaches.** Time-series tests (GRS) and cross-sectional tests (Fama-MacBeth) answer different questions. Always report both. If they disagree, investigate *why* rather than cherry-picking the more favorable result.
+**Sử dụng cả hai cách tiếp cận.** Kiểm định chuỗi thời gian (GRS) và kiểm định mặt cắt ngang (Fama-MacBeth) trả lời các câu hỏi khác nhau. Luôn báo cáo cả hai. Nếu chúng bất đồng, hãy tìm hiểu *vì sao* thay vì chọn lọc kết quả thuận lợi hơn.
 
-**Be cautious with cross-sectional** $R^2$. High $R^2$ from Fama-MacBeth on sorted portfolios is nearly guaranteed by the test asset structure. Always report the @lewellen2010skeptical constrained $R^2$ alongside the unconstrained value. Include industry portfolios as additional test assets.
+**Thận trọng với** $R^2$ **mặt cắt ngang.** $R^2$ cao từ Fama-MacBeth trên các danh mục sắp xếp gần như được đảm bảo bởi cấu trúc của tài sản kiểm định. Luôn báo cáo $R^2$ có ràng buộc của @lewellen2010skeptical cùng với giá trị không ràng buộc. Đưa các danh mục ngành vào làm tài sản kiểm định bổ sung.
 
-**Apply the Shanken correction.** The EIV bias from estimated betas inflates Fama-MacBeth t-statistics. Always report Shanken-corrected standard errors for full-sample betas. For rolling betas, the correction is not straightforward, but the bias is smaller because beta estimation error averages out over time.
+**Áp dụng hiệu chỉnh Shanken.** Thiên lệch EIV từ các beta ước lượng làm thổi phồng các thống kê t của Fama-MacBeth. Luôn báo cáo các sai số chuẩn đã hiệu chỉnh Shanken cho beta toàn mẫu. Với beta trượt, việc hiệu chỉnh không đơn giản, nhưng thiên lệch nhỏ hơn vì sai số ước lượng beta triệt tiêu dần theo thời gian.
 
-**Use individual stocks with caution.** Fama-MacBeth with individual stocks avoids the Lewellen-Nagel-Shanken critique but introduces severe noise: individual Vietnamese stocks are thin, volatile, and the monthly cross-section is small (500-700). The resulting risk premia will have wide confidence intervals. Report the average number of stocks per cross-section and the cross-sectional $R^2$.
+**Thận trọng khi dùng cổ phiếu riêng lẻ.** Fama-MacBeth với cổ phiếu riêng lẻ tránh được phê phán Lewellen-Nagel-Shanken nhưng đưa vào nhiễu nghiêm trọng: các cổ phiếu Việt Nam riêng lẻ giao dịch thưa, biến động mạnh, và mặt cắt ngang hằng tháng nhỏ (500-700). Các phần bù rủi ro thu được sẽ có khoảng tin cậy rộng. Hãy báo cáo số cổ phiếu trung bình trong mỗi mặt cắt ngang và $R^2$ mặt cắt ngang.
 
-**Examine conditional models.** Rolling betas reveal substantial time-variation in Vietnamese stock exposures. If the research question is about risk compensation (does beta predict returns?), use rolling betas and control for time-variation. If the question is about model adequacy (do the factors span the mean-variance frontier?), full-sample betas and the GRS test are appropriate.
+**Xem xét các mô hình có điều kiện.** Beta trượt cho thấy sự biến thiên theo thời gian đáng kể trong mức độ phơi nhiễm của cổ phiếu Việt Nam. Nếu câu hỏi nghiên cứu là về bù đắp rủi ro (beta có dự báo lợi nhuận không?), hãy dùng beta trượt và kiểm soát sự biến thiên theo thời gian. Nếu câu hỏi là về mức độ phù hợp của mô hình (các nhân tố có bao phủ đường biên trung bình-phương sai không?), thì beta toàn mẫu và kiểm định GRS là phù hợp.
 
-**For model selection, use Barillas-Shanken.** When comparing competing factor models (e.g., FF3 vs. FF5), the @barillas2018comparing approach (i.e., testing whether each model's unique factors have alpha with respect to the other) is more informative than comparing GRS statistics on the same test assets.
+**Để lựa chọn mô hình, hãy dùng Barillas-Shanken.** Khi so sánh các mô hình nhân tố cạnh tranh (chẳng hạn FF3 so với FF5), cách tiếp cận của @barillas2018comparing (tức là kiểm định xem các nhân tố riêng của mỗi mô hình có alpha đối với mô hình kia không) cho nhiều thông tin hơn so với việc so sánh các thống kê GRS trên cùng các tài sản kiểm định.
 
-## Summary {#sec-ts-cs-summary}
+## Tóm tắt {#sec-ts-cs-summary}
 
-| Test | Question | Statistic | Strength | Weakness |
+| Kiểm định | Câu hỏi | Thống kê | Điểm mạnh | Điểm yếu |
 |---------------|---------------|---------------|---------------|---------------|
-| TS regression (GRS) | Do all alphas = 0? | F-statistic | Clean null; joint test | Depends on test assets |
-| Fama-MacBeth (portfolios) | Are betas priced? | $\bar{\gamma}$, t-stat | Estimates risk premia | EIV bias; LNS critique |
-| FM (individual stocks) | Are betas priced? | $\bar{\gamma}$, t-stat | Avoids sorted portfolios | Noisy; small cross-section |
-| LNS diagnostic | Is CS R² spurious? | Constrained R² | Reveals false positives | Only applicable to portfolios |
-| GMM / SDF | Pricing errors jointly | J-stat, HJ distance | Flexible; model-free | Requires large N relative to K |
-| Barillas-Shanken | Which model is better? | Alpha of unique factors | Model comparison | Requires traded factors |
+| Hồi quy chuỗi thời gian (GRS) | Mọi alpha có bằng 0? | Thống kê F | Giả thuyết H0 rõ ràng; kiểm định đồng thời | Phụ thuộc vào tài sản kiểm định |
+| Fama-MacBeth (danh mục) | Beta có được định giá không? | $\bar{\gamma}$, thống kê t | Ước lượng phần bù rủi ro | Thiên lệch EIV; phê phán LNS |
+| FM (cổ phiếu riêng lẻ) | Beta có được định giá không? | $\bar{\gamma}$, thống kê t | Tránh được danh mục sắp xếp | Nhiễu; mặt cắt ngang nhỏ |
+| Chẩn đoán LNS | R² mặt cắt ngang có giả tạo không? | R² có ràng buộc | Phát hiện dương tính giả | Chỉ áp dụng cho danh mục |
+| GMM / SDF | Sai số định giá đồng thời | Thống kê J, khoảng cách HJ | Linh hoạt; không phụ thuộc mô hình | Đòi hỏi N lớn so với K |
+| Barillas-Shanken | Mô hình nào tốt hơn? | Alpha của các nhân tố riêng | So sánh mô hình | Đòi hỏi nhân tố giao dịch được |
 
-: Summary of testing approaches for factor models. {#tbl-ts-cs-summary-tests}
+: Tóm tắt các cách tiếp cận kiểm định cho các mô hình nhân tố. {#tbl-ts-cs-summary-tests}
 
-The gap between time-series and cross-sectional evidence is not a technicality—it reflects a fundamental ambiguity in what "a factor model works" means. In a market like Vietnam, where the cross-section is small, betas are time-varying, and test assets are inherently noisy, the two approaches will often disagree. The honest researcher reports both, investigates the source of disagreement, and treats any single test result with appropriate humility.
+Khoảng cách giữa bằng chứng chuỗi thời gian và bằng chứng mặt cắt ngang không phải là một chi tiết kỹ thuật, mà phản ánh một sự mơ hồ căn bản trong ý nghĩa của câu "một mô hình nhân tố hoạt động tốt". Ở một thị trường như Việt Nam, nơi mặt cắt ngang nhỏ, beta biến thiên theo thời gian và các tài sản kiểm định vốn nhiễu, hai cách tiếp cận thường sẽ bất đồng. Nhà nghiên cứu trung thực báo cáo cả hai, tìm hiểu nguồn gốc của sự bất đồng, và đối xử với bất kỳ kết quả kiểm định đơn lẻ nào bằng sự khiêm tốn thích đáng.
 
-<!-- ## Exercises {#sec-ts-cs-exercises}
+<!-- ## Bài tập {#sec-ts-cs-exercises}
 
-1.  **Characteristic vs. covariance.** Run Fama-MacBeth regressions that include both estimated factor betas *and* the raw characteristics (log market cap, book-to-market, past returns) as independent variables. Which has more explanatory power—the betas or the characteristics? This tests the @goyal2018cross hypothesis that characteristics dominate covariances in explaining the cross-section.
+1.  **Đặc điểm so với hiệp phương sai.** Chạy các hồi quy Fama-MacBeth bao gồm cả các beta nhân tố ước lượng *và* các đặc điểm thô (logarit vốn hóa thị trường, B/M, lợi nhuận quá khứ) làm biến độc lập. Cái nào có sức giải thích lớn hơn, các beta hay các đặc điểm? Điều này kiểm định giả thuyết của @goyal2018cross rằng các đặc điểm lấn át hiệp phương sai trong việc giải thích mặt cắt ngang.
 
-2.  **Spanning with anomaly portfolios.** Use the 10 highest-t-statistic anomalies from the factor zoo chapter as test assets (instead of size-BM sorted portfolios). Run GRS tests for the CAPM, FF3, and FF5 models. Which anomalies remain unspanned?
+2.  **Bao phủ với các danh mục hiện tượng bất thường.** Dùng 10 hiện tượng bất thường có thống kê t cao nhất từ chương vườn thú nhân tố làm tài sản kiểm định (thay vì các danh mục sắp xếp theo quy mô-BM). Chạy các kiểm định GRS cho các mô hình CAPM, FF3 và FF5. Những hiện tượng bất thường nào vẫn chưa được bao phủ?
 
-3.  **Conditional Fama-MacBeth.** Interact factor betas with a conditioning variable (VIX, VN-Index volatility, or the SBV policy rate) to create time-varying risk premia. Does the conditional model outperform the unconditional model in cross-sectional $R^2$?
+3.  **Fama-MacBeth có điều kiện.** Cho các beta nhân tố tương tác với một biến điều kiện (VIX, độ biến động VN-Index, hoặc lãi suất chính sách của SBV) để tạo ra các phần bù rủi ro biến thiên theo thời gian. Mô hình có điều kiện có vượt trội mô hình vô điều kiện về $R^2$ mặt cắt ngang không?
 
-4.  **Bootstrap GRS.** The GRS test assumes multivariate normality of returns. Implement a bootstrap version: resample the time series 10,000 times and compute the empirical distribution of the GRS statistic under the null. Compare the bootstrap p-value to the asymptotic p-value. How much do they differ for Vietnamese data?
+4.  **GRS bootstrap.** Kiểm định GRS giả định lợi nhuận có phân phối chuẩn đa biến. Hãy triển khai phiên bản bootstrap: lấy mẫu lại chuỗi thời gian 10.000 lần và tính phân phối thực nghiệm của thống kê GRS dưới giả thuyết không. So sánh giá trị p bootstrap với giá trị p tiệm cận. Chúng khác nhau bao nhiêu đối với dữ liệu Việt Nam?
 
-5.  **Instrumented PCA.** Implement the @kelly2019characteristics instrumented PCA (IPCA) model, which allows betas to vary with observable characteristics. Estimate the latent factors and their time-varying loadings. How many factors does IPCA select for the Vietnamese market?
+5.  **PCA có công cụ.** Triển khai mô hình PCA có công cụ (IPCA) của @kelly2019characteristics, cho phép beta biến thiên theo các đặc điểm quan sát được. Ước lượng các nhân tố ẩn và các hệ số tải biến thiên theo thời gian của chúng. IPCA chọn bao nhiêu nhân tố cho thị trường Việt Nam?
 
-6.  **Test asset sensitivity.** Run the full battery of tests (GRS, Fama-MacBeth, GMM) separately for three test asset sets: (a) 25 size-BM, (b) 25 size-momentum, (c) 25 size-profitability. Do the same models win across all test asset sets, or is model ranking test-asset-dependent?
+6.  **Độ nhạy theo tài sản kiểm định.** Chạy toàn bộ bộ kiểm định (GRS, Fama-MacBeth, GMM) riêng biệt cho ba tập tài sản kiểm định: (a) 25 quy mô-BM, (b) 25 quy mô-động lượng, (c) 25 quy mô-khả năng sinh lời. Các mô hình giống nhau có thắng trên mọi tập tài sản kiểm định không, hay xếp hạng mô hình phụ thuộc vào tài sản kiểm định?
 
-7.  **Small-sample adjustment.** With only \~200 months of Vietnamese data, small-sample bias in the GRS test may be severe. Implement the @kan2013pricing finite-sample correction. How does the corrected GRS compare to the asymptotic version?
+7.  **Điều chỉnh mẫu nhỏ.** Với chỉ \~200 tháng dữ liệu Việt Nam, thiên lệch mẫu nhỏ trong kiểm định GRS có thể nghiêm trọng. Hãy triển khai hiệu chỉnh mẫu hữu hạn của @kan2013pricing. GRS đã hiệu chỉnh so với phiên bản tiệm cận như thế nào?
 
-8.  **Global vs. local factors.** Augment the Vietnamese FF5 model with global factors (MSCI World excess return, global SMB, global HML from Kenneth French's data library). Run GRS tests with and without the global factors. Does adding global factors improve pricing of Vietnamese portfolios, as @griffin2002fama would predict? -->
+8.  **Nhân tố toàn cầu so với nhân tố địa phương.** Bổ sung vào mô hình FF5 của Việt Nam các nhân tố toàn cầu (lợi nhuận vượt mức MSCI World, SMB toàn cầu, HML toàn cầu từ thư viện dữ liệu của Kenneth French). Chạy các kiểm định GRS có và không có các nhân tố toàn cầu. Việc thêm các nhân tố toàn cầu có cải thiện định giá các danh mục Việt Nam hay không, như @griffin2002fama dự đoán? -->

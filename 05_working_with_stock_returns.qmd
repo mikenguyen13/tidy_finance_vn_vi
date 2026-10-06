@@ -1,4 +1,4 @@
-# Xây dựng và phân tích chuỗi lợi nhuận vốn chủ sở hữu
+# Xây dựng và phân tích chuỗi lợi nhuận cổ phiếu
 
 Chương này phát triển một khuôn khổ thực tiễn để chuyển đổi các bản ghi giá cổ phiếu thô thành chuỗi lợi nhuận phù hợp cho phân tích tài chính thực nghiệm. Trọng tâm là tính rõ ràng về phương pháp luận và khả năng tái tạo, đặc biệt chú trọng đến các vấn đề dữ liệu phổ biến ở các thị trường chứng khoán mới nổi như Việt Nam.
 
@@ -6,7 +6,7 @@ Cuộc thảo luận bắt đầu từ các cổ phiếu riêng lẻ đến ph�
 
 ## Truy cập và chuẩn bị dữ liệu
 
-Chúng ta bắt đầu bằng cách tải các thư viện xử lý dữ liệu và số liệu cốt lõi. Các thư viện này cung cấp tất cả chức năng cần thiết để xây dựng báo cáo mà không cần dựa vào các thư viện tài chính chuyên biệt.
+Chúng ta bắt đầu bằng cách tải các thư viện xử lý dữ liệu và số liệu cốt lõi. Các thư viện này cung cấp tất cả chức năng cần thiết để xây dựng lợi nhuận mà không cần dựa vào các thư viện tài chính chuyên biệt.
 
 
 ```{python}
@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 ```
 
-Đối với dự án này, chúng tôi thu thập dữ liệu giá lịch sử bằng cách sử dụng API của DataCore. Nếu bạn muốn sao chép phân tích này hoặc sử dụng bộ dữ liệu cho công việc của riêng mình, bạn sẽ cần truy cập dữ liệu thông qua nền tảng của họ.
+Đối với dự án này, chúng tôi thu thập dữ liệu giá lịch sử bằng cách sử dụng API của DataCore. Nếu bạn muốn tái tạo phân tích này hoặc sử dụng bộ dữ liệu cho công việc của riêng mình, bạn sẽ cần truy cập dữ liệu thông qua nền tảng của họ.
 
 ### Điều kiện tiên quyết để truy cập API
 
@@ -170,7 +170,7 @@ df.head()
 ```
 
 
-<!-- Historical price data are stored in an S3-compatible object storage system. Access credentials are supplied via environment variables, which keeps sensitive information separate from the analysis and supports collaborative reproducibility. -->
+<!-- Dữ liệu giá lịch sử được lưu trong hệ thống lưu trữ đối tượng tương thích S3. Thông tin truy cập được cung cấp qua các biến môi trường, giúp tách thông tin nhạy cảm khỏi phần phân tích và hỗ trợ khả năng tái lập khi làm việc cộng tác. -->
 
 ```{python}
 #| include: false
@@ -195,7 +195,7 @@ storage = ObjectStorage()
 bucket = os.environ["MINIO_BUCKET"]
 ```
 
-<!-- The daily price file is read directly into memory. We explicitly parse dates and harmonize variable names to avoid ambiguity in later steps. -->
+<!-- Tệp giá hằng ngày được đọc trực tiếp vào bộ nhớ. Chúng ta phân tích cú pháp ngày tháng một cách tường minh và chuẩn hóa tên biến để tránh nhầm lẫn ở các bước sau. -->
 
 ```{python}
 #| include: false
@@ -264,13 +264,13 @@ prices = prices.sort_values(["symbol", "date"])
 ```
 
 
-Giá đóng cửa đã điều chỉnh kết hợp những thay đổi cơ học do các hành động của công ty như cổ tức tiền mặt và chia tách cổ phiếu. Sử dụng giá điều chỉnh đảm bảo rằng các tính toán lợi nhuận tiếp theo phản ánh hiệu suất liên quan đến nhà đầu tư hơn là các hiện vật kế toán.
+Giá đóng cửa đã điều chỉnh kết hợp những thay đổi cơ học do các hành động của công ty như cổ tức tiền mặt và chia tách cổ phiếu. Sử dụng giá điều chỉnh đảm bảo rằng các tính toán lợi nhuận tiếp theo phản ánh hiệu quả đầu tư thực tế đối với nhà đầu tư hơn là các yếu tố nhiễu do kế toán.
 
 
-## Kiểm tra một vốn chủ sở hữu duy nhất
+## Kiểm tra một cổ phiếu duy nhất
 
 
-Để làm nền tảng cho cuộc thảo luận, chúng tôi tách biệt lịch sử giao dịch của một cổ phiếu vốn hóa lớn duy nhất, FPT, trong một khoảng thời gian dài lấy mẫu.
+Để làm nền tảng cho cuộc thảo luận, chúng tôi tách biệt lịch sử giao dịch của một cổ phiếu vốn hóa lớn duy nhất, FPT, trong một giai đoạn mẫu dài.
 
 ```{python}
 import datetime as dt
@@ -296,8 +296,8 @@ from plotnine import ggplot, aes, geom_line, labs
 
 ```{python}
 #| label: fig-100 
-#| fig-cap: "Prices are in VND, adjusted for dividend payments and stock splits."
-#| fig-alt: "Title: FPT stock prices"
+#| fig-cap: "Giá tính bằng VND, đã điều chỉnh theo cổ tức và chia tách cổ phiếu."
+#| fig-alt: "Tiêu đề: Giá cổ phiếu FPT"
 (
     ggplot(fpt, aes(x="date", y="adjusted_close"))
     + geom_line()
@@ -310,13 +310,13 @@ from plotnine import ggplot, aes, geom_line, labs
 Hầu hết các mô hình định giá tài sản thực nghiệm đều được xây dựng dựa trên lợi nhuận thay vì mức giá. Lợi nhuận hàng ngày đơn giản được định nghĩa là
 
 $$
-r_t = \frac{p_t}{p_t - 1} - 1, 
+r_t = \frac{p_t}{p_{t-1}} - 1, 
 $$
 
 
 trong đó $p_t$ biểu thị giá đóng cửa đã điều chỉnh vào cuối ngày giao dịch $t$.
 
-Trước khi tính toán lợi nhuận, chúng ta phải giải quyết các quan sát giá không hợp lệ. Trong dữ liệu chứng khoán Việt Nam, giá điều chỉnh đôi khi lấy giá trị bằng không. Các mục này thường phát sinh từ các trình giữ chỗ IPO, tạm ngưng giao dịch hoặc quy ước lấp lại lịch sử và không thể được sử dụng để tính toán lợi nhuận có ý nghĩa.
+Trước khi tính toán lợi nhuận, chúng ta phải giải quyết các quan sát giá không hợp lệ. Trong dữ liệu chứng khoán Việt Nam, giá điều chỉnh đôi khi lấy giá trị bằng không. Các mục này thường phát sinh từ các giá trị giữ chỗ cho đợt IPO, tạm ngưng giao dịch hoặc quy ước điền ngược dữ liệu lịch sử và không thể được sử dụng để tính toán lợi nhuận có ý nghĩa.
 
 ```{python}
 prices.loc[prices["adjusted_close"] <= 0, ["symbol", "date", "adjusted_close"]].head()
@@ -339,7 +339,7 @@ Theo thiết kế, lợi nhuận ban đầu của mỗi cổ phiếu bị thiế
 
 ## Hạn chế ảnh hưởng của lợi nhuận cực đoan
 
-Chuỗi lợi nhuận hàng ngày thường chứa các quan sát cực đoan do lỗi dữ liệu, khối lượng giao dịch thấp hoặc điều chỉnh giá đột ngột. Một phương pháp phổ biến là tối ưu hóa lợi nhuận bằng cách sử dụng các ngưỡng phần trăm theo mặt cắt ngang.
+Chuỗi lợi nhuận hàng ngày thường chứa các quan sát cực đoan do lỗi dữ liệu, khối lượng giao dịch thấp hoặc điều chỉnh giá đột ngột. Một phương pháp phổ biến là winsorize lợi nhuận bằng cách sử dụng các ngưỡng phân vị theo mặt cắt ngang.
 
 ```{python}
 def winsorize_cs(df, column="ret", lower_q=0.01, upper_q=0.99):
@@ -352,13 +352,13 @@ def winsorize_cs(df, column="ret", lower_q=0.01, upper_q=0.99):
 returns = winsorize_cs(returns)
 ```
 
-Việc áp dụng phương pháp winsorization trên toàn bộ dữ liệu chéo giúp hạn chế tác động của các quan sát cực đoan trên toàn thị trường trong khi vẫn bảo toàn sự khác biệt tương đối giữa các công ty. Phương pháp winsorization riêng lẻ cho từng cổ phiếu hiếm khi phù hợp trong các nghiên cứu dữ liệu bảng và có thể làm sai lệch nghiêm trọng dữ liệu của các chứng khoán kém thanh khoản.
+Việc áp dụng phương pháp winsorization trên toàn bộ mặt cắt ngang giúp hạn chế tác động của các quan sát cực đoan trên toàn thị trường trong khi vẫn bảo toàn sự khác biệt tương đối giữa các công ty. Phương pháp winsorization riêng lẻ cho từng cổ phiếu hiếm khi phù hợp trong các nghiên cứu dữ liệu bảng và có thể làm sai lệch nghiêm trọng dữ liệu của các chứng khoán kém thanh khoản.
 
 
 ## Đặc điểm phân bố lợi nhuận
 
 
-Tiếp theo, chúng ta sẽ xem xét phân bố thực nghiệm của lợi nhuận hàng ngày đối với FPT. Hình dưới đây cũng đánh dấu phân vị 5 phần trăm trong lịch sử, cung cấp một thước đo đơn giản, phi tham số về rủi ro giảm giá.
+Tiếp theo, chúng ta sẽ xem xét phân bố thực nghiệm của lợi nhuận hàng ngày đối với FPT. Hình dưới đây cũng đánh dấu phân vị 5 phần trăm trong lịch sử, cung cấp một thước đo đơn giản, phi tham số về rủi ro sụt giảm (downside risk).
 
 ```{python}
 from mizani.formatters import percent_format
@@ -372,8 +372,8 @@ q05 = fpt_ret["ret"].quantile(0.05)
 
 ```{python}
 #| label: fig-101 
-#| fig-alt: "Title: Distribution of daily FPT stock returns in percent. The figure shows a histogram of daily returns. The vertical line indicates that the historical five percent quantile of daily returns was around negative three percent."
-#| fig-cap: "The dotted vertical line indicates the historical five percent quantile."
+#| fig-alt: "Tiêu đề: Phân phối lợi nhuận hằng ngày của cổ phiếu FPT theo phần trăm. Hình là biểu đồ histogram của lợi nhuận hằng ngày. Đường thẳng đứng cho thấy phân vị năm phần trăm lịch sử của lợi nhuận hằng ngày vào khoảng âm ba phần trăm."
+#| fig-cap: "Đường chấm thẳng đứng thể hiện phân vị năm phần trăm lịch sử."
 #| 
 (
     ggplot(fpt_ret, aes(x="ret"))
@@ -384,7 +384,7 @@ q05 = fpt_ret["ret"].quantile(0.05)
 )
 ```
 
-Thống kê tóm tắt cung cấp một mô tả ngắn gọn về hành vi trả về và phải luôn được kiểm tra trước khi lập mô hình chính thức.
+Thống kê tóm tắt cung cấp một mô tả ngắn gọn về hành vi của lợi nhuận và phải luôn được kiểm tra trước khi lập mô hình chính thức.
 
 ```{python}
 returns["ret"].describe().round(3)
@@ -421,8 +421,8 @@ from plotnine import theme
 
 ```{python}
 #| label: fig-102
-#| fig-cap: "Prices in VND, adjusted for dividend payments and stock splits." 
-#| fig-alt: "Title: Stock prices of VN30 index constituents."
+#| fig-cap: "Giá tính bằng VND, đã điều chỉnh theo cổ tức và chia tách cổ phiếu."
+#| fig-alt: "Tiêu đề: Giá cổ phiếu của các thành phần chỉ số VN30."
 (
     ggplot(prices_vn30, aes(x="date", y="adjusted_close", color="symbol"))
     + geom_line()
@@ -431,7 +431,7 @@ from plotnine import theme
 )
 ```
 
-Lợi nhuận cho vũ trụ VN30 được tính toán tương tự.
+Lợi nhuận cho nhóm cổ phiếu VN30 được tính toán tương tự.
 
 ```{python}
 returns_vn30 = (
@@ -476,8 +476,8 @@ fpt_both = pd.concat([
 
 ```{python}
 #| label: fig-103
-#| fig-cap: "Returns are based on prices adjusted for dividend payments and stock splits."
-#| fig-alt: "Title: Distribution of FPT returns across different frequencies. The figure shows the distribution of daily and monthly returns in two separate facets."
+#| fig-cap: "Lợi nhuận được tính dựa trên giá đã điều chỉnh theo cổ tức và chia tách cổ phiếu."
+#| fig-alt: "Tiêu đề: Phân phối lợi nhuận của FPT theo các tần suất khác nhau. Hình thể hiện phân phối của lợi nhuận hằng ngày và hằng tháng trong hai ô riêng biệt."
 (
     ggplot(fpt_both, aes(x="ret"))
     + geom_histogram(bins=50)
@@ -507,7 +507,7 @@ trading_value = (
 )
 ```
 
-Cuối cùng, chúng tôi đánh giá tính bền vững của hoạt động giao dịch bằng cách so sánh giá trị giao dịch trong những ngày liên tiếp.
+Cuối cùng, chúng tôi đánh giá tính dai dẳng của hoạt động giao dịch bằng cách so sánh giá trị giao dịch trong những ngày liên tiếp.
 
 ```{python}
 from plotnine import geom_point, geom_abline
@@ -515,8 +515,8 @@ from plotnine import geom_point, geom_abline
 
 ```{python}
 #| label: fig-104
-#| fig-cap: "Total daily trading volume."
-#| fig-alt: "Title: Aggregate daily trading volume of VN30 index constitutens. The figure shows a volatile time series of daily trading volume."
+#| fig-cap: "Tổng khối lượng giao dịch hằng ngày."
+#| fig-alt: "Tiêu đề: Tổng khối lượng giao dịch hằng ngày của các thành phần chỉ số VN30. Hình thể hiện một chuỗi thời gian biến động mạnh của khối lượng giao dịch hằng ngày."
 (
     ggplot(trading_value, aes(x="value_lag", y="value"))
     + geom_point()
@@ -530,7 +530,7 @@ from plotnine import geom_point, geom_abline
 ```
 
 
-Sự trùng khớp mạnh mẽ dọc theo đường 45 độ cho thấy những ngày giao dịch sôi động thường được tiếp nối bởi những ngày có hoạt động tương tự, một quy luật thực nghiệm phổ biến trên thị trường chứng khoán.
+Việc các điểm dữ liệu nằm sát dọc theo đường 45 độ cho thấy những ngày giao dịch sôi động thường được tiếp nối bởi những ngày có hoạt động tương tự, một quy luật thực nghiệm phổ biến trên thị trường chứng khoán.
 
 ## Tóm tắt
 

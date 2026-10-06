@@ -1,8 +1,8 @@
 # Lợi nhuận kép
 
-Trong chương này, chúng tôi trình bày về lợi nhuận kép. Cho dù là xây dựng danh mục đầu tư mua và nắm giữ, đánh giá hiệu suất quỹ, tính toán chỉ số tài sản tích lũy hay ước tính các thước đo rủi ro dài hạn, khả năng tính toán chính xác lợi nhuận kép trong các khoảng thời gian bất kỳ là điều không thể thiếu. Chúng tôi bắt đầu với nền tảng toán học: sự khác biệt giữa lợi nhuận đơn giản và lợi nhuận logarit, mối quan hệ giữa trung bình cộng và trung bình hình học, và các đặc tính của lợi nhuận kép liên tục. Trên đường đi, chúng tôi đề cập đến các vấn đề phức tạp thực tiễn phát sinh trong dữ liệu chứng khoán thực tế, chẳng hạn như tạm ngừng giao dịch, cơ chế giới hạn giá, lợi nhuận trong một phần kỳ và các sự kiện hủy niêm yết, và chỉ ra cách xử lý chúng trong bối cảnh Việt Nam.
+Trong chương này, chúng tôi trình bày về lợi nhuận kép. Cho dù là xây dựng danh mục đầu tư mua và nắm giữ, đánh giá hiệu suất quỹ, tính toán chỉ số tài sản tích lũy hay ước tính các thước đo rủi ro dài hạn, khả năng tính toán chính xác lợi nhuận kép trong các khoảng thời gian bất kỳ là điều không thể thiếu. Chúng tôi bắt đầu với nền tảng toán học: sự khác biệt giữa lợi nhuận đơn giản và lợi nhuận logarit, mối quan hệ giữa trung bình cộng và trung bình hình học, và các đặc tính của lợi nhuận kép liên tục. Trong quá trình đó, chúng tôi đề cập đến các vấn đề phức tạp thực tiễn phát sinh trong dữ liệu chứng khoán thực tế, chẳng hạn như tạm ngừng giao dịch, cơ chế giới hạn giá, lợi nhuận trong một phần kỳ và các sự kiện hủy niêm yết, và chỉ ra cách xử lý chúng trong bối cảnh Việt Nam.
 
-Chương này tiếp tục trình bày về lợi suất kép luân chuyển trong các kỳ hạn tiêu chuẩn (3, 6, 9 và 12 tháng), lợi suất kép phù hợp với thời điểm kết thúc kỳ kế toán, lợi suất tích lũy hướng tới tương lai cho các nghiên cứu sự kiện và ước tính biến động luân chuyển.
+Chương này tiếp tục trình bày về lợi nhuận kép trượt trong các kỳ hạn tiêu chuẩn (3, 6, 9 và 12 tháng), lợi nhuận kép căn theo thời điểm kết thúc kỳ kế toán, lợi nhuận tích lũy hướng tới tương lai cho các nghiên cứu sự kiện và ước tính biến động trượt.
 
 ```{python}
 import pandas as pd
@@ -15,19 +15,19 @@ from itertools import product
 from datetime import datetime, timedelta
 ```
 
-## Lợi nhuận cơ bản so với lợi nhuận logarit
+## Lợi nhuận đơn giản so với lợi nhuận logarit
 
 Trước khi thảo luận về lãi kép, chúng ta cần phân biệt giữa hai quy ước lợi nhuận cơ bản được sử dụng trong tài chính.
 
-### Lợi nhuận cơ bản (số học)
+### Lợi nhuận đơn giản (số học)
 
-Lợi nhuận gộp cơ bản trên một tài sản từ kỳ $t-1$ đến $t$ được định nghĩa như sau:
+Lợi nhuận gộp đơn giản trên một tài sản từ kỳ $t-1$ đến $t$ được định nghĩa như sau:
 
 $$
 1 + R_t = \frac{P_t + D_t}{P_{t-1}},
 $$ {#eq-simple-return}
 
-Trong đó, $P_t$ biểu thị giá vào cuối kỳ $t$ và $D_t$ biểu thị bất kỳ khoản phân phối tiền mặt nào (cổ tức, lãi suất) được trả trong kỳ $t$. Lợi nhuận ròng đơn giản chính là $R_t$. Khi chúng ta nói về "lợi nhuận" mà không có sự giải thích rõ ràng, chúng ta thường muốn nói đến lợi nhuận ròng đơn giản.
+Trong đó, $P_t$ biểu thị giá vào cuối kỳ $t$ và $D_t$ biểu thị bất kỳ khoản phân phối tiền mặt nào (cổ tức, lãi trái phiếu) được trả trong kỳ $t$. Lợi nhuận ròng đơn giản chính là $R_t$. Khi chúng ta nói về "lợi nhuận" mà không có sự giải thích rõ ràng, chúng ta thường muốn nói đến lợi nhuận ròng đơn giản.
 
 Đặc tính quan trọng của lợi nhuận đơn giản là **lãi kép nhiều kỳ có tính chất nhân**:
 
@@ -39,13 +39,13 @@ trong đó $R_t(k)$ là lợi nhuận kép kỳ $k$ kết thúc tại thời đi
 
 ### Lợi nhuận kép liên tục (Log)
 
-Lợi tức kép liên tục, hay lợi tức logarit, được định nghĩa là
+Lợi nhuận kép liên tục, hay lợi nhuận logarit, được định nghĩa là
 
 $$
 r_t = \ln(1 + R_t) = \ln\!\left(\frac{P_t + D_t}{P_{t-1}}\right).
 $$ {#eq-log-return}
 
-Ưu điểm trung tâm của lợi nhuận log để cộng gộp là **lãi kép nhiều kỳ trở thành cộng **:
+Ưu điểm trung tâm của lợi nhuận log để cộng gộp là **lãi kép nhiều kỳ trở thành phép cộng**:
 
 $$
 r_t(k) = \ln(1 + R_t(k)) = \sum_{j=0}^{k-1} r_{t-j} = r_t + r_{t-1} + \cdots + r_{t-k+1}.
@@ -61,15 +61,15 @@ $$ {#eq-recover-simple}
 
 ### Khi nào thì chúng bắt đầu khác biệt?
 
-Đối với lợi nhuận nhỏ, phép xấp xỉ $r_t \approx R_t$ đúng ở bậc nhất (thông qua khai triển Taylor $\ln(1+x) \approx x$ với $|x| \ll 1$). Tuy nhiên, đối với lợi nhuận lớn, thường thấy ở các thị trường mới nổi, cổ phiếu vốn hóa nhỏ hoặc trong thời kỳ khủng hoảng, hai giá trị này có thể khác biệt đáng kể. Hãy xem xét một cổ phiếu có giá tăng gấp đôi ($R_t = 1,0$): lợi nhuận logarit là $r_t = \ln(2) \approx 0,693$, chênh lệch 31%. Ngược lại, đối với một cổ phiếu mất một nửa giá trị ($R_t = -0,5$): lợi nhuận logarit là $r_t = \ln(0,5) \approx -0,693$, lớn hơn 39%.
+Đối với lợi nhuận nhỏ, phép xấp xỉ $r_t \approx R_t$ đúng ở bậc nhất (thông qua khai triển Taylor $\ln(1+x) \approx x$ với $|x| \ll 1$). Tuy nhiên, đối với lợi nhuận lớn, thường thấy ở các thị trường mới nổi, cổ phiếu vốn hóa nhỏ hoặc trong thời kỳ khủng hoảng, hai giá trị này có thể khác biệt đáng kể. Hãy xem xét một cổ phiếu có giá tăng gấp đôi ($R_t = 1,0$): lợi nhuận logarit là $r_t = \ln(2) \approx 0,693$, chênh lệch 31%. Ngược lại, đối với một cổ phiếu mất một nửa giá trị ($R_t = -0,5$): lợi nhuận logarit là $r_t = \ln(0,5) \approx -0,693$, có độ lớn lớn hơn 39%.
 
-Sự khác biệt này đặc biệt đáng chú ý ở Việt Nam, nơi giới hạn giá hàng ngày là ±7% trên HOSE, ±10% trên HNX và ±15% trên UPCoM có thể tạo ra chuỗi ngày tăng hoặc giảm kịch trần. Trong một tuần liên tiếp tăng kịch trần trên HOSE, lợi nhuận đơn giản là $(1,07)^5 - 1 = 40,3%$ trong khi lợi nhuận logarit là $5 \times \ln(1,07) = 33,8%$, đây là một khoảng cách đáng kể.
+Sự khác biệt này đặc biệt đáng chú ý ở Việt Nam, nơi giới hạn giá hàng ngày là ±7% trên HOSE, ±10% trên HNX và ±15% trên UPCoM có thể tạo ra chuỗi ngày tăng trần hoặc giảm sàn liên tiếp. Trong một tuần liên tiếp tăng kịch trần trên HOSE, lợi nhuận đơn giản là $(1,07)^5 - 1 = 40,3%$ trong khi lợi nhuận logarit là $5 \times \ln(1,07) = 33,8%$, đây là một khoảng cách đáng kể.
 
-@tbl-return-comparison minh họa sự khác biệt này trên một dải các giá trị trên nhiều mức độ lợi nhuận khác nhau.
+@tbl-return-comparison minh họa sự khác biệt này trên nhiều mức lợi nhuận khác nhau.
 
 ```{python}
 #| label: tbl-return-comparison
-#| tbl-cap: "Comparison of simple and log returns for various price changes. The divergence grows with the magnitude of the simple return, which is particularly relevant for volatile emerging market stocks."
+#| tbl-cap: "So sánh lợi nhuận đơn giản và lợi nhuận logarit đối với các mức thay đổi giá khác nhau. Mức chênh lệch tăng theo độ lớn của lợi nhuận đơn giản, điều đặc biệt đáng chú ý đối với các cổ phiếu biến động mạnh ở thị trường mới nổi."
 simple_returns = [-0.50, -0.30, -0.15, -0.10, -0.07, -0.05, -0.01,
                   0.00, 0.01, 0.05, 0.07, 0.10, 0.15, 0.30, 0.50, 1.00]
 comparison_df = pd.DataFrame({
@@ -84,13 +84,13 @@ comparison_df = pd.DataFrame({
 comparison_df
 ```
 
-> **Điểm mấu chốt**: Lợi nhuận theo logarit rất thuận tiện cho việc tính lãi kép (tổng hợp cộng), nhưng lợi nhuận danh mục đầu tư được tổng hợp theo chiều ngang trong không gian lợi nhuận đơn giản. Trên thực tế, chúng ta thường chuyển đổi sang lợi nhuận theo logarit để tính lãi kép theo thời gian, sau đó chuyển đổi lại thành lợi nhuận đơn giản để báo cáo.
+> **Điểm mấu chốt**: Lợi nhuận theo logarit rất thuận tiện cho việc tính lãi kép (tổng hợp cộng), nhưng lợi nhuận danh mục đầu tư được tổng hợp theo mặt cắt ngang trong không gian lợi nhuận đơn giản. Trên thực tế, chúng ta thường chuyển đổi sang lợi nhuận theo logarit để tính lãi kép theo thời gian, sau đó chuyển đổi lại thành lợi nhuận đơn giản để báo cáo.
 
 ## Cơ sở toán học của tính lãi kép
 
-### Lợi tức trung bình hình học
+### Lợi nhuận trung bình hình học
 
-Lợi tức trung bình hình học trong $T$ kỳ là
+Lợi nhuận trung bình hình học trong $T$ kỳ là
 
 $$
 \bar{R}_g = \left(\prod_{t=1}^{T} (1 + R_t)\right)^{1/T} - 1,
@@ -102,7 +102,7 @@ $$
 \bar{R}_g \approx \bar{R}_a - \frac{\sigma^2}{2},
 $$ {#eq-arithmetic-geometric}
 
-trong đó $\sigma^2$ là phương sai của lợi nhuận. Sự xấp xỉ này, đôi khi được gọi là "lực cản biến động", có ý nghĩa quan trọng: các tài sản có độ biến động cao có khoảng cách lớn hơn giữa các phương tiện số học và hình học của chúng, có nghĩa là sự tăng trưởng kép thực tế của chúng đánh giá thấp những gì một mức trung bình ngây thơ sẽ gợi ý. Trong một thị trường như Việt Nam, nơi biến động cổ phiếu riêng lẻ thường gấp hai đến ba lần so với chứng khoán các thị trường phát triển, lực cản biến động có thể là đáng kể.
+trong đó $\sigma^2$ là phương sai của lợi nhuận. Sự xấp xỉ này, đôi khi được gọi là "lực cản biến động", có ý nghĩa quan trọng: các tài sản có độ biến động cao có khoảng cách lớn hơn giữa trung bình số học và trung bình hình học của chúng, có nghĩa là sự tăng trưởng kép thực tế của chúng đánh giá thấp những gì một mức trung bình ngây thơ sẽ gợi ý. Trong một thị trường như Việt Nam, nơi biến động cổ phiếu riêng lẻ thường gấp hai đến ba lần so với chứng khoán các thị trường phát triển, lực cản biến động có thể là đáng kể.
 
 ### Chỉ số tài sản và sụt giảm
 
@@ -118,13 +118,13 @@ $$
 \text{MDD} = \max_{0 \le s \le t \le T} \left(\frac{W_s - W_t}{W_s}\right),
 $$ {#eq-max-drawdown}
 
-đo lường mức giảm từ đỉnh đến đáy lớn nhất trong chỉ số tài sản. Chúng tôi sẽ tính toán số lượng này cùng với lợi nhuận kép bên dưới. Sự sụt giảm đặc biệt có nhiều thông tin ở các thị trường mới nổi trải qua những đợt điều chỉnh mạnh, như đã xảy ra trong cuộc khủng hoảng tài chính toàn cầu năm 2008 khi VN-Index giảm khoảng 66% so với mức đỉnh năm 2007.
+đo lường mức giảm từ đỉnh đến đáy lớn nhất trong chỉ số tài sản. Chúng tôi sẽ tính toán đại lượng này cùng với lợi nhuận kép bên dưới. Sự sụt giảm đặc biệt có nhiều thông tin ở các thị trường mới nổi trải qua những đợt điều chỉnh mạnh, như đã xảy ra trong cuộc khủng hoảng tài chính toàn cầu năm 2008 khi VN-Index giảm khoảng 66% so với mức đỉnh năm 2007.
 
-<!--# Show the data here -->
+<!--# Hiển thị dữ liệu tại đây -->
 
-### Tính toán hàng năm
+### Quy đổi theo năm
 
-Đối với lợi suất kép trong $k$ kỳ $R_t(k)$, trong đó mỗi kỳ có độ dài $\Delta$ (ví dụ, $\Delta = 1/12$ cho dữ liệu hàng tháng), lợi suất hàng năm là
+Đối với lợi nhuận kép trong $k$ kỳ $R_t(k)$, trong đó mỗi kỳ có độ dài $\Delta$ (ví dụ, $\Delta = 1/12$ cho dữ liệu hàng tháng), lợi nhuận quy năm là
 
 $$
 R_{\text{ann}} = (1 + R_t(k))^{1/(k\Delta)} - 1.
@@ -136,7 +136,7 @@ $$
 \sigma_{\text{ann}} = \sigma / \sqrt{\Delta},
 $$ {#eq-annualize-vol}
 
-Vì vậy, độ biến động hàng tháng được tính theo năm bằng cách nhân với $\sqrt{12}$ và độ biến động hàng ngày được tính bằng khoảng $\sqrt{252}$ (giả sử có 252 ngày giao dịch mỗi năm). Riêng đối với Việt Nam, Sở Giao dịch Chứng khoán Hà Nội (HOSE) thường có khoảng 245-250 ngày giao dịch mỗi năm sau khi tính cả các ngày lễ của Việt Nam, con số này đủ gần để quy ước $\sqrt{252}$ trở thành tiêu chuẩn.
+Vì vậy, độ biến động hàng tháng được tính theo năm bằng cách nhân với $\sqrt{12}$ và độ biến động hàng ngày được nhân với khoảng $\sqrt{252}$ (giả sử có 252 ngày giao dịch mỗi năm). Riêng đối với Việt Nam, Sở Giao dịch Chứng khoán Thành phố Hồ Chí Minh (HOSE) thường có khoảng 245-250 ngày giao dịch mỗi năm sau khi tính cả các ngày lễ của Việt Nam, con số này đủ gần để quy ước $\sqrt{252}$ trở thành tiêu chuẩn.
 
 ## Chuẩn bị dữ liệu
 
@@ -183,12 +183,12 @@ print(f"Total observations: {len(prices_monthly):,}")
 # print(f"Exchanges: {prices_monthly['exchange'].unique()}")
 ```
 
-@tbl-sample-overview cung cấp số liệu thống kê tóm tắt về lợi nhuận thô hàng tháng, được chia nhỏ theo sàn giao dịch. Sự khác biệt giữa các sàn giao dịch phản ánh quy mô và độ dốc thanh khoản: HOSE liệt kê các công ty lớn nhất và có tính thanh khoản cao nhất, HNX bao gồm các công ty vốn hóa trung bình và UPCoM lưu trữ các chứng khoán nhỏ hơn và được giao dịch mỏng hơn.
+@tbl-sample-overview cung cấp số liệu thống kê tóm tắt về lợi nhuận thô hàng tháng, được chia nhỏ theo sàn giao dịch. Sự khác biệt giữa các sàn giao dịch phản ánh quy mô và độ dốc thanh khoản: HOSE niêm yết các công ty lớn nhất và có tính thanh khoản cao nhất, HNX bao gồm các công ty vốn hóa trung bình và UPCoM gồm các chứng khoán nhỏ hơn và được giao dịch mỏng hơn.
 
 ```{python}
 #| label: tbl-sample-overview
 #| eval: false
-#| tbl-cap: "Summary statistics of monthly stock returns by exchange. HOSE firms tend to have lower return dispersion and fewer extreme observations compared to HNX and UPCoM, consistent with their larger market capitalization and greater liquidity."
+#| tbl-cap: "Thống kê mô tả lợi nhuận cổ phiếu hằng tháng theo sàn giao dịch. Các doanh nghiệp trên HOSE có xu hướng có độ phân tán lợi nhuận thấp hơn và ít quan sát cực đoan hơn so với HNX và UPCoM, phù hợp với vốn hóa thị trường lớn hơn và thanh khoản cao hơn."
 sample_stats = (
     prices_monthly
     .groupby("exchange")["ret_total"]
@@ -198,9 +198,9 @@ sample_stats = (
 sample_stats
 ```
 
-## Phương pháp 1: Tích lũy thông qua GroupBy
+## Phương pháp 1: Tích số lũy kế (cumulative product) thông qua GroupBy
 
-Cách tiếp cận trực tiếp nhất đối với lợi nhuận kép sử dụng tính chất nhân trong @eq-compound-simple. Đối với mỗi chứng khoán, chúng ta tính tích lũy của lợi nhuận gộp $(1 + R_t)$ trong khoảng thời gian mong muốn.
+Cách tiếp cận trực tiếp nhất đối với lợi nhuận kép sử dụng tính chất nhân trong @eq-compound-simple. Đối với mỗi chứng khoán, chúng ta tính tích số lũy kế của lợi nhuận gộp $(1 + R_t)$ trong khoảng thời gian mong muốn.
 
 ```{python}
 def compute_cumret_cumprod(df, ret_col="ret_total",
@@ -256,8 +256,8 @@ sample_wealth = stock_cumret[
 
 ```{python}
 #| label: fig-wealth-index
-#| fig-cap: "Wealth index (value of 1 VND invested) for selected long-history Vietnamese stocks. Each line represents the cumulative value of a 1 VND investment in a single stock, with all dividends reinvested. The divergence in terminal wealth illustrates the power of compounding over long horizons."
-#| fig-alt: "Line chart showing the growth of 1 VND invested in five different Vietnamese stocks over time."
+#| fig-cap: "Chỉ số tài sản (giá trị của 1 VND đầu tư) đối với một số cổ phiếu Việt Nam có lịch sử dài. Mỗi đường biểu diễn giá trị tích lũy của khoản đầu tư 1 VND vào một cổ phiếu, với toàn bộ cổ tức được tái đầu tư. Sự phân kỳ về tài sản cuối kỳ cho thấy sức mạnh của lãi kép trong các kỳ hạn dài."
+#| fig-alt: "Biểu đồ đường thể hiện sự tăng trưởng của 1 VND đầu tư vào năm cổ phiếu Việt Nam khác nhau theo thời gian."
 #| fig-pos: "htbp"
 plot_wealth = (
     ggplot(sample_wealth, aes(x="date", y="wealth_index",
@@ -274,9 +274,9 @@ plot_wealth = (
 plot_wealth.draw()
 ```
 
-### Xử lý các khoản trả về bị thiếu
+### Xử lý lợi nhuận bị thiếu
 
-Phương pháp tích lũy giá trị lan truyền các giá trị thiếu: nếu bất kỳ $R_t$ nào là `NaN`, toàn bộ tích lũy giá trị từ điểm đó trở đi sẽ trở thành `NaN`. Điều này mang tính thận trọng vì nó giả định rằng việc thiếu lợi nhuận sẽ khiến chỉ số tài sản tiếp theo không xác định. Trong nhiều ứng dụng, đây là hành vi mong muốn vì việc thiếu lợi nhuận có thể cho thấy lỗi dữ liệu hoặc khoảng thời gian cổ phiếu không được giao dịch.
+Phương pháp tích số lũy kế lan truyền các giá trị thiếu: nếu bất kỳ $R_t$ nào là `NaN`, toàn bộ tích số lũy kế từ điểm đó trở đi sẽ trở thành `NaN`. Điều này mang tính thận trọng vì nó giả định rằng việc thiếu lợi nhuận sẽ khiến chỉ số tài sản tiếp theo không xác định. Trong nhiều ứng dụng, đây là hành vi mong muốn vì việc thiếu lợi nhuận có thể cho thấy lỗi dữ liệu hoặc khoảng thời gian cổ phiếu không được giao dịch.
 
 Tuy nhiên, tại thị trường Việt Nam, việc thiếu lợi nhuận có thể phát sinh do tạm ngừng giao dịch kéo dài. Ủy ban Chứng khoán Nhà nước (SSC) và các sở giao dịch có thể tạm ngừng giao dịch cổ phiếu vì nhiều lý do pháp lý khác nhau, chẳng hạn như chậm trễ báo cáo tài chính, thông báo tái cấu trúc doanh nghiệp đang chờ xử lý hoặc nghi ngờ thao túng thị trường. Việc tạm ngừng này có thể kéo dài nhiều ngày, nhiều tuần, thậm chí nhiều tháng. Trong thời gian tạm ngừng như vậy, giá trị cổ phiếu không thay đổi (giá giao dịch cuối cùng vẫn được dùng làm giá tham chiếu), vì vậy việc coi lợi nhuận thiếu là bằng không (tức là không có sự thay đổi giá) có thể phù hợp hơn là sử dụng giá trị `NaN`.
 
@@ -299,11 +299,11 @@ def compute_cumret_skipna(df, ret_col="ret_total",
 Việc coi các giá trị lợi nhuận bị thiếu là bằng không là một giả định có thể phù hợp hoặc không. Nếu lợi nhuận bị thiếu do cổ phiếu bị tạm ngừng giao dịch, thì việc gán giá trị bằng không có thể hợp lý. Nếu lợi nhuận bị thiếu do lỗi dữ liệu hoặc do cổ phiếu thực sự không được giao dịch (ví dụ: đang chờ niêm yết lại sau một sự kiện của công ty), việc gán giá trị bằng không có thể gây ra sai lệch. Luôn luôn điều tra lý do thiếu giá trị trước khi quyết định phương pháp xử lý.
 :::
 
-<!--# The DataCore.vn documentation provides flags for different types of trading suspensions that can guide this decision. -->
+<!--# Tài liệu của DataCore.vn cung cấp các cờ đánh dấu những loại đình chỉ giao dịch khác nhau, có thể hỗ trợ quyết định này. -->
 
 ## Phương pháp 2: Phương pháp tiếp cận Log-Sum-Exp
 
-Phương thức log-sum-exp khai thác thuộc tính cộng của log return (@eq-compound-log). Cách tiếp cận này đặc biệt hữu ích khi tính toán lợi nhuận kép qua các cửa sổ cố định (ví dụ: lợi nhuận hàng năm từ dữ liệu hàng tháng) vì tính tổng vừa hiệu quả về mặt tính toán vừa ổn định về mặt số.
+Phương pháp log-sum-exp khai thác tính chất cộng của lợi nhuận logarit (@eq-compound-log). Cách tiếp cận này đặc biệt hữu ích khi tính toán lợi nhuận kép qua các cửa sổ cố định (ví dụ: lợi nhuận hàng năm từ dữ liệu hàng tháng) vì tính tổng vừa hiệu quả về mặt tính toán vừa ổn định về mặt số.
 
 ```{python}
 def compute_cumret_logsum(df, ret_col="ret_total",
@@ -405,7 +405,7 @@ def compound_return_by_period(df, ret_col="ret_total",
 
 ```{python}
 #| label: tbl-annual-returns
-#| tbl-cap: "Annual compound returns for selected Vietnamese securities. The number of non-missing monthly observations (n_obs) and missing observations (n_miss) are reported to flag potentially incomplete years. A stock-year with n_obs substantially below 12 indicates either partial listing or extended trading halts."
+#| tbl-cap: "Lợi nhuận kép hằng năm của một số chứng khoán Việt Nam. Số quan sát hằng tháng không bị thiếu (n_obs) và số quan sát bị thiếu (n_miss) được báo cáo để đánh dấu các năm có thể chưa đầy đủ. Một cổ phiếu-năm có n_obs thấp hơn đáng kể so với 12 cho thấy cổ phiếu chỉ niêm yết một phần của năm hoặc bị ngừng giao dịch kéo dài."
 annual_returns = compound_return_by_period(
     prices_monthly[
         prices_monthly["symbol"].isin(long_history_stocks)
@@ -427,9 +427,9 @@ recent_annual.head(20)
 Khi số lượng quan sát không bị thiếu (`n_obs`) nhỏ hơn 12 đối với lợi nhuận hàng năm, lợi nhuận kép chỉ thể hiện một phần của năm. Điều này thường xảy ra trong năm đầu tiên và năm cuối cùng khi một chứng khoán được niêm yết trên HOSE, HNX hoặc UPCoM, hoặc khi một cổ phiếu được chuyển đổi giữa các sàn giao dịch (ví dụ: từ UPCoM sang HOSE sau khi đáp ứng các yêu cầu niêm yết). Người dùng nên quyết định giữ lại hay loại bỏ các quan sát không đầy đủ như vậy tùy thuộc vào thiết kế nghiên cứu của họ.
 :::
 
-## Phương pháp 3: Kết hợp lặp đi lặp lại với logic giữ nguyên
+## Phương pháp 3: Tính lãi kép lặp với logic giữ lại
 
-Trong một số ứng dụng, chúng ta cần kiểm soát chi tiết cách các giá trị thiếu, sự kiện loại bỏ khỏi danh sách hoặc các điều kiện đặc biệt khác ảnh hưởng đến quá trình tính lãi kép. Phương pháp lặp xử lý từng quan sát một cách tuần tự, chuyển tiếp lợi nhuận tích lũy và áp dụng logic điều kiện ở mỗi bước.
+Trong một số ứng dụng, chúng ta cần kiểm soát chi tiết cách các giá trị thiếu, sự kiện hủy niêm yết hoặc các điều kiện đặc biệt khác ảnh hưởng đến quá trình tính lãi kép. Phương pháp lặp xử lý từng quan sát một cách tuần tự, chuyển tiếp lợi nhuận tích lũy và áp dụng logic điều kiện ở mỗi bước.
 
 ```{python}
 def compute_cumret_iterative(df, ret_col="ret_total",
@@ -487,7 +487,7 @@ Phương pháp lặp là phương pháp chậm nhất trong bốn phương pháp
 
 ```{python}
 #| label: tbl-missing-comparison
-#| tbl-cap: "Effect of different missing value treatments on cumulative returns. The 'carry' strategy assumes zero return for missing periods (appropriate for trading halts); 'propagate' makes all subsequent values undefined (conservative); 'reset' restarts the cumulative product after the missing spell."
+#| tbl-cap: "Ảnh hưởng của các cách xử lý giá trị thiếu khác nhau lên lợi nhuận tích lũy. Chiến lược 'carry' giả định lợi nhuận bằng không cho các kỳ bị thiếu (phù hợp với trường hợp ngừng giao dịch); 'propagate' khiến mọi giá trị về sau đều không xác định (thận trọng); 'reset' khởi động lại tích lũy sau chuỗi kỳ bị thiếu."
 example = pd.DataFrame({
     "symbol": [1]*6,
     "date": pd.date_range("2024-01-31", periods=6, freq="ME"),
@@ -510,13 +510,13 @@ comparison = pd.DataFrame({
 comparison
 ```
 
-## Phương pháp 4: Lợi nhuận kép tích lũy
+## Phương pháp 4: Lợi nhuận kép trượt
 
 Đối với nhiều ứng dụng thực nghiệm, bao gồm các chiến lược dựa trên động lượng, đánh giá hiệu suất và ước tính rủi ro, chúng ta cần lợi nhuận kép trên các cửa sổ trượt có độ dài cố định. Phần này trình bày cách tính lợi nhuận kép trượt hiệu quả bằng thư viện pandas.
 
-### Cửa sổ trượt thông qua lợi nhuận từ nhật ký
+### Cửa sổ trượt thông qua lợi nhuận logarit
 
-Phương pháp hiệu quả nhất là kết hợp phương pháp logarit tổng lũy ​​thừa với tổng tích lũy:
+Phương pháp hiệu quả nhất là kết hợp phương pháp log-sum-exp với tổng trượt:
 
 ```{python}
 def rolling_compound_return(df, ret_col="ret_total",
@@ -564,7 +564,7 @@ stock_rolling = rolling_compound_return(
 )
 ```
 
-Chúng ta cũng hãy tính toán lợi nhuận luân chuyển tương tự cho chỉ số thị trường, vốn được dùng làm chuẩn mực để tính toán lợi nhuận vượt trội:
+Chúng ta cũng hãy tính toán lợi nhuận luân chuyển tương tự cho chỉ số thị trường, vốn được dùng làm chuẩn mực để tính toán lợi nhuận vượt mức:
 
 ```{python}
 # Compute market rolling returns
@@ -597,12 +597,12 @@ stock_rolling = stock_rolling.merge(
 )
 ```
 
-@fig-rolling-returns hiển thị sự phân bố lợi nhuận kép tích lũy trong 12 tháng theo thời gian.
+@fig-rolling-returns hiển thị sự phân bố lợi nhuận kép trượt trong 12 tháng theo thời gian.
 
 ```{python}
 #| label: fig-rolling-returns
-#| fig-cap: "Cross-sectional distribution of 12-month rolling compound returns for Vietnamese stocks over time. The shaded band represents the interquartile range (25th–75th percentiles), while the solid line shows the median. Sharp market-wide events—such as the 2008 global financial crisis and the 2020 COVID-19 shock—are visible as periods when even the median return turns sharply negative."
-#| fig-alt: "Time series chart showing the distribution of 12-month rolling stock returns in Vietnam."
+#| fig-cap: "Phân phối chéo của lợi nhuận kép trượt 12 tháng của các cổ phiếu Việt Nam theo thời gian. Dải tô bóng thể hiện khoảng tứ phân vị (phân vị 25 đến 75), còn đường liền nét thể hiện trung vị. Các sự kiện mạnh trên toàn thị trường, như khủng hoảng tài chính toàn cầu 2008 và cú sốc COVID-19 năm 2020, hiện rõ thành những giai đoạn mà ngay cả lợi nhuận trung vị cũng giảm mạnh xuống âm."
+#| fig-alt: "Biểu đồ chuỗi thời gian thể hiện phân phối lợi nhuận cổ phiếu trượt 12 tháng tại Việt Nam."
 #| fig-pos: "htbp"
 rolling_stats = (
     stock_rolling
@@ -628,13 +628,13 @@ plot_rolling = (
 plot_rolling.draw()
 ```
 
-### Xác minh lợi nhuận luân chuyển
+### Xác minh lợi nhuận trượt
 
 Nên kiểm tra lại tỷ suất lợi nhuận kép so với phép tính trực tiếp. Chúng tôi chọn một cổ phiếu và tính toán lại tỷ suất lợi nhuận 12 tháng của nó theo cách thủ công:
 
 ```{python}
 #| label: tbl-rolling-verify
-#| tbl-cap: "Verification of rolling compound return calculation. The 'Direct' column computes the product of the preceding 12 monthly gross returns minus one; 'Rolling' uses our log-sum-exp function. Differences are at machine precision."
+#| tbl-cap: "Kiểm chứng cách tính lợi nhuận kép trượt. Cột 'Direct' tính tích của 12 lợi nhuận gộp hằng tháng liền trước rồi trừ một; cột 'Rolling' dùng hàm log-sum-exp của chúng ta. Các chênh lệch ở mức độ chính xác của máy tính."
 test_stock = long_history_stocks[0]
 test_data = (
     stock_rolling[stock_rolling["symbol"] == test_stock]
@@ -665,9 +665,9 @@ verify["difference"] = (
 verify.round(8)
 ```
 
-## Việc hủy niêm yết và thiên kiến ​​sống sót
+## Lợi nhuận hủy niêm yết và thiên kiến sống sót
 
-Một vấn đề thực tiễn quan trọng khi tính toán lợi nhuận kép là cách xử lý các chứng khoán bị loại khỏi sàn giao dịch. Việc hủy niêm yết xảy ra vì nhiều lý do: sáp nhập và mua lại, phá sản, không đáp ứng yêu cầu niêm yết, rút ​​lui tự nguyện hoặc chuyển sang sàn giao dịch khác. Nếu lợi nhuận từ việc hủy niêm yết không được tính vào, lợi nhuận kép thu được sẽ bị sai lệch do chọn lọc dữ liệu: chúng đánh giá quá cao hiệu suất vì các kết quả xấu nhất (phá sản, hủy niêm yết bắt buộc) bị loại trừ [@shumway1997delisting].
+Một vấn đề thực tiễn quan trọng khi tính toán lợi nhuận kép là cách xử lý các chứng khoán bị loại khỏi sàn giao dịch. Việc hủy niêm yết xảy ra vì nhiều lý do: sáp nhập và mua lại, phá sản, không đáp ứng yêu cầu niêm yết, rút lui tự nguyện hoặc chuyển sang sàn giao dịch khác. Nếu lợi nhuận từ việc hủy niêm yết không được tính vào, lợi nhuận kép thu được sẽ mắc thiên kiến sống sót: chúng đánh giá quá cao hiệu suất vì các kết quả xấu nhất (phá sản, hủy niêm yết bắt buộc) bị loại trừ [@shumway1997delisting].
 
 ### Bối cảnh Việt Nam
 
@@ -677,11 +677,11 @@ Tại Việt Nam, chứng khoán có thể bị hủy niêm yết vì nhiều l�
 - **Hủy niêm yết tự nguyện**: khi các cổ đông của một công ty bỏ phiếu rút khỏi sàn giao dịch.
 - **Chuyển đổi**: khi một công ty chuyển từ UPCoM sang HOSE/HNX (nâng hạng) hoặc từ HOSE/HNX sang UPCoM (hạ hạng). Những chuyển đổi này không phải là hủy niêm yết thực sự về mặt kinh tế mà cần được xử lý cẩn thận trong việc tính toán lợi nhuận.
 
-Không giống như các thị trường phát triển hơn, nơi dữ liệu về lợi nhuận từ việc hủy niêm yết được biên soạn một cách có hệ thống, dữ liệu thị trường Việt Nam không phải lúc nào cũng cung cấp lợi nhuận rõ ràng từ việc hủy niêm yết. Khi một cổ phiếu bị hủy niêm yết vì lý do chính đáng (ví dụ: phá sản), giá giao dịch cuối cùng có thể đánh giá quá cao giá trị thu hồi của chứng khoán. Các nhà nghiên cứu nên nhận thức được hạn chế này và xem xét việc ước tính lợi nhuận từ việc hủy niêm yết dựa trên lý do hủy niêm yết, theo phương pháp của @shumway1997delisting.
+Không giống như các thị trường phát triển hơn, nơi dữ liệu về lợi nhuận từ việc hủy niêm yết được biên soạn một cách có hệ thống, dữ liệu thị trường Việt Nam không phải lúc nào cũng cung cấp lợi nhuận rõ ràng từ việc hủy niêm yết. Khi một cổ phiếu bị hủy niêm yết do vi phạm hoặc gặp khó khăn nghiêm trọng (ví dụ: phá sản), giá giao dịch cuối cùng có thể đánh giá quá cao giá trị thu hồi của chứng khoán. Các nhà nghiên cứu nên nhận thức được hạn chế này và xem xét việc ước tính lợi nhuận từ việc hủy niêm yết dựa trên lý do hủy niêm yết, theo phương pháp của @shumway1997delisting.
 
-### Tích hợp Lợi nhuận Khi Gỡ Bỏ Niêm yết
+### Tích hợp lợi nhuận hủy niêm yết
 
-Khi một chứng khoán bị gỡ bỏ niêm yết, một "lợi nhuận khi gỡ bỏ niêm yết" cuối cùng sẽ ghi nhận sự thay đổi giá giữa ngày giao dịch thường xuyên cuối cùng và việc thực hiện giá sau khi gỡ bỏ niêm yết. Lợi nhuận này phải được kết hợp với lợi nhuận thông thường trong tháng gỡ bỏ:
+Khi một chứng khoán bị hủy niêm yết, một "lợi nhuận hủy niêm yết" cuối cùng sẽ ghi nhận sự thay đổi giá giữa ngày giao dịch bình thường cuối cùng và mức giá thực nhận sau khi hủy niêm yết. Lợi nhuận này phải được ghép lãi với lợi nhuận thông thường trong tháng hủy niêm yết:
 
 $$
 R_t^{\text{adj}} = (1 + R_t)(1 + R_t^{\text{delist}}) - 1,
@@ -726,15 +726,15 @@ def adjust_for_delisting(df, ret_col="ret_total",
 
 ### Tác động của việc điều chỉnh hủy niêm yết
 
-Mức độ sai lệch do hủy niêm yết phụ thuộc vào tần suất và mức độ nghiêm trọng của các sự kiện hủy niêm yết. @shumway1997delisting đã chỉ ra rằng, tại các thị trường phát triển, việc bỏ qua lợi nhuận từ hủy niêm yết sẽ tạo ra sai lệch tăng khoảng 1% mỗi năm trong lợi nhuận danh mục đầu tư bình quân gia quyền. Sai lệch này lớn hơn đối với cổ phiếu vốn hóa nhỏ và cổ phiếu giá trị, những loại cổ phiếu dễ gặp khó khăn tài chính hơn. Tại Việt Nam, nơi các công ty nhỏ hơn trên HNX và UPCoM phải đối mặt với những hạn chế thanh khoản chặt chẽ hơn và rủi ro vỡ nợ cao hơn, sai lệch này thậm chí còn rõ rệt hơn. Trong các vụ hủy niêm yết ở thị trường mới nổi, việc hủy niêm yết bắt buộc thường liên quan đến các công ty gặp khó khăn tài chính nghiêm trọng, trong đó giá trị vốn chủ sở hữu còn lại gần bằng không, ngụ ý lợi nhuận từ hủy niêm yết có thể lên tới gần -100% trong trường hợp xấu nhất.
+Mức độ sai lệch do hủy niêm yết phụ thuộc vào tần suất và mức độ nghiêm trọng của các sự kiện hủy niêm yết. @shumway1997delisting đã chỉ ra rằng, tại các thị trường phát triển, việc bỏ qua lợi nhuận từ hủy niêm yết sẽ tạo ra sai lệch tăng khoảng 1% mỗi năm trong lợi nhuận danh mục đầu tư trọng số bằng nhau. Sai lệch này lớn hơn đối với cổ phiếu vốn hóa nhỏ và cổ phiếu giá trị, những loại cổ phiếu dễ gặp khó khăn tài chính hơn. Tại Việt Nam, nơi các công ty nhỏ hơn trên HNX và UPCoM phải đối mặt với những hạn chế thanh khoản chặt chẽ hơn và rủi ro vỡ nợ cao hơn, sai lệch này có thể còn rõ rệt hơn. Trong các vụ hủy niêm yết ở thị trường mới nổi, việc hủy niêm yết bắt buộc thường liên quan đến các công ty gặp khó khăn tài chính nghiêm trọng, trong đó giá trị vốn chủ sở hữu còn lại gần bằng không, ngụ ý lợi nhuận từ hủy niêm yết có thể lên tới gần -100% trong trường hợp xấu nhất.
 
-## Ước tính biến động luân chuyển
+## Ước tính biến động trượt
 
 Biến động lợi nhuận cổ phiếu là yếu tố đầu vào quan trọng đối với quản lý rủi ro, định giá quyền chọn và nhiều mô hình định giá tài sản thực nghiệm. Một phương pháp phổ biến là ước tính độ lệch chuẩn trượt của lợi nhuận trong một khoảng thời gian nhất định.
 
-### Biến động luân chuyển 24 tháng
+### Biến động trượt 24 tháng
 
-Theo @ben2012hedge, chúng tôi tính toán độ biến động lợi nhuận tổng thể của cổ phiếu bằng độ lệch chuẩn luân chuyển của lợi nhuận hàng tháng trong khoảng thời gian 24 tháng:
+Theo @ben2012hedge, chúng tôi tính toán độ biến động lợi nhuận tổng thể của cổ phiếu bằng độ lệch chuẩn trượt của lợi nhuận hàng tháng trong khoảng thời gian 24 tháng:
 
 $$
 \hat{\sigma}_{i,t}^{24} = \sqrt{\frac{1}{23}\sum_{j=0}^{23}(R_{i,t-j} - \bar{R}_{i,t}^{24})^2},
@@ -778,12 +778,12 @@ def rolling_volatility(df, ret_col="ret_total",
 stock_vol = rolling_volatility(stock_rolling)
 ```
 
-@fig-vol-distribution thể hiện sự phân bố theo mặt cắt ngang của độ biến động hàng năm trong 24 tháng theo thời gian.
+@fig-vol-distribution thể hiện sự phân bố theo mặt cắt ngang của độ biến động 24 tháng quy năm theo thời gian.
 
 ```{python}
 #| label: fig-vol-distribution
-#| fig-cap: "Cross-sectional distribution of annualized 24-month rolling stock return volatility for Vietnamese equities. The median volatility (solid line) and interquartile range (shaded band) capture both secular trends and crisis episodes. Vietnamese stocks exhibit structurally higher volatility than developed-market peers, with the median annualized volatility typically ranging between 30% and 50%."
-#| fig-alt: "Time series of the cross-sectional distribution of stock return volatility in Vietnam."
+#| fig-cap: "Phân phối theo mặt cắt ngang của độ biến động lợi nhuận cổ phiếu trượt 24 tháng quy năm của các cổ phiếu Việt Nam. Độ biến động trung vị (đường liền nét) và khoảng tứ phân vị (dải tô bóng) phản ánh cả các xu hướng dài hạn lẫn các giai đoạn khủng hoảng. Cổ phiếu Việt Nam có độ biến động cao hơn về mặt cấu trúc so với các thị trường phát triển, với độ biến động quy năm trung vị thường nằm trong khoảng 30% đến 50%."
+#| fig-alt: "Chuỗi thời gian của phân phối theo mặt cắt ngang của độ biến động lợi nhuận cổ phiếu tại Việt Nam."
 #| fig-pos: "htbp"
 vol_stats = (
     stock_vol
@@ -810,13 +810,13 @@ plot_vol.draw()
 
 ### Biến động và lợi nhuận kép: Sự hao hụt phương sai
 
-Như đã lưu ý trong @eq-arithmetic-geometric, lợi nhuận trung bình hình học thấp hơn lợi nhuận trung bình số học khoảng $\sigma^2/2$. Hiện tượng "giảm phương sai" hay "sức cản biến động" này có nghĩa là hai danh mục đầu tư có cùng lợi nhuận trung bình số học nhưng độ biến động khác nhau sẽ có lợi nhuận kép khác nhau: danh mục đầu tư có độ biến động thấp hơn sẽ tích lũy được nhiều tài sản hơn ở giai đoạn cuối kỳ.
+Như đã lưu ý trong @eq-arithmetic-geometric, lợi nhuận trung bình hình học thấp hơn lợi nhuận trung bình số học khoảng $\sigma^2/2$. Hiện tượng "hao hụt phương sai" hay "sức cản biến động" này có nghĩa là hai danh mục đầu tư có cùng lợi nhuận trung bình số học nhưng độ biến động khác nhau sẽ có lợi nhuận kép khác nhau: danh mục đầu tư có độ biến động thấp hơn sẽ tích lũy được nhiều tài sản hơn ở giai đoạn cuối kỳ.
 
-Hiệu ứng này có ý nghĩa quan trọng về mặt định lượng ở Việt Nam. Một cổ phiếu có lợi nhuận trung bình hàng tháng là 1,5% và độ lệch chuẩn hàng tháng là 10% sẽ chịu ảnh hưởng bởi sự biến động khoảng 0,10^2/2 = 0,5% mỗi tháng, hoặc khoảng 6% mỗi năm. Điều này phù hợp với quan sát cho thấy các nhà đầu tư Việt Nam đang phải đối mặt với sự suy giảm đáng kể về giá trị tài sản tích lũy do sự biến động cao của từng cổ phiếu riêng lẻ. Chúng ta có thể kiểm chứng điều này bằng thực nghiệm bằng cách phân loại cổ phiếu theo nhóm biến động và so sánh lợi nhuận tích lũy:
+Hiệu ứng này có ý nghĩa quan trọng về mặt định lượng ở Việt Nam. Một cổ phiếu có lợi nhuận trung bình hàng tháng là 1,5% và độ lệch chuẩn hàng tháng là 10% sẽ chịu mức lực cản biến động khoảng 0,10^2/2 = 0,5% mỗi tháng, hoặc khoảng 6% mỗi năm. Điều này phù hợp với quan sát cho thấy các nhà đầu tư Việt Nam đang phải đối mặt với sự suy giảm đáng kể về giá trị tài sản tích lũy do sự biến động cao của từng cổ phiếu riêng lẻ. Chúng ta có thể kiểm chứng điều này bằng thực nghiệm bằng cách phân loại cổ phiếu theo nhóm biến động và so sánh lợi nhuận tích lũy:
 
 ```{python}
 #| label: tbl-vol-drag
-#| tbl-cap: "Arithmetic mean, geometric mean, and volatility by volatility quintile for Vietnamese stocks. The difference between arithmetic and geometric mean increases with volatility, confirming the variance drain effect. The magnitude of the drag is notably large for the highest-volatility quintile, typical of small and illiquid stocks on HNX and UPCoM."
+#| tbl-cap: "Trung bình số học, trung bình hình học và độ biến động theo ngũ phân vị biến động của các cổ phiếu Việt Nam. Chênh lệch giữa trung bình số học và trung bình hình học tăng theo độ biến động, xác nhận hiệu ứng hao hụt do phương sai (variance drain). Mức hao hụt đặc biệt lớn ở ngũ phân vị có biến động cao nhất, điển hình cho các cổ phiếu nhỏ và kém thanh khoản trên HNX và UPCoM."
 annual_data = compound_return_by_period(
     prices_monthly, period="year"
 )
@@ -866,11 +866,11 @@ vol_summary
 
 ## Lợi nhuận kép vào thời điểm kết thúc năm tài chính
 
-Một phương pháp được sử dụng rộng rãi trong nghiên cứu kế toán và tài chính là liên kết lợi nhuận kép với ngày kết thúc kỳ kế toán cụ thể của từng công ty. Điều này rất cần thiết để tính toán lợi nhuận bất thường khi mua và nắm giữ (BHAR) cho các nghiên cứu sự kiện, sự biến động sau khi công bố lợi nhuận và các nghiên cứu khác mà ngày xảy ra sự kiện khác nhau tùy thuộc vào từng công ty.
+Một phương pháp được sử dụng rộng rãi trong nghiên cứu kế toán và tài chính là liên kết lợi nhuận kép với ngày kết thúc kỳ kế toán cụ thể của từng công ty. Điều này rất cần thiết để tính toán lợi nhuận bất thường khi mua và nắm giữ (BHAR) cho các nghiên cứu sự kiện, hiện tượng trôi giá sau khi công bố lợi nhuận (post-earnings-announcement drift) và các nghiên cứu khác mà ngày xảy ra sự kiện khác nhau tùy thuộc vào từng công ty.
 
 Tại Việt Nam, đa số các công ty niêm yết tuân theo năm tài chính dương lịch (tháng 1 – tháng 12), theo quy định của Luật Kế toán, trừ trường hợp được Bộ Tài chính miễn trừ. Tuy nhiên, các công ty trong một số ngành (ví dụ: nông nghiệp, du lịch) có thể sử dụng năm tài chính không theo chuẩn, kết thúc vào tháng 3, tháng 6 hoặc tháng 9.
 
-<!--# The DataCore.vn financial statements database records the firm-specific fiscal year end for each firm-year. -->
+<!--# Cơ sở dữ liệu báo cáo tài chính của DataCore.vn ghi nhận ngày kết thúc năm tài chính riêng của từng doanh nghiệp theo từng năm. -->
 
 ### Điều chỉnh lợi nhuận phù hợp với các kỳ kế toán
 
@@ -968,19 +968,19 @@ def compound_returns_around_event(
 
 ### Lợi nhuận bất thường khi mua và nắm giữ so với lợi nhuận bất thường tích lũy
 
-Đối với các nghiên cứu sự kiện và đánh giá hiệu suất, chúng ta thường muốn có lợi nhuận kép **vượt trội**, tức là lợi nhuận kép của cổ phiếu trừ đi lợi nhuận kép của chỉ số tham chiếu trong cùng khoảng thời gian. Lợi nhuận bất thường khi mua và nắm giữ (BHAR) được định nghĩa là
+Đối với các nghiên cứu sự kiện và đánh giá hiệu suất, chúng ta thường muốn có lợi nhuận kép **vượt mức**, tức là lợi nhuận kép của cổ phiếu trừ đi lợi nhuận kép của chỉ số tham chiếu trong cùng khoảng thời gian. Lợi nhuận bất thường khi mua và nắm giữ (BHAR) được định nghĩa là
 
 $$
 \text{BHAR}_{i,t}(k) = \prod_{j=1}^{k}(1 + R_{i,t+j}) - \prod_{j=1}^{k}(1 + R_{b,t+j}),
 $$ {#eq-bhar}
 
-trong đó $R_{b,t}$ là lợi suất chuẩn (chỉ số thị trường, danh mục đầu tư phù hợp quy mô, v.v.). Điều này khác với lợi suất bất thường tích lũy (CAR), là tổng của các lợi suất bất thường đơn giản:
+trong đó $R_{b,t}$ là lợi nhuận chuẩn so sánh (chỉ số thị trường, danh mục đối sánh theo quy mô, v.v.). Điều này khác với lợi nhuận bất thường tích lũy (CAR), là tổng của các lợi nhuận bất thường đơn giản:
 
 $$
 \text{CAR}_{i,t}(k) = \sum_{j=1}^{k}(R_{i,t+j} - R_{b,t+j}).
 $$ {#eq-car}
 
-BHAR phản ánh tốt hơn trải nghiệm thực tế của nhà đầu tư vì nó thể hiện sự tích lũy lợi nhuận, trong khi CAR ngầm giả định việc tái cân bằng hàng ngày để duy trì vị thế bằng nhau về giá trị đô la trong cổ phiếu và chỉ số tham chiếu [@barber1997detecting]. Sự khác biệt này đặc biệt quan trọng ở Việt Nam, nơi lợi nhuận của từng cổ phiếu có thể biến động mạnh và do đó hiệu ứng tích lũy được khuếch đại. @lyon1999improved cung cấp thêm phân tích về các đặc tính thống kê của BHAR và đề xuất các giá trị tới hạn được lấy mẫu bằng phương pháp bootstrap để suy luận.
+BHAR phản ánh tốt hơn trải nghiệm thực tế của nhà đầu tư vì nó thể hiện sự tích lũy lợi nhuận, trong khi CAR ngầm giả định việc tái cân bằng hàng ngày để duy trì vị thế có giá trị tiền bằng nhau trong cổ phiếu và chỉ số tham chiếu [@barber1997detecting]. Sự khác biệt này đặc biệt quan trọng ở Việt Nam, nơi lợi nhuận của từng cổ phiếu có thể biến động mạnh và do đó hiệu ứng tích lũy được khuếch đại. @lyon1999improved cung cấp thêm phân tích về các đặc tính thống kê của BHAR và đề xuất các giá trị tới hạn được lấy mẫu bằng phương pháp bootstrap để suy luận.
 
 ```{python}
 def compute_bhar(stock_returns, benchmark_returns):
@@ -1016,7 +1016,7 @@ $$ {#eq-book-equity}
 
 Trong đó, SE là vốn chủ sở hữu, DT là thuế hoãn lại, ITC là tín dụng thuế đầu tư và PS là giá trị cổ phiếu ưu đãi. Đối với cổ phiếu ưu đãi, thứ tự ưu tiên là: giá trị mua lại (nếu có), sau đó là giá trị thanh lý, rồi đến giá trị ghi sổ.
 
-Tại Việt Nam, các chuẩn mực kế toán (Chuẩn mực kế toán Việt Nam, VAS, và ngày càng nhiều trường hợp áp dụng IFRS) đưa ra một hệ thống tài khoản hơi khác. Vốn chủ sở hữu được báo cáo trên bảng cân đối kế toán là *Vốn chủ sở hữu*, bao gồm vốn góp của chủ sở hữu, thặng dư vốn cổ phần, điều chỉnh cổ phiếu quỹ, lợi nhuận giữ lại chưa phân phối và các khoản dự trữ khác. Tài sản và nợ thuế hoãn lại được báo cáo riêng. Cổ phiếu ưu đãi khá hiếm gặp ở các công ty niêm yết của Việt Nam (hầu hết chỉ phát hành cổ phiếu phổ thông), nhưng khi có, giá trị sổ sách của nó cần được trừ khỏi tổng vốn chủ sở hữu.
+Tại Việt Nam, các chuẩn mực kế toán (Chuẩn mực kế toán Việt Nam, VAS, và ngày càng nhiều trường hợp áp dụng IFRS) đưa ra một hệ thống tài khoản hơi khác. Vốn chủ sở hữu được báo cáo trên bảng cân đối kế toán là *Vốn chủ sở hữu*, bao gồm vốn góp của chủ sở hữu, thặng dư vốn cổ phần, điều chỉnh cổ phiếu quỹ, lợi nhuận sau thuế chưa phân phối và các quỹ khác thuộc vốn chủ sở hữu. Tài sản và nợ thuế hoãn lại được báo cáo riêng. Cổ phiếu ưu đãi khá hiếm gặp ở các công ty niêm yết của Việt Nam (hầu hết chỉ phát hành cổ phiếu phổ thông), nhưng khi có, giá trị sổ sách của nó cần được trừ khỏi tổng vốn chủ sở hữu.
 
 ```{python}
 def compute_book_equity(df):
@@ -1089,12 +1089,12 @@ def compute_max_drawdown(df, ret_col="ret_total",
     return df
 ```
 
-@fig-drawdown minh họa biểu đồ giảm giá trị cổ phiếu đã chọn.
+@fig-drawdown minh họa hồ sơ sụt giảm (drawdown) của cổ phiếu đã chọn.
 
 ```{python}
 #| label: fig-drawdown
-#| fig-cap: "Drawdown profile for a selected Vietnamese stock showing the percentage decline from each running peak. The maximum drawdown (horizontal dashed line) represents the worst peak-to-trough loss over the full sample. Vietnamese stocks frequently exhibit drawdowns exceeding 50%, reflecting the market's high volatility and susceptibility to sentiment-driven corrections."
-#| fig-alt: "Time series chart of drawdowns for a single Vietnamese stock."
+#| fig-cap: "Hồ sơ sụt giảm (drawdown) của một cổ phiếu Việt Nam được chọn, thể hiện mức giảm phần trăm so với đỉnh cao nhất tính đến từng thời điểm. Mức sụt giảm tối đa (đường nét đứt ngang) là khoản lỗ từ đỉnh đến đáy tồi tệ nhất trong toàn mẫu. Cổ phiếu Việt Nam thường xuyên có mức sụt giảm vượt 50%, phản ánh độ biến động cao của thị trường và xu hướng điều chỉnh theo tâm lý."
+#| fig-alt: "Biểu đồ chuỗi thời gian của các mức sụt giảm đối với một cổ phiếu Việt Nam."
 #| fig-pos: "htbp"
 dd_data = compute_max_drawdown(
     prices_monthly[
@@ -1118,7 +1118,7 @@ plot_dd.draw()
 
 ## Kết hợp tất cả lại với nhau: Một quy trình toàn diện
 
-Giờ đây, chúng tôi kết hợp tất cả các phương pháp vào một quy trình duy nhất để tạo ra một tập dữ liệu sẵn sàng nghiên cứu với lợi nhuận kép luân phiên, lợi nhuận thị trường, biến động và các biện pháp sụt giảm.
+Giờ đây, chúng tôi kết hợp tất cả các phương pháp vào một quy trình duy nhất để tạo ra một tập dữ liệu sẵn sàng nghiên cứu với lợi nhuận kép trượt, lợi nhuận thị trường, biến động và các thước đo sụt giảm.
 
 ```{python}
 def build_compound_return_dataset(
@@ -1203,7 +1203,7 @@ compound_dataset = build_compound_return_dataset(prices_monthly)
 
 ```{python}
 #| label: tbl-summary-stats
-#| tbl-cap: "Summary statistics for compound return variables across all Vietnamese stock-month observations. Returns are in decimal form (0.10 = 10%). The wide dispersion of 12-month compound returns and the high median volatility reflect the emerging market characteristics of the Vietnamese equity market."
+#| tbl-cap: "Thống kê mô tả các biến lợi nhuận kép trên toàn bộ quan sát cổ phiếu-tháng của Việt Nam. Lợi nhuận được biểu diễn dưới dạng thập phân (0.10 = 10%). Độ phân tán rộng của lợi nhuận kép 12 tháng và độ biến động trung vị cao phản ánh đặc điểm thị trường mới nổi của thị trường chứng khoán Việt Nam."
 summary_cols = ["ret_total", "ret_3", "ret_6", "ret_12",
                 "exret_3", "exret_12", "vol_24", "drawdown"]
 available_cols = [c for c in summary_cols
@@ -1224,8 +1224,8 @@ summary
 
 ```{python}
 #| label: fig-horizon-comparison
-#| fig-cap: "Cross-sectional distribution of compound returns at different horizons (3, 6, and 12 months) for Vietnamese stocks. Longer horizons exhibit greater dispersion and more pronounced right skewness, reflecting the compounding of idiosyncratic risk. The fat tails are more extreme than those typically observed in developed markets, consistent with the higher volatility environment."
-#| fig-alt: "Overlaid density plots of compound returns at 3, 6, and 12 month horizons for Vietnamese stocks."
+#| fig-cap: "Phân phối chéo của lợi nhuận kép ở các kỳ hạn khác nhau (3, 6 và 12 tháng) của các cổ phiếu Việt Nam. Kỳ hạn càng dài thì độ phân tán càng lớn và độ lệch phải càng rõ rệt, phản ánh sự cộng gộp của rủi ro đặc thù. Đuôi dày cực đoan hơn so với thường thấy ở các thị trường phát triển, phù hợp với môi trường biến động cao hơn."
+#| fig-alt: "Các biểu đồ mật độ chồng nhau của lợi nhuận kép ở kỳ hạn 3, 6 và 12 tháng đối với các cổ phiếu Việt Nam."
 #| fig-pos: "htbp"
 horizon_data = pd.DataFrame()
 for k in [3, 6, 12]:
@@ -1270,25 +1270,25 @@ Tuy nhiên, giới hạn giá có thể gây ra sai lệch trong các tính toá
 
 ### Giới hạn sở hữu nước ngoài
 
-Việt Nam áp đặt giới hạn sở hữu nước ngoài (FOL) đối với các công ty niêm yết, thường giới hạn ở mức 49% đối với hầu hết các ngành và thấp hơn (30% hoặc ít hơn) đối với một số lĩnh vực bị hạn chế như ngân hàng và viễn thông. Khi một cổ phiếu đạt đến FOL, các nhà đầu tư nước ngoài chỉ có thể mua cổ phiếu từ những người bán nước ngoài khác, tạo ra một thị trường cao cấp song song cho cổ phiếu hội đồng quản trị nước ngoài. Điều này không ảnh hưởng trực tiếp đến việc tính toán lợi nhuận kép (sử dụng giá giao dịch chính thức), nhưng các nhà nghiên cứu nghiên cứu lợi nhuận danh mục đầu tư xuyên biên giới nên lưu ý rằng giá hiệu quả mà các nhà đầu tư nước ngoài trả có thể khác với giá bảng [@vo2017foreign].
+Việt Nam áp đặt giới hạn sở hữu nước ngoài (FOL) đối với các công ty niêm yết, thường giới hạn ở mức 49% đối với hầu hết các ngành và thấp hơn (30% hoặc ít hơn) đối với một số lĩnh vực bị hạn chế như ngân hàng và viễn thông. Khi một cổ phiếu đạt đến FOL, các nhà đầu tư nước ngoài chỉ có thể mua cổ phiếu từ những người bán nước ngoài khác, tạo ra một thị trường song song có giá cao hơn (premium) cho cổ phiếu trên bảng giao dịch dành cho nhà đầu tư nước ngoài. Điều này không ảnh hưởng trực tiếp đến việc tính toán lợi nhuận kép (sử dụng giá giao dịch chính thức), nhưng các nhà nghiên cứu xem xét lợi nhuận danh mục đầu tư xuyên biên giới nên lưu ý rằng giá hiệu quả mà các nhà đầu tư nước ngoài trả có thể khác với giá trên bảng giao dịch chính [@vo2017foreign].
 
-### Chỉ số VN-Index và các điểm chuẩn thị trường
+### Chỉ số VN-Index và các chỉ số tham chiếu thị trường
 
-Đối với lợi nhuận kép chuẩn, các chỉ số chính của Việt Nam là:
+Đối với lợi nhuận kép của chỉ số tham chiếu, các chỉ số chính của Việt Nam là:
 
 - **VN-Index**: Chỉ số tính theo giá trị vốn hóa của tất cả các cổ phiếu niêm yết trên HOSE.
-- **VN30**: 30 cổ phiếu lớn nhất và có tính thanh khoản cao nhất trên HOSE, được soát xét nửa năm.
+- **VN30**: 30 cổ phiếu lớn nhất và có tính thanh khoản cao nhất trên HOSE, được xem xét lại định kỳ nửa năm một lần.
 - **HNX-Index**: Chỉ số tính theo giá trị vốn hóa của các cổ phiếu niêm yết trên HNX.
 
-VN-Index là điểm chuẩn được sử dụng rộng rãi nhất và là lợi nhuận thị trường mặc định trong bộ dữ liệu của chúng tôi.
+VN-Index là chỉ số tham chiếu được sử dụng rộng rãi nhất và là lợi nhuận thị trường mặc định trong bộ dữ liệu của chúng tôi.
 
-## Cân nhắc hiệu suất
+## Cân nhắc về hiệu năng tính toán
 
-Khi làm việc với các tập dữ liệu lớn, hiệu quả tính toán rất quan trọng. @tbl-performance-benchmark so sánh thời gian thực hiện của bốn phương pháp tổng hợp của chúng tôi trên một tập dữ liệu được tiêu chuẩn hóa.
+Khi làm việc với các tập dữ liệu lớn, hiệu quả tính toán rất quan trọng. @tbl-performance-benchmark so sánh thời gian thực thi của bốn phương pháp tính lãi kép của chúng tôi trên một tập dữ liệu được tiêu chuẩn hóa.
 
 ```{python}
 #| label: tbl-performance-benchmark
-#| tbl-cap: "Execution time comparison for different compounding methods on a dataset of 10,000 stock-month observations. The cumulative product and log-sum-exp methods are orders of magnitude faster than the iterative approach due to NumPy vectorization."
+#| tbl-cap: "So sánh thời gian thực thi của các phương pháp tính lãi kép khác nhau trên bộ dữ liệu gồm 10,000 quan sát cổ phiếu-tháng. Các phương pháp tích lũy (cumulative product) và log-sum-exp nhanh hơn phương pháp lặp nhiều bậc độ lớn nhờ vector hóa của NumPy."
 import time
 
 np.random.seed(42)
@@ -1337,19 +1337,19 @@ perf_df
 
 ## Những lỗi thường gặp và cách làm tốt nhất
 
-Một số vấn đề nhỏ có thể dẫn đến tính toán lợi nhuận kép không chính xác. Chúng tôi tóm tắt những vấn đề quan trọng nhất như sau:
+Một số vấn đề tinh vi có thể dẫn đến tính toán lợi nhuận kép không chính xác. Chúng tôi tóm tắt những vấn đề quan trọng nhất như sau:
 
-**Khoảng trống trong chuỗi thời gian.** Nếu một chứng khoán có những tháng không có dữ liệu quan sát (thậm chí không có cờ báo lợi nhuận bị thiếu), các phép tính cửa sổ trượt dựa trên chỉ số vị thế sẽ cho ra kết quả không chính xác. Cửa sổ trượt sẽ bao phủ khoảng thời gian không đúng. Luôn đảm bảo chuỗi thời gian đầy đủ, điền vào các khoảng trống bằng các giá trị bị thiếu rõ ràng trước khi tính toán số liệu thống kê trượt. Điều này đặc biệt quan trọng ở Việt Nam, nơi việc tạm ngừng giao dịch có thể tạo ra các khoảng trống.
+**Khoảng trống trong chuỗi thời gian.** Nếu một chứng khoán có những tháng không có dữ liệu quan sát (thậm chí không có cờ báo lợi nhuận bị thiếu), các phép tính cửa sổ trượt dựa trên chỉ mục theo vị trí sẽ cho ra kết quả không chính xác. Cửa sổ trượt sẽ bao phủ khoảng thời gian không đúng. Luôn đảm bảo chuỗi thời gian đầy đủ, điền vào các khoảng trống bằng các giá trị bị thiếu rõ ràng trước khi tính toán số liệu thống kê trượt. Điều này đặc biệt quan trọng ở Việt Nam, nơi việc tạm ngừng giao dịch có thể tạo ra các khoảng trống.
 
-**Sai lệch do chọn lọc chứng khoán còn tồn tại.** Như đã thảo luận trong phần lợi nhuận từ việc hủy niêm yết, việc loại trừ các chứng khoán ngừng giao dịch sẽ làm sai lệch lợi nhuận kép theo hướng tăng lên. Luôn luôn kết hợp lợi nhuận từ việc hủy niêm yết khi có sẵn. Khi không có lợi nhuận từ việc hủy niêm yết (như đôi khi xảy ra với dữ liệu của Việt Nam), hãy xem xét sử dụng các giá trị ước tính dựa trên lý do hủy niêm yết.
+**Thiên kiến sống sót.** Như đã thảo luận trong phần lợi nhuận từ việc hủy niêm yết, việc loại trừ các chứng khoán ngừng giao dịch sẽ làm sai lệch lợi nhuận kép theo hướng tăng lên. Luôn luôn kết hợp lợi nhuận từ việc hủy niêm yết khi có sẵn. Khi không có lợi nhuận từ việc hủy niêm yết (như đôi khi xảy ra với dữ liệu của Việt Nam), hãy xem xét sử dụng các giá trị ước tính dựa trên lý do hủy niêm yết.
 
-**Thiên kiến ​​nhìn xa trông rộng.** Khi điều chỉnh lợi nhuận kép theo cuối năm tài chính cho phân tích chéo, cần thận trọng không sử dụng lợi nhuận trước khi kết thúc năm tài chính để dự đoán lợi nhuận sau khi công bố kết quả. Các doanh nghiệp Việt Nam bắt buộc phải công bố báo cáo tài chính thường niên đã được kiểm toán trong vòng 90 ngày kể từ ngày kết thúc năm tài chính, vì vậy nên có khoảng thời gian đệm ít nhất 3 tháng khi xây dựng lợi nhuận kép hướng tới tương lai.
+**Thiên kiến nhìn trước.** Khi điều chỉnh lợi nhuận kép theo cuối năm tài chính cho phân tích theo mặt cắt ngang, cần thận trọng không sử dụng lợi nhuận trước khi kết thúc năm tài chính để dự đoán lợi nhuận sau khi công bố kết quả. Các doanh nghiệp Việt Nam bắt buộc phải công bố báo cáo tài chính thường niên đã được kiểm toán trong vòng 90 ngày kể từ ngày kết thúc năm tài chính, vì vậy nên có khoảng thời gian đệm ít nhất 3 tháng khi xây dựng lợi nhuận kép hướng tới tương lai.
 
-**Lỗi tràn và thiếu số liệu.** Đối với các kỳ tính lãi kép rất dài hoặc lợi nhuận cực đoan, tích lũy có thể bị tràn (vô cực) hoặc thiếu (0). Phương pháp log-sum-exp mạnh mẽ hơn đối với các vấn đề số học như vậy vì nó hoạt động trong không gian logarit, nơi phạm vi được thu hẹp.
+**Tràn số trên và tràn số dưới (overflow và underflow).** Đối với các kỳ tính lãi kép rất dài hoặc lợi nhuận cực đoan, tích số lũy kế có thể bị tràn trên (vô cực) hoặc tràn dưới (về 0). Phương pháp log-sum-exp mạnh mẽ hơn đối với các vấn đề số học như vậy vì nó hoạt động trong không gian logarit, nơi phạm vi được thu hẹp.
 
-**Tính toán lợi nhuận hàng năm từ các kỳ không đầy đủ.** Khi tính toán lợi nhuận hàng năm từ dữ liệu của các kỳ không đầy đủ (ví dụ: dữ liệu 7 tháng được tính toán hàng năm thành 12 tháng), công thức tính toán lợi nhuận hàng năm $(1+R)^{12/k} - 1$ giả định rằng tỷ suất lợi nhuận quan sát được sẽ không thay đổi. Giả định này càng mạnh mẽ hơn đối với các kỳ không đầy đủ ngắn và có thể dẫn đến kết quả sai lệch. Hãy báo cáo tỷ suất lợi nhuận kép thực tế và số kỳ cùng với bất kỳ con số lợi nhuận hàng năm nào.
+**Quy năm lợi nhuận từ các kỳ không đầy đủ.** Khi tính lợi nhuận quy năm từ dữ liệu của các kỳ không đầy đủ (ví dụ: dữ liệu 7 tháng được quy năm thành 12 tháng), công thức quy năm $(1+R)^{12/k} - 1$ giả định rằng tỷ suất lợi nhuận quan sát được sẽ duy trì. Giả định này càng khắt khe hơn đối với các kỳ không đầy đủ ngắn và có thể dẫn đến kết quả sai lệch. Hãy báo cáo tỷ suất lợi nhuận kép thực tế và số kỳ cùng với bất kỳ con số lợi nhuận hàng năm nào.
 
-**Chuyển nhượng cổ phiếu.** Tại Việt Nam, cổ phiếu đôi khi được chuyển nhượng giữa các sàn UPCoM, HNX và HOSE. Việc chuyển nhượng này có thể dẫn đến việc tạm ngừng giao dịch và gây ra những khoảng trống rõ ràng trong chuỗi lợi nhuận. Khi tính toán lợi nhuận kép trải qua quá trình chuyển nhượng, cần đảm bảo chuỗi lợi nhuận liên tục kể từ ngày chuyển nhượng.
+**Chuyển sàn niêm yết.** Tại Việt Nam, cổ phiếu đôi khi chuyển giữa các sàn UPCoM, HNX và HOSE. Việc chuyển sàn này có thể dẫn đến việc tạm ngừng giao dịch và gây ra những khoảng trống rõ ràng trong chuỗi lợi nhuận. Khi tính toán lợi nhuận kép trải qua việc chuyển sàn, cần đảm bảo chuỗi lợi nhuận liên tục xuyên suốt ngày chuyển sàn.
 
 <!-- ## Bài tập
 

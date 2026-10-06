@@ -1,8 +1,19 @@
-# Phân loại danh mục đầu tư đơn biến
+---
+title: Univariate Portfolio Sorts
+format:
+  html:
+    toc: true
+    number-sections: true
+jupyter: python3
+execute:
+  echo: true
+  warning: false
+  message: false
+---
 
-Trong chương này, chúng ta sẽ đi sâu vào phân loại danh mục đầu tư, một trong những phương pháp thống kê được sử dụng rộng rãi nhất trong định giá tài sản thực nghiệm [ví dụ: @BaliEngleMurray2016]. Ứng dụng chính của phân loại danh mục đầu tư là để kiểm tra xem một hoặc nhiều biến số có thể dự đoán lợi nhuận vượt trội trong tương lai hay không. Nói chung, ý tưởng là phân loại các cổ phiếu riêng lẻ vào các danh mục đầu tư, trong đó các cổ phiếu trong mỗi danh mục đầu tư tương tự nhau về một biến số phân loại, chẳng hạn như quy mô công ty. Các danh mục đầu tư khác nhau sau đó đại diện cho các khoản đầu tư đa dạng tốt, khác nhau về mức độ của biến số phân loại. Sau đó, bạn có thể quy kết sự khác biệt trong phân phối lợi nhuận cho tác động của biến số phân loại. Chúng ta bắt đầu bằng cách giới thiệu phân loại danh mục đầu tư đơn biến (phân loại chỉ dựa trên một đặc điểm) và giải quyết phân loại hai biến trong phần Giá trị và Phân loại Hai biến.
+Trong chương này, chúng ta chuyển sang phân loại danh mục đầu tư (portfolio sort), một trong những phương pháp thống kê được sử dụng rộng rãi nhất trong nghiên cứu định giá tài sản thực nghiệm [xem, ví dụ, @BaliEngleMurray2016]. Ứng dụng then chốt của phân loại danh mục là kiểm tra xem một hay nhiều biến có thể dự báo lợi nhuận vượt mức trong tương lai hay không. Nhìn chung, ý tưởng là sắp xếp từng cổ phiếu vào các danh mục, trong đó các cổ phiếu trong cùng một danh mục tương tự nhau về một biến phân loại, chẳng hạn quy mô doanh nghiệp. Các danh mục khác nhau khi đó đại diện cho những khoản đầu tư được đa dạng hóa tốt nhưng khác nhau về mức của biến phân loại. Bạn có thể quy các khác biệt trong phân phối lợi nhuận cho tác động của biến phân loại. Chúng ta bắt đầu bằng việc giới thiệu phân loại danh mục đơn biến (chỉ dựa trên một đặc điểm) và xử lý phân loại hai biến trong chương Phân loại theo giá trị và hai biến.
 
-Phân loại danh mục đầu tư đơn biến chỉ xem xét một biến phân loại duy nhất là $x_{i,t-1}$. Ở đây, $i$ biểu thị cổ phiếu và $t-1$ cho biết đặc điểm này có thể quan sát được bởi các nhà đầu tư tại thời điểm $t$. Mục tiêu là đánh giá mối quan hệ chéo giữa $x_{i,t-1}$ và, thông thường, lợi nhuận vượt trội của cổ phiếu $r_{i,t}$ tại thời điểm $t$ như là biến kết quả. Để minh họa cách thức hoạt động của phân loại danh mục đầu tư, chúng ta sử dụng các ước tính về hệ số beta thị trường từ chương trước làm biến phân loại của mình.
+Phân loại danh mục đơn biến chỉ xét một biến phân loại $x_{i,t-1}$. Ở đây, $i$ ký hiệu cổ phiếu và $t-1$ cho biết nhà đầu tư quan sát được đặc điểm này tại thời điểm $t$. Mục tiêu là đánh giá mối quan hệ theo mặt cắt ngang (cross-sectional) giữa $x_{i,t-1}$ và, thông thường, lợi nhuận vượt mức của cổ phiếu $r_{i,t}$ tại thời điểm $t$ với vai trò biến kết quả. Để minh họa cách phân loại danh mục vận hành, chúng ta dùng các ước lượng beta thị trường từ chương trước làm biến phân loại.
 
 ```{python}
 import pandas as pd
@@ -17,7 +28,7 @@ from regtabletotext import prettify_result
 
 ## Chuẩn bị dữ liệu
 
-Chúng ta bắt đầu bằng việc tải dữ liệu cần thiết từ cơ sở dữ liệu SQLite đã được giới thiệu trong phần Truy cập và Quản lý Dữ liệu Tài chính và Dữ liệu DataCore. Cụ thể, chúng ta sử dụng dữ liệu giá cổ phiếu hàng tháng làm tập hợp tài sản. Sau khi hình thành các danh mục đầu tư, chúng ta sử dụng lợi nhuận của các yếu tố thị trường để tính toán hiệu suất điều chỉnh rủi ro (tức là alpha). `beta` là khung dữ liệu chứa các hệ số beta thị trường được tính toán trong chương trước.
+Chúng ta bắt đầu bằng việc tải dữ liệu cần thiết từ cơ sở dữ liệu SQLite đã được giới thiệu trong chương Truy cập và quản lý dữ liệu tài chính và Dữ liệu DataCore. Cụ thể, chúng ta dùng dữ liệu giá cổ phiếu theo tháng làm tập hợp tài sản. Sau khi hình thành các danh mục, chúng ta dùng lợi nhuận nhân tố thị trường để tính hiệu quả điều chỉnh theo rủi ro (tức là alpha). `beta` là bảng dữ liệu (dataframe) chứa các beta thị trường được tính ở chương trước.
 
 ```{python}
 tidy_finance = sqlite3.connect(database="data/tidy_finance_python.sqlite")
@@ -41,9 +52,9 @@ beta = pd.read_sql_query(
 )
 ```
 
-## Sorting by Market Beta
+## Phân loại theo beta thị trường
 
-Next, we merge our sorting variable with the return data. We use the one-month *lagged* betas as a sorting variable to ensure that the sorts rely only on information available when we create the portfolios. To lag stock beta by one month, we add one month to the current date and join the resulting information with our return data. This procedure ensures that month $t$ information is available in month $t+1$. You may be tempted to simply use a call such as `prices_monthly['beta_lag'] = prices_monthly.groupby('symbol')['beta'].shift(1)` instead. This procedure, however, does not work correctly if there are implicit missing values in the time series.
+Tiếp theo, chúng ta ghép biến phân loại với dữ liệu lợi nhuận. Chúng ta dùng beta *trễ* một tháng làm biến phân loại để bảo đảm việc phân loại chỉ dựa trên thông tin có sẵn tại thời điểm hình thành danh mục. Để làm trễ beta cổ phiếu một tháng, chúng ta cộng thêm một tháng vào ngày hiện tại và ghép thông tin thu được với dữ liệu lợi nhuận. Quy trình này bảo đảm thông tin của tháng $t$ có sẵn trong tháng $t+1$. Bạn có thể bị cám dỗ dùng đơn giản một lệnh như `prices_monthly['beta_lag'] = prices_monthly.groupby('symbol')['beta'].shift(1)`. Tuy nhiên, cách này không hoạt động đúng nếu chuỗi thời gian có các giá trị thiếu ngầm định.
 
 ```{python}
 beta_lag = (beta
@@ -59,7 +70,7 @@ data_for_sorts = (prices_monthly
 )
 ```
 
-The first step to conduct portfolio sorts is to calculate periodic breakpoints that you can use to group the stocks into portfolios. For simplicity, we start with the median lagged market beta as the single breakpoint. We then compute the value-weighted returns for each of the two resulting portfolios, which means that the lagged market capitalization determines the weight in `np.average()`.
+Bước đầu tiên để phân loại danh mục là tính các điểm cắt theo từng kỳ, dùng để nhóm cổ phiếu vào các danh mục. Để đơn giản, chúng ta bắt đầu với trung vị của beta thị trường trễ làm điểm cắt duy nhất. Sau đó, chúng ta tính lợi nhuận theo trọng số vốn hóa cho từng danh mục trong hai danh mục thu được, nghĩa là vốn hóa thị trường trễ quyết định trọng số trong `np.average()`.
 
 ```{python}
 beta_portfolios = (
@@ -80,9 +91,9 @@ beta_portfolios = (
 beta_portfolios.head()
 ```
 
-## Performance Evaluation
+## Đánh giá hiệu quả
 
-We can construct a long-short strategy based on the two portfolios: buy the high-beta portfolio and, at the same time, short the low-beta portfolio. Thereby, the overall position in the market is net-zero.
+Chúng ta có thể xây dựng một chiến lược mua–bán khống (long–short) dựa trên hai danh mục: mua danh mục beta cao và đồng thời bán khống danh mục beta thấp. Nhờ vậy, vị thế tổng thể trên thị trường bằng không.
 
 ```{python}
 beta_longshort = (beta_portfolios
@@ -92,7 +103,7 @@ beta_longshort = (beta_portfolios
 )
 ```
 
-We compute the average return and the corresponding standard error to test whether the long-short portfolio yields on average positive or negative excess returns. In the asset pricing literature, one typically adjusts for autocorrelation by using @Newey1987 $t$-statistics to test the null hypothesis that average portfolio excess returns are equal to zero. One necessary input for Newey-West standard errors is a chosen bandwidth based on the number of lags employed for the estimation. Researchers often default to choosing a pre-specified lag length of six months (which is not a data-driven approach). We do so in the `fit()` function by indicating the `cov_type` as `HAC` and providing the maximum lag length through an additional keywords dictionary.
+Chúng ta tính lợi nhuận trung bình và sai số chuẩn tương ứng để kiểm định xem danh mục mua–bán khống có đem lại lợi nhuận vượt mức trung bình dương hay âm hay không. Trong tài liệu về định giá tài sản, người ta thường điều chỉnh tự tương quan bằng thống kê $t$ của @Newey1987 để kiểm định giả thuyết không rằng lợi nhuận vượt mức trung bình của danh mục bằng không. Một đầu vào cần thiết cho sai số chuẩn Newey–West là độ rộng băng thông (bandwidth) được chọn dựa trên số độ trễ dùng cho ước lượng. Các nhà nghiên cứu thường mặc định chọn độ dài trễ định trước là sáu tháng (đây không phải là cách tiếp cận dựa trên dữ liệu). Chúng ta thực hiện điều này trong hàm `fit()` bằng cách chỉ định `cov_type` là `HAC` và cung cấp độ dài trễ tối đa thông qua một từ điển tham số bổ sung.
 
 ```{python}
 model_fit = (sm.OLS.from_formula(
@@ -104,13 +115,13 @@ model_fit = (sm.OLS.from_formula(
 prettify_result(model_fit)
 ```
 
-The results indicate that we cannot reject the null hypothesis of average returns being equal to zero. Our portfolio strategy using the median as a breakpoint does not yield any abnormal returns. Is this finding surprising if you reconsider the CAPM? It certainly is. The CAPM predicts that high-beta stocks should yield higher expected returns. Our portfolio sort implicitly mimics an investment strategy that finances high-beta stocks by shorting low-beta stocks. Therefore, one should expect that the average excess returns yield a return that is above the risk-free rate.
+Kết quả cho thấy chúng ta không thể bác bỏ giả thuyết không rằng lợi nhuận trung bình bằng không. Chiến lược danh mục dùng trung vị làm điểm cắt không đem lại lợi nhuận bất thường nào. Phát hiện này có gây ngạc nhiên không nếu bạn xem xét lại CAPM? Chắc chắn là có. CAPM dự báo rằng cổ phiếu beta cao phải đem lại lợi nhuận kỳ vọng cao hơn. Phân loại danh mục của chúng ta ngầm mô phỏng một chiến lược đầu tư tài trợ việc mua cổ phiếu beta cao bằng cách bán khống cổ phiếu beta thấp. Do đó, ta kỳ vọng lợi nhuận vượt mức trung bình sẽ đem lại mức lợi nhuận cao hơn lãi suất phi rủi ro.
 
-## Functional Programming for Portfolio Sorts
+## Lập trình hàm cho phân loại danh mục
 
-Now, we take portfolio sorts to the next level. We want to be able to sort stocks into an arbitrary number of portfolios. For this case, functional programming is very handy: we define a function that gives us flexibility concerning which variable to use for the sorting, denoted by `sorting_variable`. We use `np.quantile()` to compute breakpoints for `n_portfolios`. Then, we assign portfolios to stocks using the `pd.cut()` function. The output of the following function is a new column that contains the number of the portfolio to which a stock belongs.
+Bây giờ, chúng ta đưa phân loại danh mục lên một tầm cao hơn. Chúng ta muốn có thể phân loại cổ phiếu vào một số lượng danh mục tùy ý. Trong trường hợp này, lập trình hàm rất tiện lợi: chúng ta định nghĩa một hàm cho phép linh hoạt về việc dùng biến nào để phân loại, ký hiệu là `sorting_variable`. Chúng ta dùng `np.quantile()` để tính các điểm cắt cho `n_portfolios`. Sau đó, chúng ta gán danh mục cho cổ phiếu bằng hàm `pd.cut()`. Đầu ra của hàm dưới đây là một cột mới chứa số hiệu của danh mục mà cổ phiếu thuộc về.
 
-In some applications, the variable used for the sorting might be clustered (e.g., at a lower bound of 0). Then, multiple breakpoints may be identical, leading to empty portfolios. Similarly, some portfolios might have a very small number of stocks at the beginning of the sample. Cases where the number of portfolio constituents differs substantially due to the distribution of the characteristics require careful consideration and, depending on the application, might require customized sorting approaches.
+Trong một số ứng dụng, biến dùng để phân loại có thể bị tập trung (ví dụ, tại cận dưới bằng 0). Khi đó, nhiều điểm cắt có thể trùng nhau, dẫn đến các danh mục rỗng. Tương tự, một số danh mục có thể có rất ít cổ phiếu vào đầu mẫu. Những trường hợp số lượng cổ phiếu cấu thành danh mục chênh lệch đáng kể do phân phối của các đặc điểm cần được cân nhắc cẩn thận và, tùy ứng dụng, có thể cần các cách phân loại tùy chỉnh.
 
 ```{python}
 def assign_portfolio(data, sorting_variable, n_portfolios):
@@ -133,7 +144,7 @@ def assign_portfolio(data, sorting_variable, n_portfolios):
     return assigned_portfolios
 ```
 
-We can use the above function to sort stocks into ten portfolios each month using lagged betas and compute value-weighted returns for each portfolio. Note that we transform the portfolio column to a factor variable because it provides more convenience for the figure construction below.
+Chúng ta có thể dùng hàm trên để phân loại cổ phiếu vào mười danh mục mỗi tháng dựa trên beta trễ và tính lợi nhuận theo trọng số vốn hóa cho từng danh mục. Lưu ý rằng chúng ta chuyển cột danh mục thành biến định tính (categorical) vì điều này thuận tiện hơn cho việc dựng hình bên dưới.
 
 ```{python}
 beta_portfolios = (data_for_sorts
@@ -153,9 +164,9 @@ beta_portfolios = (data_for_sorts
 )
 ```
 
-## More Performance Evaluation
+## Đánh giá hiệu quả bổ sung
 
-In the next step, we compute summary statistics for each beta portfolio. Namely, we compute CAPM-adjusted alphas, the beta of each beta portfolio, and average returns.
+Ở bước tiếp theo, chúng ta tính các thống kê tóm tắt cho từng danh mục beta. Cụ thể, chúng ta tính alpha đã điều chỉnh theo CAPM, beta của từng danh mục beta, và lợi nhuận trung bình.
 
 ```{python}
 beta_portfolios_summary = (beta_portfolios
@@ -177,12 +188,12 @@ beta_portfolios_summary = (beta_portfolios
 beta_portfolios_summary
 ```
 
-@fig-701 illustrates the CAPM alphas of beta-sorted portfolios.
+@fig-701 minh họa các alpha CAPM của các danh mục được phân loại theo beta.
 
 ```{python}
 #| label: fig-701
-#| fig-cap: "The figure shows CAPM alphas of beta-sorted portfolios. Portfolios are sorted into deciles each month based on their estimated CAPM beta. The bar charts indicate the CAPM alpha of the resulting portfolio returns during the sample period." 
-#| fig-alt: "Title: CAPM alphas of beta-sorted portfolios. The figure shows bar charts of alphas of beta-sorted portfolios with the decile portfolio on the horizontal axis and the corresponding CAPM alpha on the vertical axis."
+#| fig-cap: "Hình cho thấy các alpha CAPM của các danh mục được phân loại theo beta. Các danh mục được chia thành thập phân vị mỗi tháng dựa trên beta CAPM ước lượng. Các cột biểu diễn alpha CAPM của lợi nhuận danh mục thu được trong giai đoạn mẫu."
+#| fig-alt: "Tiêu đề: Alpha CAPM của các danh mục được phân loại theo beta. Hình cho thấy biểu đồ cột của alpha các danh mục được phân loại theo beta, với danh mục thập phân vị trên trục hoành và alpha CAPM tương ứng trên trục tung."
 #| fig-pos: "htb"
 beta_portfolios_figure = (
   ggplot(
@@ -200,16 +211,16 @@ beta_portfolios_figure = (
 beta_portfolios_figure.show()
 ```
 
-Unlike the well-documented "betting against beta" anomaly in US markets, where low-beta portfolios exhibit positive alphas and high-beta portfolios exhibit negative alphas in a monotonic pattern, the Vietnamese market shows no clear relationship between beta and risk-adjusted returns. The alphas fluctuate without a discernible trend across deciles. This lack of pattern likely reflects the limited sample period rather than a definitive conclusion about beta pricing in Vietnam. With such a short time series, the portfolio-level CAPM regressions contain substantial estimation noise, making it difficult to detect subtle anomalies. Longer sample periods would be needed to draw reliable conclusions about whether the low-beta anomaly exists in the Vietnamese equity market.
+Khác với hiện tượng bất thường "đặt cược chống lại beta" (betting against beta) đã được ghi nhận rõ ràng tại thị trường Mỹ, nơi các danh mục beta thấp có alpha dương và các danh mục beta cao có alpha âm theo một dạng đơn điệu, thị trường Việt Nam không cho thấy mối quan hệ rõ ràng giữa beta và lợi nhuận đã điều chỉnh theo rủi ro. Các alpha dao động mà không có xu hướng rõ rệt giữa các thập phân vị. Việc thiếu quy luật này nhiều khả năng phản ánh giai đoạn mẫu còn ngắn hơn là một kết luận dứt khoát về việc định giá beta tại Việt Nam. Với chuỗi thời gian ngắn như vậy, các hồi quy CAPM ở cấp danh mục chứa nhiễu ước lượng đáng kể, khiến khó phát hiện các hiện tượng bất thường tinh tế. Cần có các giai đoạn mẫu dài hơn để rút ra kết luận đáng tin cậy về việc hiện tượng bất thường beta thấp có tồn tại trên thị trường cổ phiếu Việt Nam hay không.
 
-## Security Market Line and Beta Portfolios
+## Đường thị trường chứng khoán và các danh mục beta
 
-The CAPM predicts that our portfolios should lie on the security market line (SML). The slope of the SML is equal to the market risk premium and reflects the risk-return trade-off at any given time.  @fig-702 illustrates the security market line: We see that (not surprisingly) the high-beta portfolio returns have a high correlation with the market returns. However, it seems like the average excess returns for high-beta stocks are lower than what the security market line implies would be an "appropriate" compensation for the high market risk. 
+CAPM dự báo rằng các danh mục của chúng ta phải nằm trên đường thị trường chứng khoán (security market line, SML). Độ dốc của SML bằng phần bù rủi ro thị trường và phản ánh sự đánh đổi giữa rủi ro và lợi nhuận tại bất kỳ thời điểm nào.  @fig-702 minh họa đường thị trường chứng khoán: Chúng ta thấy rằng (không có gì ngạc nhiên) lợi nhuận của danh mục beta cao có tương quan cao với lợi nhuận thị trường. Tuy nhiên, có vẻ như lợi nhuận vượt mức trung bình của cổ phiếu beta cao thấp hơn mức mà đường thị trường chứng khoán hàm ý là khoản bù đắp "thích đáng" cho rủi ro thị trường cao.
 
 ```{python}
 #| label: fig-702
-#| fig-cap: "The figure shows average portfolio excess returns and beta estimates. Excess returns are computed as CAPM alphas of the beta-sorted portfolios. The horizontal axis indicates the CAPM beta of the resulting beta-sorted portfolio return time series. The dashed line indicates the slope coefficient of a linear regression of excess returns on portfolio betas."
-#| fig-alt: "Title: Average portfolio excess returns and beta estimates. The figure shows a scatter plot of the average excess returns per beta portfolio with average beta estimates per portfolio on the horizontal axis and average excess returns on the vertical axis. An increasing solid line indicates the security market line. A dashed increasing line with lower slope than the security market line indicates that the CAPM prediction is not valid for the data."
+#| fig-cap: "Hình cho thấy lợi nhuận vượt mức trung bình của danh mục và các ước lượng beta. Lợi nhuận vượt mức được tính bằng alpha CAPM của các danh mục được phân loại theo beta. Trục hoành biểu diễn beta CAPM của chuỗi thời gian lợi nhuận danh mục beta thu được. Đường nét đứt biểu diễn hệ số góc của hồi quy tuyến tính của lợi nhuận vượt mức theo beta danh mục."
+#| fig-alt: "Tiêu đề: Lợi nhuận vượt mức trung bình của danh mục và các ước lượng beta. Hình cho thấy biểu đồ phân tán của lợi nhuận vượt mức trung bình theo từng danh mục beta, với beta ước lượng trung bình của mỗi danh mục trên trục hoành và lợi nhuận vượt mức trung bình trên trục tung. Một đường liền nét dốc lên biểu diễn đường thị trường chứng khoán. Một đường nét đứt dốc lên với độ dốc thấp hơn đường thị trường chứng khoán cho thấy dự báo của CAPM không phù hợp với dữ liệu."
 #| fig-pos: "htb"
 sml_capm = (sm.OLS.from_formula(
     formula="ret ~ 1 + beta", 
@@ -241,7 +252,7 @@ sml_figure = (
 sml_figure.show()
 ```
 
-To provide more evidence against the CAPM predictions, we again form a long-short strategy that buys the high-beta portfolio and shorts the low-beta portfolio.
+Để cung cấp thêm bằng chứng chống lại các dự báo của CAPM, chúng ta một lần nữa lập chiến lược mua–bán khống: mua danh mục beta cao và bán khống danh mục beta thấp.
 
 ```{python}
 beta_longshort = (beta_portfolios
@@ -261,7 +272,7 @@ beta_longshort = (beta_portfolios
 )
 ```
 
-Again, the resulting long-short strategy does not exhibit statistically significant returns. 
+Một lần nữa, chiến lược mua–bán khống thu được không cho thấy lợi nhuận có ý nghĩa thống kê.
 
 ```{python}
 model_fit = (sm.OLS.from_formula(
@@ -273,7 +284,7 @@ model_fit = (sm.OLS.from_formula(
 prettify_result(model_fit)
 ```
 
-However, controlling for the effect of beta, the long-short portfolio yields a CAPM-adjusted alpha. The results can provide evidence regarding the validity of the CAPM in the Vietnamese market. The betting-against-beta factor has been documented extensively in developed markets [@Frazzini2014]. Betting-against-beta corresponds to a strategy that shorts high-beta stocks and takes a (levered) long position in low-beta stocks. If borrowing constraints prevent investors from taking positions on the security market line, they are instead incentivized to buy high-beta stocks, which leads to a relatively higher price (and therefore lower expected returns than implied by the CAPM) for such high-beta stocks. As a result, the betting-against-beta strategy earns from providing liquidity to capital-constrained investors with lower risk aversion.
+Tuy nhiên, khi kiểm soát tác động của beta, danh mục mua–bán khống đem lại alpha đã điều chỉnh theo CAPM. Kết quả có thể cung cấp bằng chứng về tính hợp lệ của CAPM tại thị trường Việt Nam. Nhân tố đặt cược chống lại beta đã được ghi nhận rộng rãi tại các thị trường phát triển [@Frazzini2014]. Đặt cược chống lại beta tương ứng với chiến lược bán khống cổ phiếu beta cao và nắm giữ vị thế mua (có đòn bẩy) đối với cổ phiếu beta thấp. Nếu các ràng buộc vay mượn ngăn nhà đầu tư thiết lập vị thế trên đường thị trường chứng khoán, thì họ có động cơ mua cổ phiếu beta cao, điều này dẫn đến giá tương đối cao hơn (và do đó lợi nhuận kỳ vọng thấp hơn mức CAPM hàm ý) đối với các cổ phiếu beta cao đó. Kết quả là, chiến lược đặt cược chống lại beta kiếm lời nhờ cung cấp thanh khoản cho các nhà đầu tư bị ràng buộc vốn và có mức e ngại rủi ro thấp hơn.
 
 ```{python}
 model_fit = (sm.OLS.from_formula(
@@ -285,12 +296,12 @@ model_fit = (sm.OLS.from_formula(
 prettify_result(model_fit)
 ```
 
-@fig-703 shows the annual returns of the extreme beta portfolios we are mainly interested in. The figure illustrates the patterns over the sample period; each portfolio exhibits periods with positive and negative annual returns. 
+@fig-703 cho thấy lợi nhuận hằng năm của các danh mục beta cực trị mà chúng ta quan tâm chủ yếu. Hình minh họa các quy luật trong giai đoạn mẫu; mỗi danh mục đều có những giai đoạn lợi nhuận hằng năm dương và âm.
 
 ```{python}
 #| label: fig-703
-#| fig-cap: "The figure shows annual returns of beta portfolios. We construct portfolios by sorting stocks into high and low based on their estimated CAPM beta. Long short indicates a strategy that goes long into high beta stocks and short low beta stocks."
-#| fig-alt: "Title: Annual returns of beta portfolios. The figure shows bar charts of annual returns of long, short, and long-short beta portfolios with years on the horizontal axis and returns on the vertical axis. Each portfolio is plotted in its own facet."
+#| fig-cap: "Hình cho thấy lợi nhuận hằng năm của các danh mục beta. Chúng ta lập các danh mục bằng cách chia cổ phiếu thành nhóm cao và thấp dựa trên beta CAPM ước lượng. Long short biểu thị chiến lược mua cổ phiếu beta cao và bán khống cổ phiếu beta thấp."
+#| fig-alt: "Tiêu đề: Lợi nhuận hằng năm của các danh mục beta. Hình cho thấy biểu đồ cột của lợi nhuận hằng năm của các danh mục beta mua, bán khống và mua–bán khống, với các năm trên trục hoành và lợi nhuận trên trục tung. Mỗi danh mục được vẽ trong một ô riêng."
 #| fig-pos: "htb"
 beta_longshort_year = (beta_longshort
   .assign(year=lambda x: x["date"].dt.year)
@@ -318,18 +329,18 @@ beta_longshort_figure = (
 beta_longshort_figure.show()
 ```
 
-The high-beta portfolio and low-beta portfolio both exhibit substantial year-to-year variation. The long-short portfolio, which goes long high-beta stocks and short low-beta stocks, shows no consistent pattern of positive returns. This erratic performance reinforces our earlier finding that the beta-return relationship in the Vietnamese market does not conform to theoretical CAPM predictions during our sample period. The high volatility of annual long-short returns highlights the substantial risk inherent in such a strategy, particularly in an emerging market context with a limited sample period.
+Cả danh mục beta cao và danh mục beta thấp đều biến động đáng kể giữa các năm. Danh mục mua–bán khống, tức mua cổ phiếu beta cao và bán khống cổ phiếu beta thấp, không cho thấy quy luật lợi nhuận dương nhất quán. Hiệu quả thất thường này củng cố phát hiện trước đó của chúng ta rằng mối quan hệ beta–lợi nhuận tại thị trường Việt Nam không phù hợp với các dự báo lý thuyết của CAPM trong giai đoạn mẫu. Mức biến động cao của lợi nhuận hằng năm của danh mục mua–bán khống làm nổi bật rủi ro đáng kể vốn có của chiến lược này, đặc biệt trong bối cảnh thị trường mới nổi với giai đoạn mẫu hạn chế.
 
-## Key Takeaways
+## Những điểm chính
 
-1. Univariate portfolio sorts assess whether a single firm characteristic, like lagged market beta, can predict future excess returns.
+1. Phân loại danh mục đơn biến đánh giá xem một đặc điểm đơn lẻ của doanh nghiệp, như beta thị trường trễ, có thể dự báo lợi nhuận vượt mức trong tương lai hay không.
 
-2. Portfolios are formed each month using quantile breakpoints, with returns computed using value-weighted averages to reflect realistic investment strategies.
+2. Các danh mục được hình thành mỗi tháng bằng các điểm cắt theo phân vị, với lợi nhuận được tính bằng trung bình theo trọng số vốn hóa để phản ánh các chiến lược đầu tư thực tế.
 
-3. A long-short strategy based on beta-sorted portfolios fails to generate significant positive excess returns in the Vietnamese market, contradicting CAPM predictions that higher beta should yield higher returns.
+3. Chiến lược mua–bán khống dựa trên các danh mục phân loại theo beta không tạo ra lợi nhuận vượt mức dương có ý nghĩa tại thị trường Việt Nam, trái với dự báo của CAPM rằng beta cao hơn phải đem lại lợi nhuận cao hơn.
 
-4. The analysis provides a framework for examining the "betting against beta" anomaly, where low-beta portfolios may deliver higher alphas than high-beta portfolios, offering evidence regarding the validity of the CAPM.
+4. Phân tích cung cấp một khung để xem xét hiện tượng bất thường "đặt cược chống lại beta", trong đó các danh mục beta thấp có thể đem lại alpha cao hơn các danh mục beta cao, qua đó đưa ra bằng chứng về tính hợp lệ của CAPM.
 
-5. The functional programming capabilities of Python enable scalable and flexible portfolio sorting, making it easy to analyze multiple characteristics and portfolio configurations.
+5. Khả năng lập trình hàm của Python cho phép phân loại danh mục linh hoạt và có thể mở rộng, giúp dễ dàng phân tích nhiều đặc điểm và cấu hình danh mục.
 
-6. Emerging markets like Vietnam may exhibit different beta-return relationships compared to developed markets, highlighting the importance of conducting market-specific empirical analysis rather than assuming universal applicability of asset pricing anomalies.
+6. Các thị trường mới nổi như Việt Nam có thể cho thấy mối quan hệ beta–lợi nhuận khác với các thị trường phát triển, nhấn mạnh tầm quan trọng của việc thực hiện phân tích thực nghiệm riêng cho từng thị trường thay vì giả định các hiện tượng bất thường trong định giá tài sản áp dụng phổ quát.

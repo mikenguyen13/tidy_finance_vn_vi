@@ -1,72 +1,72 @@
-# Standardized Earnings Surprises (SUE)
+# Bất ngờ lợi nhuận chuẩn hóa (SUE)
 
-In the context of the Ho Chi Minh Stock Exchange (HOSE) and the Hanoi Stock Exchange (HNX), earnings announcements represent critical information events. Investors and quantitative analysts continuously monitor the deviation between reported earnings and market expectations. This deviation is quantified as the Standardized Earnings Surprise (SUE).
+Trên Sở Giao dịch Chứng khoán Thành phố Hồ Chí Minh (HOSE) và Sở Giao dịch Chứng khoán Hà Nội (HNX), các thông báo lợi nhuận là những sự kiện thông tin quan trọng. Nhà đầu tư và các nhà phân tích định lượng liên tục theo dõi độ lệch giữa lợi nhuận kế toán được báo cáo và kỳ vọng của thị trường. Độ lệch này được đo lường bằng bất ngờ lợi nhuận chuẩn hóa (Standardized Earnings Surprise, SUE).
 
-This chapter details the methodology for calculating SUE using three distinct approaches frequently utilized in academic literature and institutional research. We apply these methods to a dataset of Vietnamese large-cap equities to illustrate the mechanics of the calculation. The goal is to isolate the "surprise" component of earnings, which is a known predictor of post-earnings announcement drift (PEAD) [@bernard1989post; @livnat2006comparing].
+Chương này trình bày chi tiết phương pháp tính SUE theo ba cách tiếp cận khác nhau, thường được sử dụng trong các nghiên cứu học thuật và nghiên cứu của các tổ chức. Chúng ta áp dụng các phương pháp này cho một bộ dữ liệu gồm các cổ phiếu vốn hóa lớn của Việt Nam để minh họa cơ chế tính toán. Mục tiêu là tách riêng thành phần "bất ngờ" của lợi nhuận, vốn là một yếu tố dự báo đã được biết đến của hiện tượng trôi dạt sau thông báo lợi nhuận (PEAD) [@bernard1989post; @livnat2006comparing].
 
-## Methodology
+## Phương pháp luận
 
-We define three primary methods for calculating SUE. Each method differs in how it establishes the "expected" earnings value.
+Chúng ta định nghĩa ba phương pháp chính để tính SUE. Mỗi phương pháp khác nhau ở cách xác lập giá trị lợi nhuận "kỳ vọng".
 
-### Method 1: Seasonal Random Walk
+### Phương pháp 1: Bước ngẫu nhiên theo mùa vụ
 
-This method assumes that earnings follow a seasonal pattern. The best predictor for the current quarter's earnings per share (EPS) is the EPS from the same quarter in the previous year. This controls for the seasonality often seen in Vietnamese sectors like retail and agriculture.
+Phương pháp này giả định lợi nhuận tuân theo một quy luật mùa vụ. Yếu tố dự báo tốt nhất cho lợi nhuận trên mỗi cổ phiếu (EPS) của quý hiện tại là EPS của cùng quý trong năm trước. Cách làm này kiểm soát tính mùa vụ thường thấy ở các ngành của Việt Nam như bán lẻ và nông nghiệp.
 
 $$SUE_{1} = \frac{EPS_{t} - EPS_{t-4}}{P_{t}}$$
 
-Where:
+Trong đó:
 
--   $EPS_{t}$ is the current quarterly Earnings Per Share.
+-   $EPS_{t}$ là lợi nhuận trên mỗi cổ phiếu của quý hiện tại.
 
--   $EPS_{t-4}$ is the Earnings Per Share from the same quarter of the prior fiscal year.
+-   $EPS_{t-4}$ là lợi nhuận trên mỗi cổ phiếu của cùng quý trong năm tài chính trước.
 
--   $P_{t}$ is the stock price at the end of the quarter (used as a deflator).
+-   $P_{t}$ là giá cổ phiếu vào cuối quý (được dùng làm mẫu số chuẩn hóa).
 
-### Method 2: Exclusion of Special Items
+### Phương pháp 2: Loại trừ các khoản mục đặc biệt
 
-Reported earnings often contain non-recurring items (e.g., asset sales, one-time write-offs) that distort the true operating performance. This method adjusts the reported EPS by removing the after-tax impact of special items.
+Lợi nhuận được báo cáo thường chứa các khoản mục không thường xuyên (ví dụ: bán tài sản, xóa sổ một lần) làm sai lệch hiệu quả hoạt động thực sự. Phương pháp này điều chỉnh EPS được báo cáo bằng cách loại bỏ tác động sau thuế của các khoản mục đặc biệt.
 
-In Vietnam, the standard Corporate Income Tax (CIT) rate is generally 20%. We adjust special items to reflect their impact on net income.
+Tại Việt Nam, thuế suất thuế thu nhập doanh nghiệp (CIT) tiêu chuẩn nhìn chung là 20%. Chúng ta điều chỉnh các khoản mục đặc biệt để phản ánh tác động của chúng lên lợi nhuận ròng.
 
 $$
 Adjusted \ EPS = Reported \ EPS - \frac{Special \ Items \times (1 - CIT)}{Shares \ Outstanding}
 $$
 
-The SUE calculation then follows the seasonal logic but uses the adjusted EPS figures: $$SUE_{2} = \frac{Adj \ EPS_{t} - Adj \ EPS_{t-4}}{P_{t}}$$
+Khi đó, cách tính SUE tuân theo logic mùa vụ nhưng sử dụng các số liệu EPS đã điều chỉnh: $$SUE_{2} = \frac{Adj \ EPS_{t} - Adj \ EPS_{t-4}}{P_{t}}$$
 
-### Method 3: Analyst Consensus
+### Phương pháp 3: Đồng thuận của các nhà phân tích
 
-This method relies on market consensus rather than historical time series. It compares the actual reported earnings against the median analyst forecast provided prior to the announcement.
+Phương pháp này dựa vào đồng thuận của thị trường thay vì chuỗi thời gian lịch sử. Phương pháp so sánh lợi nhuận thực tế được báo cáo với dự báo trung vị của các nhà phân tích được công bố trước thông báo.
 
 $$SUE_{3} = \frac{Actual \ EPS - Median \ Estimate}{P_{t}}$$
 
-## Data Description
+## Mô tả dữ liệu
 
-For this analysis, we utilize a dataset covering the fiscal years 2023 through 2025. The data includes quarterly financial statements and analyst consensus estimates for a selection of VN30 index constituents.
+Trong phân tích này, chúng ta sử dụng một bộ dữ liệu bao phủ các năm tài chính từ 2023 đến 2025. Dữ liệu gồm báo cáo tài chính hằng quý và ước tính đồng thuận của các nhà phân tích đối với một số cổ phiếu thành phần của chỉ số VN30.
 
-The dataset, `vietnam_fin_data.csv`, contains the following columns:
+Bộ dữ liệu `vietnam_fin_data.csv` gồm các cột sau:
 
--   **ticker**: Stock symbol (e.g., VNM, VCB, HPG).
+-   **ticker**: Mã cổ phiếu (ví dụ: VNM, VCB, HPG).
 
--   **fiscal_year**: The financial year.
+-   **fiscal_year**: Năm tài chính.
 
--   **fiscal_qtr**: The financial quarter (1-4).
+-   **fiscal_qtr**: Quý tài chính (1-4).
 
--   **eps_basic**: Basic Earnings Per Share (VND).
+-   **eps_basic**: Lợi nhuận cơ bản trên mỗi cổ phiếu (VND).
 
--   **price_close**: Closing price at quarter end (VND).
+-   **price_close**: Giá đóng cửa vào cuối quý (VND).
 
--   **special_items**: Pre-tax special items value (VND millions). (i.e., `is_other_profit` in DataCore).
+-   **special_items**: Giá trị các khoản mục đặc biệt trước thuế (triệu VND). (tức là `is_other_profit` trong DataCore).
 
--   **shares_out**: Shares outstanding (millions).
+-   **shares_out**: Số cổ phiếu đang lưu hành (triệu).
 
--   **analyst_med**: Median analyst EPS estimate (VND).
+-   **analyst_med**: Ước tính EPS trung vị của các nhà phân tích (VND).
 
-### Visualizing the Core Data
+### Trực quan hóa dữ liệu cốt lõi
 
-Below is a tabular representation of the raw data we have ingested for the analysis.
+Dưới đây là bảng biểu diễn dữ liệu thô mà chúng ta đã nạp cho phân tích.
 
-| ticker | fiscal_year | fiscal_qtr | eps_basic | price_close | special_items | shares_out | analyst_med |
+| ticker (mã CP) | fiscal_year (năm TC) | fiscal_qtr (quý TC) | eps_basic (EPS cơ bản) | price_close (giá đóng cửa) | special_items (khoản mục đặc biệt) | shares_out (số CP lưu hành) | analyst_med (trung vị nhà phân tích) |
 |:--------|:--------|:--------|:--------|:--------|:--------|:--------|:--------|
 | VNM | 2023 | 1 | 1200 | 68000 | 0 | 2090 | 1150 |
 | VNM | 2023 | 2 | 1350 | 71000 | 50000 | 2090 | 1300 |
@@ -77,11 +77,11 @@ Below is a tabular representation of the raw data we have ingested for the analy
 | VCB | 2023 | 1 | 1800 | 85000 | 10000 | 5500 | 1700 |
 | VCB | 2024 | 1 | 2100 | 92000 | 0 | 5500 | 2000 |
 
-## Implementation
+## Triển khai
 
-### Python Setup and Data Loading
+### Thiết lập Python và nạp dữ liệu
 
-First, we establish our environment and load the dataset. We ensure the data is sorted by ticker and time to allow for accurate lag calculations.
+Trước tiên, chúng ta thiết lập môi trường và nạp bộ dữ liệu. Chúng ta đảm bảo dữ liệu được sắp xếp theo mã cổ phiếu và thời gian để tính độ trễ một cách chính xác.
 
 ```{python}
 import pandas as pd
@@ -123,24 +123,24 @@ df = df.sort_values(by=['ticker', 'fiscal_year', 'fiscal_qtr'])
 print(df.head())
 ```
 
-### Calculation Logic
+### Logic tính toán
 
-We now apply the functions to calculate the three variations of SUE.
+Bây giờ chúng ta áp dụng các hàm để tính ba biến thể của SUE.
 
-**Step 1: Handling Seasonality (Lags)**
+**Bước 1: Xử lý tính mùa vụ (độ trễ)**
 
-For Methods 1 and 2, we require the data from the same quarter of the previous year (lag 4).
+Với Phương pháp 1 và 2, chúng ta cần dữ liệu của cùng quý năm trước (độ trễ 4).
 
 ```{python}
 # Group by ticker to ensure we don't shift data between companies
 df['eps_lag4'] = df.groupby('ticker')['eps_basic'].shift(4)
 ```
 
-**Step 2: Adjusting for Special Items**
+**Bước 2: Điều chỉnh các khoản mục đặc biệt**
 
-For Method 2, we must strip out non-recurring items. We apply the Vietnamese Corporate Income Tax (CIT) rate of 20%.
+Với Phương pháp 2, chúng ta phải loại bỏ các khoản mục không thường xuyên. Chúng ta áp dụng thuế suất thuế thu nhập doanh nghiệp (CIT) của Việt Nam là 20%.
 
-The formula for the adjustment per share is: $$ \text{Adjustment} = \frac{\text{Special Items} \times (1 - 0.20)}{\text{Shares Outstanding}} $$
+Công thức điều chỉnh trên mỗi cổ phiếu là: $$ \text{Adjustment} = \frac{\text{Special Items} \times (1 - 0.20)}{\text{Shares Outstanding}} $$
 
 ```{python}
 # Constants
@@ -158,9 +158,9 @@ df['eps_adjusted'] = df['eps_basic'] - df['spi_impact_per_share']
 df['eps_adj_lag4'] = df.groupby('ticker')['eps_adjusted'].shift(4)
 ```
 
-**Step 3: Computing SUE Variants**
+**Bước 3: Tính các biến thể của SUE**
 
-We finalize the calculation by computing the difference between actual (or adjusted) and expected values, deflated by the stock price.
+Chúng ta hoàn tất phép tính bằng cách lấy chênh lệch giữa giá trị thực tế (hoặc đã điều chỉnh) và giá trị kỳ vọng, chia cho giá cổ phiếu.
 
 ```{python}
 # Method 1: Seasonal Random Walk (Standard EPS)
@@ -178,11 +178,11 @@ df['sue_2_pct'] = df['sue_2'] * 100
 df['sue_3_pct'] = df['sue_3'] * 100
 ```
 
-## Results and Analysis
+## Kết quả và phân tích
 
-We present the calculated standardized earnings surprises for the fiscal year 2024. Positive values indicate a positive surprise (beating expectations), while negative values indicate a miss.
+Chúng ta trình bày bất ngờ lợi nhuận chuẩn hóa đã tính cho năm tài chính 2024. Giá trị dương cho thấy một bất ngờ tích cực (vượt kỳ vọng), còn giá trị âm cho thấy kết quả không đạt kỳ vọng.
 
-### Tabular Results (FY 2024)
+### Kết quả dạng bảng (năm tài chính 2024)
 
 ```{python}
 # Filter for 2024 results where lag data exists
@@ -219,9 +219,9 @@ display(Markdown(markdown_table))
 3.  **Sector Volatility:** HPG (Steel sector) shows higher volatility in surprises compared to VNM (Consumer Staples), reflecting the cyclical nature of the construction materials market in Vietnam. -->
 ```
 
-### Visualization
+### Trực quan hóa
 
-The following figure plots the Analyst-based SUE (Method 3) for the selected tickers over the 2024 fiscal year.
+Hình sau vẽ SUE dựa trên dự báo của nhà phân tích (Phương pháp 3) cho các mã cổ phiếu được chọn trong năm tài chính 2024.
 
 ```{python}
 #| fig-width: 7
@@ -243,8 +243,8 @@ plt.xticks([1, 2, 3, 4])
 plt.show()
 ```
 
-## Conclusion
+## Kết luận
 
-In this chapter, we have formalized the calculation of Standardized Earnings Surprises for the Vietnamese market. We demonstrated that relying solely on raw EPS growth (Method 1) can be misleading in the presence of non-recurring items. Furthermore, analyst-based surprises (Method 3) often provide a cleaner signal of new information reaching the market.
+Trong chương này, chúng ta đã chính thức hóa cách tính bất ngờ lợi nhuận chuẩn hóa cho thị trường Việt Nam. Chúng ta đã chỉ ra rằng chỉ dựa vào tăng trưởng EPS thô (Phương pháp 1) có thể gây hiểu lầm khi có các khoản mục không thường xuyên. Hơn nữa, các bất ngờ dựa trên nhà phân tích (Phương pháp 3) thường cung cấp tín hiệu rõ ràng hơn về thông tin mới đi vào thị trường.
 
-For robust quantitative modeling in Vietnam, we recommend using Method 2 when analyst data is sparse (common in small-cap stocks) and Method 3 for VN30 constituents where analyst coverage is deep and liquid.
+Để xây dựng mô hình định lượng vững chắc tại Việt Nam, chúng tôi khuyến nghị dùng Phương pháp 2 khi dữ liệu nhà phân tích thưa thớt (phổ biến ở các cổ phiếu vốn hóa nhỏ) và Phương pháp 3 cho các cổ phiếu thành phần VN30, nơi mức độ phủ sóng của nhà phân tích sâu và thanh khoản cao.

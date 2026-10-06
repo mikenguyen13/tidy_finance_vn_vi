@@ -1,4 +1,4 @@
-# Information Content of Earnings Announcements
+# Hàm lượng thông tin của các thông báo lợi nhuận
 
 ```{python}
 #| label: setup
@@ -23,109 +23,109 @@ plt.rcParams.update({
 })
 ```
 
-A foundational question in capital markets research is whether accounting information matters to investors. If financial statements merely repackage what the market already knows from other sources, such as press coverage, analyst reports, management guidance, macroeconomic data, then the elaborate apparatus of financial reporting is largely redundant for price discovery. Conversely, if earnings announcements trigger measurable changes in trading behavior, we have evidence that the accounting system produces information the market did not previously possess.
+Một câu hỏi nền tảng trong nghiên cứu thị trường vốn là liệu thông tin kế toán có thực sự quan trọng đối với nhà đầu tư hay không. Nếu báo cáo tài chính chỉ đóng gói lại những gì thị trường đã biết từ các nguồn khác, chẳng hạn báo chí, báo cáo của nhà phân tích, định hướng của ban lãnh đạo, dữ liệu vĩ mô, thì toàn bộ bộ máy lập báo cáo tài chính phần lớn là thừa đối với quá trình khám phá giá. Ngược lại, nếu các thông báo lợi nhuận kích hoạt những thay đổi đo lường được trong hành vi giao dịch, chúng ta có bằng chứng rằng hệ thống kế toán tạo ra thông tin mà thị trường trước đó chưa có.
 
-@beaver1968information addressed this question by examining whether trading volume and return volatility increase around the dates when firms announce annual earnings. The logic is direct: if an earnings announcement contains new information, it should alter investors' beliefs. Altered beliefs lead some investors to trade, increasing volume. And to the extent that the announcement resolves uncertainty, the stock price should adjust, generating abnormal return volatility. Both channels (i.e., volume and volatility) provide distinct windows into the information content of earnings.
+@beaver1968information đã trả lời câu hỏi này bằng cách xem xét liệu khối lượng giao dịch và độ biến động lợi nhuận có tăng lên quanh ngày các doanh nghiệp công bố lợi nhuận năm hay không. Logic rất trực tiếp: nếu một thông báo lợi nhuận chứa thông tin mới, nó sẽ làm thay đổi niềm tin của nhà đầu tư. Niềm tin thay đổi khiến một số nhà đầu tư giao dịch, làm tăng khối lượng. Và trong chừng mực thông báo giải tỏa được sự bất định, giá cổ phiếu sẽ điều chỉnh, tạo ra độ biến động lợi nhuận bất thường. Cả hai kênh (tức là khối lượng và độ biến động) đều cung cấp những góc nhìn riêng biệt về hàm lượng thông tin của lợi nhuận.
 
-The empirical design compares a firm's trading activity during a narrow **announcement window** (the days immediately around the earnings release) with its own trading activity during a **non-announcement window** (otherwise comparable days away from the event). If the announcement conveys information, the announcement window should show elevated volume and volatility relative to the non-announcement period.
+Thiết kế thực nghiệm so sánh hoạt động giao dịch của doanh nghiệp trong một **cửa sổ thông báo** hẹp (những ngày ngay quanh thời điểm công bố lợi nhuận) với hoạt động giao dịch của chính doanh nghiệp đó trong một **cửa sổ không thông báo** (những ngày tương đương, cách xa sự kiện). Nếu thông báo mang thông tin, cửa sổ thông báo sẽ có khối lượng và độ biến động cao hơn so với giai đoạn không thông báo.
 
-### Two Distinct Signals: Volume vs. Volatility
+### Hai tín hiệu khác biệt: khối lượng và độ biến động
 
-While volume and return volatility are both used to measure investor reaction, they capture different economic phenomena. This distinction, formalized in subsequent theoretical work, is important for interpreting results:
+Mặc dù khối lượng và độ biến động lợi nhuận đều được dùng để đo phản ứng của nhà đầu tư, hai đại lượng này phản ánh những hiện tượng kinh tế khác nhau. Sự phân biệt này, được hình thức hóa trong các nghiên cứu lý thuyết về sau, rất quan trọng cho việc diễn giải kết quả:
 
--   **Return volatility** reflects the *average* revision in investor beliefs. When the market as a whole is surprised by an earnings number, prices move sharply. The magnitude of the squared (or absolute) return residual measures how far the announcement moved the consensus. This is a measure of the *aggregate information content* of the announcement [@kim1991market].
+-   **Độ biến động lợi nhuận** phản ánh mức điều chỉnh *trung bình* trong niềm tin của nhà đầu tư. Khi toàn thị trường bị bất ngờ bởi một con số lợi nhuận, giá biến động mạnh. Độ lớn của phần dư lợi nhuận bình phương (hoặc tuyệt đối) đo lường mức độ thông báo đã dịch chuyển nhận định đồng thuận. Đây là thước đo *hàm lượng thông tin tổng hợp* của thông báo [@kim1991market].
 
--   **Trading volume** reflects *disagreement* among investors about the implications of the announcement. Even an announcement that moves prices very little can generate heavy trading if investors interpret the same signal differently. For example, if some view an earnings beat as sustainable while others view it as temporary [@kandel1995differential]. Volume thus captures the *differential information content* of the announcement.
+-   **Khối lượng giao dịch** phản ánh *sự bất đồng* giữa các nhà đầu tư về hàm ý của thông báo. Ngay cả một thông báo làm giá thay đổi rất ít cũng có thể tạo ra giao dịch sôi động nếu các nhà đầu tư diễn giải cùng một tín hiệu theo những cách khác nhau. Chẳng hạn, một số người cho rằng kết quả lợi nhuận vượt kỳ vọng là bền vững trong khi những người khác cho rằng nó chỉ mang tính tạm thời [@kandel1995differential]. Do đó, khối lượng phản ánh *hàm lượng thông tin khác biệt* của thông báo.
 
-@karpoff1987relation surveys the theoretical and empirical relationship between these two variables. The key insight is that volume is not simply a noisier version of volatility; it provides independent information about how the market processes accounting data.
+@karpoff1987relation khảo sát mối quan hệ lý thuyết và thực nghiệm giữa hai biến này. Hiểu biết then chốt là khối lượng không đơn thuần là phiên bản nhiễu hơn của độ biến động; nó cung cấp thông tin độc lập về cách thị trường xử lý dữ liệu kế toán.
 
-### Why Vietnam?
+### Vì sao là Việt Nam?
 
-Vietnam's equity markets provide a distinctive setting for studying announcement reactions for several reasons:
+Thị trường chứng khoán Việt Nam là bối cảnh đặc biệt để nghiên cứu phản ứng với thông báo, vì một số lý do sau:
 
-1.  **Information environment.** Vietnamese listed firms face less intense pre-announcement scrutiny than their U.S. counterparts. Analyst coverage is sparse (most firms outside the VN30 index receive no institutional coverage). Management earnings guidance is rare. This creates a thicker "information gap" for the earnings announcement to fill, potentially amplifying both volume and volatility reactions.
+1.  **Môi trường thông tin.** Các doanh nghiệp niêm yết Việt Nam ít bị soi xét trước thông báo hơn so với các doanh nghiệp Mỹ. Mức độ bao phủ của nhà phân tích còn thưa (hầu hết doanh nghiệp ngoài rổ VN30 không có phân tích của các tổ chức). Định hướng lợi nhuận của ban lãnh đạo hiếm khi được đưa ra. Điều này tạo ra một "khoảng trống thông tin" dày hơn để thông báo lợi nhuận lấp đầy, có khả năng khuếch đại cả phản ứng về khối lượng lẫn độ biến động.
 
-2.  **Retail investor dominance.** Over 80% of daily trading volume on HOSE is attributed to retail investors. Retail traders may process earnings information differently from institutions, with greater behavioral biases, less capacity for fundamental analysis, and different trading horizons. This affects both the timing and magnitude of market reactions.
+2.  **Sự áp đảo của nhà đầu tư cá nhân.** Hơn 80% khối lượng giao dịch hằng ngày trên HOSE là của nhà đầu tư cá nhân. Nhà đầu tư cá nhân có thể xử lý thông tin lợi nhuận khác với các tổ chức, với nhiều thiên lệch hành vi hơn, ít khả năng phân tích cơ bản hơn và khung thời gian giao dịch khác. Điều này ảnh hưởng đến cả thời điểm lẫn độ lớn của phản ứng thị trường.
 
-3.  **Price limits.** HOSE imposes daily price limits of $\pm$ 7% and HNX of $\pm$ 10%. When an earnings announcement is sufficiently surprising, the stock may hit its price limit, preventing the market from fully incorporating the information within a single trading session. This creates a distinctive pattern of *multi-day adjustment* that has no analogue in the original U.S. studies.
+3.  **Biên độ giá.** HOSE áp dụng biên độ giá hằng ngày $\pm$ 7% và HNX là $\pm$ 10%. Khi một thông báo lợi nhuận đủ bất ngờ, cổ phiếu có thể chạm biên độ giá, khiến thị trường không thể phản ánh đầy đủ thông tin trong một phiên giao dịch. Điều này tạo ra một mô hình đặc trưng về *điều chỉnh kéo dài nhiều ngày* mà các nghiên cứu gốc trên thị trường Mỹ không có.
 
-4.  **Disclosure timing.** Vietnamese regulations require audited annual financial statements to be published within 90 days of fiscal year-end. Quarterly financial data (unaudited) must be released within 20 days. The overlap between quarterly and annual announcements, and the variable lag between fiscal year-end and announcement date, creates heterogeneity in the information content of annual earnings releases.
+4.  **Thời điểm công bố thông tin.** Quy định của Việt Nam yêu cầu báo cáo tài chính năm đã kiểm toán phải được công bố trong vòng 90 ngày kể từ ngày kết thúc năm tài chính. Dữ liệu tài chính quý (chưa kiểm toán) phải được công bố trong vòng 20 ngày. Sự chồng lấn giữa thông báo quý và thông báo năm, cùng độ trễ thay đổi giữa ngày kết thúc năm tài chính và ngày thông báo, tạo ra tính không đồng nhất về hàm lượng thông tin của các thông báo lợi nhuận năm.
 
-5.  **Market structure.** Vietnam operates continuous order-matching during trading hours (9:00–11:30 and 13:00–14:30 on HOSE; 9:00–11:30 and 13:00–15:00 on HNX), with periodic call auctions at open and close. This microstructure affects intraday patterns of price discovery around announcements.
+5.  **Cấu trúc thị trường.** Việt Nam vận hành khớp lệnh liên tục trong giờ giao dịch (9:00–11:30 và 13:00–14:30 trên HOSE; 9:00–11:30 và 13:00–15:00 trên HNX), với các phiên khớp lệnh định kỳ xác định giá mở cửa và đóng cửa. Vi cấu trúc này ảnh hưởng đến các mô hình khám phá giá trong ngày quanh thời điểm thông báo.
 
-## Theoretical Framework {#sec-info-earnings-theory}
+## Khung lý thuyết {#sec-info-earnings-theory}
 
-### The Information Content Hypothesis
+### Giả thuyết hàm lượng thông tin
 
-Let $P_{i,t}$ denote the price of stock $i$ on date $t$. Under the efficient markets hypothesis, the price reflects all publicly available information:
+Gọi $P_{i,t}$ là giá của cổ phiếu $i$ vào ngày $t$. Theo giả thuyết thị trường hiệu quả, giá phản ánh toàn bộ thông tin công khai sẵn có:
 
 $$
 P_{i,t} = E\left[\sum_{s=1}^{\infty} \frac{D_{i,t+s}}{(1+r)^s} \;\bigg|\; \Omega_t \right]
 $$ {#eq-emh}
 
-where $D_{i,t+s}$ represents future dividends, $r$ is the discount rate, and $\Omega_t$ is the information set at time $t$.
+trong đó $D_{i,t+s}$ là cổ tức tương lai, $r$ là tỷ suất chiết khấu, và $\Omega_t$ là tập thông tin tại thời điểm $t$.
 
-When firm $i$ announces earnings $X_i$ at time $\tau$, the information set expands: $\Omega_{\tau^+} = \Omega_{\tau^-} \cup \{X_i\}$. If the announcement contains new information, meaning $X_i \notin \Omega_{\tau^-}$, then in general:
+Khi doanh nghiệp $i$ công bố lợi nhuận $X_i$ tại thời điểm $\tau$, tập thông tin được mở rộng: $\Omega_{\tau^+} = \Omega_{\tau^-} \cup \{X_i\}$. Nếu thông báo chứa thông tin mới, nghĩa là $X_i \notin \Omega_{\tau^-}$, thì nói chung:
 
 $$
 P_{i,\tau^+} \neq P_{i,\tau^-}
 $$ {#eq-price-revision}
 
-The magnitude of the price change reflects the *surprise* component of the announcement:
+Độ lớn của thay đổi giá phản ánh thành phần *bất ngờ* của thông báo:
 
 $$
 |P_{i,\tau^+} - P_{i,\tau^-}| \propto |X_i - E[X_i | \Omega_{\tau^-}]|
 $$ {#eq-surprise}
 
-### Volume as a Signal of Heterogeneous Beliefs
+### Khối lượng như tín hiệu của niềm tin không đồng nhất
 
-@kim1991market develop a model where trading volume is driven by the precision of investors' private information relative to the precision of the public signal. Define $V_{i,\tau}$ as the trading volume for stock $i$ at time $\tau$. In their framework:
+@kim1991market xây dựng một mô hình trong đó khối lượng giao dịch được quyết định bởi độ chính xác của thông tin riêng của nhà đầu tư so với độ chính xác của tín hiệu công khai. Định nghĩa $V_{i,\tau}$ là khối lượng giao dịch của cổ phiếu $i$ tại thời điểm $\tau$. Trong khung phân tích của họ:
 
 $$
 V_{i,\tau} = f\left(\frac{\text{Var}[X_i | \Omega^{(j)}_{\tau^-}]}{\text{Var}[\varepsilon_i]}\right)
 $$ {#eq-volume-model}
 
-where $\Omega^{(j)}_{\tau^-}$ is investor $j$'s private information set and $\varepsilon_i$ is noise. Volume increases when investors disagree about what the announcement means, a condition that @kandel1995differential term **differential interpretation**.
+trong đó $\Omega^{(j)}_{\tau^-}$ là tập thông tin riêng của nhà đầu tư $j$ và $\varepsilon_i$ là nhiễu. Khối lượng tăng lên khi các nhà đầu tư bất đồng về ý nghĩa của thông báo, một điều kiện mà @kandel1995differential gọi là **diễn giải khác biệt**.
 
-This distinction matters for Vietnam. In a market dominated by retail investors with heterogeneous information and analytical capacity, we might expect the volume reaction to be *disproportionately large* relative to the price reaction, because disagreement is high even when the aggregate price revision is modest.
+Sự phân biệt này có ý nghĩa với Việt Nam. Trong một thị trường bị chi phối bởi các nhà đầu tư cá nhân với thông tin và năng lực phân tích không đồng nhất, chúng ta có thể kỳ vọng phản ứng về khối lượng *lớn không tương xứng* so với phản ứng về giá, vì mức độ bất đồng cao ngay cả khi mức điều chỉnh giá tổng hợp là khiêm tốn.
 
-### Measuring Information Content
+### Đo lường hàm lượng thông tin
 
-We use two complementary measures:
+Chúng ta sử dụng hai thước đo bổ sung cho nhau:
 
-**Abnormal return volatility.** For each firm-day, compute the squared market-adjusted return:
+**Độ biến động lợi nhuận bất thường.** Với mỗi cặp doanh nghiệp–ngày, tính lợi nhuận điều chỉnh theo thị trường bình phương:
 
 $$
 U^2_{i,t} = (R_{i,t} - R_{m,t})^2
 $$ {#eq-squared-residual}
 
-where $R_{i,t}$ is the return on stock $i$ and $R_{m,t}$ is the market return. Under the null of no information content, $E[U^2_{i,t}]$ should be the same in the announcement and non-announcement windows. @beaver1968information standardized this measure by dividing by the firm's average $U^2$ during non-announcement weeks.
+trong đó $R_{i,t}$ là lợi nhuận của cổ phiếu $i$ và $R_{m,t}$ là lợi nhuận thị trường. Theo giả thuyết không về việc không có hàm lượng thông tin, $E[U^2_{i,t}]$ phải như nhau trong cửa sổ thông báo và cửa sổ không thông báo. @beaver1968information chuẩn hóa thước đo này bằng cách chia cho $U^2$ trung bình của doanh nghiệp trong các tuần không có thông báo.
 
-**Relative volume.** For each firm-day, compute:
+**Khối lượng tương đối.** Với mỗi cặp doanh nghiệp–ngày, tính:
 
 $$
 RV_{i,t} = \frac{Vol_{i,t}}{\overline{Vol}_i}
 $$ {#eq-relative-volume}
 
-where $\overline{Vol}_i$ is the firm's average daily volume over the event window. A value of $RV > 1$ indicates above-average trading. @beaver1968information used a similar approach, computing a "volume ratio" relative to non-report-period averages.
+trong đó $\overline{Vol}_i$ là khối lượng giao dịch trung bình hằng ngày của doanh nghiệp trong cửa sổ sự kiện. Giá trị $RV > 1$ cho thấy giao dịch trên mức trung bình. @beaver1968information dùng một cách tiếp cận tương tự, tính "tỷ lệ khối lượng" so với mức trung bình của các giai đoạn không công bố báo cáo.
 
-## Data and Variable Construction {#sec-info-earnings-measures}
+## Dữ liệu và xây dựng biến {#sec-info-earnings-measures}
 
-### Data Requirements
+### Yêu cầu về dữ liệu
 
-The analysis requires three data elements:
+Phân tích cần ba thành phần dữ liệu:
 
-| Data | Source | Key Fields |
+| Dữ liệu | Nguồn | Các trường chính |
 |-------------------|-----------------------|------------------------------|
-| Earnings announcement dates | Financial statements/filings | Ticker, fiscal year-end, announcement date |
-| Daily stock returns | Exchange data (HOSE/HNX) | Ticker, date, closing price, return |
-| Daily trading volume | Exchange data (HOSE/HNX) | Ticker, date, volume (shares or VND) |
+| Ngày thông báo lợi nhuận | Báo cáo tài chính/hồ sơ công bố | Mã cổ phiếu, ngày kết thúc năm tài chính, ngày thông báo |
+| Lợi nhuận cổ phiếu hằng ngày | Dữ liệu sàn giao dịch (HOSE/HNX) | Mã cổ phiếu, ngày, giá đóng cửa, lợi nhuận |
+| Khối lượng giao dịch hằng ngày | Dữ liệu sàn giao dịch (HOSE/HNX) | Mã cổ phiếu, ngày, khối lượng (cổ phiếu hoặc VND) |
 
-: Data sources for the information content analysis {#tbl-info-earnings-data-sources}
+: Nguồn dữ liệu cho phân tích hàm lượng thông tin {#tbl-info-earnings-data-sources}
 
-### Trading Day Calendar
+### Lịch ngày giao dịch
 
-A critical infrastructure element is a **trading day calendar** that maps calendar dates to sequential trading day indices. This allows us to count "20 trading days before the announcement" correctly, skipping weekends and holidays.
+Một thành phần hạ tầng quan trọng là **lịch ngày giao dịch**, ánh xạ các ngày dương lịch sang chỉ số ngày giao dịch tuần tự. Điều này cho phép chúng ta đếm đúng "20 ngày giao dịch trước thông báo", bỏ qua cuối tuần và ngày lễ.
 
 ```{python}
 #| label: trading-calendar
@@ -175,9 +175,9 @@ print(f"Trading calendar: {len(trading_cal):,} trading days, "
       f"{trading_cal['date'].min().date()} to {trading_cal['date'].max().date()}")
 ```
 
-### Announcement Date Alignment
+### Căn chỉnh ngày thông báo
 
-Earnings announcements may occur on non-trading days (weekends, holidays). When this happens, we assign the announcement to the *next available* trading day, since that is the first opportunity for the market to react. We also need to handle the case where announcements occur after market close. Ideally, these would be assigned to the following trading day. Without intraday timing data (common in Vietnamese disclosures), we use the announcement date as reported.
+Các thông báo lợi nhuận có thể xảy ra vào những ngày không giao dịch (cuối tuần, ngày lễ). Khi đó, chúng ta gán thông báo cho ngày giao dịch *kế tiếp gần nhất*, vì đó là cơ hội đầu tiên để thị trường phản ứng. Chúng ta cũng cần xử lý trường hợp thông báo diễn ra sau khi thị trường đóng cửa. Lý tưởng nhất, những thông báo này nên được gán cho ngày giao dịch tiếp theo. Nếu không có dữ liệu thời điểm trong ngày (phổ biến trong các công bố thông tin của Việt Nam), chúng ta dùng ngày thông báo như được báo cáo.
 
 ```{python}
 #| label: annc-date-alignment
@@ -206,9 +206,9 @@ def build_announcement_mapper(trading_cal: pd.DataFrame) -> pd.DataFrame:
 annc_mapper = build_announcement_mapper(trading_cal)
 ```
 
-### Generating Synthetic Vietnamese Data
+### Tạo dữ liệu mô phỏng cho thị trường Việt Nam
 
-We generate a synthetic panel of Vietnamese listed firms with realistic properties to demonstrate the methodology. The simulation embeds an earnings announcement effect—elevated volume and volatility on days 0 and +1, that we then seek to detect using the @beaver1968information framework.
+Chúng ta tạo một bộ dữ liệu bảng (panel) tổng hợp các doanh nghiệp niêm yết Việt Nam với các đặc tính thực tế để minh họa phương pháp. Mô phỏng này cài sẵn một hiệu ứng thông báo lợi nhuận, tức khối lượng và độ biến động tăng cao vào ngày 0 và +1, mà sau đó chúng ta tìm cách phát hiện bằng khung phân tích của @beaver1968information.
 
 ```{python}
 #| label: gen-data
@@ -362,11 +362,11 @@ print(f"Announcements: {len(earn_annc):,}")
 print(f"Daily observations: {len(daily_data):,}")
 ```
 
-## Single-Event Walkthrough {#sec-info-earnings-single}
+## Minh họa với một sự kiện đơn lẻ {#sec-info-earnings-single}
 
-Before scaling to the full sample, we trace the methodology for a single earnings announcement to build intuition and verify each step.
+Trước khi mở rộng ra toàn bộ mẫu, chúng ta lần theo phương pháp trên một thông báo lợi nhuận duy nhất để xây dựng trực giác và kiểm tra từng bước.
 
-### Selecting the Event
+### Chọn sự kiện
 
 ```{python}
 #| label: single-event-select
@@ -387,9 +387,9 @@ print(f"Exchange: {single_event['exchange']}")
 print(f"Event trading day: {single_event['event_td']}")
 ```
 
-### Event Window Data
+### Dữ liệu cửa sổ sự kiện
 
-We extract 41 trading days of data (20 before through 20 after the announcement) and compute the key measures.
+Chúng ta trích xuất dữ liệu của 41 ngày giao dịch (từ 20 ngày trước đến 20 ngày sau thông báo) và tính các thước đo chính.
 
 ```{python}
 #| label: single-event-data
@@ -412,13 +412,13 @@ print(f"Trading days in window: {len(single_daily)}")
 print(f"Average daily volume: {avg_vol:,.0f} shares")
 ```
 
-### Visualizing the Single Event
+### Trực quan hóa sự kiện đơn lẻ
 
-@fig-single-volume and @fig-single-volatility display the volume and volatility patterns for this single earnings announcement.
+@fig-single-volume và @fig-single-volatility thể hiện mô hình khối lượng và độ biến động của thông báo lợi nhuận đơn lẻ này.
 
 ```{python}
 #| label: fig-single-volume
-#| fig-cap: "Daily trading volume around a single earnings announcement. Day 0 is the first trading day on or after the announcement date. The dashed line marks the event-window average."
+#| fig-cap: "Khối lượng giao dịch hằng ngày quanh một thông báo lợi nhuận đơn lẻ. Ngày 0 là ngày giao dịch đầu tiên vào hoặc sau ngày thông báo. Đường đứt nét đánh dấu mức trung bình của cửa sổ sự kiện."
 
 fig, ax = plt.subplots()
 colors = ["firebrick" if abs(t) <= 1 else "steelblue"
@@ -438,7 +438,7 @@ plt.show()
 
 ```{python}
 #| label: fig-single-volatility
-#| fig-cap: "Squared market-adjusted returns around a single earnings announcement. Elevated values on days 0 and +1 indicate that the announcement moved the stock price beyond what market-wide movements would predict."
+#| fig-cap: "Lợi nhuận điều chỉnh theo thị trường bình phương quanh một thông báo lợi nhuận đơn lẻ. Các giá trị cao vào ngày 0 và +1 cho thấy thông báo đã đẩy giá cổ phiếu đi xa hơn mức mà biến động chung của thị trường dự báo."
 
 fig, ax = plt.subplots()
 ax.bar(single_daily["relative_td"], single_daily["sq_ret_mkt"],
@@ -456,16 +456,16 @@ plt.show()
 ```
 
 ::: callout-tip
-## Reading the Plots
+## Đọc các biểu đồ
 
-A single event is inherently noisy, other firm-specific news (M&A rumors, analyst reports, regulatory actions) can generate volume and volatility spikes on non-announcement dates. The value of the @beaver1968information approach lies in *averaging across many events* to isolate the systematic announcement effect from idiosyncratic noise.
+Một sự kiện đơn lẻ vốn có nhiều nhiễu, các tin tức đặc thù khác của doanh nghiệp (tin đồn M&A, báo cáo phân tích, hành động của cơ quan quản lý) có thể tạo ra các đỉnh khối lượng và độ biến động vào những ngày không có thông báo. Giá trị của cách tiếp cận của @beaver1968information nằm ở việc *lấy trung bình trên nhiều sự kiện* để tách hiệu ứng thông báo mang tính hệ thống khỏi nhiễu đặc thù.
 :::
 
-## Full-Sample Analysis {#sec-info-earnings-full-sample}
+## Phân tích toàn mẫu {#sec-info-earnings-full-sample}
 
-### Computing Event-Time Aggregates
+### Tính các giá trị tổng hợp theo thời gian sự kiện
 
-For each event day $\tau$ relative to the announcement, we compute the cross-sectional average of our two measures across all announcements:
+Với mỗi ngày sự kiện $\tau$ tương đối so với thông báo, chúng ta tính trung bình chéo của hai thước đo trên tất cả các thông báo:
 
 $$
 \overline{U^2}_\tau = \frac{1}{N_\tau} \sum_{i=1}^{N_\tau} U^2_{i,\tau}
@@ -475,7 +475,7 @@ $$
 \overline{RV}_\tau = \frac{1}{N_\tau} \sum_{i=1}^{N_\tau} RV_{i,\tau}
 $$ {#eq-avg-volume}
 
-where $N_\tau$ is the number of announcements with available data on event day $\tau$.
+trong đó $N_\tau$ là số thông báo có dữ liệu sẵn có vào ngày sự kiện $\tau$.
 
 ```{python}
 #| label: full-sample-measures
@@ -543,13 +543,13 @@ event_summary_pooled = (
 )
 ```
 
-### Return Volatility Around Announcements
+### Độ biến động lợi nhuận quanh các thông báo
 
-@fig-volatility-by-year plots the standard deviation of market-adjusted returns by event day, separately for each fiscal year. A clear spike on days 0 and +1 is the hallmark of information content.
+@fig-volatility-by-year vẽ độ lệch chuẩn của lợi nhuận điều chỉnh theo thị trường theo ngày sự kiện, tách riêng cho từng năm tài chính. Một đỉnh rõ rệt vào ngày 0 và +1 là dấu hiệu đặc trưng của hàm lượng thông tin.
 
 ```{python}
 #| label: fig-volatility-by-year
-#| fig-cap: "Standard deviation of market-adjusted returns around earnings announcements, by fiscal year. The consistent spike on days 0 and +1 across years provides strong evidence that annual earnings announcements convey new information to Vietnamese equity markets."
+#| fig-cap: "Độ lệch chuẩn của lợi nhuận điều chỉnh theo thị trường quanh các thông báo lợi nhuận, theo năm tài chính. Đỉnh nhất quán vào ngày 0 và +1 qua các năm là bằng chứng mạnh cho thấy các thông báo lợi nhuận năm truyền tải thông tin mới đến thị trường chứng khoán Việt Nam."
 
 fig, ax = plt.subplots(figsize=(9, 5))
 years_plot = sorted(event_summary["year"].unique())
@@ -575,13 +575,13 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Trading Volume Around Announcements
+### Khối lượng giao dịch quanh các thông báo
 
-@fig-volume-by-year shows relative trading volume by event day. The volume response provides an independent confirmation of the volatility finding.
+@fig-volume-by-year cho thấy khối lượng giao dịch tương đối theo ngày sự kiện. Phản ứng về khối lượng cung cấp sự xác nhận độc lập cho kết quả về độ biến động.
 
 ```{python}
 #| label: fig-volume-by-year
-#| fig-cap: "Mean relative trading volume around earnings announcements, by fiscal year. Volume spikes sharply on days 0 and +1, consistent with investors actively trading on the new information. The elevated volume persists slightly longer than the volatility spike, suggesting that disagreement about the announcement's implications takes time to resolve."
+#| fig-cap: "Khối lượng giao dịch tương đối trung bình quanh các thông báo lợi nhuận, theo năm tài chính. Khối lượng tăng vọt vào ngày 0 và +1, phù hợp với việc nhà đầu tư tích cực giao dịch dựa trên thông tin mới. Khối lượng cao kéo dài lâu hơn một chút so với đỉnh độ biến động, cho thấy sự bất đồng về hàm ý của thông báo cần thời gian để được giải quyết."
 
 fig, ax = plt.subplots(figsize=(9, 5))
 
@@ -603,21 +603,21 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Formal Statistical Tests
+### Các kiểm định thống kê chính thức
 
-@beaver1968information relied on visual inspection and informal statistical arguments. Modern practice demands formal tests. We test whether the announcement-window measures differ significantly from the non-announcement window using a paired comparison.
+@beaver1968information dựa vào quan sát trực quan và các lập luận thống kê không chính thức. Thực hành hiện đại đòi hỏi các kiểm định chính thức. Chúng ta kiểm định xem các thước đo trong cửa sổ thông báo có khác biệt đáng kể so với cửa sổ không thông báo hay không, bằng so sánh theo cặp.
 
-Define the announcement window as days $\{-1, 0, +1\}$ and the non-announcement window as days $\{-20, \ldots, -5\} \cup \{+5, \ldots, +20\}$. For each event $i$, we compute:
+Định nghĩa cửa sổ thông báo là các ngày $\{-1, 0, +1\}$ và cửa sổ không thông báo là các ngày $\{-20, \ldots, -5\} \cup \{+5, \ldots, +20\}$. Với mỗi sự kiện $i$, chúng ta tính:
 
 $$
 \Delta U^2_i = \overline{U^2}_{i,\text{annc}} - \overline{U^2}_{i,\text{non-annc}}
 $$ {#eq-delta-vol}
 
-Under the null, $E[\Delta U^2_i] = 0$. We test this with a $t$-test across events.
+Theo giả thuyết không, $E[\Delta U^2_i] = 0$. Chúng ta kiểm định giả thuyết này bằng kiểm định $t$ trên các sự kiện.
 
 ```{python}
 #| label: tbl-formal-tests
-#| tbl-cap: "Formal tests of announcement-period information content. The announcement window is days {-1, 0, +1}; the non-announcement window excludes days {-4, ..., +4}. Large t-statistics and small p-values provide strong evidence that both return volatility and trading volume are significantly elevated during the announcement window."
+#| tbl-cap: "Các kiểm định chính thức về hàm lượng thông tin trong giai đoạn thông báo. Cửa sổ thông báo là các ngày {-1, 0, +1}; cửa sổ không thông báo loại trừ các ngày {-4, ..., +4}. Các thống kê t lớn và giá trị p nhỏ là bằng chứng mạnh cho thấy cả độ biến động lợi nhuận lẫn khối lượng giao dịch đều tăng đáng kể trong cửa sổ thông báo."
 
 annc_window = [-1, 0, 1]
 non_annc_window = list(range(-20, -4)) + list(range(5, 21))
@@ -658,13 +658,13 @@ test_df["N events"] = test_df["N events"].astype(int)
 test_df
 ```
 
-### Standardized Volatility Ratio
+### Tỷ lệ biến động chuẩn hóa
 
-Following the approach of @beaver1968information, we compute the ratio of announcement-window squared returns to non-announcement-window squared returns. Under the null, this ratio equals 1.0.
+Theo cách tiếp cận của @beaver1968information, chúng ta tính tỷ lệ giữa lợi nhuận bình phương trong cửa sổ thông báo và lợi nhuận bình phương trong cửa sổ không thông báo. Theo giả thuyết không, tỷ lệ này bằng 1,0.
 
 ```{python}
 #| label: fig-volatility-ratio
-#| fig-cap: "Standardized squared market-adjusted return by event day (pooled across all years). A value of 1.0 indicates normal volatility. The announcement-day ratio substantially exceeds 1.0, indicating that earnings releases generate return variation well above normal levels."
+#| fig-cap: "Lợi nhuận điều chỉnh theo thị trường bình phương đã chuẩn hóa theo ngày sự kiện (gộp tất cả các năm). Giá trị 1.0 cho biết độ biến động bình thường. Tỷ lệ vào ngày thông báo vượt xa 1.0, cho thấy việc công bố lợi nhuận tạo ra biến động lợi nhuận cao hơn nhiều so với mức bình thường."
 
 fig, ax = plt.subplots()
 ratio = pooled["mean_std_sq_ret"]
@@ -680,17 +680,17 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Cross-Sectional Variation {#sec-info-earnings-cross}
+## Biến thiên chéo giữa các doanh nghiệp {#sec-info-earnings-cross}
 
-A uniform announcement effect across all firms would be surprising. Theory predicts that the magnitude of the market reaction depends on the pre-announcement information environment: firms with richer information sets prior to the announcement should exhibit *smaller* reactions because less of the earnings number is news [@atiase1985predisclosure; @verrecchia2001essays].
+Một hiệu ứng thông báo đồng nhất trên mọi doanh nghiệp sẽ là điều đáng ngạc nhiên. Lý thuyết dự báo rằng độ lớn của phản ứng thị trường phụ thuộc vào môi trường thông tin trước thông báo: các doanh nghiệp có tập thông tin phong phú hơn trước thông báo sẽ có phản ứng *nhỏ hơn* vì con số lợi nhuận ít mang tính tin mới hơn [@atiase1985predisclosure; @verrecchia2001essays].
 
-### By Firm Size
+### Theo quy mô doanh nghiệp
 
-Larger firms receive more attention from analysts, media, and institutional investors, so their earnings announcements should contain less incremental information.
+Các doanh nghiệp lớn hơn nhận được nhiều sự chú ý hơn từ nhà phân tích, truyền thông và nhà đầu tư tổ chức, nên thông báo lợi nhuận của họ được kỳ vọng chứa ít thông tin gia tăng hơn.
 
 ```{python}
 #| label: fig-size-effect
-#| fig-cap: "Announcement-day abnormal volatility and volume by firm size tercile. Smaller firms exhibit substantially larger reactions, consistent with the prediction that pre-disclosure information is increasing in firm size."
+#| fig-cap: "Độ biến động bất thường và khối lượng vào ngày thông báo theo nhóm tam phân vị quy mô doanh nghiệp. Các doanh nghiệp nhỏ hơn có phản ứng lớn hơn đáng kể, phù hợp với dự báo rằng thông tin có trước khi công bố tăng theo quy mô doanh nghiệp."
 
 # Assign size terciles
 daily_data["size_tercile"] = pd.qcut(
@@ -734,13 +734,13 @@ plt.tight_layout()
 plt.show()
 ```
 
-### By Exchange (HOSE vs. HNX)
+### Theo sàn giao dịch (HOSE so với HNX)
 
-HOSE-listed firms are generally larger and more liquid than HNX-listed firms. Additionally, the tighter price limits on HOSE ($\pm$ 7% vs. $\pm$ 10% on HNX) may truncate announcement-day returns, compressing measured volatility and potentially spreading the adjustment over multiple days.
+Các doanh nghiệp niêm yết trên HOSE nhìn chung lớn hơn và thanh khoản hơn các doanh nghiệp niêm yết trên HNX. Ngoài ra, biên độ giá chặt hơn trên HOSE ($\pm$ 7% so với $\pm$ 10% trên HNX) có thể cắt cụt lợi nhuận ngày thông báo, làm nén độ biến động đo được và có thể trải việc điều chỉnh ra nhiều ngày.
 
 ```{python}
 #| label: fig-exchange-effect
-#| fig-cap: "Announcement reactions by exchange. HNX firms (generally smaller, less liquid) show larger volatility spikes. The tighter HOSE price limit may compress announcement-day returns, but the wider HNX limit allows larger single-day adjustments."
+#| fig-cap: "Phản ứng với thông báo theo sàn giao dịch. Các doanh nghiệp HNX (nhìn chung nhỏ hơn, kém thanh khoản hơn) cho thấy các đỉnh biến động lớn hơn. Biên độ giá chặt hơn của HOSE có thể nén lợi nhuận ngày thông báo, nhưng biên độ rộng hơn của HNX cho phép điều chỉnh một ngày lớn hơn."
 
 exch_summary = (
     daily_data
@@ -779,19 +779,19 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Regression Analysis
+### Phân tích hồi quy
 
-We formalize the cross-sectional analysis with an event-level regression:
+Chúng ta chính thức hóa phân tích chéo bằng một hồi quy ở cấp độ sự kiện:
 
 $$
 \Delta U^2_i = \beta_0 + \beta_1 \text{Size}_i + \beta_2 \text{HNX}_i + \beta_3 \text{AnnLag}_i + \varepsilon_i
 $$ {#eq-cross-section-reg}
 
-where $\text{Size}_i$ is log market capitalization, $\text{HNX}_i$ is an indicator for HNX listing, and $\text{AnnLag}_i$ is the number of calendar days between fiscal year-end and the announcement date (longer lags may allow more information leakage, reducing the surprise).
+trong đó $\text{Size}_i$ là logarit của vốn hóa thị trường, $\text{HNX}_i$ là biến chỉ báo cho việc niêm yết trên HNX, và $\text{AnnLag}_i$ là số ngày dương lịch giữa ngày kết thúc năm tài chính và ngày thông báo (độ trễ dài hơn có thể cho phép rò rỉ thông tin nhiều hơn, làm giảm mức độ bất ngờ).
 
 ```{python}
 #| label: tbl-cross-section
-#| tbl-cap: "Cross-sectional determinants of announcement-day return volatility. Negative size coefficient confirms that larger firms have less informative announcements. The announcement lag coefficient captures information leakage before the official release."
+#| tbl-cap: "Các yếu tố quyết định chéo của độ biến động lợi nhuận vào ngày thông báo. Hệ số quy mô âm xác nhận rằng các doanh nghiệp lớn hơn có thông báo ít mang tính thông tin hơn. Hệ số độ trễ thông báo phản ánh sự rò rỉ thông tin trước khi công bố chính thức."
 
 # Build event-level dataset
 annc_data = daily_data[daily_data["relative_td"].isin(annc_window)].copy()
@@ -852,21 +852,21 @@ reg_table = pd.DataFrame({
 reg_table
 ```
 
-## Discussion and Contemporary Perspectives {#sec-info-earnings-discussion}
+## Thảo luận và các góc nhìn đương đại {#sec-info-earnings-discussion}
 
-### The Bamber et al. (2000) Critique
+### Phê bình của Bamber et al. (2000)
 
-@bamber2000we raised two important methodological concerns about the original @beaver1968information findings:
+@bamber2000we nêu ra hai mối quan ngại phương pháp luận quan trọng đối với kết quả gốc của @beaver1968information:
 
-1.  **Mean vs. median effects.** The original study focused on mean volume and volatility, which can be driven by a small number of extreme events. When @bamber2000we examined the *proportion* of individual announcements that generate unusual reactions (rather than the mean reaction), the evidence was far less dramatic.
+1.  **Hiệu ứng trung bình so với trung vị.** Nghiên cứu gốc tập trung vào khối lượng và độ biến động trung bình, vốn có thể bị chi phối bởi một số ít sự kiện cực đoan. Khi @bamber2000we xem xét *tỷ lệ* các thông báo riêng lẻ tạo ra phản ứng bất thường (thay vì phản ứng trung bình), bằng chứng kém ấn tượng hơn nhiều.
 
-2.  **Sample selection.** Beaver's original sample of 143 firms was not randomly drawn but reflected specific selection criteria that may have biased toward firms with more informative announcements.
+2.  **Chọn mẫu.** Mẫu gốc gồm 143 doanh nghiệp của Beaver không được chọn ngẫu nhiên mà phản ánh các tiêu chí chọn lọc cụ thể, có thể thiên về các doanh nghiệp có thông báo mang nhiều thông tin hơn.
 
-We can assess the first concern directly. @fig-proportion plots the *fraction* of announcements with above-median volatility or volume on each event day, following the spirit of Bamber et al.'s critique.
+Chúng ta có thể đánh giá trực tiếp mối quan ngại thứ nhất. @fig-proportion vẽ *tỷ lệ* các thông báo có độ biến động hoặc khối lượng trên trung vị theo từng ngày sự kiện, theo tinh thần phê bình của Bamber et al.
 
 ```{python}
 #| label: fig-proportion
-#| fig-cap: "Proportion of individual announcements with above-median reaction on each event day. Unlike mean-based measures, this approach is robust to outliers. The fraction still rises notably on days 0 and +1, though the magnitude is more modest than in the mean-based plots."
+#| fig-cap: "Tỷ lệ các thông báo riêng lẻ có phản ứng trên trung vị theo từng ngày sự kiện. Khác với các thước đo dựa trên trung bình, cách tiếp cận này vững trước giá trị ngoại lai. Tỷ lệ này vẫn tăng đáng kể vào ngày 0 và +1, dù độ lớn khiêm tốn hơn so với các biểu đồ dựa trên trung bình."
 
 # For each event, determine if announcement-day measures exceed
 # that event's median non-announcement-day measures
@@ -922,15 +922,15 @@ plt.tight_layout()
 plt.show()
 ```
 
-### How Much Information Do Earnings Announcements Convey?
+### Các thông báo lợi nhuận truyền tải bao nhiêu thông tin?
 
-@ball2008much pose a provocative question: even if earnings announcements generate detectable market reactions, how much of the *total* annual information flow do they account for? Their analysis suggests that quarterly earnings announcements explain only about 12–18% of annual return variation for U.S. firms, implying that the vast majority of value-relevant information reaches the market through other channels.
+@ball2008much đặt ra một câu hỏi đầy thách thức: ngay cả khi các thông báo lợi nhuận tạo ra phản ứng thị trường có thể phát hiện được, chúng chiếm bao nhiêu trong *tổng* luồng thông tin hằng năm? Phân tích của họ cho thấy các thông báo lợi nhuận quý chỉ giải thích khoảng 12–18% biến thiên lợi nhuận năm của các doanh nghiệp Mỹ, hàm ý rằng phần lớn thông tin có liên quan đến giá trị đến với thị trường qua các kênh khác.
 
-We can compute an analogous statistic for our Vietnamese sample:
+Chúng ta có thể tính một thống kê tương tự cho mẫu Việt Nam:
 
 ```{python}
 #| label: tbl-info-share
-#| tbl-cap: "Share of annual return variation concentrated in the announcement window. The announcement window is days {-1, 0, +1}. If announcements carried no information, the expected share would be 3/41 ≈ 7.3% (three days out of a 41-day window). Values substantially above this indicate that a disproportionate share of return variation is concentrated around announcements."
+#| tbl-cap: "Tỷ trọng biến thiên lợi nhuận năm tập trung trong cửa sổ thông báo. Cửa sổ thông báo là các ngày {-1, 0, +1}. Nếu các thông báo không mang thông tin, tỷ trọng kỳ vọng sẽ là 3/41 ≈ 7,3% (ba ngày trong cửa sổ 41 ngày). Các giá trị cao hơn đáng kể cho thấy một phần không tương xứng của biến thiên lợi nhuận tập trung quanh các thông báo."
 
 # Compute fraction of event-window variance in announcement days
 variance_shares = []
@@ -962,13 +962,13 @@ share_stats = pd.DataFrame({
 share_stats
 ```
 
-### Price Limits and Multi-Day Adjustment
+### Biên độ giá và điều chỉnh nhiều ngày
 
-A distinctive feature of Vietnamese markets is that daily price limits can prevent full single-day price adjustment. When an announcement is sufficiently surprising, the stock may hit the $\pm$ 7% limit on HOSE (or $\pm$ 10% on HNX), and the remaining adjustment spills into subsequent trading days. This creates a pattern of **limit hits followed by continued drift**, a phenomenon that would bias downward any single-day measure of announcement impact and redistribute information content across days 0, +1, and potentially +2.
+Một đặc điểm riêng của thị trường Việt Nam là biên độ giá hằng ngày có thể ngăn việc điều chỉnh giá hoàn toàn trong một ngày. Khi một thông báo đủ bất ngờ, cổ phiếu có thể chạm biên độ $\pm$ 7% trên HOSE (hoặc $\pm$ 10% trên HNX), và phần điều chỉnh còn lại tràn sang các ngày giao dịch tiếp theo. Điều này tạo ra mô hình **chạm biên độ rồi tiếp tục trôi giá**, một hiện tượng sẽ làm lệch xuống mọi thước đo tác động của thông báo trong một ngày và phân phối lại hàm lượng thông tin qua các ngày 0, +1 và có thể cả +2.
 
 ```{python}
 #| label: fig-limit-hits
-#| fig-cap: "Proportion of stocks hitting the daily price limit (within 0.5% of the ±7% HOSE limit or ±10% HNX limit) by event day. Limit hits are concentrated on the announcement day, indicating that some announcements are sufficiently surprising to exhaust single-day adjustment capacity."
+#| fig-cap: "Tỷ lệ cổ phiếu chạm biên độ giá hằng ngày (trong phạm vi 0,5% của biên độ ±7% trên HOSE hoặc ±10% trên HNX) theo ngày sự kiện. Các lần chạm biên độ tập trung vào ngày thông báo, cho thấy một số thông báo đủ bất ngờ để làm cạn năng lực điều chỉnh trong một ngày."
 
 # Identify limit hits
 def is_limit_hit(row):
@@ -998,46 +998,46 @@ plt.tight_layout()
 plt.show()
 ```
 
-### International Context
+### Bối cảnh quốc tế
 
-@landsman2012information conduct a cross-country study of announcement reactions and find that information content is higher in countries with: (i) stronger investor protection, (ii) greater financial transparency, and (iii) mandatory IFRS adoption. Vietnam's position on these dimensions, developing institutional framework, VAS rather than IFRS, moderate transparency, suggests that announcement reactions may differ systematically from developed-market benchmarks.
+@landsman2012information thực hiện một nghiên cứu liên quốc gia về phản ứng với thông báo và thấy rằng hàm lượng thông tin cao hơn ở các quốc gia có: (i) bảo vệ nhà đầu tư mạnh hơn, (ii) minh bạch tài chính cao hơn, và (iii) bắt buộc áp dụng IFRS. Vị thế của Việt Nam trên các phương diện này, khung thể chế đang phát triển, áp dụng VAS thay vì IFRS, mức minh bạch trung bình, cho thấy phản ứng với thông báo có thể khác biệt một cách hệ thống so với các chuẩn mực của thị trường phát triển.
 
-Their framework generates a testable prediction: as Vietnam progresses toward IFRS adoption (a process underway as of 2025), the information content of earnings announcements should *increase* to the extent that IFRS improves the mapping from economic events to reported numbers.
+Khung phân tích của họ đưa ra một dự báo có thể kiểm định: khi Việt Nam tiến tới áp dụng IFRS (một quá trình đang diễn ra tính đến năm 2025), hàm lượng thông tin của các thông báo lợi nhuận sẽ *tăng lên* trong chừng mực IFRS cải thiện việc ánh xạ từ các sự kiện kinh tế sang các con số được báo cáo.
 
-<!-- ## Exercises
+<!-- ## Bài tập
 
-1.  **Median vs. mean.** Reproduce @fig-volatility-by-year and @fig-volume-by-year using the *median* rather than the mean across events on each event day. How do the results change? Which approach—mean or median—is more appropriate for drawing inferences, and why?
+1.  **Trung vị so với trung bình.** Tái tạo @fig-volatility-by-year và @fig-volume-by-year bằng cách dùng *trung vị* thay vì trung bình trên các sự kiện theo từng ngày sự kiện. Kết quả thay đổi như thế nào? Cách tiếp cận nào, trung bình hay trung vị, phù hợp hơn để rút ra suy luận, và vì sao?
 
-2.  **Absolute returns.** Replace squared market-adjusted returns with *absolute* market-adjusted returns ($|R_{i,t} - R_{m,t}|$) as the volatility measure. This is the `mean_abs_ret` variable computed in the code. How do the plots and test statistics compare? What are the statistical advantages of absolute returns over squared returns?
+2.  **Lợi nhuận tuyệt đối.** Thay lợi nhuận điều chỉnh theo thị trường bình phương bằng lợi nhuận điều chỉnh theo thị trường *tuyệt đối* ($|R_{i,t} - R_{m,t}|$) làm thước đo độ biến động. Đây là biến `mean_abs_ret` được tính trong đoạn mã. Các biểu đồ và thống kê kiểm định so sánh ra sao? Lợi nhuận tuyệt đối có những ưu điểm thống kê nào so với lợi nhuận bình phương?
 
-3.  **Pre-announcement drift.** Examine whether there is evidence of information leakage before the announcement. Specifically, test whether volume and volatility on days $\{-5, -4, -3, -2\}$ are significantly elevated above their non-event counterparts. What might explain pre-announcement trading activity in the Vietnamese context?
+3.  **Trôi giá trước thông báo.** Xem xét liệu có bằng chứng về rò rỉ thông tin trước thông báo hay không. Cụ thể, kiểm định xem khối lượng và độ biến động vào các ngày $\{-5, -4, -3, -2\}$ có cao hơn đáng kể so với các ngày tương ứng không có sự kiện hay không. Điều gì có thể giải thích hoạt động giao dịch trước thông báo trong bối cảnh Việt Nam?
 
-4.  **Announcement day return direction.** @beaver1968information focused exclusively on *unsigned* measures (volume and volatility). Extend the analysis to examine whether the *sign* of the announcement-day return is predictable. Compute the fraction of announcements with positive market-adjusted returns on day 0. Test whether this fraction differs from 50%. What would a systematic positive (or negative) bias imply?
+4.  **Chiều hướng lợi nhuận ngày thông báo.** @beaver1968information chỉ tập trung vào các thước đo *không mang dấu* (khối lượng và độ biến động). Mở rộng phân tích để xem xét liệu *dấu* của lợi nhuận ngày thông báo có dự báo được hay không. Tính tỷ lệ các thông báo có lợi nhuận điều chỉnh theo thị trường dương vào ngày 0. Kiểm định xem tỷ lệ này có khác 50% hay không. Một thiên lệch dương (hoặc âm) mang tính hệ thống sẽ hàm ý điều gì?
 
-5.  **Post-announcement drift.** Following the event study methodology from the previous chapter, compute cumulative abnormal returns (CARs) from day +2 to day +20 and test whether they are systematically nonzero. Post-announcement drift would suggest that the market underreacts to earnings news and gradually incorporates the information.
+5.  **Trôi giá sau thông báo.** Theo phương pháp nghiên cứu sự kiện ở chương trước, tính lợi nhuận bất thường tích lũy (CAR) từ ngày +2 đến ngày +20 và kiểm định xem chúng có khác 0 một cách có hệ thống hay không. Trôi giá sau thông báo sẽ gợi ý rằng thị trường phản ứng chưa đủ với tin tức lợi nhuận và dần dần phản ánh thông tin.
 
-6.  **Price limit effects.** Identify announcements where the stock hit the daily price limit on day 0. For these events, plot cumulative absolute market-adjusted returns from day 0 through day +5. Compare with events where no limit was hit. Does the multi-day adjustment pattern for limit-hit events suggest that price limits impede efficient information incorporation?
+6.  **Tác động của biên độ giá.** Xác định các thông báo mà cổ phiếu chạm biên độ giá hằng ngày vào ngày 0. Với các sự kiện này, vẽ lợi nhuận điều chỉnh theo thị trường tuyệt đối tích lũy từ ngày 0 đến ngày +5. So sánh với các sự kiện không chạm biên độ. Mô hình điều chỉnh nhiều ngày của các sự kiện chạm biên độ có gợi ý rằng biên độ giá cản trở việc phản ánh thông tin một cách hiệu quả không?
 
-7.  **Confounding events.** A potential threat to identification is that other corporate events (dividend declarations, M&A announcements, capital raisings) may coincide with the earnings window. If you have access to event data, exclude firm-windows with confounding events and re-estimate the analysis. How sensitive are the results to this filter?
+7.  **Các sự kiện gây nhiễu.** Một mối đe dọa đối với nhận diện là các sự kiện doanh nghiệp khác (công bố cổ tức, thông báo M&A, huy động vốn) có thể trùng với cửa sổ lợi nhuận. Nếu bạn có dữ liệu sự kiện, hãy loại các cửa sổ doanh nghiệp có sự kiện gây nhiễu và ước lượng lại phân tích. Kết quả nhạy cảm đến mức nào với bộ lọc này?
 
-8.  **Asymmetric reactions.** Classify announcements into "good news" (positive market-adjusted return on day 0) and "bad news" (negative return). Compare the volume and volatility patterns separately for each group. Is there evidence that the market reacts more strongly to bad news, consistent with the "bad news travels slowly" hypothesis of @berkman2009price?
+8.  **Phản ứng bất đối xứng.** Phân loại các thông báo thành "tin tốt" (lợi nhuận điều chỉnh theo thị trường dương vào ngày 0) và "tin xấu" (lợi nhuận âm). So sánh mô hình khối lượng và độ biến động riêng cho từng nhóm. Có bằng chứng nào cho thấy thị trường phản ứng mạnh hơn với tin xấu, phù hợp với giả thuyết "tin xấu lan truyền chậm" của @berkman2009price không?
 
-9.  **Herd behavior.** @nguyen2014herd document herding behavior in Vietnamese equity markets. Design a test for whether announcement-day trading shows signs of herding (e.g., correlation between individual stock volume and market-wide volume conditional on the announcement signal). Discuss how herding would affect the interpretation of volume as a measure of information content.
+9.  **Hành vi bầy đàn.** @nguyen2014herd ghi nhận hành vi bầy đàn trên thị trường chứng khoán Việt Nam. Thiết kế một kiểm định xem giao dịch vào ngày thông báo có dấu hiệu bầy đàn hay không (chẳng hạn, tương quan giữa khối lượng của từng cổ phiếu và khối lượng toàn thị trường có điều kiện theo tín hiệu thông báo). Thảo luận hành vi bầy đàn sẽ ảnh hưởng thế nào đến việc diễn giải khối lượng như một thước đo hàm lượng thông tin.
 
 10. **Time trend in information content.** Vietnam's disclosure regime has strengthened over time (Circular 155/2015/TT-BTC, Decree 71/2017/NĐ-CP). Test whether the announcement-day volatility ratio has increased over your sample period. A formal test would regress the event-level volatility difference on a time trend. -->
 
-## Summary
+## Tóm tắt
 
-This chapter examined whether earnings announcements convey new information to investors in Vietnamese equity markets, following the foundational research design of @beaver1968information. The key findings are:
+Chương này xem xét liệu các thông báo lợi nhuận có truyền tải thông tin mới đến nhà đầu tư trên thị trường chứng khoán Việt Nam hay không, theo thiết kế nghiên cứu nền tảng của @beaver1968information. Các phát hiện chính là:
 
--   Both return volatility and trading volume spike sharply on the announcement day and the following day, providing robust evidence of information content. This result holds across fiscal years, consistent with earnings being a persistent source of new information.
+-   Cả độ biến động lợi nhuận và khối lượng giao dịch đều tăng vọt vào ngày thông báo và ngày kế tiếp, cung cấp bằng chứng vững chắc về hàm lượng thông tin. Kết quả này đúng qua các năm tài chính, phù hợp với việc lợi nhuận là nguồn thông tin mới liên tục.
 
--   Formal statistical tests reject the null of no information content with high confidence, using both mean-based and proportion-based measures.
+-   Các kiểm định thống kê chính thức bác bỏ giả thuyết không về việc không có hàm lượng thông tin với độ tin cậy cao, dùng cả thước đo dựa trên trung bình lẫn dựa trên tỷ lệ.
 
--   Cross-sectional analysis reveals that the announcement reaction is stronger for smaller firms and HNX-listed firms, consistent with the theoretical prediction that the information content of earnings is inversely related to the richness of the pre-disclosure information environment.
+-   Phân tích chéo cho thấy phản ứng với thông báo mạnh hơn đối với các doanh nghiệp nhỏ hơn và doanh nghiệp niêm yết trên HNX, phù hợp với dự báo lý thuyết rằng hàm lượng thông tin của lợi nhuận tỷ lệ nghịch với mức độ phong phú của môi trường thông tin trước khi công bố.
 
--   Vietnamese-specific features—price limits, retail dominance, and sparse analyst coverage—create distinctive empirical patterns that enrich the standard @beaver1968information framework. Price limits, in particular, generate multi-day adjustment dynamics that researchers must account for when measuring single-day information content.
+-   Các đặc điểm riêng của Việt Nam, gồm biên độ giá, sự áp đảo của nhà đầu tư cá nhân và mức bao phủ thưa của nhà phân tích, tạo ra các mô hình thực nghiệm đặc trưng làm phong phú thêm khung phân tích chuẩn của @beaver1968information. Đặc biệt, biên độ giá tạo ra các động thái điều chỉnh nhiều ngày mà nhà nghiên cứu phải tính đến khi đo hàm lượng thông tin trong một ngày.
 
--   The @bamber2000we critique—that mean effects can be driven by outliers—is addressed by examining the proportion of events with above-median reactions, which still shows clear announcement-day elevation.
+-   Phê bình của @bamber2000we, rằng hiệu ứng trung bình có thể bị chi phối bởi giá trị ngoại lai, được giải quyết bằng cách xem xét tỷ lệ các sự kiện có phản ứng trên trung vị, vốn vẫn cho thấy mức tăng rõ rệt vào ngày thông báo.
 
-The evidence strongly supports the conclusion that annual earnings announcements convey new information to the Vietnamese market, consistent with the original @beaver1968information findings and the broader international evidence in @landsman2012information.
+Bằng chứng ủng hộ mạnh mẽ kết luận rằng các thông báo lợi nhuận năm truyền tải thông tin mới đến thị trường Việt Nam, phù hợp với kết quả gốc của @beaver1968information và bằng chứng quốc tế rộng hơn trong @landsman2012information.

@@ -1,10 +1,10 @@
-# Structural Models in Finance
+# Các mô hình cấu trúc trong tài chính
 
-Most of empirical finance is reduced-form: regress returns on characteristics, estimate risk premia from factor portfolios, test whether a coefficient is significantly different from zero. Structural estimation takes a fundamentally different approach. It begins with an explicit economic model (i.e., specifying agents' preferences, information sets, constraints, and optimization problems) and estimates the model's primitive parameters directly from observed data. The payoff is the ability to perform counterfactual analysis: what would happen to prices if trading costs fell by half? How would IPO underpricing change if the allocation mechanism switched from book building to a uniform-price auction? What is the welfare cost of a particular market design choice? These questions are unanswerable within a reduced-form framework because they require knowledge of the data-generating process, not merely statistical associations within a single regime.
+Phần lớn tài chính thực nghiệm mang tính dạng rút gọn (reduced-form): hồi quy lợi nhuận theo các đặc điểm, ước lượng phần bù rủi ro từ các danh mục nhân tố, kiểm định xem một hệ số có khác không một cách có ý nghĩa thống kê hay không. Ước lượng cấu trúc tiếp cận theo một cách về cơ bản là khác. Nó bắt đầu từ một mô hình kinh tế tường minh (tức là xác định sở thích, tập thông tin, các ràng buộc và bài toán tối ưu hóa của các tác nhân) và ước lượng trực tiếp các tham số gốc của mô hình từ dữ liệu quan sát được. Lợi ích là khả năng thực hiện phân tích phản thực tế (counterfactual): giá sẽ ra sao nếu chi phí giao dịch giảm một nửa? Mức định giá thấp khi IPO sẽ thay đổi thế nào nếu cơ chế phân bổ chuyển từ xây dựng sổ lệnh (book building) sang đấu giá đồng giá? Chi phí phúc lợi của một lựa chọn thiết kế thị trường cụ thể là bao nhiêu? Những câu hỏi này không thể trả lời trong khuôn khổ dạng rút gọn, vì chúng đòi hỏi hiểu biết về quá trình sinh dữ liệu, chứ không chỉ các mối liên hệ thống kê trong một chế độ duy nhất.
 
-This chapter introduces the key structural estimation frameworks used in financial economics and implements them for Vietnamese equity markets. We cover four domains where structural models have proven most productive: investor demand estimation, trading cost and execution models, primary market auctions, and limit order book dynamics. Each domain involves distinct economic primitives such as preferences, beliefs, transaction costs, information asymmetries and each requires domain-specific identification strategies.
+Chương này giới thiệu các khuôn khổ ước lượng cấu trúc chính được dùng trong kinh tế học tài chính và triển khai chúng cho thị trường cổ phiếu Việt Nam. Chúng ta xét bốn lĩnh vực mà mô hình cấu trúc đã tỏ ra hiệu quả nhất: ước lượng cầu của nhà đầu tư, các mô hình chi phí giao dịch và thực thi lệnh, đấu giá ở thị trường sơ cấp, và động lực của sổ lệnh giới hạn. Mỗi lĩnh vực gắn với các yếu tố kinh tế cơ bản riêng như sở thích, niềm tin, chi phí giao dịch, bất đối xứng thông tin, và mỗi lĩnh vực cần chiến lược nhận diện đặc thù.
 
-Vietnamese markets offer both challenges and opportunities for structural estimation. On the challenge side, data quality is uneven, market microstructure is evolving, and institutional features (price limits, foreign ownership caps, state ownership) introduce constraints that standard models do not accommodate. On the opportunity side, several features of Vietnamese markets create natural variation that aids identification: the coexistence of two exchanges (HOSE and HNX) with different trading rules, regulatory changes that shift trading costs and price limits, and the phased liberalization of foreign ownership caps that generates exogenous demand shocks.
+Thị trường Việt Nam vừa đặt ra thách thức vừa mở ra cơ hội cho ước lượng cấu trúc. Về thách thức, chất lượng dữ liệu không đồng đều, vi cấu trúc thị trường đang tiến hóa, và các đặc điểm thể chế (biên độ giá, giới hạn sở hữu nước ngoài, sở hữu nhà nước) đưa vào những ràng buộc mà các mô hình chuẩn không tính đến. Về cơ hội, một số đặc điểm của thị trường Việt Nam tạo ra biến thiên tự nhiên hỗ trợ nhận diện: sự tồn tại song song của hai sàn (HOSE và HNX) với quy tắc giao dịch khác nhau, các thay đổi quy định làm dịch chuyển chi phí giao dịch và biên độ giá, và việc tự do hóa từng giai đoạn giới hạn sở hữu nước ngoài tạo ra các cú sốc cầu ngoại sinh.
 
 ```{python}
 #| label: setup
@@ -24,98 +24,98 @@ import warnings
 warnings.filterwarnings("ignore")
 ```
 
-## What Structural Estimation Means in Finance
+## Ước lượng cấu trúc có nghĩa gì trong tài chính
 
-### Reduced Form Versus Structural
+### Dạng rút gọn so với dạng cấu trúc
 
-Consider two researchers studying the effect of transaction costs on trading volume. The reduced-form researcher exploits a fee reduction event and estimates:
+Xét hai nhà nghiên cứu cùng nghiên cứu tác động của chi phí giao dịch lên khối lượng giao dịch. Nhà nghiên cứu theo dạng rút gọn khai thác một sự kiện giảm phí và ước lượng:
 
 $$
 \ln V_{i,t} = \alpha + \beta \cdot \text{Post}_t + \gamma \mathbf{X}_{i,t} + \varepsilon_{i,t}
 $$ {#eq-reduced-form}
 
-The coefficient $\beta$ identifies the causal effect of the fee change on volume, but it is local to this specific fee change, this specific market, and this specific time period. It says nothing about what a different fee change would do, or what the optimal fee structure might be.
+Hệ số $\beta$ nhận diện tác động nhân quả của thay đổi phí lên khối lượng, nhưng nó mang tính cục bộ đối với đợt thay đổi phí này, thị trường này và giai đoạn này. Nó không cho biết một thay đổi phí khác sẽ gây ra điều gì, hay cơ cấu phí tối ưu có thể là gì.
 
-The structural researcher writes down an explicit model of trader behavior:
+Nhà nghiên cứu theo dạng cấu trúc viết ra một mô hình tường minh về hành vi của nhà giao dịch:
 
 $$
 \max_{q_t} \; E_t\left[\sum_{s=t}^{T} \delta^{s-t}\left(v_s q_s - c(q_s; \boldsymbol{\theta})\right)\right]
 $$ {#eq-structural-trader}
 
-where $v_s$ is the (possibly private) valuation, $q_s$ is the trade quantity, $c(\cdot; \boldsymbol{\theta})$ is the cost function parameterized by $\boldsymbol{\theta}$, and $\delta$ is the discount factor. The researcher estimates $\boldsymbol{\theta}$ by requiring that the model's predictions match observed trading patterns. With $\hat{\boldsymbol{\theta}}$ in hand, any counterfactual cost function $c'(\cdot; \boldsymbol{\theta}')$ can be fed into the model to predict the equilibrium response.
+trong đó $v_s$ là định giá (có thể là thông tin riêng), $q_s$ là khối lượng giao dịch, $c(\cdot; \boldsymbol{\theta})$ là hàm chi phí được tham số hóa bởi $\boldsymbol{\theta}$, và $\delta$ là hệ số chiết khấu. Nhà nghiên cứu ước lượng $\boldsymbol{\theta}$ bằng cách yêu cầu các dự báo của mô hình khớp với các mẫu hình giao dịch quan sát được. Khi đã có $\hat{\boldsymbol{\theta}}$, mọi hàm chi phí phản thực tế $c'(\cdot; \boldsymbol{\theta}')$ đều có thể đưa vào mô hình để dự báo phản ứng cân bằng.
 
-The distinction is not about sophistication (reduced-form work can be highly rigorous) but about the type of question being answered:
+Sự khác biệt không nằm ở mức độ tinh vi (công trình dạng rút gọn cũng có thể rất chặt chẽ) mà ở loại câu hỏi được trả lời:
 
-|   | Reduced Form | Structural |
+|   | Dạng rút gọn | Dạng cấu trúc |
 |------------------|------------------------------|-------------------------|
-| Answers | "What happened?" | "What would happen if...?" |
-| Identification | Exogenous variation (events, instruments) | Model restrictions + data moments |
-| Key assumption | Unconfoundedness or exclusion restriction | Correct model specification |
-| Output | Treatment effects, associations | Primitive parameters, counterfactuals |
-| Risk | Omitted variable bias, weak instruments | Model misspecification |
+| Trả lời | "Điều gì đã xảy ra?" | "Điều gì sẽ xảy ra nếu...?" |
+| Nhận diện | Biến thiên ngoại sinh (sự kiện, biến công cụ) | Các ràng buộc của mô hình + moment của dữ liệu |
+| Giả định then chốt | Không có biến gây nhiễu chưa quan sát (unconfoundedness) hoặc ràng buộc loại trừ | Đặc tả mô hình đúng |
+| Kết quả | Hiệu ứng can thiệp, các mối liên hệ | Tham số gốc, phân tích phản thực tế |
+| Rủi ro | Thiên lệch do bỏ sót biến, biến công cụ yếu | Đặc tả sai mô hình |
 
-: Reduced Form vs. Structural Estimation {#tbl-rf-vs-structural}
+: Ước lượng dạng rút gọn so với dạng cấu trúc {#tbl-rf-vs-structural}
 
-### Identification Through Economic Primitives
+### Nhận diện thông qua các yếu tố kinh tế cơ bản
 
-Structural identification relies on the economic model to convert observed outcomes into unobserved primitives. The classic example is the demand-supply system. Observing prices and quantities alone cannot identify demand and supply curves (the simultaneity problem). But if we know the functional form of demand and supply, and have instruments that shift one curve but not the other, the system is identified.
+Nhận diện cấu trúc dựa vào mô hình kinh tế để chuyển các kết quả quan sát được thành các yếu tố cơ bản không quan sát được. Ví dụ kinh điển là hệ thống cung–cầu. Chỉ quan sát giá và lượng thì không thể nhận diện các đường cầu và đường cung (vấn đề đồng thời). Nhưng nếu ta biết dạng hàm của cầu và cung, và có các biến công cụ làm dịch chuyển đường này mà không dịch chuyển đường kia, thì hệ thống được nhận diện.
 
-In financial contexts, identification often comes from the model's equilibrium conditions. In @kyle1985continuous, the informed trader's strategy, the market maker's pricing rule, and the noise trader's demand jointly determine the equilibrium price impact coefficient $\lambda$. The model maps the observable (i.e., the price impact of order flow) to the unobservable (i.e., the precision of private information). The identification is through the model's structure, not through a conventional instrument.
+Trong bối cảnh tài chính, nhận diện thường đến từ các điều kiện cân bằng của mô hình. Trong @kyle1985continuous, chiến lược của nhà giao dịch có thông tin, quy tắc định giá của nhà tạo lập thị trường và cầu của nhà giao dịch nhiễu cùng quyết định hệ số tác động giá cân bằng $\lambda$. Mô hình ánh xạ đại lượng quan sát được (tức là tác động giá của dòng lệnh) sang đại lượng không quan sát được (tức là độ chính xác của thông tin riêng). Việc nhận diện đến từ cấu trúc của mô hình, chứ không phải từ một biến công cụ thông thường.
 
-Formally, let $\boldsymbol{\theta} \in \Theta$ denote the vector of structural parameters and $\mathbf{m}(\boldsymbol{\theta})$ the model-implied moments. The data provide empirical moments $\hat{\mathbf{m}}$. Identification requires that the mapping $\boldsymbol{\theta} \mapsto \mathbf{m}(\boldsymbol{\theta})$ is injective: different parameter values produce different observable implications.
+Một cách hình thức, gọi $\boldsymbol{\theta} \in \Theta$ là vectơ các tham số cấu trúc và $\mathbf{m}(\boldsymbol{\theta})$ là các moment do mô hình suy ra. Dữ liệu cung cấp các moment thực nghiệm $\hat{\mathbf{m}}$. Nhận diện đòi hỏi ánh xạ $\boldsymbol{\theta} \mapsto \mathbf{m}(\boldsymbol{\theta})$ là đơn ánh: các giá trị tham số khác nhau tạo ra các hệ quả quan sát được khác nhau.
 
 $$
 \hat{\boldsymbol{\theta}} = \arg\min_{\boldsymbol{\theta} \in \Theta} \left[\hat{\mathbf{m}} - \mathbf{m}(\boldsymbol{\theta})\right]' \mathbf{W} \left[\hat{\mathbf{m}} - \mathbf{m}(\boldsymbol{\theta})\right]
 $$ {#eq-gmm-structural}
 
-This is the Generalized Method of Moments (GMM) framework applied to structural estimation. The choice of weighting matrix $\mathbf{W}$ determines efficiency, and over-identifying restrictions (more moments than parameters) provide specification tests.
+Đây là khuôn khổ Phương pháp moment tổng quát (GMM) áp dụng cho ước lượng cấu trúc. Việc chọn ma trận trọng số $\mathbf{W}$ quyết định hiệu quả ước lượng, và các ràng buộc quá nhận diện (nhiều moment hơn số tham số) cung cấp các kiểm định đặc tả.
 
-### Tradeoffs Between Realism and Tractability
+### Đánh đổi giữa tính thực tế và tính khả giải
 
-Every structural model involves choices about which features of reality to include and which to abstract from. @tbl-tradeoff illustrates this for several canonical finance models.
+Mọi mô hình cấu trúc đều phải lựa chọn nên đưa vào những đặc điểm nào của thực tế và trừu tượng hóa những đặc điểm nào. @tbl-tradeoff minh họa điều này cho một số mô hình tài chính kinh điển.
 
-| Model | Key Simplification | What It Misses | What It Gains |
+| Mô hình | Đơn giản hóa chính | Điều bị bỏ sót | Điều đạt được |
 |-----------------|---------------------|-----------------|-----------------|
-| @kyle1985continuous | Single informed trader, normal distributions | Multiple insiders, fat tails | Closed-form $\lambda$, clean identification |
-| @glosten1985bid | Binary signal, competitive market makers | Complex information, inventory costs | Bid-ask spread decomposition |
-| @koijen2019demand | Characteristics-based demand, no dynamics | Dynamic portfolio rebalancing | Demand elasticity estimation at scale |
-| @roll1984simple | No information, serial independence | Information-driven trades | Spread estimation from return autocovariance |
+| @kyle1985continuous | Một nhà giao dịch có thông tin duy nhất, phân phối chuẩn | Nhiều người nội bộ, đuôi dày | $\lambda$ có dạng đóng, nhận diện rõ ràng |
+| @glosten1985bid | Tín hiệu nhị phân, các nhà tạo lập thị trường cạnh tranh | Thông tin phức tạp, chi phí tồn kho | Phân rã chênh lệch giá mua–bán |
+| @koijen2019demand | Cầu dựa trên đặc điểm, không có tính động | Tái cân bằng danh mục động | Ước lượng độ co giãn của cầu trên quy mô lớn |
+| @roll1984simple | Không có thông tin, độc lập chuỗi | Các giao dịch do thông tin dẫn dắt | Ước lượng chênh lệch giá từ tự hiệp phương sai của lợi nhuận |
 
-: Structural Model Tradeoffs {#tbl-tradeoff}
+: Đánh đổi của các mô hình cấu trúc {#tbl-tradeoff}
 
-The researcher's task is to choose the simplest model that captures the economic mechanism of interest while remaining rich enough that its counterfactual predictions are credible. As @rust1987optimal emphasized, there is a tension between models that are "structurally correct" but computationally intractable and models that are tractable but potentially misspecified.
+Nhiệm vụ của nhà nghiên cứu là chọn mô hình đơn giản nhất nắm bắt được cơ chế kinh tế quan tâm, đồng thời vẫn đủ phong phú để các dự báo phản thực tế của nó đáng tin cậy. Như @rust1987optimal nhấn mạnh, có một sự căng thẳng giữa các mô hình "đúng về cấu trúc" nhưng không thể tính toán được và các mô hình khả giải nhưng có khả năng bị đặc tả sai.
 
-## Demand Estimation for Financial Assets
+## Ước lượng cầu đối với tài sản tài chính
 
-### The Demand System Approach
+### Cách tiếp cận hệ thống cầu
 
-@koijen2019demand (hereafter KY) develop a demand system for financial assets that estimates the elasticity of institutional investor demand with respect to asset characteristics. The framework adapts the discrete-choice demand estimation methodology of @berry1995automobile from industrial organization to financial markets.
+@koijen2019demand (sau đây gọi là KY) xây dựng một hệ thống cầu cho tài sản tài chính, ước lượng độ co giãn của cầu của nhà đầu tư tổ chức theo các đặc điểm của tài sản. Khuôn khổ này điều chỉnh phương pháp ước lượng cầu lựa chọn rời rạc của @berry1995automobile từ kinh tế học tổ chức công nghiệp sang thị trường tài chính.
 
-Each investor $i$ holds a portfolio of $N$ assets. The demand for asset $j$ by investor $i$ at time $t$ is:
+Mỗi nhà đầu tư $i$ nắm giữ một danh mục gồm $N$ tài sản. Cầu của nhà đầu tư $i$ đối với tài sản $j$ tại thời điểm $t$ là:
 
 $$
 w_{ij,t} = \frac{\exp(\delta_{j,t} + \boldsymbol{\beta}_i' \mathbf{x}_{j,t})}{1 + \sum_{k=1}^{N} \exp(\delta_{k,t} + \boldsymbol{\beta}_i' \mathbf{x}_{k,t})}
 $$ {#eq-ky-demand}
 
-where $w_{ij,t}$ is the portfolio weight of asset $j$ for investor $i$, $\delta_{j,t}$ is the mean utility (common valuation), $\mathbf{x}_{j,t}$ is a vector of observable characteristics (market cap, book-to-market, momentum, etc.), and $\boldsymbol{\beta}_i$ captures investor-specific preferences (heterogeneous demand elasticities). The denominator includes 1 to represent the outside option (holding cash or non-equity assets).
+trong đó $w_{ij,t}$ là tỷ trọng danh mục của tài sản $j$ đối với nhà đầu tư $i$, $\delta_{j,t}$ là độ hữu dụng trung bình (định giá chung), $\mathbf{x}_{j,t}$ là vectơ các đặc điểm quan sát được (vốn hóa thị trường, B/M, động lượng, v.v.), và $\boldsymbol{\beta}_i$ phản ánh sở thích riêng của từng nhà đầu tư (độ co giãn cầu không đồng nhất). Mẫu số bao gồm số 1 để đại diện cho lựa chọn bên ngoài (nắm giữ tiền mặt hoặc tài sản phi cổ phiếu).
 
-The key insight is that the market-clearing condition links demand to equilibrium prices:
+Ý tưởng then chốt là điều kiện cân bằng thị trường (market-clearing) liên kết cầu với giá cân bằng:
 
 $$
 \sum_i A_{i,t} \cdot w_{ij,t}(\boldsymbol{\theta}) = \text{ME}_{j,t} \qquad \forall j, t
 $$ {#eq-market-clearing}
 
-where $A_{i,t}$ is investor $i$'s total assets under management and $\text{ME}_{j,t}$ is the market capitalization of asset $j$. This system of equations determines the equilibrium price impacts and demand elasticities.
+trong đó $A_{i,t}$ là tổng tài sản quản lý của nhà đầu tư $i$ và $\text{ME}_{j,t}$ là vốn hóa thị trường của tài sản $j$. Hệ phương trình này xác định các tác động giá cân bằng và độ co giãn của cầu.
 
-### Demand Elasticity Estimation
+### Ước lượng độ co giãn của cầu
 
-The demand elasticity of asset $j$ with respect to its own price (or a characteristic that moves its price) is:
+Độ co giãn của cầu đối với tài sản $j$ theo chính giá của nó (hoặc theo một đặc điểm làm dịch chuyển giá của nó) là:
 
 $$
 \varepsilon_{jj} = \frac{\partial \ln w_{ij}}{\partial \ln P_j} = \beta_{\text{price}} \cdot (1 - w_{ij})
 $$ {#eq-demand-elasticity}
 
-In a frictionless market with perfectly elastic demand, a supply shock (e.g., an index addition) would have zero price impact. Empirically, demand curves for financial assets slope downward with finite elasticity, implying that supply shocks move equilibrium prices.
+Trong một thị trường không ma sát với cầu co giãn hoàn hảo, một cú sốc cung (ví dụ: việc thêm vào chỉ số) sẽ không có tác động giá nào. Theo thực nghiệm, đường cầu đối với tài sản tài chính dốc xuống với độ co giãn hữu hạn, hàm ý rằng các cú sốc cung làm dịch chuyển giá cân bằng.
 
 ```{python}
 #| label: load-holdings-data
@@ -235,7 +235,7 @@ demand_params = (
 ```{python}
 #| label: tbl-demand-params
 #| eval: false
-#| tbl-cap: "Demand Elasticities by Investor Type"
+#| tbl-cap: "Độ co giãn của cầu theo loại nhà đầu tư"
 
 avg_params = (
     demand_params.groupby("institution_type")
@@ -256,7 +256,7 @@ avg_params
 ```{python}
 #| label: fig-demand-elasticity-time
 #| eval: false
-#| fig-cap: "Time-Varying Demand Sensitivity to Size Across Investor Types"
+#| fig-cap: "Độ nhạy của cầu đối với quy mô biến đổi theo thời gian giữa các loại nhà đầu tư"
 
 top_types = demand_params.groupby("institution_type").size().nlargest(4).index
 plot_data = demand_params[
@@ -278,15 +278,15 @@ plot_data = demand_params[
 )
 ```
 
-### Price Pressure and Market Impact
+### Áp lực giá và tác động thị trường
 
-The demand system framework directly yields price impact predictions. If investor $i$ receives an exogenous inflow $\Delta A_i$ (e.g., from a fund flow shock), the price of each stock must adjust to clear the market with the new demand. The equilibrium price impact of a demand shock is:
+Khuôn khổ hệ thống cầu trực tiếp cho ra các dự báo về tác động giá. Nếu nhà đầu tư $i$ nhận được một dòng vốn vào ngoại sinh $\Delta A_i$ (ví dụ: từ một cú sốc dòng vốn quỹ), giá của mỗi cổ phiếu phải điều chỉnh để cân bằng thị trường với mức cầu mới. Tác động giá cân bằng của một cú sốc cầu là:
 
 $$
 \frac{\Delta P_j}{P_j} = \frac{1}{\varepsilon_{jj}} \cdot \frac{\Delta D_j}{D_j}
 $$ {#eq-price-impact-demand}
 
-where $\varepsilon_{jj}$ is the demand elasticity and $\Delta D_j / D_j$ is the percentage demand shock. Less elastic demand implies larger price impact for the same demand shock (a prediction with direct implications for the price impact of index rebalancing, fund flows, and forced selling).
+trong đó $\varepsilon_{jj}$ là độ co giãn của cầu và $\Delta D_j / D_j$ là cú sốc cầu theo phần trăm. Cầu càng kém co giãn thì tác động giá càng lớn đối với cùng một cú sốc cầu (một dự báo có hàm ý trực tiếp đối với tác động giá của việc tái cân bằng chỉ số, dòng vốn quỹ và bán cưỡng bức).
 
 ```{python}
 #| label: price-pressure
@@ -389,7 +389,7 @@ car_results = event_study_car(index_changes, daily_data)
 ```{python}
 #| label: fig-index-event-study
 #| eval: false
-#| fig-cap: "Cumulative Abnormal Returns Around VN30 Index Reconstitutions"
+#| fig-cap: "Lợi nhuận bất thường tích lũy quanh các lần tái cấu trúc chỉ số VN30"
 
 if len(car_results) > 0:
     # Average AR by event day and type
@@ -429,51 +429,51 @@ if len(car_results) > 0:
     )
 ```
 
-The permanent component of the CAR measures the information content of index inclusion, while the temporary component (reversal after the event) measures pure price pressure from demand. In a world with perfectly elastic demand, there would be no temporary price impact. The magnitude of the temporary component is inversely related to the demand elasticity, providing a second identification strategy (complementary to the holdings-based approach) for demand curves.
+Thành phần vĩnh viễn của CAR đo hàm lượng thông tin của việc đưa vào chỉ số, trong khi thành phần tạm thời (đảo chiều sau sự kiện) đo áp lực giá thuần túy từ cầu. Trong một thế giới có cầu co giãn hoàn hảo, sẽ không có tác động giá tạm thời. Độ lớn của thành phần tạm thời tỷ lệ nghịch với độ co giãn của cầu, cung cấp chiến lược nhận diện thứ hai (bổ sung cho cách tiếp cận dựa trên vị thế nắm giữ) đối với các đường cầu.
 
-### Demand Inelasticity and Its Implications
+### Cầu kém co giãn và các hàm ý
 
-@gabaix2021search argue that the aggregate demand for equities is remarkably inelastic, with elasticity estimates on the order of 0.2 (meaning a 1% supply increase requires a 5% price decline to clear). The implications are profound: if demand is this inelastic, then flows (from index funds, foreign investors, retail traders) have outsized effects on prices. In Vietnamese markets, where foreign ownership caps create binding constraints on a key investor class, demand inelasticity may be even more severe.
+@gabaix2021search lập luận rằng tổng cầu đối với cổ phiếu kém co giãn một cách đáng kể, với các ước lượng độ co giãn vào khoảng 0,2 (nghĩa là nguồn cung tăng 1% đòi hỏi giá giảm 5% để cân bằng thị trường). Hàm ý là rất sâu sắc: nếu cầu kém co giãn đến vậy, thì các dòng vốn (từ quỹ chỉ số, nhà đầu tư nước ngoài, nhà đầu tư cá nhân) có tác động lên giá lớn không tương xứng. Ở thị trường Việt Nam, nơi giới hạn sở hữu nước ngoài tạo ra các ràng buộc có hiệu lực đối với một nhóm nhà đầu tư then chốt, mức độ kém co giãn của cầu có thể còn nghiêm trọng hơn.
 
-The inelasticity also generates a role for "the market portfolio" as an equilibrium concept: if most investors hold portfolios close to the market (as in CAPM), then deviations from market weights require someone to absorb the excess supply, and the compensation required is the inverse of demand elasticity.
+Sự kém co giãn này cũng tạo ra vai trò cho "danh mục thị trường" như một khái niệm cân bằng: nếu hầu hết nhà đầu tư nắm giữ danh mục gần với thị trường (như trong CAPM), thì các độ lệch khỏi tỷ trọng thị trường đòi hỏi ai đó phải hấp thụ phần cung dư, và khoản bù đắp cần thiết là nghịch đảo của độ co giãn của cầu.
 
-## Structural Models of Trading Strategies
+## Các mô hình cấu trúc về chiến lược giao dịch
 
-### Optimal Execution: The Almgren-Chriss Framework
+### Thực thi tối ưu: Khuôn khổ Almgren-Chriss
 
-The optimal execution problem, formalized by @almgren2001optimal, asks: given a large order to execute over a fixed horizon, what is the optimal trading schedule that minimizes the total execution cost? The problem is fundamental to institutional investing because large orders cannot be executed instantaneously without severe price impact.
+Bài toán thực thi tối ưu, được @almgren2001optimal hình thức hóa, đặt câu hỏi: với một lệnh lớn cần thực thi trong một khoảng thời gian cố định, lịch giao dịch tối ưu nào sẽ tối thiểu hóa tổng chi phí thực thi? Bài toán này mang tính nền tảng đối với đầu tư tổ chức vì các lệnh lớn không thể được thực thi tức thời mà không gây ra tác động giá nghiêm trọng.
 
-Let $X_t$ denote the remaining shares to sell at time $t$, with $X_0 = X$ (total order) and $X_T = 0$ (completion). The trading rate is $n_t = X_{t-1} - X_t$. The execution price for shares traded at $t$ is affected by both temporary and permanent price impact:
+Gọi $X_t$ là số cổ phiếu còn lại cần bán tại thời điểm $t$, với $X_0 = X$ (tổng lệnh) và $X_T = 0$ (hoàn tất). Tốc độ giao dịch là $n_t = X_{t-1} - X_t$. Giá thực thi của số cổ phiếu giao dịch tại $t$ chịu ảnh hưởng của cả tác động giá tạm thời và vĩnh viễn:
 
 $$
 S_t = S_0 + \sigma W_t - g(n_t) - h\left(\frac{n_t}{\tau}\right)
 $$ {#eq-almgren-chriss-price}
 
-where $g(\cdot)$ is the permanent impact function, $h(\cdot)$ is the temporary impact function, $\sigma$ is the volatility, $W_t$ is a Wiener process, and $\tau$ is the time interval. The total implementation shortfall (cost of execution relative to the arrival price $S_0$) is:
+trong đó $g(\cdot)$ là hàm tác động vĩnh viễn, $h(\cdot)$ là hàm tác động tạm thời, $\sigma$ là độ biến động, $W_t$ là quá trình Wiener, và $\tau$ là khoảng thời gian. Tổng mức thiếu hụt thực thi (implementation shortfall, chi phí thực thi so với giá tại thời điểm lệnh đến $S_0$) là:
 
 $$
 \text{IS} = \sum_{t=1}^{T} n_t (S_0 - S_t) = \sum_{t=1}^{T} n_t \left[\sigma W_t + g(n_t) + h\left(\frac{n_t}{\tau}\right)\right]
 $$ {#eq-shortfall}
 
-The trader minimizes a mean-variance objective:
+Nhà giao dịch tối thiểu hóa một hàm mục tiêu trung bình–phương sai:
 
 $$
 \min_{\{n_t\}} \; E[\text{IS}] + \lambda \cdot \text{Var}(\text{IS})
 $$ {#eq-ac-objective}
 
-where $\lambda$ is the risk aversion parameter. With linear impact functions $g(n) = \gamma n$ and $h(v) = \eta v + \epsilon \text{sgn}(v)$, the optimal strategy has a closed-form solution.
+trong đó $\lambda$ là tham số ác cảm rủi ro. Với các hàm tác động tuyến tính $g(n) = \gamma n$ và $h(v) = \eta v + \epsilon \text{sgn}(v)$, chiến lược tối ưu có nghiệm dạng đóng.
 
-**TWAP (Time-Weighted Average Price):** Trade uniformly: $n_t = X / T$ for all $t$. Optimal when permanent impact dominates temporary impact.
+**TWAP (Time-Weighted Average Price, giá trung bình theo thời gian):** Giao dịch đều đặn: $n_t = X / T$ với mọi $t$. Tối ưu khi tác động vĩnh viễn trội hơn tác động tạm thời.
 
-**VWAP (Volume-Weighted Average Price):** Trade proportionally to expected volume: $n_t \propto \hat{V}_t$. Approximates TWAP adjusted for intraday volume patterns.
+**VWAP (Volume-Weighted Average Price, giá trung bình theo khối lượng):** Giao dịch tỷ lệ với khối lượng kỳ vọng: $n_t \propto \hat{V}_t$. Xấp xỉ TWAP có điều chỉnh theo mẫu hình khối lượng trong ngày.
 
-**Almgren-Chriss Optimal:** The risk-averse optimal trajectory for linear impact is:
+**Tối ưu Almgren-Chriss:** Quỹ đạo tối ưu cho nhà giao dịch ác cảm rủi ro với tác động tuyến tính là:
 
 $$
 x_t^* = X \cdot \frac{\sinh(\kappa (T - t))}{\sinh(\kappa T)}
 $$ {#eq-ac-trajectory}
 
-where $\kappa = \sqrt{\lambda \sigma^2 / \eta}$ governs the trade-off between urgency (trading quickly to reduce risk) and patience (trading slowly to reduce impact). High risk aversion ($\lambda$ large) implies front-loaded execution.
+trong đó $\kappa = \sqrt{\lambda \sigma^2 / \eta}$ chi phối sự đánh đổi giữa tính cấp bách (giao dịch nhanh để giảm rủi ro) và sự kiên nhẫn (giao dịch chậm để giảm tác động). Mức ác cảm rủi ro cao ($\lambda$ lớn) hàm ý thực thi dồn về phía đầu.
 
 ```{python}
 #| label: almgren-chriss
@@ -543,7 +543,7 @@ def almgren_chriss_trajectory(X, T, sigma, eta, gamma, lam, n_steps=100):
 ```{python}
 #| label: fig-execution-trajectories
 #| eval: false
-#| fig-cap: "Optimal Execution Trajectories for Different Risk Aversion Levels"
+#| fig-cap: "Quỹ đạo thực thi tối ưu ứng với các mức ác cảm rủi ro khác nhau"
 
 # Estimate market impact parameters from Vietnamese data
 # Typical values for mid-cap Vietnamese stocks
@@ -586,15 +586,15 @@ traj_all = pd.concat(trajectories, ignore_index=True)
 )
 ```
 
-### Estimating Market Impact from Transaction Data
+### Ước lượng tác động thị trường từ dữ liệu giao dịch
 
-The structural parameters $(\gamma, \eta, \sigma)$ must be estimated from data. The standard approach uses the square-root law of market impact, documented empirically by @kyle1985continuous and @hasbrouck1991measuring and derived theoretically by @gabaix2003theory:
+Các tham số cấu trúc $(\gamma, \eta, \sigma)$ phải được ước lượng từ dữ liệu. Cách tiếp cận chuẩn sử dụng quy luật căn bậc hai của tác động thị trường, được @kyle1985continuous và @hasbrouck1991measuring ghi nhận bằng thực nghiệm và được @gabaix2003theory suy ra về mặt lý thuyết:
 
 $$
 \Delta P / P = c \cdot \text{sgn}(Q) \cdot |Q / V|^{\delta}
 $$ {#eq-impact-model}
 
-where $Q$ is the signed order flow, $V$ is daily volume, $c$ is the impact coefficient, and $\delta \approx 0.5$ is the impact exponent. The "square root" refers to $\delta = 0.5$, which is remarkably robust across markets, time periods, and asset classes.
+trong đó $Q$ là dòng lệnh có dấu, $V$ là khối lượng hằng ngày, $c$ là hệ số tác động, và $\delta \approx 0.5$ là số mũ tác động. "Căn bậc hai" ám chỉ $\delta = 0.5$, một giá trị bền vững đáng kể giữa các thị trường, giai đoạn và loại tài sản.
 
 ```{python}
 #| label: impact-estimation
@@ -661,22 +661,22 @@ impact_df = pd.DataFrame(impact_results)
 ```{python}
 #| label: tbl-impact-by-size
 #| eval: false
-#| tbl-cap: "Market Impact Exponent by Firm Size Quintile"
+#| tbl-cap: "Số mũ tác động thị trường theo nhóm ngũ phân vị quy mô doanh nghiệp"
 
 impact_df.round(4)
 ```
 
-The impact exponent $\hat{\delta}$ near 0.5 across size quintiles confirms the universality of the square-root law. Smaller firms typically exhibit higher impact coefficients (larger $c$), consistent with lower liquidity.
+Số mũ tác động $\hat{\delta}$ gần 0.5 ở mọi nhóm ngũ phân vị quy mô xác nhận tính phổ quát của quy luật căn bậc hai. Các doanh nghiệp nhỏ hơn thường có hệ số tác động cao hơn ($c$ lớn hơn), phù hợp với thanh khoản thấp hơn.
 
-### Transaction Cost Decomposition
+### Phân rã chi phí giao dịch
 
-Total transaction costs comprise multiple components, each with distinct economic content:
+Tổng chi phí giao dịch gồm nhiều thành phần, mỗi thành phần có nội dung kinh tế riêng:
 
 $$
 \text{TC} = \underbrace{\frac{s}{2}}_{\text{Half-spread}} + \underbrace{\gamma \cdot Q}_{\text{Permanent impact}} + \underbrace{\eta \cdot \frac{Q}{V}}_{\text{Temporary impact}} + \underbrace{\sigma \sqrt{T}}_{\text{Timing risk}}
 $$ {#eq-tc-decomposition}
 
-We estimate each component separately, following the @hasbrouck2009trading methodology for effective spread decomposition.
+Chúng ta ước lượng riêng từng thành phần, theo phương pháp của @hasbrouck2009trading để phân rã chênh lệch giá hiệu dụng.
 
 ```{python}
 #| label: tc-decomposition
@@ -735,7 +735,7 @@ roll_spreads = (
 ```{python}
 #| label: fig-spread-size
 #| eval: false
-#| fig-cap: "Transaction Costs by Firm Size: Roll Implied Spread"
+#| fig-cap: "Chi phí giao dịch theo quy mô doanh nghiệp: chênh lệch giá hàm ý theo Roll"
 
 # Bin by market cap deciles
 roll_spreads["size_decile"] = roll_spreads.groupby("month")[
@@ -772,38 +772,38 @@ spread_by_size = (
 )
 ```
 
-## Auction Models in Primary Markets
+## Các mô hình đấu giá ở thị trường sơ cấp
 
-### The IPO Allocation Problem
+### Bài toán phân bổ cổ phiếu IPO
 
-Initial public offerings present a classic information asymmetry problem. Issuers and underwriters do not know the true market-clearing price; informed investors do (approximately). The allocation mechanism (i.e., how shares are distributed and at what price) determines the IPO's pricing efficiency, the degree of underpricing, and the distribution of surplus between issuers and investors.
+Phát hành cổ phiếu lần đầu ra công chúng (IPO) đặt ra một bài toán bất đối xứng thông tin kinh điển. Tổ chức phát hành và tổ chức bảo lãnh không biết giá cân bằng thị trường thực sự; các nhà đầu tư có thông tin thì biết (xấp xỉ). Cơ chế phân bổ (tức là cổ phiếu được phân phối ra sao và ở mức giá nào) quyết định hiệu quả định giá của đợt IPO, mức độ định giá thấp, và việc phân chia thặng dư giữa tổ chức phát hành và nhà đầu tư.
 
-@rock1986new provides the canonical model. There are two types of investors: informed (who know the true value $v$) and uninformed (who know only the distribution $v \sim F$). If the IPO is priced at $P$:
+@rock1986new đưa ra mô hình kinh điển. Có hai loại nhà đầu tư: có thông tin (biết giá trị thực $v$) và không có thông tin (chỉ biết phân phối $v \sim F$). Nếu IPO được định giá ở mức $P$:
 
--   When $v > P$ (good IPO): both informed and uninformed subscribe, so uninformed receive only a fraction of their order (rationing).
--   When $v < P$ (bad IPO): only uninformed subscribe, so they receive full allocation (the "winner's curse").
+-   Khi $v > P$ (IPO tốt): cả nhà đầu tư có thông tin và không có thông tin đều đăng ký mua, do đó nhà đầu tư không có thông tin chỉ nhận được một phần lệnh của mình (phân bổ theo tỷ lệ).
+-   Khi $v < P$ (IPO xấu): chỉ nhà đầu tư không có thông tin đăng ký mua, do đó họ được phân bổ đầy đủ ("lời nguyền người thắng cuộc").
 
-The uninformed investor's expected return, accounting for rationing, is:
+Lợi nhuận kỳ vọng của nhà đầu tư không có thông tin, có tính đến việc phân bổ theo tỷ lệ, là:
 
 $$
 E[R_{\text{uninformed}}] = \alpha_g \cdot E\left[\frac{v - P}{P} \mid v > P\right] \cdot \Pr(v > P) + E\left[\frac{v - P}{P} \mid v \leq P\right] \cdot \Pr(v \leq P)
 $$ {#eq-rock-return}
 
-where $\alpha_g < 1$ is the allocation probability in good IPOs (rationed) and allocation is 1 in bad IPOs. For uninformed investors to participate, $E[R_{\text{uninformed}}] \geq 0$, which requires:
+trong đó $\alpha_g < 1$ là xác suất được phân bổ trong các IPO tốt (bị phân bổ theo tỷ lệ) và mức phân bổ bằng 1 trong các IPO xấu. Để nhà đầu tư không có thông tin tham gia, cần $E[R_{\text{uninformed}}] \geq 0$, điều này đòi hỏi:
 
 $$
 E\left[\frac{v - P}{P}\right] > 0
 $$ {#eq-underpricing-condition}
 
-That is, IPOs must be underpriced on average to compensate uninformed investors for the winner's curse. The degree of required underpricing increases with the proportion of informed investors and the variance of the true value.
+Nghĩa là, các đợt IPO phải được định giá thấp trung bình để bù đắp cho nhà đầu tư không có thông tin trước lời nguyền người thắng cuộc. Mức định giá thấp cần thiết tăng theo tỷ lệ nhà đầu tư có thông tin và phương sai của giá trị thực.
 
-### Book Building vs. Auction Mechanisms
+### Xây dựng sổ lệnh so với cơ chế đấu giá
 
-Vietnamese IPO history provides variation in allocation mechanisms. State-owned enterprise equitizations have used Dutch auctions, while private-sector IPOs have used book building. This institutional variation allows structural comparison of the mechanisms.
+Lịch sử IPO của Việt Nam cung cấp biến thiên về cơ chế phân bổ. Các đợt cổ phần hóa doanh nghiệp nhà nước đã dùng đấu giá kiểu Hà Lan, trong khi các đợt IPO của khu vực tư nhân dùng phương pháp xây dựng sổ lệnh. Sự khác biệt về thể chế này cho phép so sánh cấu trúc giữa các cơ chế.
 
-**Book Building** [@benveniste1989investment]: The underwriter solicits indications of interest from institutional investors during the roadshow. Investors who reveal positive information (high valuations) receive favorable allocations as compensation. The mechanism aggregates information efficiently but grants discretion to the underwriter.
+**Xây dựng sổ lệnh (Book Building)** [@benveniste1989investment]: Tổ chức bảo lãnh thu thập các biểu thị quan tâm (indications of interest) từ nhà đầu tư tổ chức trong quá trình roadshow. Những nhà đầu tư tiết lộ thông tin tích cực (định giá cao) được phân bổ ưu đãi như một khoản đền bù. Cơ chế này tổng hợp thông tin hiệu quả nhưng trao quyền tùy nghi cho tổ chức bảo lãnh.
 
-**Uniform-Price Auction**: All winning bidders pay the same market-clearing price. This eliminates the underwriter's allocation discretion but may lead to free-riding on information revelation.
+**Đấu giá đồng giá (Uniform-Price Auction)**: Mọi nhà đầu tư đặt giá trúng đều trả cùng một mức giá cân bằng thị trường. Cơ chế này loại bỏ quyền tùy nghi phân bổ của tổ chức bảo lãnh nhưng có thể dẫn đến hành vi ăn theo (free-riding) trong việc tiết lộ thông tin.
 
 ```{python}
 #| label: ipo-data
@@ -835,7 +835,7 @@ print(f"By mechanism:\n{ipo_data['mechanism'].value_counts()}")
 ```{python}
 #| label: tbl-ipo-underpricing
 #| eval: false
-#| tbl-cap: "IPO Underpricing by Allocation Mechanism"
+#| tbl-cap: "Mức định giá thấp khi IPO theo cơ chế phân bổ"
 
 ipo_summary = (
     ipo_data.groupby("mechanism")
@@ -852,16 +852,16 @@ ipo_summary = (
 ipo_summary
 ```
 
-### Structural Estimation of Information Asymmetry
+### Ước lượng cấu trúc về bất đối xứng thông tin
 
-We estimate the @rock1986new model parameters (i.e., the fraction of informed investors ($\mu$) and the precision of their information ($\sigma_v^2$)) using the method of simulated moments (MSM).
+Chúng ta ước lượng các tham số của mô hình @rock1986new (tức là tỷ lệ nhà đầu tư có thông tin ($\mu$) và độ chính xác của thông tin của họ ($\sigma_v^2$)) bằng phương pháp moment mô phỏng (MSM).
 
-The model predicts two key moments: 
+Mô hình dự báo hai moment chính:
 
-1 . Average underpricing: $E[U] = f(\mu, \sigma_v^2)$ 
-2. Cross-sectional variance of underpricing: $\text{Var}(U) = g(\mu, \sigma_v^2)$
+1 . Mức định giá thấp trung bình: $E[U] = f(\mu, \sigma_v^2)$
+2. Phương sai theo mặt cắt ngang của mức định giá thấp: $\text{Var}(U) = g(\mu, \sigma_v^2)$
 
-We match these model-implied moments to the data.
+Chúng ta khớp các moment do mô hình suy ra này với dữ liệu.
 
 ```{python}
 #| label: rock-model-estimation
@@ -953,7 +953,7 @@ print(f"  Objective value: {result.fun:.6f}")
 ```{python}
 #| label: fig-ipo-underpricing-time
 #| eval: false
-#| fig-cap: "IPO Underpricing Over Time by Mechanism"
+#| fig-cap: "Mức định giá thấp khi IPO theo thời gian và theo cơ chế"
 
 ipo_plot = ipo_data.dropna(subset=["underpricing", "mechanism"]).copy()
 ipo_plot["year"] = pd.to_datetime(ipo_plot["ipo_date"]).dt.year
@@ -988,9 +988,9 @@ annual_underpricing = (
 )
 ```
 
-### Counterfactual: Welfare Under Alternative Mechanisms
+### Phân tích phản thực tế: Phúc lợi dưới các cơ chế thay thế
 
-With the structural parameters $(\hat{\mu}, \hat{\sigma}_v)$ in hand, we can simulate counterfactual outcomes. For instance: if all Vietnamese IPOs used uniform-price auctions instead of book building, how would underpricing and welfare change?
+Với các tham số cấu trúc $(\hat{\mu}, \hat{\sigma}_v)$ đã có, chúng ta có thể mô phỏng các kết quả phản thực tế. Chẳng hạn: nếu mọi đợt IPO ở Việt Nam đều dùng đấu giá đồng giá thay vì xây dựng sổ lệnh, mức định giá thấp và phúc lợi sẽ thay đổi ra sao?
 
 ```{python}
 #| label: counterfactual-ipo
@@ -1048,30 +1048,30 @@ counterfactual = pd.DataFrame([
 counterfactual
 ```
 
-## Limit Order Book Models
+## Các mô hình sổ lệnh giới hạn
 
-### Order Submission as a Strategic Choice
+### Việc đặt lệnh như một lựa chọn chiến lược
 
-In a limit order market, every trader faces a fundamental tradeoff: submit a market order (immediate execution, but at an adverse price) or a limit order (better price, but risk of non-execution). @parlour1998price models this as a sequential game where each trader's optimal strategy depends on the current state of the order book.
+Trong thị trường lệnh giới hạn, mọi nhà giao dịch đều đối mặt với một đánh đổi cơ bản: đặt lệnh thị trường (khớp ngay, nhưng ở mức giá bất lợi) hay lệnh giới hạn (giá tốt hơn, nhưng có rủi ro không được khớp). @parlour1998price mô hình hóa điều này như một trò chơi tuần tự, trong đó chiến lược tối ưu của mỗi nhà giao dịch phụ thuộc vào trạng thái hiện tại của sổ lệnh.
 
-Let $a_t$ and $b_t$ denote the best ask and bid prices at time $t$, with the spread $s_t = a_t - b_t$. A buyer who arrives at time $t$ chooses between:
+Gọi $a_t$ và $b_t$ là giá bán tốt nhất và giá mua tốt nhất tại thời điểm $t$, với chênh lệch giá $s_t = a_t - b_t$. Một người mua đến tại thời điểm $t$ lựa chọn giữa:
 
--   **Market buy**: Execute immediately at $a_t$. Cost: $a_t - v_t$ where $v_t$ is the true value.
--   **Limit buy at** $b_t$: Provides liquidity. If executed, profit: $v_t - b_t$. Probability of execution: $\pi(b_t, \text{book state})$.
+-   **Mua theo lệnh thị trường**: Khớp ngay tại $a_t$. Chi phí: $a_t - v_t$ với $v_t$ là giá trị thực.
+-   **Mua theo lệnh giới hạn tại** $b_t$: Cung cấp thanh khoản. Nếu được khớp, lợi nhuận: $v_t - b_t$. Xác suất được khớp: $\pi(b_t, \text{book state})$.
 
-The buyer submits a market order if:
+Người mua đặt lệnh thị trường nếu:
 
 $$
 a_t - v_t < (1 - \pi_t)(v_t - b_t) + \pi_t \cdot 0
 $$ {#eq-order-choice}
 
-Rearranging: market orders are optimal when the spread is narrow relative to the non-execution risk of limit orders. This generates the empirically observed pattern that limit orders are more attractive when spreads are wide and the book is thin.
+Sắp xếp lại: lệnh thị trường là tối ưu khi chênh lệch giá hẹp so với rủi ro không được khớp của lệnh giới hạn. Điều này tạo ra mẫu hình quan sát được trong thực nghiệm rằng lệnh giới hạn hấp dẫn hơn khi chênh lệch giá rộng và sổ lệnh mỏng.
 
-### The Glosten-Milgrom Model
+### Mô hình Glosten-Milgrom
 
-@glosten1985bid provide the foundational structural model of bid-ask spread determination under asymmetric information. A competitive market maker sets bid and ask prices to break even in expectation, recognizing that some trades come from informed traders.
+@glosten1985bid đưa ra mô hình cấu trúc nền tảng về việc xác định chênh lệch giá mua–bán trong điều kiện thông tin bất đối xứng. Một nhà tạo lập thị trường cạnh tranh đặt giá mua và giá bán sao cho hòa vốn theo kỳ vọng, nhận thức rằng một số giao dịch đến từ các nhà giao dịch có thông tin.
 
-Let $\mu$ denote the probability that an incoming order is from an informed trader, and let $V^H$ and $V^L$ denote the high and low values of the asset ($\Pr(V = V^H) = p$). The zero-profit conditions yield:
+Gọi $\mu$ là xác suất một lệnh đến là từ nhà giao dịch có thông tin, và gọi $V^H$ và $V^L$ là giá trị cao và thấp của tài sản ($\Pr(V = V^H) = p$). Các điều kiện lợi nhuận bằng không cho ra:
 
 $$
 a = E[V \mid \text{buy order}] = \frac{p(1-\mu) + p\mu}{(1-\mu) + p\mu} V^H + \frac{(1-p)(1-\mu)}{(1-\mu) + p\mu} V^L
@@ -1081,20 +1081,20 @@ $$
 b = E[V \mid \text{sell order}] = \frac{p(1-\mu)}{(1-\mu) + (1-p)\mu} V^H + \frac{(1-p)(1-\mu) + (1-p)\mu}{(1-\mu) + (1-p)\mu} V^L
 $$ {#eq-gm-bid}
 
-The spread $s = a - b$ is positive whenever $\mu > 0$, and increases in both the proportion of informed traders ($\mu$) and the information asymmetry ($V^H - V^L$). This decomposition is foundational: the spread compensates liquidity providers for the adverse selection cost of trading with informed counterparties.
+Chênh lệch giá $s = a - b$ dương bất cứ khi nào $\mu > 0$, và tăng theo cả tỷ lệ nhà giao dịch có thông tin ($\mu$) lẫn mức bất đối xứng thông tin ($V^H - V^L$). Sự phân rã này mang tính nền tảng: chênh lệch giá bù đắp cho người cung cấp thanh khoản chi phí lựa chọn đối nghịch khi giao dịch với đối tác có thông tin.
 
-### PIN: Probability of Informed Trading
+### PIN: Xác suất giao dịch có thông tin
 
 
-@easley1996liquidity extend the Glosten-Milgrom framework to a dynamic setting and develop the Probability of Informed Trading (PIN) measure, which can be estimated from trade data. The model assumes that on each trading day, an information event occurs with probability $\alpha$. Conditional on an event, it is bad news with probability $\delta$. Informed traders arrive at rate $\mu$; uninformed buyers and sellers arrive at rates $\varepsilon_b$ and $\varepsilon_s$, respectively.
+@easley1996liquidity mở rộng khuôn khổ Glosten-Milgrom sang bối cảnh động và xây dựng thước đo Xác suất giao dịch có thông tin (PIN), có thể ước lượng từ dữ liệu giao dịch. Mô hình giả định rằng trong mỗi ngày giao dịch, một sự kiện thông tin xảy ra với xác suất $\alpha$. Với điều kiện có sự kiện xảy ra, đó là tin xấu với xác suất $\delta$. Các nhà giao dịch có thông tin đến với tốc độ $\mu$; những người mua và người bán không có thông tin đến với tốc độ lần lượt là $\varepsilon_b$ và $\varepsilon_s$.
 
-The likelihood of observing $B_t$ buys and $S_t$ sells on day $t$ is:
+Hàm hợp lý của việc quan sát $B_t$ lệnh mua và $S_t$ lệnh bán trong ngày $t$ là:
 
 $$
 \mathcal{L}(B_t, S_t | \boldsymbol{\theta}) = (1-\alpha) f(B_t|\varepsilon_b) f(S_t|\varepsilon_s) + \alpha\delta \cdot f(B_t|\varepsilon_b) f(S_t|\varepsilon_s + \mu) + \alpha(1-\delta) \cdot f(B_t|\varepsilon_b + \mu) f(S_t|\varepsilon_s)
 $$ {#eq-pin-likelihood}
 
-where $f(\cdot|\lambda)$ is the Poisson density with rate $\lambda$, and $\boldsymbol{\theta} = (\alpha, \delta, \mu, \varepsilon_b, \varepsilon_s)$. PIN is then:
+trong đó $f(\cdot|\lambda)$ là hàm mật độ Poisson với tốc độ $\lambda$, và $\boldsymbol{\theta} = (\alpha, \delta, \mu, \varepsilon_b, \varepsilon_s)$. Khi đó PIN là:
 
 $$
 \text{PIN} = \frac{\alpha \mu}{\alpha \mu + \varepsilon_b + \varepsilon_s}
@@ -1259,7 +1259,7 @@ print(f"  Median PIN: {pin_df['pin'].median():.4f}")
 ```{python}
 #| label: fig-pin-distribution
 #| eval: false
-#| fig-cap: "Cross-Sectional Distribution of Probability of Informed Trading (PIN)"
+#| fig-cap: "Phân phối theo mặt cắt ngang của Xác suất giao dịch có thông tin (PIN)"
 
 (
     p9.ggplot(pin_df, p9.aes(x="pin"))
@@ -1278,9 +1278,9 @@ print(f"  Median PIN: {pin_df['pin'].median():.4f}")
 )
 ```
 
-### PIN and Asset Pricing
+### PIN và định giá tài sản
 
-@easley2002information argue that PIN should be priced in the cross-section of expected returns: stocks with higher information asymmetry require a risk premium to compensate uninformed investors. We test this prediction using Fama-MacBeth regressions.
+@easley2002information lập luận rằng PIN cần được định giá trong mặt cắt ngang của lợi nhuận kỳ vọng: các cổ phiếu có bất đối xứng thông tin cao hơn đòi hỏi một phần bù rủi ro để bù đắp cho các nhà đầu tư không có thông tin. Chúng ta kiểm định dự báo này bằng các hồi quy Fama-MacBeth.
 
 ```{python}
 #| label: pin-asset-pricing
@@ -1325,58 +1325,58 @@ if len(pin_returns) > 20:
               f"(t = {cs_model.tvalues[var]:.3f})")
 ```
 
-### Estimation Challenges in Limit Order Book Models
+### Các thách thức ước lượng trong mô hình sổ lệnh giới hạn
 
-Structural estimation of limit order book models faces several challenges specific to Vietnamese markets:
+Ước lượng cấu trúc các mô hình sổ lệnh giới hạn đối mặt với một số thách thức đặc thù của thị trường Việt Nam:
 
-**Tick size effects.** Vietnamese exchanges use discrete tick sizes that vary with price level. At low prices, the minimum tick size represents a large fraction of the price, artificially widening the spread and distorting the structural parameters. The standard Glosten-Milgrom and PIN models assume continuous prices; adapting them to discrete price grids requires the modifications proposed by @bollen2004modeling.
+**Hiệu ứng bước giá.** Các sàn giao dịch Việt Nam dùng bước giá rời rạc thay đổi theo mức giá. Ở mức giá thấp, bước giá tối thiểu chiếm tỷ trọng lớn của giá, làm chênh lệch giá rộng ra một cách giả tạo và bóp méo các tham số cấu trúc. Các mô hình Glosten-Milgrom và PIN chuẩn giả định giá liên tục; việc điều chỉnh chúng cho lưới giá rời rạc đòi hỏi các sửa đổi do @bollen2004modeling đề xuất.
 
-**Price limits.** When a stock hits its price limit, the order book is effectively frozen at one side. Orders accumulate but cannot execute until the limit is lifted. This creates a censoring problem analogous to the price limit censoring in return distributions: the observed order flow is a truncated version of the latent flow.
+**Biên độ giá.** Khi một cổ phiếu chạm biên độ giá, sổ lệnh thực chất bị đóng băng ở một phía. Các lệnh tích tụ nhưng không thể khớp cho đến khi biên độ được nới. Điều này tạo ra vấn đề kiểm duyệt (censoring) tương tự như việc kiểm duyệt do biên độ giá trong phân phối lợi nhuận: dòng lệnh quan sát được là phiên bản bị cắt cụt của dòng lệnh tiềm ẩn.
 
-**Missing data.** Full order book snapshots at high frequency are not universally available for Vietnamese stocks. PIN estimation requires only daily buy/sell counts, making it feasible with lower-frequency data. But richer models (@foucault1999order dynamic limit order book, @rocsu2009dynamic continuous-time model) require tick-by-tick order book data that may be unavailable for smaller stocks.
+**Dữ liệu thiếu.** Các ảnh chụp toàn bộ sổ lệnh ở tần suất cao không phải lúc nào cũng có sẵn đối với cổ phiếu Việt Nam. Ước lượng PIN chỉ cần số lệnh mua/bán hằng ngày, nên khả thi với dữ liệu tần suất thấp hơn. Nhưng các mô hình phong phú hơn (sổ lệnh giới hạn động của @foucault1999order, mô hình thời gian liên tục của @rocsu2009dynamic) đòi hỏi dữ liệu sổ lệnh theo từng giao dịch mà có thể không có sẵn cho các cổ phiếu nhỏ hơn.
 
-**Institutional features.** The coexistence of HOSE (continuous auction) and HNX (with periodic call auctions for less liquid stocks) creates heterogeneity in the appropriate structural model. A model estimated on HOSE continuous trading data does not directly apply to HNX call auction stocks.
+**Đặc điểm thể chế.** Sự tồn tại song song của HOSE (khớp lệnh liên tục) và HNX (với các phiên khớp lệnh định kỳ cho cổ phiếu kém thanh khoản) tạo ra sự không đồng nhất trong mô hình cấu trúc phù hợp. Một mô hình được ước lượng trên dữ liệu giao dịch liên tục của HOSE không áp dụng trực tiếp được cho các cổ phiếu khớp lệnh định kỳ của HNX.
 
-## When Structural Models Are Worth It
+## Khi nào mô hình cấu trúc đáng được sử dụng
 
-### Decision Framework
+### Khung ra quyết định
 
-Structural estimation is not always the right tool. The additional complexity, data requirements, and model risk must be justified by the research question. @tbl-when-structural provides a decision framework.
+Ước lượng cấu trúc không phải lúc nào cũng là công cụ phù hợp. Độ phức tạp tăng thêm, yêu cầu về dữ liệu và rủi ro mô hình phải được biện minh bởi câu hỏi nghiên cứu. @tbl-when-structural đưa ra một khung ra quyết định.
 
-| Criterion | Structural Preferred | Reduced Form Preferred |
+| Tiêu chí | Ưu tiên dạng cấu trúc | Ưu tiên dạng rút gọn |
 |------------------|---------------------------|----------------------------|
-| Research question | Counterfactual or policy evaluation | Causal effect of observed variation |
-| Data availability | Rich micro-data (transactions, holdings) | Standard panel (returns, fundamentals) |
-| Institutional environment | Stable (model assumptions plausible) | Rapidly changing (model may be misspecified) |
-| Number of parameters | Few primitives, many observables | Many parameters, few identifying assumptions |
-| Publication venue | JF, RFS, Econometrica, JPE | JFE, RFS, MS, JFQA |
-| Computational budget | Weeks to months of estimation | Hours to days |
+| Câu hỏi nghiên cứu | Phân tích phản thực tế hoặc đánh giá chính sách | Tác động nhân quả của biến thiên quan sát được |
+| Dữ liệu sẵn có | Dữ liệu vi mô phong phú (giao dịch, vị thế nắm giữ) | Dữ liệu bảng chuẩn (lợi nhuận, dữ liệu cơ bản) |
+| Môi trường thể chế | Ổn định (giả định mô hình hợp lý) | Thay đổi nhanh (mô hình có thể bị đặc tả sai) |
+| Số lượng tham số | Ít yếu tố gốc, nhiều đại lượng quan sát được | Nhiều tham số, ít giả định nhận diện |
+| Tạp chí công bố | JF, RFS, Econometrica, JPE | JFE, RFS, MS, JFQA |
+| Ngân sách tính toán | Vài tuần đến vài tháng ước lượng | Vài giờ đến vài ngày |
 
-: When to Choose Structural vs. Reduced Form {#tbl-when-structural}
+: Khi nào chọn dạng cấu trúc so với dạng rút gọn {#tbl-when-structural}
 
-### Data Requirements
+### Yêu cầu về dữ liệu
 
-Structural models are data-hungry. @tbl-data-requirements summarizes the minimum data needs for each model class covered in this chapter.
+Các mô hình cấu trúc rất "đói" dữ liệu. @tbl-data-requirements tóm tắt các yêu cầu dữ liệu tối thiểu cho từng lớp mô hình được đề cập trong chương này.
 
-| Model | Minimum Data | Ideal Data | Vietnamese Availability |
+| Mô hình | Dữ liệu tối thiểu | Dữ liệu lý tưởng | Mức sẵn có ở Việt Nam |
 |----------------|----------------|----------------|-------------------------|
-| KY demand system | Quarterly institutional holdings + prices | 13F-equivalent filings + fund flows | Partial (semi-annual disclosure) |
-| Almgren-Chriss | Daily volume, spread, volatility | Intraday order-by-order data | Good (HOSE provides) |
-| Rock/IPO | Offer price, first-day close, allocation | Investor-level bids and allocations | Limited (auction data available) |
-| PIN | Daily buy/sell counts (Lee-Ready) | Tick-by-tick trade and quote | Moderate (requires trade classification) |
-| Glosten-Milgrom | Best bid/ask, trade direction | Full order book snapshots | Moderate (top-of-book available) |
+| Hệ thống cầu KY | Vị thế nắm giữ của tổ chức theo quý + giá | Báo cáo tương đương 13F + dòng vốn quỹ | Một phần (công bố theo nửa năm) |
+| Almgren-Chriss | Khối lượng, chênh lệch giá, biến động theo ngày | Dữ liệu từng lệnh trong ngày | Tốt (HOSE cung cấp) |
+| Rock/IPO | Giá chào bán, giá đóng cửa ngày đầu, phân bổ | Giá đặt mua và phân bổ ở cấp nhà đầu tư | Hạn chế (có dữ liệu đấu giá) |
+| PIN | Số lệnh mua/bán theo ngày (Lee-Ready) | Dữ liệu giao dịch và báo giá theo từng giao dịch | Trung bình (cần phân loại giao dịch) |
+| Glosten-Milgrom | Giá mua/bán tốt nhất, chiều giao dịch | Ảnh chụp toàn bộ sổ lệnh | Trung bình (có dữ liệu mức giá tốt nhất của sổ lệnh) |
 
-: Data Requirements for Structural Estimation {#tbl-data-requirements}
+: Yêu cầu về dữ liệu cho ước lượng cấu trúc {#tbl-data-requirements}
 
-### Computational Cost
+### Chi phí tính toán
 
-Structural estimation is orders of magnitude more expensive than reduced-form regression. The cost arises from three sources:
+Ước lượng cấu trúc tốn kém hơn hồi quy dạng rút gọn nhiều bậc độ lớn. Chi phí đến từ ba nguồn:
 
-**Likelihood evaluation.** Each evaluation of the structural likelihood or moment function requires solving the model for given parameters. For dynamic models (e.g., inventory models, dynamic discrete choice), this involves solving a dynamic programming problem at each iteration.
+**Đánh giá hàm hợp lý.** Mỗi lần đánh giá hàm hợp lý hoặc hàm moment cấu trúc đòi hỏi giải mô hình với các tham số cho trước. Với các mô hình động (ví dụ: mô hình tồn kho, lựa chọn rời rạc động), điều này đồng nghĩa với việc giải một bài toán quy hoạch động ở mỗi vòng lặp.
 
-**Optimization.** The GMM or MLE objective is typically non-convex, requiring multiple starting points and global optimization algorithms. The PIN model with 5 parameters requires $\sim 10$ random starts; a richer model with $\sim 20$ parameters might require hundreds.
+**Tối ưu hóa.** Hàm mục tiêu GMM hoặc MLE thường không lồi, đòi hỏi nhiều điểm xuất phát và các thuật toán tối ưu toàn cục. Mô hình PIN với 5 tham số cần $\sim 10$ điểm xuất phát ngẫu nhiên; một mô hình phong phú hơn với $\sim 20$ tham số có thể cần hàng trăm.
 
-**Inference.** Standard errors for structural parameters often require bootstrapping (because the asymptotic distribution is non-standard or the delta method is unreliable), adding a multiplicative factor of 200--1000 to the computational budget.
+**Suy luận.** Sai số chuẩn của các tham số cấu trúc thường đòi hỏi bootstrap (vì phân phối tiệm cận không chuẩn hoặc phương pháp delta không đáng tin cậy), làm ngân sách tính toán tăng thêm một hệ số nhân từ 200--1000.
 
 ```{python}
 #| label: computational-cost-comparison
@@ -1408,48 +1408,48 @@ print(f"  PIN (250 days, 5 starts): {pin_time:.1f} s per stock")
 print(f"  Ratio: {pin_time / ols_time:.0f}x")
 ```
 
-### Interpretation Risks
+### Rủi ro diễn giải
 
-The primary risk of structural estimation is model misspecification. If the model is wrong, the estimated parameters have no economic meaning and the counterfactual predictions are unreliable. Several strategies mitigate this risk:
+Rủi ro chính của ước lượng cấu trúc là đặc tả sai mô hình. Nếu mô hình sai, các tham số ước lượng không có ý nghĩa kinh tế và các dự báo phản thực tế không đáng tin cậy. Một số chiến lược giúp giảm thiểu rủi ro này:
 
-**Specification tests.** Over-identifying restrictions (more moments than parameters) provide the Hansen $J$-test for model fit. A rejection suggests misspecification, though the test has low power in small samples.
+**Kiểm định đặc tả.** Các ràng buộc quá nhận diện (nhiều moment hơn số tham số) cung cấp kiểm định $J$ của Hansen cho độ phù hợp của mô hình. Việc bác bỏ gợi ý đặc tả sai, mặc dù kiểm định có sức mạnh thấp trong mẫu nhỏ.
 
-**Model comparison.** Estimate multiple nested or non-nested models and compare fit. If a simpler model fits the data equally well, prefer it (Occam's razor).
+**So sánh mô hình.** Ước lượng nhiều mô hình lồng nhau hoặc không lồng nhau và so sánh độ phù hợp. Nếu một mô hình đơn giản hơn phù hợp với dữ liệu ngang bằng, hãy ưu tiên nó (dao cạo Occam).
 
-**Sensitivity analysis.** Report how structural parameters change under plausible alternative assumptions (e.g., different functional forms for the impact function, different distributional assumptions for valuations).
+**Phân tích độ nhạy.** Báo cáo các tham số cấu trúc thay đổi ra sao dưới các giả định thay thế hợp lý (ví dụ: các dạng hàm khác nhau cho hàm tác động, các giả định phân phối khác nhau cho định giá).
 
-**Out-of-sample validation.** Estimate the model on one sample period and test its predictions on a holdout sample. Structural models that fit in-sample but fail out-of-sample are likely overfit.
+**Kiểm định ngoài mẫu.** Ước lượng mô hình trên một giai đoạn mẫu và kiểm tra các dự báo của nó trên một mẫu giữ lại (holdout). Các mô hình cấu trúc khớp trong mẫu nhưng thất bại ngoài mẫu nhiều khả năng bị quá khớp.
 
-### Journal Expectations
+### Kỳ vọng của các tạp chí
 
-Structural papers in top finance journals are held to specific standards:
+Các bài báo cấu trúc trên những tạp chí tài chính hàng đầu phải đáp ứng các tiêu chuẩn cụ thể:
 
-**Identification clarity.** The paper must clearly state which parameters are identified, from which moments, and what variation in the data provides identification. The @rust1987optimal critique that without clear identification, structural estimation is curve-fitting, must be addressed head-on.
+**Sự rõ ràng về nhận diện.** Bài báo phải nêu rõ tham số nào được nhận diện, từ những moment nào, và biến thiên nào trong dữ liệu cung cấp nhận diện. Lời phê bình của @rust1987optimal rằng nếu không có nhận diện rõ ràng thì ước lượng cấu trúc chỉ là khớp đường cong (curve-fitting) phải được giải quyết trực diện.
 
-**Counterfactual credibility.** Counterfactual exercises should be economically motivated and the range of counterfactual scenarios should not extrapolate far beyond the data.
+**Độ tin cậy của phân tích phản thực tế.** Các bài tập phản thực tế phải có động cơ kinh tế và phạm vi các kịch bản phản thực tế không nên ngoại suy quá xa so với dữ liệu.
 
-**Robustness to specification.** Reviewers will ask what happens under alternative distributional assumptions, alternative moment conditions, and alternative model features.
+**Độ vững theo đặc tả.** Những người phản biện sẽ hỏi điều gì xảy ra dưới các giả định phân phối thay thế, các điều kiện moment thay thế và các đặc điểm mô hình thay thế.
 
-**Transparency.** Code and data should be made available. Structural estimation is sufficiently complex that replicability is a first-order concern. 
+**Tính minh bạch.** Mã nguồn và dữ liệu cần được công khai. Ước lượng cấu trúc đủ phức tạp để khả năng tái lập là mối quan tâm hàng đầu.
 
-<!-- ## Exercises
+<!-- ## Bài tập
 
-1.  **Demand Elasticity Heterogeneity.** Extend the KY demand system by allowing demand elasticities to vary by investor type (mutual funds, insurance companies, pension funds, foreign institutional investors). Estimate separate $\boldsymbol{\beta}_i$ vectors for each type. Which investor type has the most elastic demand? Which has the most inelastic? Relate your findings to the price impact predictions of @gabaix2021search.
+1.  **Tính không đồng nhất của độ co giãn cầu.** Mở rộng hệ thống cầu KY bằng cách cho phép độ co giãn cầu thay đổi theo loại nhà đầu tư (quỹ tương hỗ, công ty bảo hiểm, quỹ hưu trí, nhà đầu tư tổ chức nước ngoài). Ước lượng các vectơ $\boldsymbol{\beta}_i$ riêng cho từng loại. Loại nhà đầu tư nào có cầu co giãn nhất? Loại nào kém co giãn nhất? Liên hệ các phát hiện của bạn với các dự báo về tác động giá của @gabaix2021search.
 
-2.  **Optimal Execution with Price Limits.** Modify the Almgren-Chriss framework to incorporate Vietnamese daily price limits. The constraint is that the execution price on any day cannot exceed the limit: $|S_t - S_{t-1}| \leq L$. Solve the modified optimization numerically and compare the optimal trajectory with the unconstrained solution. How do price limits affect total execution cost and the optimal time horizon?
+2.  **Thực thi tối ưu với biên độ giá.** Sửa đổi khuôn khổ Almgren-Chriss để đưa vào biên độ giá hằng ngày của Việt Nam. Ràng buộc là giá thực thi trong bất kỳ ngày nào không thể vượt quá biên độ: $|S_t - S_{t-1}| \leq L$. Giải bài toán tối ưu đã sửa đổi bằng phương pháp số và so sánh quỹ đạo tối ưu với nghiệm không ràng buộc. Biên độ giá ảnh hưởng thế nào đến tổng chi phí thực thi và khoảng thời gian tối ưu?
 
-3.  **Mechanism Design for SOE Equitization.** Using the estimated Rock model parameters, simulate IPO outcomes under a Vickrey (second-price) auction mechanism. Compare welfare (issuer revenue, investor surplus, total surplus) with the observed auction and book building outcomes. Under what conditions does the Vickrey mechanism dominate?
+3.  **Thiết kế cơ chế cho cổ phần hóa doanh nghiệp nhà nước.** Sử dụng các tham số mô hình Rock đã ước lượng, mô phỏng kết quả IPO dưới cơ chế đấu giá Vickrey (giá thứ hai). So sánh phúc lợi (doanh thu của tổ chức phát hành, thặng dư nhà đầu tư, tổng thặng dư) với kết quả đấu giá và xây dựng sổ lệnh quan sát được. Trong điều kiện nào cơ chế Vickrey vượt trội?
 
-4.  **PIN and Corporate Events.** Estimate PIN in event windows around earnings announcements, M&A announcements, and regulatory changes for a sample of Vietnamese firms. Does PIN spike before public announcements (consistent with informed trading or leakage)? Compare the magnitude of the pre-announcement PIN increase across event types.
+4.  **PIN và các sự kiện doanh nghiệp.** Ước lượng PIN trong các cửa sổ sự kiện quanh công bố lợi nhuận, công bố M&A và các thay đổi quy định cho một mẫu doanh nghiệp Việt Nam. PIN có tăng vọt trước các công bố công khai không (phù hợp với giao dịch có thông tin hoặc rò rỉ thông tin)? So sánh mức tăng PIN trước công bố giữa các loại sự kiện.
 
-5.  **Kyle's Lambda and Market Depth.** Estimate Kyle's $\lambda$ (the price impact coefficient from the regression of price changes on signed order flow) for the cross-section of Vietnamese stocks. Test whether $\lambda$ is inversely related to measures of market depth (average volume, number of active traders, institutional ownership). Construct a tradeable portfolio long low-$\lambda$ (liquid) stocks and short high-$\lambda$ (illiquid) stocks. Does this liquidity factor earn a risk premium?
+5.  **Lambda của Kyle và độ sâu thị trường.** Ước lượng $\lambda$ của Kyle (hệ số tác động giá từ hồi quy thay đổi giá theo dòng lệnh có dấu) cho các cổ phiếu Việt Nam theo mặt cắt ngang. Kiểm định xem $\lambda$ có tương quan nghịch với các thước đo độ sâu thị trường hay không (khối lượng trung bình, số nhà giao dịch tích cực, sở hữu tổ chức). Xây dựng một danh mục có thể giao dịch mua các cổ phiếu $\lambda$ thấp (thanh khoản) và bán khống các cổ phiếu $\lambda$ cao (kém thanh khoản). Nhân tố thanh khoản này có đem lại phần bù rủi ro không?
 
-6.  **Structural Break in Market Microstructure.** Vietnam implemented tick size changes and trading hour extensions at various points. Using the PIN model and the Roll spread, estimate structural breaks in information asymmetry and transaction costs around these regulatory changes. Do the structural parameters change in the direction predicted by market microstructure theory? Use the @bai1998estimating sequential breakpoint methodology to formally test for and date the breaks. -->
+6.  **Điểm gãy cấu trúc trong vi cấu trúc thị trường.** Việt Nam đã thực hiện các thay đổi bước giá và kéo dài giờ giao dịch vào nhiều thời điểm khác nhau. Sử dụng mô hình PIN và chênh lệch giá Roll, ước lượng các điểm gãy cấu trúc của bất đối xứng thông tin và chi phí giao dịch quanh các thay đổi quy định này. Các tham số cấu trúc có thay đổi theo hướng mà lý thuyết vi cấu trúc thị trường dự báo không? Sử dụng phương pháp điểm gãy tuần tự của @bai1998estimating để kiểm định chính thức và xác định thời điểm của các điểm gãy. -->
 
-## Summary
+## Tóm tắt
 
-This chapter introduced structural estimation as a distinct methodology for financial economics, one that trades the simplicity and transparency of reduced-form analysis for the ability to estimate economic primitives and conduct counterfactual policy evaluation. We implemented four classes of structural models: demand systems for financial assets, optimal execution and transaction cost models, IPO auction models, and limit order book models of informed trading.
+Chương này giới thiệu ước lượng cấu trúc như một phương pháp luận riêng biệt cho kinh tế học tài chính, một phương pháp đánh đổi sự đơn giản và minh bạch của phân tích dạng rút gọn để lấy khả năng ước lượng các yếu tố kinh tế gốc và đánh giá chính sách phản thực tế. Chúng ta đã triển khai bốn lớp mô hình cấu trúc: hệ thống cầu cho tài sản tài chính, các mô hình thực thi tối ưu và chi phí giao dịch, các mô hình đấu giá IPO, và các mô hình sổ lệnh giới hạn về giao dịch có thông tin.
 
-The demand system approach of @koijen2019demand reveals that institutional investors in Vietnam exhibit heterogeneous demand elasticities across characteristics, with foreign investors showing different sensitivity patterns than domestic institutions. Market impact estimation confirms the universality of the square-root law, while the Almgren-Chriss framework provides the optimal execution benchmark for large institutional orders. The Rock IPO model quantifies the information asymmetry premium embedded in Vietnamese IPO underpricing, and the PIN model estimates the probability of informed trading across the cross-section.
+Cách tiếp cận hệ thống cầu của @koijen2019demand cho thấy các nhà đầu tư tổ chức ở Việt Nam có độ co giãn cầu không đồng nhất theo các đặc điểm, trong đó nhà đầu tư nước ngoài có các mẫu hình độ nhạy khác với các tổ chức trong nước. Ước lượng tác động thị trường xác nhận tính phổ quát của quy luật căn bậc hai, trong khi khuôn khổ Almgren-Chriss cung cấp chuẩn thực thi tối ưu cho các lệnh lớn của tổ chức. Mô hình IPO của Rock định lượng phần bù bất đối xứng thông tin gắn trong mức định giá thấp khi IPO ở Việt Nam, và mô hình PIN ước lượng xác suất giao dịch có thông tin trong mặt cắt ngang.
 
-Each model involves a tradeoff between the economic questions it can answer and the assumptions it requires. The decision to use structural estimation should be driven by the research question (specifically, whether counterfactual analysis is essential) and tempered by honest assessment of whether the model's assumptions are sufficiently credible in the Vietnamese institutional environment. When they are, structural models provide insights that no amount of reduced-form regression can deliver.
+Mỗi mô hình đều có sự đánh đổi giữa các câu hỏi kinh tế mà nó có thể trả lời và các giả định mà nó đòi hỏi. Quyết định dùng ước lượng cấu trúc nên được dẫn dắt bởi câu hỏi nghiên cứu (cụ thể là liệu phân tích phản thực tế có thiết yếu hay không) và được điều tiết bởi sự đánh giá trung thực về việc các giả định của mô hình có đủ đáng tin cậy trong môi trường thể chế Việt Nam hay không. Khi có, các mô hình cấu trúc đem lại những hiểu biết mà không một lượng hồi quy dạng rút gọn nào có thể mang lại.

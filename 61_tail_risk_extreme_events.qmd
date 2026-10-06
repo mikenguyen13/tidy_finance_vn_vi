@@ -1,10 +1,10 @@
-# Tail Risk and Extreme Events
+# Rủi ro đuôi và các sự kiện cực đoan
 
-Finance is fundamentally a discipline of extremes. The central objects of concern (e.g., asset pricing, portfolio allocation, capital regulation, systemic stability) are all disproportionately shaped by rare but severe events. A portfolio manager who correctly estimates the mean and variance of returns but ignores the possibility of a $-20\%$ daily move is, in the language of @taleb2010black, "picking up pennies in front of a steamroller." The 1997 Asian Financial Crisis, the 2008 Global Financial Crisis, and the 2020 COVID-19 crash each demonstrated that the most consequential realizations in financial markets are precisely those that conventional Gaussian models assign near-zero probability.
+Về bản chất, tài chính là một lĩnh vực của những giá trị cực đoan. Các đối tượng trọng tâm (ví dụ: định giá tài sản, phân bổ danh mục đầu tư, quy định về vốn, ổn định hệ thống) đều bị chi phối một cách không cân xứng bởi những sự kiện hiếm nhưng nghiêm trọng. Một nhà quản lý danh mục ước lượng đúng kỳ vọng và phương sai của lợi nhuận nhưng bỏ qua khả năng xảy ra một biến động ngày $-20\%$ thì, theo cách nói của @taleb2010black, là đang "nhặt từng đồng xu ngay trước một chiếc xe lu". Cuộc khủng hoảng tài chính châu Á năm 1997, khủng hoảng tài chính toàn cầu năm 2008 và cú sụp đổ do COVID-19 năm 2020 đều cho thấy rằng những diễn biến có hệ quả lớn nhất trên thị trường tài chính chính là những diễn biến mà các mô hình Gauss truyền thống gán cho xác suất gần như bằng không.
 
-This chapter develops the statistical and econometric toolkit for measuring, modeling, and diagnosing tail risk in Vietnamese equity markets. We focus on three interconnected layers. First, at the individual stock level, we estimate crash risk measures that capture the asymmetry and thickness of the left tail of return distributions. Second, at the portfolio or regulatory level, we implement Value at Risk (VaR) and Expected Shortfall (ES) under multiple estimation approaches and evaluate their accuracy via backtesting. Third, at the system level, we apply Extreme Value Theory (EVT) and tail dependence measures to characterize joint crash behavior across sectors and assess financial contagion.
+Chương này xây dựng bộ công cụ thống kê và kinh tế lượng để đo lường, mô hình hóa và chẩn đoán rủi ro đuôi trên thị trường cổ phiếu Việt Nam. Chúng ta tập trung vào ba tầng có liên hệ chặt chẽ với nhau. Thứ nhất, ở cấp độ từng cổ phiếu, chúng ta ước lượng các thước đo rủi ro sụp đổ nhằm nắm bắt tính bất đối xứng và độ dày của đuôi trái trong phân phối lợi nhuận. Thứ hai, ở cấp độ danh mục hoặc cấp độ quy định giám sát, chúng ta triển khai Giá trị chịu rủi ro (Value at Risk, VaR) và Thiếu hụt kỳ vọng (Expected Shortfall, ES) theo nhiều cách ước lượng khác nhau và đánh giá độ chính xác của chúng thông qua kiểm định ngược (backtesting). Thứ ba, ở cấp độ hệ thống, chúng ta áp dụng Lý thuyết giá trị cực trị (Extreme Value Theory, EVT) và các thước đo phụ thuộc đuôi để mô tả hành vi sụp đổ đồng thời giữa các ngành và đánh giá sự lây lan tài chính.
 
-Vietnamese markets present a particularly rich laboratory for studying tail phenomena. Daily price limits mechanically censor the tails of observed return distributions, creating latent tail risk that is not directly observable but must be inferred. State ownership concentrations, thin liquidity, and herding behavior among retail investors amplify crash dynamics. The absence of a developed derivatives market means that tail hedging instruments familiar in more developed markets (e.g., deep out-of-the-money puts, variance swaps) are largely unavailable, making accurate tail risk measurement all the more important for risk management.
+Thị trường Việt Nam là một phòng thí nghiệm đặc biệt phong phú để nghiên cứu các hiện tượng đuôi. Biên độ giá hằng ngày kiểm duyệt một cách cơ học phần đuôi của phân phối lợi nhuận quan sát được, tạo ra rủi ro đuôi tiềm ẩn không thể quan sát trực tiếp mà phải được suy ra. Mức độ tập trung sở hữu nhà nước, thanh khoản mỏng và hành vi bầy đàn của nhà đầu tư cá nhân khuếch đại các động lực sụp đổ. Việc thiếu một thị trường phái sinh phát triển có nghĩa là các công cụ phòng ngừa rủi ro đuôi quen thuộc ở những thị trường phát triển hơn (ví dụ: quyền chọn bán nằm sâu ngoài giá, hoán đổi phương sai) hầu như không có sẵn, khiến việc đo lường chính xác rủi ro đuôi càng trở nên quan trọng đối với quản trị rủi ro.
 
 ```{python}
 #| label: setup
@@ -20,65 +20,65 @@ import warnings
 warnings.filterwarnings("ignore")
 ```
 
-## Crash Risk in Equity Markets
+## Rủi ro sụp đổ trên thị trường cổ phiếu
 
-### The Left Tail Problem
+### Vấn đề đuôi trái
 
-The return distribution of individual stocks and market indices is not symmetric. Decades of evidence, beginning with @mandelbrot1963variation and formalized in the asset pricing context by @harvey2000conditional, establish that equity returns exhibit negative skewness (i.e., large negative returns occur more frequently than a Gaussian model predicts) and excess kurtosis (i.e., the tails are thicker than normal in both directions, but the left tail is of primary economic concern).
+Phân phối lợi nhuận của từng cổ phiếu và của các chỉ số thị trường không đối xứng. Bằng chứng qua nhiều thập kỷ, bắt đầu từ @mandelbrot1963variation và được hình thức hóa trong bối cảnh định giá tài sản bởi @harvey2000conditional, cho thấy lợi nhuận cổ phiếu có độ lệch âm (tức là các mức lợi nhuận âm lớn xảy ra thường xuyên hơn so với dự báo của mô hình Gauss) và độ nhọn vượt mức (tức là phần đuôi dày hơn phân phối chuẩn ở cả hai phía, nhưng đuôi trái là mối quan tâm kinh tế chính).
 
-Let $r_{i,t}$ denote the daily log return of stock $i$ on day $t$. The standardized third central moment (skewness) is:
+Gọi $r_{i,t}$ là lợi nhuận logarit hằng ngày của cổ phiếu $i$ vào ngày $t$. Moment trung tâm bậc ba đã chuẩn hóa (độ lệch) là:
 
 $$
 \text{Skew}(r_i) = \frac{E\left[(r_{i,t} - \mu_i)^3\right]}{\sigma_i^3}
 $$ {#eq-skewness}
 
-Negative skewness implies that the distribution has a longer or fatter left tail relative to the right. In economic terms, negative skewness means that large losses are more likely than large gains of equal magnitude. The standardized fourth moment (excess kurtosis) is:
+Độ lệch âm hàm ý rằng phân phối có đuôi trái dài hơn hoặc dày hơn so với đuôi phải. Về mặt kinh tế, độ lệch âm có nghĩa là các khoản lỗ lớn có khả năng xảy ra cao hơn các khoản lãi lớn có cùng độ lớn. Moment bậc bốn đã chuẩn hóa (độ nhọn vượt mức) là:
 
 $$
 \text{Kurt}(r_i) = \frac{E\left[(r_{i,t} - \mu_i)^4\right]}{\sigma_i^4} - 3
 $$ {#eq-kurtosis}
 
-Positive excess kurtosis indicates heavier tails than the normal distribution. Both moments have direct asset pricing implications: @harvey2000conditional and @kraus1976skewness argue that investors demand compensation for holding negatively skewed assets, implying that crash-prone stocks should earn higher expected returns, ceteris paribus.
+Độ nhọn vượt mức dương cho thấy phần đuôi nặng hơn so với phân phối chuẩn. Cả hai moment đều có hàm ý trực tiếp đối với định giá tài sản: @harvey2000conditional và @kraus1976skewness lập luận rằng nhà đầu tư đòi hỏi được bù đắp khi nắm giữ các tài sản có độ lệch âm, nghĩa là các cổ phiếu dễ sụp đổ nên có lợi nhuận kỳ vọng cao hơn, các yếu tố khác không đổi.
 
-### Crash Risk Measures
+### Các thước đo rủi ro sụp đổ
 
-The literature has developed several firm-specific crash risk measures. We implement the three most widely used, following @chen2001forecasting and @hutton2009opaque.
+Tài liệu nghiên cứu đã phát triển nhiều thước đo rủi ro sụp đổ riêng cho từng doanh nghiệp. Chúng ta triển khai ba thước đo được sử dụng rộng rãi nhất, theo @chen2001forecasting và @hutton2009opaque.
 
-**Measure 1: Negative Coefficient of Skewness (NCSKEW)**
+**Thước đo 1: Hệ số lệch âm (NCSKEW)**
 
-For each firm $i$ in fiscal year $y$, compute firm-specific weekly returns $W_{i,\tau}$ as residuals from a market model augmented with lead and lag market returns to account for nonsynchronous trading:
+Với mỗi doanh nghiệp $i$ trong năm tài chính $y$, tính lợi nhuận tuần đặc thù của doanh nghiệp $W_{i,\tau}$ là phần dư từ một mô hình thị trường được bổ sung thêm lợi nhuận thị trường dẫn trước và trễ sau để xử lý hiện tượng giao dịch không đồng bộ:
 
 $$
 r_{i,t} = \alpha_i + \beta_{1i} r_{m,t-1} + \beta_{2i} r_{m,t} + \beta_{3i} r_{m,t+1} + \varepsilon_{i,t}
 $$ {#eq-crash-model}
 
-where $r_{m,t}$ is the value-weighted market return on day $t$. The firm-specific weekly return is $W_{i,\tau} = \ln(1 + \sum_{t \in \tau} \hat{\varepsilon}_{i,t})$, where $\tau$ indexes weeks. NCSKEW is then:
+trong đó $r_{m,t}$ là lợi nhuận thị trường theo trọng số vốn hóa vào ngày $t$. Lợi nhuận tuần đặc thù của doanh nghiệp là $W_{i,\tau} = \ln(1 + \sum_{t \in \tau} \hat{\varepsilon}_{i,t})$, trong đó $\tau$ là chỉ số của các tuần. Khi đó NCSKEW là:
 
 $$
 \text{NCSKEW}_{i,y} = -\frac{n(n-1)^{3/2} \sum W_{i,\tau}^3}{(n-1)(n-2)\left(\sum W_{i,\tau}^2\right)^{3/2}}
 $$ {#eq-ncskew}
 
-where $n$ is the number of firm-specific weekly returns in the year. The negative sign ensures that higher NCSKEW corresponds to greater crash risk.
+trong đó $n$ là số lợi nhuận tuần đặc thù của doanh nghiệp trong năm. Dấu âm bảo đảm rằng NCSKEW càng cao thì rủi ro sụp đổ càng lớn.
 
-**Measure 2: Down-to-Up Volatility (DUVOL)**
+**Thước đo 2: Biến động giảm so với tăng (DUVOL)**
 
-Partition the firm-specific weekly returns into "down weeks" ($W_{i,\tau} < \bar{W}_i$) and "up weeks" ($W_{i,\tau} \geq \bar{W}_i$), where $\bar{W}_i$ is the annual mean. Then:
+Chia các lợi nhuận tuần đặc thù của doanh nghiệp thành "tuần giảm" ($W_{i,\tau} < \bar{W}_i$) và "tuần tăng" ($W_{i,\tau} \geq \bar{W}_i$), trong đó $\bar{W}_i$ là giá trị trung bình năm. Khi đó:
 
 $$
 \text{DUVOL}_{i,y} = \ln\left(\frac{(n_u - 1)\sum_{\text{down}} W_{i,\tau}^2}{(n_d - 1)\sum_{\text{up}} W_{i,\tau}^2}\right)
 $$ {#eq-duvol}
 
-where $n_u$ and $n_d$ are the number of up and down weeks, respectively. Higher DUVOL indicates greater crash risk. @chen2001forecasting argue that DUVOL is less sensitive to outliers than NCSKEW because it does not involve the cube of returns.
+trong đó $n_u$ và $n_d$ lần lượt là số tuần tăng và số tuần giảm. DUVOL càng cao thì rủi ro sụp đổ càng lớn. @chen2001forecasting lập luận rằng DUVOL ít nhạy với các giá trị ngoại lai hơn NCSKEW vì không liên quan đến lũy thừa bậc ba của lợi nhuận.
 
-**Measure 3: Crash Count (COUNT)**
+**Thước đo 3: Số lần sụp đổ (COUNT)**
 
-Define a crash event as a firm-specific weekly return that falls below $k$ standard deviations of its annual distribution:
+Định nghĩa một sự kiện sụp đổ là lợi nhuận tuần đặc thù của doanh nghiệp thấp hơn $k$ độ lệch chuẩn so với phân phối trong năm của chính nó:
 
 $$
 \text{CRASH}_{i,\tau} = \mathbb{1}\left(W_{i,\tau} < \bar{W}_i - k \cdot \hat{\sigma}_{W_i}\right)
 $$ {#eq-crash-event}
 
-The standard threshold in the literature is $k = 3.09$, corresponding to the 0.1% tail of a standard normal distribution. The crash count for year $y$ is $\text{COUNT}_{i,y} = \sum_{\tau \in y} \text{CRASH}_{i,\tau}$.
+Ngưỡng tiêu chuẩn trong tài liệu nghiên cứu là $k = 3.09$, tương ứng với phần đuôi 0.1% của phân phối chuẩn tắc. Số lần sụp đổ của năm $y$ là $\text{COUNT}_{i,y} = \sum_{\tau \in y} \text{CRASH}_{i,\tau}$.
 
 ```{python}
 #| label: load-data
@@ -221,14 +221,14 @@ crash_risk = crash_risk.dropna(subset=["ncskew", "duvol"])
 print(f"Crash risk panel: {len(crash_risk)} firm-years")
 ```
 
-### Cross-Sectional Distribution of Crash Risk
+### Phân phối chéo của rủi ro sụp đổ
 
-@tbl-crash-summary presents summary statistics for the three crash risk measures across the Vietnamese equity market.
+@tbl-crash-summary trình bày các thống kê mô tả của ba thước đo rủi ro sụp đổ trên thị trường cổ phiếu Việt Nam.
 
 ```{python}
 #| label: tbl-crash-summary
 #| eval: false
-#| tbl-cap: "Summary Statistics of Crash Risk Measures"
+#| tbl-cap: "Thống kê mô tả của các thước đo rủi ro sụp đổ"
 
 summary = crash_risk[["ncskew", "duvol", "crash_count"]].describe(
     percentiles=[0.05, 0.25, 0.5, 0.75, 0.95]
@@ -242,7 +242,7 @@ summary
 ```{python}
 #| label: fig-ncskew-distribution
 #| eval: false
-#| fig-cap: "Cross-Sectional Distribution of NCSKEW by Year"
+#| fig-cap: "Phân phối chéo của NCSKEW theo năm"
 
 plot_data = crash_risk[crash_risk["year"].between(2012, 2024)].copy()
 
@@ -261,19 +261,19 @@ plot_data = crash_risk[crash_risk["year"].between(2012, 2024)].copy()
 )
 ```
 
-The rightward shift of the NCSKEW distribution during crisis episodes, particularly in 2020 and 2022, indicates a market-wide increase in crash risk. The red dashed line at zero separates firms with negative skewness (right of zero, i.e., high NCSKEW since the measure is negated) from those with positive skewness.
+Sự dịch chuyển sang phải của phân phối NCSKEW trong các giai đoạn khủng hoảng, đặc biệt là năm 2020 và 2022, cho thấy rủi ro sụp đổ trên toàn thị trường gia tăng. Đường đứt nét màu đỏ tại mức không phân tách các doanh nghiệp có độ lệch âm (nằm bên phải mức không, tức NCSKEW cao vì thước đo này đã được đổi dấu) với các doanh nghiệp có độ lệch dương.
 
-### Interpretation in Asset Pricing
+### Diễn giải trong định giá tài sản
 
-Crash risk has first-order implications for asset pricing. @harvey2000conditional demonstrate that coskewness (i.e., the contribution of an individual asset to the skewness of the aggregate market portfolio) is priced in the cross-section of expected returns. Specifically, assets that tend to crash when the market crashes (negative coskewness) should command a risk premium.
+Rủi ro sụp đổ có hàm ý bậc nhất đối với định giá tài sản. @harvey2000conditional chứng minh rằng độ lệch đồng thời (coskewness, tức là mức đóng góp của một tài sản riêng lẻ vào độ lệch của danh mục thị trường tổng hợp) được định giá trong mặt cắt ngang của lợi nhuận kỳ vọng. Cụ thể, những tài sản có xu hướng sụp đổ khi thị trường sụp đổ (độ lệch đồng thời âm) nên được hưởng một phần bù rủi ro.
 
-The coskewness of stock $i$ with the market is:
+Độ lệch đồng thời của cổ phiếu $i$ với thị trường là:
 
 $$
 \text{CoSkew}_i = \frac{E\left[(r_i - \mu_i)(r_m - \mu_m)^2\right]}{\sigma_i \cdot \sigma_m^2}
 $$ {#eq-coskewness}
 
-Stocks with more negative coskewness exhibit disproportionately poor performance during market downturns. In Vietnam, this is especially relevant because: (1) retail investor herding amplifies co-movement during selloffs; (2) price limits delay crash completion, spreading crash risk across multiple days; and (3) state-owned enterprises, which constitute a large fraction of market capitalization, may exhibit coordinated crash behavior driven by common policy shocks.
+Các cổ phiếu có độ lệch đồng thời âm hơn thể hiện kết quả kém một cách không cân xứng trong các giai đoạn thị trường đi xuống. Ở Việt Nam, điều này đặc biệt quan trọng vì: (1) hành vi bầy đàn của nhà đầu tư cá nhân khuếch đại sự đồng biến động trong các đợt bán tháo; (2) biên độ giá làm chậm quá trình hoàn tất sụp đổ, dàn trải rủi ro sụp đổ qua nhiều ngày; và (3) các doanh nghiệp nhà nước, vốn chiếm một tỷ trọng lớn trong vốn hóa thị trường, có thể thể hiện hành vi sụp đổ phối hợp do các cú sốc chính sách chung.
 
 ```{python}
 #| label: coskewness-estimation
@@ -306,7 +306,7 @@ df_coskew = (
 
 ```{python}
 #| label: fig-coskew-time
-#| fig-cap: "Cross-Sectional Median Coskewness Over Time"
+#| fig-cap: "Trung vị chéo của độ lệch đồng thời theo thời gian"
 #| eval: false
 
 median_coskew = (
@@ -337,15 +337,15 @@ median_coskew = (
 )
 ```
 
-### Downside Tail Concentration
+### Mức tập trung ở đuôi giảm
 
-Beyond skewness, the concentration of returns in the extreme left tail provides additional diagnostic information. We define the downside tail concentration ratio as the fraction of total return variance attributable to observations below the $p$-th percentile:
+Ngoài độ lệch, mức độ tập trung của lợi nhuận ở đuôi trái cực đoan cung cấp thêm thông tin chẩn đoán. Chúng ta định nghĩa tỷ lệ tập trung đuôi giảm là phần của tổng phương sai lợi nhuận được quy cho các quan sát nằm dưới bách phân vị thứ $p$:
 
 $$
 \text{TCR}_p = \frac{\sum_{r_{i,t} < q_p} (r_{i,t} - \bar{r}_i)^2}{\sum_t (r_{i,t} - \bar{r}_i)^2}
 $$ {#eq-tail-concentration}
 
-where $q_p$ is the $p$-th percentile of the firm's return distribution. Under a symmetric distribution, $\text{TCR}_{5\%}$ would be close to $5\%$ (with a slight upward bias due to the squaring). Values substantially exceeding $5\%$ indicate that the left tail contributes disproportionately to total risk.
+trong đó $q_p$ là bách phân vị thứ $p$ của phân phối lợi nhuận của doanh nghiệp. Với phân phối đối xứng, $\text{TCR}_{5\%}$ sẽ gần $5\%$ (với một độ chệch hướng lên nhẹ do phép bình phương). Các giá trị vượt xa $5\%$ cho thấy đuôi trái đóng góp không cân xứng vào tổng rủi ro.
 
 ```{python}
 #| label: tail-concentration
@@ -374,64 +374,64 @@ print("Median TCR(5%):", round(tcr["tcr_5"].median(), 4))
 print("Median TCR(1%):", round(tcr["tcr_1"].median(), 4))
 ```
 
-## Value at Risk and Expected Shortfall
+## Giá trị chịu rủi ro và Thiếu hụt kỳ vọng
 
-### Definitions
+### Định nghĩa
 
-Value at Risk (VaR) and Expected Shortfall (ES) are the two principal quantile-based risk measures used in financial regulation and internal risk management. For a portfolio return $r$ with the cumulative distribution function $F$, the VaR at confidence level $\alpha$ is:
+Giá trị chịu rủi ro (VaR) và Thiếu hụt kỳ vọng (ES) là hai thước đo rủi ro chính dựa trên phân vị, được sử dụng trong quy định tài chính và quản trị rủi ro nội bộ. Với lợi nhuận danh mục $r$ có hàm phân phối tích lũy $F$, VaR ở mức tin cậy $\alpha$ là:
 
 $$
 \text{VaR}_\alpha = -F^{-1}(\alpha) = -\inf\{x : F(x) \geq \alpha\}
 $$ {#eq-var-def}
 
-This is simply the negative of the $\alpha$-quantile of the return distribution. For $\alpha = 0.01$, $\text{VaR}_{1\%}$ answers: "What is the loss that is exceeded with only 1% probability?"
+Đây đơn giản là giá trị âm của phân vị $\alpha$ của phân phối lợi nhuận. Với $\alpha = 0.01$, $\text{VaR}_{1\%}$ trả lời câu hỏi: "Mức lỗ nào bị vượt qua chỉ với xác suất 1%?"
 
-Expected Shortfall (also called Conditional VaR or CVaR) is the expected loss conditional on the loss exceeding VaR:
+Thiếu hụt kỳ vọng (còn gọi là VaR có điều kiện hay CVaR) là mức lỗ kỳ vọng với điều kiện khoản lỗ vượt quá VaR:
 
 $$
 \text{ES}_\alpha = -\frac{1}{\alpha}\int_0^\alpha F^{-1}(u) \, du = -E\left[r \mid r \leq -\text{VaR}_\alpha\right]
 $$ {#eq-es-def}
 
-For continuous distributions, ES simplifies to the conditional expectation in @eq-es-def. ES is always at least as large as VaR ($\text{ES}_\alpha \geq \text{VaR}_\alpha$) and is strictly larger whenever the distribution has any mass beyond the VaR quantile.
+Với các phân phối liên tục, ES đơn giản hóa thành kỳ vọng có điều kiện trong @eq-es-def. ES luôn lớn hơn hoặc bằng VaR ($\text{ES}_\alpha \geq \text{VaR}_\alpha$) và lớn hơn thực sự bất cứ khi nào phân phối có khối lượng xác suất vượt quá phân vị VaR.
 
-### Why Expected Shortfall Dominates VaR
+### Vì sao Thiếu hụt kỳ vọng vượt trội hơn VaR
 
-@tbl-tail-riskvar-vs-es summarizes the fundamental differences.
+@tbl-tail-riskvar-vs-es tóm tắt những khác biệt cơ bản.
 
-| Property | VaR | Expected Shortfall |
+| Thuộc tính | VaR | Thiếu hụt kỳ vọng |
 |-------------------|-------------------|----------------------------------|
-| Definition | Quantile of the loss distribution | Conditional mean loss beyond VaR |
-| Tail information | None beyond the quantile | Captures severity of tail losses |
-| Subadditivity | Not subadditive in general | Subadditive (coherent risk measure) |
-| Regulatory status | Basel II primary measure | Basel III/IV primary measure |
-| Backtesting | Binary: breach or no breach | Continuous: requires severity assessment |
-| Sensitivity to tail shape | None | Directly sensitive |
+| Định nghĩa | Phân vị của phân phối lỗ | Mức lỗ trung bình có điều kiện vượt quá VaR |
+| Thông tin về đuôi | Không có gì ngoài phân vị | Nắm bắt mức độ nghiêm trọng của các khoản lỗ ở đuôi |
+| Tính dưới cộng tính | Nhìn chung không dưới cộng tính | Dưới cộng tính (thước đo rủi ro nhất quán) |
+| Vị thế trong quy định | Thước đo chính của Basel II | Thước đo chính của Basel III/IV |
+| Kiểm định ngược | Nhị phân: vi phạm hoặc không | Liên tục: đòi hỏi đánh giá mức độ nghiêm trọng |
+| Độ nhạy với hình dạng đuôi | Không có | Nhạy trực tiếp |
 
-: Comparison of VaR and Expected Shortfall {#tbl-tail-riskvar-vs-es}
+: So sánh VaR và Thiếu hụt kỳ vọng {#tbl-tail-riskvar-vs-es}
 
-The critical deficiency of VaR is the absence of subadditivity. A risk measure $\rho$ is subadditive if $\rho(X + Y) \leq \rho(X) + \rho(Y)$ for all portfolios $X, Y$. VaR violates this condition for non-elliptical distributions, meaning that diversification can appear to increase risk under VaR, which is a perverse result. @artzner1999coherent established the axiomatic framework for coherent risk measures, and ES satisfies all four axioms: monotonicity, translation invariance, positive homogeneity, and subadditivity. VaR satisfies only three.
+Khiếm khuyết then chốt của VaR là thiếu tính dưới cộng tính. Một thước đo rủi ro $\rho$ có tính dưới cộng tính nếu $\rho(X + Y) \leq \rho(X) + \rho(Y)$ với mọi danh mục $X, Y$. VaR vi phạm điều kiện này đối với các phân phối không elliptic, nghĩa là đa dạng hóa có thể trông như làm tăng rủi ro theo VaR, một kết quả phi lý. @artzner1999coherent đã thiết lập khung tiên đề cho các thước đo rủi ro nhất quán (coherent), và ES thỏa mãn cả bốn tiên đề: tính đơn điệu, bất biến tịnh tiến, thuần nhất dương và dưới cộng tính. VaR chỉ thỏa mãn ba.
 
-### Estimation Methods
+### Các phương pháp ước lượng
 
-We implement four approaches to VaR and ES estimation, each with distinct assumptions and data requirements.
+Chúng ta triển khai bốn cách tiếp cận để ước lượng VaR và ES, mỗi cách có giả định và yêu cầu dữ liệu riêng.
 
-**Method 1: Historical Simulation**
+**Phương pháp 1: Mô phỏng lịch sử**
 
-The simplest nonparametric approach uses the empirical distribution directly:
+Cách tiếp cận phi tham số đơn giản nhất sử dụng trực tiếp phân phối thực nghiệm:
 
 $$
 \widehat{\text{VaR}}_\alpha^{\text{HS}} = -\hat{F}_n^{-1}(\alpha) = -r_{(\lceil n\alpha \rceil)}
 $$ {#eq-var-hs}
 
-where $r_{(k)}$ is the $k$-th order statistic of the return sample. ES is the average of all returns below the VaR:
+trong đó $r_{(k)}$ là thống kê thứ tự thứ $k$ của mẫu lợi nhuận. ES là trung bình của mọi mức lợi nhuận thấp hơn VaR:
 
 $$
 \widehat{\text{ES}}_\alpha^{\text{HS}} = -\frac{1}{\lfloor n\alpha \rfloor}\sum_{k=1}^{\lfloor n\alpha \rfloor} r_{(k)}
 $$ {#eq-es-hs}
 
-**Method 2: Parametric (Gaussian)**
+**Phương pháp 2: Tham số (Gauss)**
 
-Assume $r_t \sim N(\mu, \sigma^2)$. Then:
+Giả định $r_t \sim N(\mu, \sigma^2)$. Khi đó:
 
 $$
 \text{VaR}_\alpha^{\text{Gauss}} = -(\hat{\mu} + \hat{\sigma} \cdot \Phi^{-1}(\alpha))
@@ -441,11 +441,11 @@ $$
 \text{ES}_\alpha^{\text{Gauss}} = -\hat{\mu} + \hat{\sigma} \cdot \frac{\phi(\Phi^{-1}(\alpha))}{\alpha}
 $$ {#eq-es-gauss}
 
-where $\Phi$ and $\phi$ are the standard normal CDF and PDF, respectively. The Gaussian assumption is known to underestimate tail risk for equity returns, but provides a useful baseline.
+trong đó $\Phi$ và $\phi$ lần lượt là hàm phân phối tích lũy (CDF) và hàm mật độ (PDF) của phân phối chuẩn tắc. Giả định Gauss được biết là đánh giá thấp rủi ro đuôi của lợi nhuận cổ phiếu, nhưng cung cấp một mốc cơ sở hữu ích.
 
-**Method 3: Parametric (Student-**$t$)
+**Phương pháp 3: Tham số (Student-**$t$)
 
-The Student-$t$ distribution with $\nu$ degrees of freedom captures excess kurtosis. The VaR and ES are:
+Phân phối Student-$t$ với $\nu$ bậc tự do nắm bắt được độ nhọn vượt mức. VaR và ES là:
 
 $$
 \text{VaR}_\alpha^{t} = -\left(\hat{\mu} + \hat{\sigma}\sqrt{\frac{\nu - 2}{\nu}} \cdot t_\nu^{-1}(\alpha)\right)
@@ -455,11 +455,11 @@ $$
 \text{ES}_\alpha^{t} = -\hat{\mu} + \hat{\sigma}\sqrt{\frac{\nu-2}{\nu}} \cdot \frac{f_{t_\nu}(t_\nu^{-1}(\alpha))}{\alpha} \cdot \frac{\nu + (t_\nu^{-1}(\alpha))^2}{\nu - 1}
 $$ {#eq-es-t}
 
-where $t_\nu^{-1}$ and $f_{t_\nu}$ are the quantile function and PDF of the Student-$t$ distribution.
+trong đó $t_\nu^{-1}$ và $f_{t_\nu}$ lần lượt là hàm phân vị và hàm mật độ của phân phối Student-$t$.
 
-**Method 4: GARCH-Filtered EVT (Semi-Parametric)**
+**Phương pháp 4: EVT lọc qua GARCH (bán tham số)**
 
-This approach, developed by @mcneil2000estimation, first filters returns through a GARCH(1,1) model to obtain standardized residuals $z_t = \hat{\varepsilon}_t / \hat{\sigma}_t$, then fits a Generalized Pareto Distribution (GPD) to the lower tail of the standardized residuals. We detail the EVT component in @sec-evt.
+Cách tiếp cận này, do @mcneil2000estimation phát triển, trước hết lọc lợi nhuận qua mô hình GARCH(1,1) để thu được phần dư chuẩn hóa $z_t = \hat{\varepsilon}_t / \hat{\sigma}_t$, sau đó khớp một Phân phối Pareto tổng quát (Generalized Pareto Distribution, GPD) vào đuôi dưới của các phần dư chuẩn hóa. Chúng ta trình bày chi tiết thành phần EVT trong @sec-evt.
 
 ```{python}
 #| label: var-es-estimation
@@ -546,7 +546,7 @@ var_es_ts = pd.DataFrame(results_list)
 ```{python}
 #| label: fig-var-comparison
 #| eval: false
-#| fig-cap: "Rolling 1% VaR Estimates: Historical, Gaussian, and Student-t Methods"
+#| fig-cap: "Ước lượng VaR 1% theo cửa sổ trượt: phương pháp lịch sử, Gauss và Student-t"
 
 plot_var = var_es_ts.melt(
     id_vars="date",
@@ -581,7 +581,7 @@ plot_var["method"] = plot_var["method"].map(method_labels)
 ```{python}
 #| label: fig-es-comparison
 #| eval: false
-#| fig-cap: "Rolling 1% Expected Shortfall Estimates"
+#| fig-cap: "Ước lượng Thiếu hụt kỳ vọng 1% theo cửa sổ trượt"
 
 plot_es = var_es_ts.melt(
     id_vars="date",
@@ -613,23 +613,23 @@ plot_es["method"] = plot_es["method"].map(method_labels_es)
 )
 ```
 
-### VaR Backtesting
+### Kiểm định ngược VaR
 
-A VaR model is only useful if its predictions are accurate. Backtesting evaluates whether the realized frequency of VaR breaches is consistent with the nominal confidence level. If VaR is estimated at the $\alpha = 1\%$ level, we expect approximately 1% of days to exhibit losses exceeding VaR.
+Một mô hình VaR chỉ hữu ích khi các dự báo của nó chính xác. Kiểm định ngược đánh giá liệu tần suất vi phạm VaR thực tế có phù hợp với mức tin cậy danh nghĩa hay không. Nếu VaR được ước lượng ở mức $\alpha = 1\%$, chúng ta kỳ vọng khoảng 1% số ngày có mức lỗ vượt quá VaR.
 
-The Kupiec unconditional coverage test [@kupiec1995techniques] evaluates whether the total number of breaches $x$ in $n$ observations is consistent with $\alpha$:
+Kiểm định độ bao phủ không điều kiện của Kupiec [@kupiec1995techniques] đánh giá liệu tổng số lần vi phạm $x$ trong $n$ quan sát có phù hợp với $\alpha$ hay không:
 
 $$
 \text{LR}_{\text{UC}} = -2\ln\left(\frac{\alpha^x (1-\alpha)^{n-x}}{\hat{p}^x (1-\hat{p})^{n-x}}\right) \sim \chi^2(1)
 $$ {#eq-kupiec}
 
-where $\hat{p} = x/n$ is the empirical breach frequency. The Christoffersen conditional coverage test [@christoffersen1998evaluating] additionally evaluates whether breaches are independent (no clustering):
+trong đó $\hat{p} = x/n$ là tần suất vi phạm thực nghiệm. Kiểm định độ bao phủ có điều kiện của Christoffersen [@christoffersen1998evaluating] đánh giá thêm liệu các lần vi phạm có độc lập hay không (không có hiện tượng quần tụ):
 
 $$
 \text{LR}_{\text{CC}} = \text{LR}_{\text{UC}} + \text{LR}_{\text{IND}}
 $$ {#eq-christoffersen}
 
-where $\text{LR}_{\text{IND}}$ tests the null of independence using a first-order Markov chain model for breach indicators.
+trong đó $\text{LR}_{\text{IND}}$ kiểm định giả thuyết không về tính độc lập bằng mô hình chuỗi Markov bậc nhất cho các chỉ báo vi phạm.
 
 ```{python}
 #| label: backtesting
@@ -682,45 +682,45 @@ bt_df.index.name = "Method"
 bt_df
 ```
 
-### Estimation Under Limited Data {#sec-limited-data}
+### Ước lượng khi dữ liệu hạn chế {#sec-limited-data}
 
-In Vietnamese equity markets, many stocks have short trading histories, thin liquidity, and censored returns due to price limits. These features create challenges for tail risk estimation that are less severe in developed markets.
+Trên thị trường cổ phiếu Việt Nam, nhiều cổ phiếu có lịch sử giao dịch ngắn, thanh khoản mỏng và lợi nhuận bị kiểm duyệt do biên độ giá. Những đặc điểm này tạo ra các thách thức cho việc ước lượng rủi ro đuôi, vốn ít nghiêm trọng hơn ở các thị trường phát triển.
 
-**Price limit censoring.** When a stock hits its daily price limit, the observed return is truncated. The true latent return may extend well beyond the limit, but is unobservable. This means that historical simulation mechanically understates VaR and ES for stocks that frequently hit limits. A Tobit-type correction can partially address this:
+**Kiểm duyệt do biên độ giá.** Khi một cổ phiếu chạm biên độ giá trong ngày, lợi nhuận quan sát được bị cắt cụt. Lợi nhuận tiềm ẩn thực sự có thể vượt xa biên độ nhưng không quan sát được. Điều này có nghĩa là mô phỏng lịch sử đánh giá thấp VaR và ES một cách cơ học đối với những cổ phiếu thường xuyên chạm biên độ. Một hiệu chỉnh kiểu Tobit có thể giải quyết phần nào vấn đề này:
 
 $$
 r_{i,t}^{\text{latent}} \sim N(\mu_i, \sigma_i^2), \quad r_{i,t}^{\text{obs}} = \max(\underline{L}, \min(\bar{L}, r_{i,t}^{\text{latent}}))
 $$ {#eq-tobit-var}
 
-The parameters $(\mu_i, \sigma_i^2)$ can be estimated via maximum likelihood on the censored sample, and VaR/ES can then be computed from the estimated latent distribution.
+Các tham số $(\mu_i, \sigma_i^2)$ có thể được ước lượng bằng hợp lý cực đại trên mẫu bị kiểm duyệt, và khi đó VaR/ES có thể được tính từ phân phối tiềm ẩn đã ước lượng.
 
-**Short histories.** For recently listed stocks, the available sample may be too short for reliable nonparametric estimation. In these cases, shrinkage toward a cross-sectional prior (e.g., the sector median VaR) or Bayesian approaches with informative priors can improve stability.
+**Lịch sử ngắn.** Với các cổ phiếu mới niêm yết, mẫu sẵn có có thể quá ngắn để ước lượng phi tham số một cách đáng tin cậy. Trong những trường hợp này, việc co (shrinkage) về một tiên nghiệm chéo (ví dụ: VaR trung vị của ngành) hoặc các cách tiếp cận Bayes với tiên nghiệm có thông tin có thể cải thiện độ ổn định.
 
-## Extreme Value Theory {#sec-evt}
+## Lý thuyết giá trị cực trị {#sec-evt}
 
-### Motivation: What EVT Captures That GARCH Does Not
+### Động lực: EVT nắm bắt điều mà GARCH không nắm bắt được
 
-GARCH models capture volatility clustering (i.e., the tendency of large returns to be followed by large returns), but they make specific distributional assumptions about standardized residuals (typically Gaussian or Student-$t$). The tail behavior of the conditional distribution is thus determined by the parametric innovation assumption, not learned from the data.
+Các mô hình GARCH nắm bắt hiện tượng quần tụ biến động (tức là xu hướng các mức lợi nhuận lớn được theo sau bởi các mức lợi nhuận lớn), nhưng chúng đưa ra những giả định phân phối cụ thể về phần dư chuẩn hóa (thường là Gauss hoặc Student-$t$). Do đó, hành vi đuôi của phân phối có điều kiện được quyết định bởi giả định tham số về cú sốc, chứ không được học từ dữ liệu.
 
-Extreme Value Theory (EVT) takes a fundamentally different approach. It provides a statistical framework for estimating the distribution of extreme observations without specifying the entire return distribution. The key theoretical results (i.e., the Fisher-Tippett-Gnedenko theorem and the Pickands-Balkema-de Haan theorem) establish that the distribution of properly normalized maxima (or exceedances over high thresholds) converges to specific parametric families regardless of the parent distribution. This universality is what makes EVT powerful: the tail can be estimated even when the center of the distribution is misspecified.
+Lý thuyết giá trị cực trị (EVT) tiếp cận theo một hướng khác về căn bản. Nó cung cấp một khung thống kê để ước lượng phân phối của các quan sát cực đoan mà không cần chỉ định toàn bộ phân phối lợi nhuận. Các kết quả lý thuyết then chốt (tức là định lý Fisher-Tippett-Gnedenko và định lý Pickands-Balkema-de Haan) khẳng định rằng phân phối của các giá trị cực đại đã chuẩn hóa thích hợp (hoặc của các mức vượt trên ngưỡng cao) hội tụ về những họ tham số xác định, bất kể phân phối gốc là gì. Tính phổ quát này làm nên sức mạnh của EVT: phần đuôi có thể được ước lượng ngay cả khi phần trung tâm của phân phối bị chỉ định sai.
 
-### Tail Index Estimation
+### Ước lượng chỉ số đuôi
 
-The tail index $\xi$ (also denoted $\alpha^{-1}$ in some formulations) governs the rate of tail decay. For heavy-tailed distributions, the survival function satisfies:
+Chỉ số đuôi $\xi$ (trong một số cách trình bày còn được ký hiệu là $\alpha^{-1}$) quyết định tốc độ suy giảm của đuôi. Với các phân phối đuôi dày, hàm sống sót thỏa mãn:
 
 $$
 P(X > x) \sim L(x) \cdot x^{-1/\xi}, \quad x \to \infty
 $$ {#eq-tail-decay}
 
-where $L(x)$ is a slowly varying function. The tail index $\xi > 0$ implies a Pareto-type tail; larger $\xi$ means heavier tails. Financial return distributions typically have $\xi \in (0.2, 0.5)$, corresponding to tail indices $\alpha = 1/\xi \in (2, 5)$, which implies finite variance but potentially infinite higher moments.
+trong đó $L(x)$ là một hàm biến thiên chậm. Chỉ số đuôi $\xi > 0$ hàm ý đuôi kiểu Pareto; $\xi$ càng lớn thì đuôi càng dày. Phân phối lợi nhuận tài chính thường có $\xi \in (0.2, 0.5)$, tương ứng với chỉ số đuôi $\alpha = 1/\xi \in (2, 5)$, hàm ý phương sai hữu hạn nhưng các moment bậc cao có thể vô hạn.
 
-The Hill estimator [@hill1975simple] provides a simple nonparametric estimate of $\xi$ from the upper order statistics:
+Bộ ước lượng Hill [@hill1975simple] cung cấp một ước lượng phi tham số đơn giản của $\xi$ từ các thống kê thứ tự cao nhất:
 
 $$
 \hat{\xi}_{\text{Hill}}(k) = \frac{1}{k}\sum_{j=1}^{k} \ln X_{(n-j+1)} - \ln X_{(n-k)}
 $$ {#eq-hill}
 
-where $X_{(1)} \leq \cdots \leq X_{(n)}$ are the order statistics and $k$ is the number of upper order statistics used. The choice of $k$ involves a bias-variance tradeoff: small $k$ yields high variance; large $k$ introduces bias from non-tail observations.
+trong đó $X_{(1)} \leq \cdots \leq X_{(n)}$ là các thống kê thứ tự và $k$ là số thống kê thứ tự cao nhất được sử dụng. Việc chọn $k$ liên quan đến sự đánh đổi giữa độ chệch và phương sai: $k$ nhỏ cho phương sai cao; $k$ lớn đưa vào độ chệch từ các quan sát không thuộc đuôi.
 
 ```{python}
 #| label: hill-estimator
@@ -762,7 +762,7 @@ def hill_estimator(data, k_values=None):
 ```{python}
 #| label: fig-hill-plot
 #| eval: false
-#| fig-cap: "Hill Plot: Tail Index Estimate as a Function of Order Statistics"
+#| fig-cap: "Đồ thị Hill: ước lượng chỉ số đuôi theo hàm của số thống kê thứ tự"
 
 # Use negative market returns (losses)
 losses = -market_daily["mkt_ret"].dropna().values
@@ -792,17 +792,17 @@ hill_results = hill_estimator(losses_positive)
 )
 ```
 
-The Hill plot is a standard diagnostic in EVT. A stable region of the Hill estimate across a range of $k$ suggests a reliable tail index estimate. The red dashed line at $\xi = 1/3$ corresponds to a tail index of $\alpha = 3$, which implies that the third moment (skewness) is infinite, which is a finding consistent with much of the empirical finance literature [@cont2001empirical; @gabaix2003theory].
+Đồ thị Hill là một công cụ chẩn đoán tiêu chuẩn trong EVT. Một vùng ổn định của ước lượng Hill trên một khoảng giá trị $k$ cho thấy ước lượng chỉ số đuôi đáng tin cậy. Đường đứt nét màu đỏ tại $\xi = 1/3$ tương ứng với chỉ số đuôi $\alpha = 3$, hàm ý rằng moment bậc ba (độ lệch) là vô hạn, một phát hiện nhất quán với phần lớn tài liệu thực nghiệm trong tài chính [@cont2001empirical; @gabaix2003theory].
 
-### Block Maxima and the GEV Distribution
+### Cực đại theo khối và phân phối GEV
 
-The Fisher-Tippett-Gnedenko theorem establishes that if the maximum of $n$ i.i.d. random variables, after proper normalization, converges in distribution, the limit must be a Generalized Extreme Value (GEV) distribution:
+Định lý Fisher-Tippett-Gnedenko khẳng định rằng nếu giá trị cực đại của $n$ biến ngẫu nhiên i.i.d., sau khi chuẩn hóa thích hợp, hội tụ theo phân phối, thì giới hạn phải là một phân phối giá trị cực trị tổng quát (Generalized Extreme Value, GEV):
 
 $$
 G_\xi(x) = \exp\left\{-\left(1 + \xi \cdot \frac{x - \mu}{\sigma}\right)^{-1/\xi}\right\}
 $$ {#eq-gev}
 
-for $1 + \xi(x - \mu)/\sigma > 0$, where $\mu$ is the location, $\sigma > 0$ the scale, and $\xi$ the shape parameter. The three sub-families are in @tbl-tail-riskgev-families.
+với $1 + \xi(x - \mu)/\sigma > 0$, trong đó $\mu$ là tham số vị trí, $\sigma > 0$ là tham số quy mô và $\xi$ là tham số hình dạng. Ba họ con được trình bày trong @tbl-tail-riskgev-families.
 
 | Shape $\xi$ | Distribution | Tail Type | Finance Example |
 |------------------|------------------|------------------|-------------------|
@@ -810,9 +810,9 @@ for $1 + \xi(x - \mu)/\sigma > 0$, where $\mu$ is the location, $\sigma > 0$ the
 | $\xi = 0$ | Gumbel | Light (exponential decay) | Normal/lognormal models |
 | $\xi < 0$ | Weibull | Bounded upper tail | Bounded loss distributions |
 
-: GEV Sub-Families and Financial Interpretation {#tbl-tail-riskgev-families}
+: Các họ con của GEV và diễn giải tài chính {#tbl-tail-riskgev-families}
 
-For the block maxima approach, we divide the return series into non-overlapping blocks (typically months or quarters) and extract the minimum return (maximum loss) from each block. The GEV is then fitted to these block minima.
+Với phương pháp cực đại theo khối, chúng ta chia chuỗi lợi nhuận thành các khối không chồng lấn (thường là tháng hoặc quý) và trích ra mức lợi nhuận nhỏ nhất (mức lỗ lớn nhất) từ mỗi khối. Sau đó GEV được khớp vào các giá trị cực tiểu theo khối này.
 
 ```{python}
 #| label: block-maxima
@@ -841,7 +841,7 @@ print(f"  Scale (σ):    {scale_hat:.4f}")
 ```{python}
 #| label: fig-gev-fit
 #| eval: false
-#| fig-cap: "GEV Fit to Monthly Maximum Losses"
+#| fig-cap: "Khớp GEV với các mức lỗ lớn nhất hằng tháng"
 
 x_grid = np.linspace(
     block_losses.min() * 0.8,
@@ -884,9 +884,9 @@ fitted = plot_data[plot_data["source"] == "GEV Fit"]
 )
 ```
 
-### Peaks Over Threshold and the GPD {#sec-gpd}
+### Các đỉnh vượt ngưỡng và GPD {#sec-gpd}
 
-The Peaks Over Threshold (POT) approach is generally preferred over block maxima because it uses tail data more efficiently. The Pickands-Balkema-de Haan theorem establishes that for a sufficiently high threshold $u$, the distribution of exceedances $Y = X - u \mid X > u$ converges to a Generalized Pareto Distribution (GPD):
+Phương pháp các đỉnh vượt ngưỡng (Peaks Over Threshold, POT) thường được ưu tiên hơn cực đại theo khối vì nó sử dụng dữ liệu đuôi hiệu quả hơn. Định lý Pickands-Balkema-de Haan khẳng định rằng với một ngưỡng $u$ đủ cao, phân phối của các mức vượt $Y = X - u \mid X > u$ hội tụ về Phân phối Pareto tổng quát (GPD):
 
 $$
 H_{\xi,\beta}(y) = \begin{cases}
@@ -895,7 +895,7 @@ H_{\xi,\beta}(y) = \begin{cases}
 \end{cases}
 $$ {#eq-gpd}
 
-for $y > 0$ and $1 + \xi y / \beta > 0$, where $\beta > 0$ is the scale parameter and $\xi$ is the shape parameter (identical to the GEV shape). The POT-based VaR and ES at level $\alpha$ are:
+với $y > 0$ và $1 + \xi y / \beta > 0$, trong đó $\beta > 0$ là tham số quy mô và $\xi$ là tham số hình dạng (đồng nhất với tham số hình dạng của GEV). VaR và ES dựa trên POT ở mức $\alpha$ là:
 
 $$
 \text{VaR}_\alpha^{\text{GPD}} = u + \frac{\hat{\beta}}{\hat{\xi}}\left[\left(\frac{n}{N_u} \cdot \alpha\right)^{-\hat{\xi}} - 1\right]
@@ -905,7 +905,7 @@ $$
 \text{ES}_\alpha^{\text{GPD}} = \frac{\text{VaR}_\alpha^{\text{GPD}}}{1 - \hat{\xi}} + \frac{\hat{\beta} - \hat{\xi} u}{1 - \hat{\xi}}
 $$ {#eq-es-gpd}
 
-where $N_u$ is the number of observations exceeding $u$ and $n$ is the total sample size. These formulae are valid for $\hat{\xi} < 1$.
+trong đó $N_u$ là số quan sát vượt $u$ và $n$ là tổng cỡ mẫu. Các công thức này có hiệu lực khi $\hat{\xi} < 1$.
 
 ```{python}
 #| label: gpd-estimation
@@ -966,9 +966,9 @@ for k, v in gpd_results.items():
         print(f"  {k}: {v}")
 ```
 
-### Threshold Selection
+### Lựa chọn ngưỡng
 
-The choice of threshold $u$ is the key practical decision in POT analysis. Too low a threshold violates the asymptotic approximation; too high wastes data. The mean residual life plot provides a graphical diagnostic: if the GPD approximation holds above $u_0$, the mean excess function $e(u) = E[X - u \mid X > u]$ is linear in $u$ for $u > u_0$:
+Việc chọn ngưỡng $u$ là quyết định thực tiễn then chốt trong phân tích POT. Ngưỡng quá thấp vi phạm xấp xỉ tiệm cận; ngưỡng quá cao lãng phí dữ liệu. Đồ thị mức vượt trung bình (mean residual life plot) cung cấp một công cụ chẩn đoán trực quan: nếu xấp xỉ GPD đúng trên $u_0$, thì hàm vượt trung bình $e(u) = E[X - u \mid X > u]$ tuyến tính theo $u$ với $u > u_0$:
 
 $$
 e(u) = \frac{\beta + \xi u}{1 - \xi}
@@ -977,7 +977,7 @@ $$ {#eq-mean-excess}
 ```{python}
 #| label: fig-mean-residual-life
 #| eval: false
-#| fig-cap: "Mean Residual Life Plot for Threshold Selection"
+#| fig-cap: "Đồ thị mức vượt trung bình để lựa chọn ngưỡng"
 
 losses = -market_daily["mkt_ret"].dropna().values
 losses_sorted = np.sort(losses)
@@ -1018,58 +1018,58 @@ mrl_df = pd.DataFrame(mean_excess)
 )
 ```
 
-A threshold in the region where the mean residual life plot is approximately linear is appropriate. In practice, we also compare GPD parameter stability across a range of thresholds and select the lowest threshold at which estimates stabilize.
+Một ngưỡng nằm trong vùng mà đồ thị mức vượt trung bình xấp xỉ tuyến tính là phù hợp. Trong thực hành, chúng ta cũng so sánh độ ổn định của các tham số GPD trên một dải ngưỡng và chọn ngưỡng thấp nhất mà tại đó các ước lượng ổn định.
 
-### What EVT Captures That GARCH Does Not
+### EVT nắm bắt điều mà GARCH không nắm bắt được
 
-@tbl-tail-riskevt-vs-garch summarizes the complementary roles of these two modeling frameworks.
+@tbl-tail-riskevt-vs-garch tóm tắt vai trò bổ trợ của hai khung mô hình này.
 
-| Feature | GARCH | EVT |
+| Đặc điểm | GARCH | EVT |
 |-----------------------------|------------------------|-------------------|
-| What is modeled | Conditional variance dynamics | Unconditional tail distribution |
-| Distributional assumption | Full distribution (Gaussian or $t$) | Only the tail (GPD or GEV) |
-| Time dependence | Explicit (volatility clustering) | None (i.i.d. or filtered) |
-| Tail shape | Determined by innovation distribution | Estimated from data |
-| Extreme quantiles | Extrapolation from parametric assumption | Principled extrapolation via EVT theorems |
-| Best use | Short-horizon risk forecasting | Extreme quantile estimation, stress testing |
+| Đối tượng được mô hình hóa | Động lực của phương sai có điều kiện | Phân phối đuôi không điều kiện |
+| Giả định về phân phối | Toàn bộ phân phối (Gauss hoặc $t$) | Chỉ phần đuôi (GPD hoặc GEV) |
+| Phụ thuộc theo thời gian | Tường minh (quần tụ biến động) | Không có (i.i.d. hoặc đã lọc) |
+| Hình dạng đuôi | Do phân phối của cú sốc quyết định | Ước lượng từ dữ liệu |
+| Phân vị cực đoan | Ngoại suy từ giả định tham số | Ngoại suy có cơ sở nhờ các định lý EVT |
+| Phù hợp nhất cho | Dự báo rủi ro ngắn hạn | Ước lượng phân vị cực đoan, kiểm tra sức chịu đựng |
 
-: GARCH vs. EVT: Complementary Frameworks {#tbl-tail-riskevt-vs-garch}
+: GARCH so với EVT: hai khung bổ trợ cho nhau {#tbl-tail-riskevt-vs-garch}
 
-The GARCH-filtered EVT approach of @mcneil2000estimation combines both: GARCH captures the time-varying volatility, and EVT models the residual tail. This hybrid approach is considered best practice for financial risk management [@mcneil2015quantitative].
+Cách tiếp cận EVT lọc qua GARCH của @mcneil2000estimation kết hợp cả hai: GARCH nắm bắt biến động thay đổi theo thời gian, còn EVT mô hình hóa phần đuôi của phần dư. Cách tiếp cận lai này được coi là thông lệ tốt nhất trong quản trị rủi ro tài chính [@mcneil2015quantitative].
 
-## Tail Dependence and Contagion
+## Phụ thuộc đuôi và sự lây lan
 
-### Why Correlation Breaks Down in Crises
+### Vì sao tương quan mất hiệu lực trong khủng hoảng
 
-Perhaps the most important practical fact about multivariate tail risk is that correlations estimated from the body of the distribution systematically understate dependence in the tails. @longin2001extreme demonstrate this using extreme value theory: for bivariate normal returns, the correlation of extreme realizations converges to zero as the threshold moves further into the tail. Yet empirically, the correlation of crash returns remains large and often increases (a phenomenon incompatible with multivariate normality).
+Có lẽ sự thật thực tiễn quan trọng nhất về rủi ro đuôi đa biến là các tương quan ước lượng từ phần thân của phân phối đánh giá thấp một cách có hệ thống mức phụ thuộc ở phần đuôi. @longin2001extreme chứng minh điều này bằng lý thuyết giá trị cực trị: với lợi nhuận chuẩn hai biến, tương quan của các giá trị cực đoan hội tụ về không khi ngưỡng càng đi sâu vào phần đuôi. Tuy nhiên, về mặt thực nghiệm, tương quan của lợi nhuận trong các đợt sụp đổ vẫn lớn và thường tăng lên (một hiện tượng không tương thích với phân phối chuẩn đa biến).
 
-Formally, the coefficient of lower tail dependence between two return series $X$ and $Y$ is:
+Về mặt hình thức, hệ số phụ thuộc đuôi dưới giữa hai chuỗi lợi nhuận $X$ và $Y$ là:
 
 $$
 \lambda_L = \lim_{q \to 0^+} P\left(Y \leq F_Y^{-1}(q) \mid X \leq F_X^{-1}(q)\right)
 $$ {#eq-tail-dependence}
 
-If $\lambda_L > 0$, the two series exhibit asymptotic tail dependence (i.e., extreme losses tend to occur jointly). For the bivariate normal distribution, $\lambda_L = 0$ for all $|\rho| < 1$ (asymptotic tail independence). This means that any model built on multivariate normality will structurally underestimate the probability of joint crashes. The Student-$t$ copula, by contrast, has $\lambda_L > 0$ for $\rho > -1$, which is why it has become the workhorse model for joint tail risk in finance [@demarta2005t].
+Nếu $\lambda_L > 0$, hai chuỗi thể hiện phụ thuộc đuôi tiệm cận (tức là các khoản lỗ cực đoan có xu hướng xảy ra đồng thời). Với phân phối chuẩn hai biến, $\lambda_L = 0$ với mọi $|\rho| < 1$ (độc lập đuôi tiệm cận). Điều này có nghĩa là bất kỳ mô hình nào xây dựng trên phân phối chuẩn đa biến về mặt cấu trúc sẽ luôn đánh giá thấp xác suất sụp đổ đồng thời. Ngược lại, copula Student-$t$ có $\lambda_L > 0$ với $\rho > -1$, đó là lý do nó trở thành mô hình chủ lực cho rủi ro đuôi đồng thời trong tài chính [@demarta2005t].
 
-### Co-Crash Measures
+### Các thước đo sụp đổ đồng thời
 
-We implement several empirical measures of joint crash behavior.
+Chúng ta triển khai một số thước đo thực nghiệm về hành vi sụp đổ đồng thời.
 
-**Exceedance Correlation.** Following @longin2001extreme, compute the correlation of returns conditional on both returns falling below a threshold $\theta$:
+**Tương quan vượt ngưỡng.** Theo @longin2001extreme, tính tương quan của lợi nhuận có điều kiện cả hai mức lợi nhuận đều thấp hơn một ngưỡng $\theta$:
 
 $$
 \rho^-(\theta) = \text{Corr}(r_i, r_j \mid r_i < \theta, r_j < \theta)
 $$ {#eq-exceedance-corr}
 
-If returns are bivariate normal, $\rho^-(\theta) \to 0$ as $\theta \to -\infty$. Empirically, $\rho^-(\theta)$ typically increases as $\theta$ decreases, indicating tail dependence beyond what the normal model implies.
+Nếu lợi nhuận tuân theo phân phối chuẩn hai biến, $\rho^-(\theta) \to 0$ khi $\theta \to -\infty$. Về mặt thực nghiệm, $\rho^-(\theta)$ thường tăng lên khi $\theta$ giảm, cho thấy phụ thuộc đuôi vượt quá những gì mô hình chuẩn hàm ý.
 
-**Co-Exceedance Count.** For each day $t$, count the number of stocks or sectors whose returns fall below the $q$-th percentile of their respective marginal distributions:
+**Số lần đồng vượt ngưỡng.** Với mỗi ngày $t$, đếm số cổ phiếu hoặc ngành có lợi nhuận thấp hơn bách phân vị thứ $q$ của phân phối biên tương ứng của chúng:
 
 $$
 C_t(q) = \sum_{i=1}^{N} \mathbb{1}\left(r_{i,t} < F_i^{-1}(q)\right)
 $$ {#eq-coexceedance}
 
-Days with high $C_t(q)$ represent system-wide stress events.
+Những ngày có $C_t(q)$ cao đại diện cho các sự kiện căng thẳng trên toàn hệ thống.
 
 ```{python}
 #| label: tail-dependence-estimation
@@ -1160,7 +1160,7 @@ td_df = pd.DataFrame(pairwise_td)
 ```{python}
 #| label: tbl-tail-dependence
 #| eval: false
-#| tbl-cap: "Pairwise Tail Dependence vs. Linear Correlation Across Sectors"
+#| tbl-cap: "Phụ thuộc đuôi theo cặp so với tương quan tuyến tính giữa các ngành"
 
 td_display = td_df.copy()
 td_display["lambda_L_5pct"] = td_display["lambda_L_5pct"].round(4)
@@ -1172,11 +1172,11 @@ td_display["ratio"] = (
 td_display.sort_values("lambda_L_5pct", ascending=False).head(15)
 ```
 
-The ratio column in @tbl-tail-dependence is particularly informative. When $\lambda_L / \rho \gg 1$, the sectors exhibit disproportionately high co-crash frequency relative to their overall correlation. This is the hallmark of tail dependence that Gaussian models miss.
+Cột tỷ lệ trong @tbl-tail-dependence đặc biệt giàu thông tin. Khi $\lambda_L / \rho \gg 1$, các ngành thể hiện tần suất sụp đổ đồng thời cao một cách không cân xứng so với tương quan tổng thể của chúng. Đây là dấu hiệu đặc trưng của phụ thuộc đuôi mà các mô hình Gauss bỏ sót.
 
-### System-Wide Stress Transmission
+### Lan truyền căng thẳng trên toàn hệ thống
 
-To assess system-wide contagion dynamics, we construct daily co-exceedance counts and examine their time-series properties.
+Để đánh giá động lực lây lan trên toàn hệ thống, chúng ta xây dựng số lần đồng vượt ngưỡng hằng ngày và xem xét các tính chất chuỗi thời gian của chúng.
 
 ```{python}
 #| label: coexceedance
@@ -1203,7 +1203,7 @@ co_exceed_df["n_sectors"] = exceedance_indicators.notna().sum(axis=1).values
 ```{python}
 #| label: fig-coexceedance-ts
 #| eval: false
-#| fig-cap: "Daily Co-Exceedance Count: Number of Sectors Below Their 5th Percentile"
+#| fig-cap: "Số lần đồng vượt ngưỡng hằng ngày: số ngành nằm dưới bách phân vị thứ 5"
 
 (
     p9.ggplot(co_exceed_df.dropna(), p9.aes(x="date", y="co_exceedance"))
@@ -1219,27 +1219,27 @@ co_exceed_df["n_sectors"] = exceedance_indicators.notna().sum(axis=1).values
 )
 ```
 
-Peaks in the co-exceedance series correspond to system-wide stress episodes. The smoothed trend (red line) reveals the evolving baseline level of systemic fragility.
+Các đỉnh trong chuỗi đồng vượt ngưỡng tương ứng với các giai đoạn căng thẳng trên toàn hệ thống. Xu hướng được làm trơn (đường màu đỏ) cho thấy mức nền đang tiến triển của tính dễ tổn thương hệ thống.
 
-### Financial Contagion Mechanisms
+### Các cơ chế lây lan tài chính
 
-The literature distinguishes several channels through which stress propagates across assets, sectors, and markets [@forbes2002no; @kaminsky2002unholy]:
+Tài liệu nghiên cứu phân biệt nhiều kênh qua đó căng thẳng lan truyền giữa các tài sản, ngành và thị trường [@forbes2002no; @kaminsky2002unholy]:
 
-**Direct linkages.** Balance sheet interconnections, interbank lending, and cross-holdings create direct transmission channels. When institution $A$ holds assets issued by institution $B$, losses at $B$ directly impair $A$'s balance sheet.
+**Liên kết trực tiếp.** Các mối liên hệ trên bảng cân đối kế toán, cho vay liên ngân hàng và sở hữu chéo tạo ra các kênh truyền dẫn trực tiếp. Khi tổ chức $A$ nắm giữ tài sản do tổ chức $B$ phát hành, các khoản lỗ tại $B$ trực tiếp làm suy yếu bảng cân đối kế toán của $A$.
 
-**Information contagion.** Adverse news about one firm triggers reassessment of similarly exposed firms. @king1990transmission and @kodres2002rational formalize this via Bayesian updating: investors cannot distinguish idiosyncratic from systematic shocks, so a crash in one asset leads them to update beliefs about common risk factors.
+**Lây lan thông tin.** Tin xấu về một doanh nghiệp kích hoạt việc đánh giá lại các doanh nghiệp có mức phơi nhiễm tương tự. @king1990transmission và @kodres2002rational hình thức hóa cơ chế này thông qua cập nhật Bayes: nhà đầu tư không thể phân biệt cú sốc đặc thù với cú sốc hệ thống, nên một cú sụp đổ ở một tài sản khiến họ cập nhật niềm tin về các nhân tố rủi ro chung.
 
-**Liquidity contagion.** Fire sales by distressed institutions depress prices of commonly held assets, creating losses for other holders. @brunnermeier2009deciphering model this as a liquidity spiral: declining prices trigger margin calls, which force further sales, further depressing prices. In Vietnamese markets, the absence of circuit breakers beyond price limits and the concentration of holdings among a few large institutional investors amplify this channel.
+**Lây lan thanh khoản.** Việc bán tháo của các tổ chức gặp khó khăn làm giảm giá các tài sản được nhiều bên cùng nắm giữ, gây thua lỗ cho những người nắm giữ khác. @brunnermeier2009deciphering mô hình hóa điều này như một vòng xoáy thanh khoản: giá giảm kích hoạt các lệnh gọi ký quỹ (margin call), buộc phải bán thêm, làm giá giảm thêm. Trên thị trường Việt Nam, việc thiếu các cơ chế ngắt giao dịch ngoài biên độ giá và mức độ tập trung nắm giữ vào một số ít nhà đầu tư tổ chức lớn khuếch đại kênh này.
 
-**Behavioral contagion.** Herding behavior (i.e., investors mimicking others' trades) generates correlated selling pressure even in the absence of fundamental linkages. @bikhchandani1992theory and @banerjee1992simple provide theoretical foundations. @choe2005domestic document herding in emerging markets specifically.
+**Lây lan hành vi.** Hành vi bầy đàn (tức là nhà đầu tư bắt chước giao dịch của người khác) tạo ra áp lực bán tương quan với nhau ngay cả khi không có các liên kết cơ bản. @bikhchandani1992theory và @banerjee1992simple cung cấp nền tảng lý thuyết. @choe2005domestic ghi nhận hành vi bầy đàn riêng ở các thị trường mới nổi.
 
-We can test for contagion (as distinct from interdependence) using the @forbes2002no framework. The null hypothesis is that the co-movement observed during a crisis period is fully explained by the increase in volatility (which mechanically inflates correlations). The adjusted correlation is:
+Chúng ta có thể kiểm định sự lây lan (khác với sự phụ thuộc lẫn nhau) bằng khung của @forbes2002no. Giả thuyết không (H0) cho rằng sự đồng biến động quan sát được trong giai đoạn khủng hoảng hoàn toàn được giải thích bởi sự gia tăng biến động (vốn làm phồng các tương quan một cách cơ học). Tương quan đã điều chỉnh là:
 
 $$
 \rho^* = \frac{\rho_{\text{crisis}}}{\sqrt{1 + \delta[1 - \rho_{\text{crisis}}^2]}}
 $$ {#eq-forbes-rigobon}
 
-where $\delta = \sigma_{\text{crisis}}^2 / \sigma_{\text{tranquil}}^2 - 1$ is the relative increase in variance. If $\rho^* > \rho_{\text{tranquil}}$, the increase in co-movement exceeds what volatility adjustment alone predicts, which is evidence of contagion.
+trong đó $\delta = \sigma_{\text{crisis}}^2 / \sigma_{\text{tranquil}}^2 - 1$ là mức tăng tương đối của phương sai. Nếu $\rho^* > \rho_{\text{tranquil}}$, thì mức tăng của sự đồng biến động vượt quá những gì chỉ riêng điều chỉnh biến động dự báo, đó là bằng chứng của sự lây lan.
 
 ```{python}
 #| label: contagion-test
@@ -1317,32 +1317,32 @@ print(f"COVID-19 contagion test: {n_contagion}/{n_pairs} sector pairs "
 ```{python}
 #| label: tbl-contagion-results
 #| eval: false
-#| tbl-cap: "Forbes-Rigobon Contagion Test: COVID-19 Crisis Period"
+#| tbl-cap: "Kiểm định lây lan Forbes-Rigobon: giai đoạn khủng hoảng COVID-19"
 
 contagion_covid.sort_values(
     "rho_adjusted", ascending=False
 ).head(15)
 ```
 
-## Applications to Financial Stability
+## Ứng dụng cho ổn định tài chính
 
-### Market-Wide Stress Indicators
+### Các chỉ báo căng thẳng trên toàn thị trường
 
-We construct several market-wide stress indicators that aggregate the individual-level and sectoral tail risk measures developed above into a comprehensive system-level diagnostic.
+Chúng ta xây dựng một số chỉ báo căng thẳng trên toàn thị trường, tổng hợp các thước đo rủi ro đuôi cấp cá thể và cấp ngành đã phát triển ở trên thành một công cụ chẩn đoán toàn diện ở cấp hệ thống.
 
-**Aggregate Crash Risk Index.** The cross-sectional average of firm-level NCSKEW provides a market-wide measure of crash risk that is forward-looking (it captures the buildup of negative skewness before a crash materializes):
+**Chỉ số rủi ro sụp đổ tổng hợp.** Trung bình chéo của NCSKEW cấp doanh nghiệp cung cấp một thước đo rủi ro sụp đổ trên toàn thị trường mang tính hướng tới tương lai (nó nắm bắt sự tích tụ độ lệch âm trước khi sụp đổ thực sự diễn ra):
 
 $$
 \text{ACRI}_y = \frac{1}{N_y}\sum_{i=1}^{N_y} \text{NCSKEW}_{i,y}
 $$ {#eq-acri}
 
-**Market Tail Risk (MTR).** Following @kelly2014tail, we estimate the time-varying tail risk of the market portfolio using option-implied or realized tail measures. In the absence of a liquid options market in Vietnam, we use the realized version based on the Hill tail index estimated from rolling windows:
+**Rủi ro đuôi thị trường (Market Tail Risk, MTR).** Theo @kelly2014tail, chúng ta ước lượng rủi ro đuôi biến thiên theo thời gian của danh mục thị trường bằng các thước đo đuôi suy ra từ quyền chọn hoặc thước đo đuôi thực hiện. Do Việt Nam không có thị trường quyền chọn thanh khoản, chúng ta dùng phiên bản thực hiện dựa trên chỉ số đuôi Hill ước lượng từ các cửa sổ trượt:
 
 $$
 \text{MTR}_t = \hat{\xi}_t^{\text{Hill}} \cdot \hat{\sigma}_t
 $$ {#eq-mtr}
 
-where $\hat{\xi}_t^{\text{Hill}}$ is the Hill estimator computed from a trailing 252-day window and $\hat{\sigma}_t$ is the conditional volatility (e.g., from GARCH). This interaction captures both the thickness of the tail and the current scale of volatility.
+trong đó $\hat{\xi}_t^{\text{Hill}}$ là ước lượng Hill tính từ cửa sổ 252 ngày gần nhất và $\hat{\sigma}_t$ là biến động có điều kiện (ví dụ: từ GARCH). Số hạng tương tác này nắm bắt cả độ dày của đuôi lẫn quy mô biến động hiện tại.
 
 ```{python}
 #| label: stability-indicators
@@ -1397,7 +1397,7 @@ mtr_df["date"] = pd.to_datetime(mtr_df["date"])
 ```{python}
 #| label: fig-stability-dashboard
 #| eval: false
-#| fig-cap: "Market Tail Risk Indicator Over Time"
+#| fig-cap: "Chỉ báo rủi ro đuôi thị trường theo thời gian"
 
 (
     p9.ggplot(mtr_df, p9.aes(x="date", y="mtr"))
@@ -1413,9 +1413,9 @@ mtr_df["date"] = pd.to_datetime(mtr_df["date"])
 )
 ```
 
-### Sectoral Fragility
+### Tính dễ tổn thương theo ngành
 
-Not all sectors are equally vulnerable to tail events. We decompose system-wide tail risk into sectoral contributions to identify the most fragile parts of the market.
+Không phải ngành nào cũng dễ bị tổn thương như nhau trước các sự kiện đuôi. Chúng ta phân rã rủi ro đuôi toàn hệ thống thành các đóng góp theo ngành để xác định những bộ phận mong manh nhất của thị trường.
 
 ```{python}
 #| label: sectoral-fragility
@@ -1466,7 +1466,7 @@ fragility_df = pd.DataFrame(sector_tail_stats)
 ```{python}
 #| label: tbl-sectoral-fragility
 #| eval: false
-#| tbl-cap: "Sectoral Tail Risk Profile"
+#| tbl-cap: "Hồ sơ rủi ro đuôi theo ngành"
 
 fragility_df.sort_values("es_1pct", ascending=False)
 ```
@@ -1474,7 +1474,7 @@ fragility_df.sort_values("es_1pct", ascending=False)
 ```{python}
 #| label: fig-sector-scatter
 #| eval: false
-#| fig-cap: "Sectoral Risk Map: Expected Shortfall vs. Tail Index"
+#| fig-cap: "Bản đồ rủi ro theo ngành: Thiếu hụt kỳ vọng so với chỉ số đuôi"
 
 (
     p9.ggplot(
@@ -1493,11 +1493,11 @@ fragility_df.sort_values("es_1pct", ascending=False)
 )
 ```
 
-Sectors in the upper-right quadrant of @fig-sector-scatter exhibit both high expected shortfall (large average losses in the tail) and high tail index (heavier-than-typical tails). These represent the most fragile components of the market from a systemic stability perspective.
+Các ngành ở góc phần tư phía trên bên phải của @fig-sector-scatter vừa có Thiếu hụt kỳ vọng cao (mức lỗ trung bình lớn ở đuôi) vừa có chỉ số đuôi cao (đuôi dày hơn thông thường). Đây là những bộ phận mong manh nhất của thị trường xét theo góc độ ổn định hệ thống.
 
-### Crisis Diagnostics
+### Chẩn đoán khủng hoảng
 
-We construct a comprehensive crisis diagnostic framework that combines the indicators developed above to identify, characterize, and compare stress episodes in Vietnamese financial markets.
+Chúng ta xây dựng một khung chẩn đoán khủng hoảng toàn diện, kết hợp các chỉ báo đã phát triển ở trên để nhận diện, mô tả và so sánh các giai đoạn căng thẳng trên thị trường tài chính Việt Nam.
 
 ```{python}
 #| label: crisis-diagnostics
@@ -1525,7 +1525,7 @@ print(f"Average co-exceedance on stress days: "
 ```{python}
 #| label: tbl-crisis-episodes
 #| eval: false
-#| tbl-cap: "Major Stress Episodes: Clustering of System-Wide Tail Events"
+#| tbl-cap: "Các giai đoạn căng thẳng lớn: sự quần tụ của các sự kiện đuôi trên toàn hệ thống"
 
 # Cluster stress days into episodes (within 10 trading days)
 stress_events = stress_events.sort_values("date").reset_index(drop=True)
@@ -1553,24 +1553,191 @@ episode_summary["avg_coexceedance"] = episode_summary["avg_coexceedance"].round(
 episode_summary.head(10)
 ```
 
-<!-- ## Exercises
+### Giải phẫu một cuộc tháo chạy: ai thoát ra trước và cái giá phải trả {#sec-tail-anatomy-run}
 
-1.  **Crash Risk Determinants.** Estimate a panel regression of NCSKEW on lagged firm characteristics: size, book-to-market, leverage, return volatility, trading volume, state ownership dummy, and lagged NCSKEW. Include industry and year fixed effects. Cluster standard errors by firm. Which characteristics predict future crash risk? Does state ownership amplify or attenuate crash risk?
+Các chẩn đoán ở trên nhận diện *khi nào* hệ thống chịu căng thẳng chỉ từ giá cả. Chúng không cho biết *ai* hành động trước, việc rút lui lan truyền nhanh đến đâu và ai là người phải gánh các khoản lỗ. Những câu hỏi này thường không thể trả lời vì hồ sơ tiền gửi ngân hàng là bí mật. @liu2026anatomy trả lời chúng cho một trong những cuộc tháo chạy lớn nhất của thập kỷ qua bằng cách khai thác một bối cảnh trong đó mọi giao dịch đều công khai: sự sụp đổ của hệ sinh thái Terra vào tháng 5 năm 2022, vốn đã xóa sổ khoảng $50 tỷ giá trị trong ba ngày. Stablecoin thuật toán của Terra, UST, có thể chuyển đổi một đổi một thành $1 của token gốc của mạng lưới, LUNA, nên xét về mặt kinh tế, UST là một khoản nợ chuyển đổi vĩnh viễn được LUNA bảo chứng. Cầu đối với UST gần như hoàn toàn đến từ Anchor, một giao thức cho vay trả cho người gửi tiền mức lợi suất cố định 19.5% trong khi lãi suất stablecoin tương đương ở nơi khác là 2 đến 3%. Các tác giả tái dựng toàn bộ lịch sử giao dịch của 3.7 triệu địa chỉ trên blockchain Terra, các cầu nối Ethereum và các sàn giao dịch tập trung, và phần tường thuật của họ về sự kiện này đọc như một cuốn cẩm nang thực địa về các cuộc tháo chạy ngân hàng.
 
-2.  **VaR Model Comparison.** Implement a GARCH(1,1)-$t$ model for the market return and compute the one-day-ahead VaR at the 1% level. Compare its backtesting performance (Kupiec and Christoffersen tests) against the four static methods implemented in this chapter. Which model performs best in terms of unconditional coverage? Which in terms of independence?
+Có bốn phát hiện đáng mang theo vào bất kỳ nghiên cứu nào về ổn định tài chính Việt Nam.
 
-3.  **Threshold Sensitivity.** Re-estimate the GPD model from @sec-gpd using thresholds at the 90th, 92.5th, 95th, and 97.5th percentiles. Plot the resulting VaR and ES estimates as a function of the threshold. At what threshold do the estimates stabilize? Relate your findings to the mean residual life plot.
+1.  **Tính mong manh được hình thành trước thời điểm kích hoạt, và nó có thể nhìn thấy được.** Lợi suất của Anchor chưa bao giờ được bù đắp bằng thu nhập từ cho vay; một quỹ dự trữ lợi suất do bên bảo trợ bổ sung đã bù khoản chênh lệch, và quỹ dự trữ này cạn dần từ tháng 12 năm 2021. Nguồn cung UST tăng từ 2.5 tỷ lên 18.5 tỷ trong sáu tháng, phần lớn được gửi trong Anchor, trong khi giá trị thị trường của LUNA bảo chứng cho nó đang giảm. Tỷ lệ người gửi tiền vào giảm và tỷ lệ rút ra tăng từ tháng 4 năm 2022, vài tuần trước khi sụp đổ. Đây là cấu trúc sunspot cộng với yếu tố cơ bản của tài liệu về các trò chơi toàn cục (global games): yếu tố cơ bản yếu biến một tín hiệu công khai vô hại thành công cụ phối hợp. Các tín hiệu cuối cùng đã phối hợp cuộc tháo chạy là việc tái cân bằng theo lịch của một bể thanh khoản và thời điểm vốn hóa thị trường của LUNA rơi xuống ngang mức UST đang lưu hành, một ngưỡng vô nghĩa đối với nhà đầu tư hoàn toàn duy lý nhưng nhiều người tham gia coi đó là bằng chứng rằng tài sản bảo chứng đã biến mất.
 
-4.  **Tail Dependence Across Market Regimes.** Split the sample into bull and bear regimes (e.g., above/below the 12-month moving average of the market index). Estimate pairwise tail dependence coefficients separately for each regime. Is tail dependence symmetric across regimes, or is it asymmetrically higher during bear markets?
+2.  **Cuộc tháo chạy không phải do thao túng mà là một hiệu ứng thác đổ do một vài người gửi tiền lớn khởi phát.** Hai ví đã rút 400 triệu UST khỏi Anchor vào ngày 7 tháng 5 năm 2022 và bán trên những sàn có độ sâu lớn nhất. Các ví lớn khác làm theo trong vòng vài giờ vì họ có thể theo dõi các lệnh rút trên chuỗi. Tiền gửi tại Anchor giảm từ 14 tỷ xuống dưới 2 tỷ UST vào ngày 13 tháng 5, và cơ chế hoán đổi vốn được cho là bảo vệ neo giá lại đẩy nguồn cung LUNA từ dưới 1 tỷ lên 5.89 nghìn tỷ khi nhà đầu tư chuyển UST sang LUNA rồi bán, tức vòng xoáy tử thần mà thiết kế này hàm ý.
+
+3.  **Sự minh bạch không tạo ra sân chơi bình đẳng.** Các địa chỉ có hơn 10 triệu UST đã rút gần như toàn bộ trong vòng hai ngày và lỗ trung bình 26%. Các địa chỉ dưới 1,000 UST tiếp tục gửi thêm cho đến ngày 10 tháng 5, cố gắng mua khi giá giảm, và lỗ 76%. Sau khi kiểm soát quy mô, các địa chỉ từng dùng cầu nối chuỗi chéo hoặc giao dịch trên nhiều sàn lỗ ít hơn một cách có ý nghĩa thống kê, nên sự tinh thông có vai trò độc lập với mức độ giàu có. Mọi người đều thấy cùng một sổ cái; chỉ một số người có thể hành động kịp thời.
+
+4.  **Người cho vay cuối cùng chỉ phát huy tác dụng khi khoản nợ còn nhỏ.** UST từng mất neo một lần trước đó, vào tháng 5 năm 2021, và phục hồi vì bên bảo trợ cùng một công ty giao dịch thân cận đã hấp thụ lượng bán khi UST đang lưu hành chỉ vài trăm triệu. Vào tháng 5 năm 2022, cũng những chủ thể đó đã chi khoảng $2.5 tỷ để bảo vệ neo giá trước 18 tỷ yêu cầu thanh toán và thất bại. Biện pháp can thiệp khôi phục niềm tin ở quy mô này chỉ là sai số làm tròn ở quy mô kế tiếp.
+
+The Vietnamese reading is direct. The deposit run on Saigon Commercial Bank (SCB) in October 2022, which forced the State Bank of Vietnam to place the bank under special control within days of the Vạn Thịnh Phát arrests, and the wave of redemptions from corporate bond funds in the same quarter after the Tân Hoàng Minh and Vạn Thịnh Phát bond cases, share the Terra anatomy: a liability that grew faster than its backing, a yield that only made sense if the sponsor kept paying, a public event that coordinated withdrawals, and a retail base that moved last. Vietnam also has one of the highest rates of retail crypto participation in the world, so a share of Vietnamese households held UST directly and sat on the wrong side of the loss table above. Two research designs follow. First, the crisis-episode table in this section can be extended from prices to *flows*: daily foreign-investor net sales by ticker, fund NAV redemptions, and, for the 2022 bond episode, the timing of retail versus institutional bondholder exits, to test whether the large-first, small-last ordering holds in Vietnamese data. Second, the co-exceedance measures above are early-warning signals for prices; @liu2026anatomy suggest complementing them with *stock* measures of fragility, the ratio of short-term claims to liquid backing at each intermediary, because that ratio is what determined whether the same intervention succeeded in 2021 and failed in 2022.
+
+### Bán tháo tự thực hiện {#sec-tail-fire-sales}
+
+Sự kiện Terra là một cuộc tháo chạy khỏi một khoản nợ: người gửi tiền rút vì họ kỳ vọng những người khác cũng rút. @khorrami2026dynamic chỉ ra rằng phía tài sản của bảng cân đối kế toán cũng có thể sụp đổ theo cách tự thực hiện tương tự, và tính mong manh này vẫn tồn tại ngay cả sau biện pháp thường được cho là loại bỏ nó, đó là các thị trường đầy đủ để phòng ngừa rủi ro cơ bản.
+
+Điểm xuất phát của họ là mô hình gia tốc tài chính của @brunnermeier2014macroeconomic, theo truyền thống của @kiyotaki1997credit. Các "chuyên gia" có năng suất cao thu được $a_e$ trên mỗi đơn vị vốn còn các "hộ gia đình" kém năng suất hơn thu được $a_h < a_e$, nên vốn có giá trị cao hơn khi nằm trong tay các chuyên gia, cùng một logic mà @shleifer1992liquidation dùng để giải thích vì sao tài sản bán cho người ngoài có giá thấp hơn. Các chuyên gia không thể phát hành cổ phiếu, nên họ tài trợ vốn bằng giá trị tài sản ròng của mình và nợ ngắn hạn. Trong phiên bản thông thường, một cú sốc cơ bản xấu làm xói mòn giá trị tài sản ròng của chuyên gia, các chuyên gia bán vốn cho hộ gia đình, giá vốn giảm vì người mua định giá nó thấp hơn, và giá giảm lại tiếp tục xói mòn tài sản ròng của chuyên gia. Quan điểm chuẩn là bộ gia tốc này cần có rủi ro cơ bản không được phòng ngừa: nếu các chuyên gia có thể bảo hiểm bảng cân đối kế toán của mình trước cú sốc, sẽ không còn gì để khuếch đại.
+
+Khorrami và Mendo cho phép các tác nhân phòng ngừa mọi cú sốc cơ bản mà không gặp ma sát. Khi đó các cú sốc cơ bản không bao giờ gây ra bán tháo, và tồn tại một trạng thái cân bằng hiệu quả trong đó các chuyên gia nắm giữ toàn bộ vốn và giá của nó biến đổi một cách tất định. Nhưng luôn còn lại một số rủi ro không được phòng ngừa: các cú sốc mới lạ, hoặc các cú sốc tác động lên những bảng cân đối kế toán mà không thị trường nào cho phép nhà đầu tư bán khống. Gọi một cú sốc như vậy là một *sunspot*. Nếu các tác nhân kỳ vọng rằng các chuyên gia sẽ bán vốn khi cú sốc xuất hiện, kỳ vọng đó tự thực hiện:
+
+1.  các chuyên gia bán, nên vốn chuyển sang các chủ sở hữu kém năng suất hơn và giá của nó giảm;
+2.  sunspot không thể phòng ngừa, nên mức giảm giá đổ lên các chuyên gia một cách không cân xứng, làm tỷ trọng của họ trong tổng tài sản thu hẹp lại;
+3.  các chuyên gia thiếu vốn bán thêm, điều này biện minh cho kỳ vọng ban đầu.
+
+Hai phương trình làm rõ vòng lặp này. Gọi $\eta$ là tỷ trọng của các chuyên gia trong tổng tài sản, $\psi$ là tỷ trọng của họ trong lượng vốn, và $\bar{\rho}(\eta) = \eta\rho_e + (1-\eta)\rho_h$ là tỷ lệ chiết khấu bình quân gia quyền theo tài sản. Điều kiện cân bằng thị trường hàng hóa gắn giá vốn với người nắm giữ nó,
+
+$$
+q\,\bar{\rho}(\eta) = \psi\, a_e + (1-\psi)\, a_h,
+$$ {#eq-tail-price-output}
+
+nên giá chỉ cao khi các chuyên gia nắm giữ vốn. Trong vùng mà họ không nắm giữ toàn bộ ($\psi < 1$), hàm giá cân bằng thỏa mãn
+
+$$
+q'(\eta) = \frac{(a_e - a_h)\, q}{q\,\bar{\rho}(\eta) - \eta\, a_e - (1-\eta)\, a_h},
+\qquad
+\sigma_q^2 = \frac{\eta(1-\eta)}{\psi - \eta}\cdot\frac{a_e - a_h}{q},
+$$ {#eq-tail-fire-sale-ode}
+
+trong đó $\sigma_q$ là biến động của giá vốn *hoàn toàn* do sunspot gây ra. Biểu thức thứ hai là điều kiện rằng năng suất bổ sung của chuyên gia, $(a_e - a_h)/q$, vừa đủ bù đắp cho họ vì gánh nhiều rủi ro giá không thể phòng ngừa hơn các hộ gia đình. Một khi các chuyên gia đủ giàu để $\psi$ đạt một, nền kinh tế hoạt động như trạng thái cân bằng an toàn và biến động do sunspot bằng không.
+
+Bài báo thiết lập ba kết quả có ý nghĩa vượt ra ngoài phạm vi mô hình.
+
+**Quy mô của một đợt bán tháo là một niềm tin.** Phương trình vi phân trong @eq-tail-fire-sale-ode cần một điều kiện biên: tỷ trọng vốn mà các chuyên gia được tin là sẽ giữ lại khi tài sản của họ tiến về không, $\psi_0$. Mọi $\psi_0 \in [0, 1)$ đều hỗ trợ một trạng thái cân bằng, từ bán tháo hoàn toàn ($\psi_0 = 0$, các chuyên gia bán sạch khi cạn vốn) đến cân bằng an toàn ($\psi_0 \to 1$). Càng lạc quan về lượng vốn mà các chuyên gia sẽ giữ lại ở đuôi thì các đợt bán tháo càng nhỏ, biến động càng thấp và giá càng cao, điều này biện minh cho chính sự lạc quan đó.
+
+**Bán tháo tự thực hiện và bán tháo do yếu tố cơ bản không thể phân biệt được qua quan sát.** Nếu rủi ro cơ bản không thể phòng ngừa với biến động $\sigma$, thì trạng thái cân bằng gia tốc thông thường hội tụ, khi $\sigma \to 0$, về trạng thái cân bằng sunspot bán tháo hoàn toàn. Điều này hình thức hóa "nghịch lý biến động" của @brunnermeier2014macroeconomic: biến động nội sinh không biến mất khi rủi ro ngoại sinh biến mất. Hệ quả đối với nghiên cứu thực nghiệm thật khó chịu. Dữ liệu được tạo ra bởi một nền kinh tế khuếch đại các cú sốc cơ bản trông giống hệt dữ liệu được tạo ra bởi nền kinh tế phối hợp trên các yếu tố phi cơ bản.
+
+**Trạng thái cân bằng tệ nhất được chọn.** Nếu các tác nhân nhận thấy sunspot có tác động cơ bản nhỏ tới mức tiệm cận không, và các chuyên gia chịu một ràng buộc đòn bẩy sau đó được nới lỏng, thì chỉ trạng thái cân bằng bán tháo hoàn toàn còn tồn tại. Với các cú sốc nhảy thay vì chuyển động Brown, trạng thái cân bằng được chọn có các đợt bán tháo lớn, rời rạc và sự phân bổ sai nguồn lực tồi tệ hơn rõ rệt.
+
+Hai hàm ý nữa phân biệt điều này với một cuộc tháo chạy ngân hàng. Bán tháo không cần sự lệch kỳ hạn và không cần tài sản kém thanh khoản: ngay cả những tài sản an toàn về cơ bản cũng có thể bị bán tháo nếu việc bán phối hợp có thể làm giảm giá của chúng. Và vì nợ luôn được hoàn trả, bảo hiểm tiền gửi không có vai trò. Biện pháp mà các tác giả chỉ ra là một cam kết đáng tin cậy về việc mua tài sản trong trạng thái thảm họa, điều này sẽ nâng $\psi_0$ và loại bỏ các trạng thái cân bằng tệ nhất, dù những cam kết như vậy có tạo ra rủi ro đạo đức ex ante hay không vẫn là câu hỏi bỏ ngỏ.
+
+Trạng thái cân bằng này dễ tính toán. Đoạn mã dưới đây giải @eq-tail-fire-sale-ode cho ba niềm tin về thảm họa, sử dụng các tham số của ví dụ số trong bài báo, và so sánh kết quả với trạng thái cân bằng an toàn trong đó $q = a_e/\bar{\rho}(\eta)$.
+
+```{python}
+#| label: fire-sale-equilibrium
+#| code-summary: "Solve the self-fulfilling fire-sale equilibrium"
+from scipy.integrate import solve_ivp
+
+RHO_E, RHO_H = 0.06, 0.04   # discount rates: experts, households
+A_E, A_H = 0.11, 0.03       # productivity: experts, households
+
+
+def rho_bar(eta):
+    return eta * RHO_E + (1 - eta) * RHO_H
+
+
+def capital_share(q, eta):
+    # Price-output relation solved for experts' capital share psi
+    return (q * rho_bar(eta) - A_H) / (A_E - A_H)
+
+
+def solve_fire_sale(psi0, eta_max=0.6, n_grid=600):
+    """Sunspot equilibrium with disaster belief psi0 = psi(0+)."""
+    def rhs(eta, y):
+        q = y[0]
+        return [(A_E - A_H) * q
+                / (q * rho_bar(eta) - eta * A_E - (1 - eta) * A_H)]
+
+    if psi0 > 0:
+        eta_0 = 1e-9
+        q_0 = (psi0 * A_E + (1 - psi0) * A_H) / rho_bar(eta_0)
+    else:
+        # psi0 = 0 is a singular boundary: near it, psi - eta ~ sqrt(2 c eta)
+        eta_0 = 1e-8
+        c = A_H / (A_E - A_H)
+        q_0 = ((eta_0 + np.sqrt(2 * c * eta_0)) * (A_E - A_H) + A_H) \
+            / rho_bar(eta_0)
+
+    def full_allocation(eta, y):        # stop where experts hold everything
+        return capital_share(y[0], eta) - 1
+    full_allocation.terminal = True
+    full_allocation.direction = 1
+
+    sol = solve_ivp(rhs, (eta_0, eta_max), [q_0], events=full_allocation,
+                    dense_output=True, rtol=1e-10, atol=1e-12, method="LSODA")
+    eta_star = sol.t_events[0][0] if sol.t_events[0].size else eta_max
+
+    eta = np.linspace(eta_0, eta_max, n_grid)
+    fire_sale_region = eta < eta_star
+    q = np.where(fire_sale_region,
+                 sol.sol(np.minimum(eta, eta_star))[0],
+                 A_E / rho_bar(eta))
+    psi = np.minimum(capital_share(q, eta), 1.0)
+    sigma_q = np.zeros_like(eta)
+    region = fire_sale_region & (psi > eta)
+    sigma_q[region] = np.sqrt(eta[region] * (1 - eta[region]) * (A_E - A_H)
+                              / ((psi[region] - eta[region]) * q[region]))
+    return pd.DataFrame({"eta": eta, "q": q, "sigma_q": sigma_q}), eta_star
+
+
+frames = []
+for psi0 in [0.0, 0.25, 0.5]:
+    frame, eta_star = solve_fire_sale(psi0)
+    frames.append(frame.assign(equilibrium=f"Disaster belief ψ₀ = {psi0:g}"))
+    print(f"psi0 = {psi0:g}: fire-sale region eta < {eta_star:.3f}, "
+          f"peak sunspot volatility {frame['sigma_q'].max():.1%}")
+
+eta_grid = frames[0]["eta"]
+frames.append(pd.DataFrame({"eta": eta_grid, "q": A_E / rho_bar(eta_grid),
+                            "sigma_q": 0.0,
+                            "equilibrium": "Safe (fundamental) equilibrium"}))
+fire_sales = pd.concat(frames, ignore_index=True)
+```
+
+```{python}
+#| label: fig-fire-sale-equilibrium
+#| fig-cap: "Bán tháo tự thực hiện: giá vốn và biến động do sunspot gây ra theo hàm của tỷ trọng tài sản của chuyên gia, cho ba niềm tin về thảm họa và trạng thái cân bằng an toàn. Các tham số theo ví dụ số trong Khorrami và Mendo."
+#| fig-alt: "Hai biểu đồ vẽ theo tỷ trọng tài sản của chuyên gia. Giá vốn tăng dần về phía đường cân bằng an toàn và gặp đường này tại một ngưỡng thấp hơn khi niềm tin về thảm họa cao hơn; biến động do sunspot tăng mạnh từ không, duy trì ở mức cao dưới ngưỡng đó và giảm về không phía trên ngưỡng."
+plot_df = fire_sales.melt(
+    id_vars=["eta", "equilibrium"], value_vars=["q", "sigma_q"],
+    var_name="series", value_name="value"
+)
+plot_df["series"] = plot_df["series"].map({
+    "q": "Price of capital q",
+    "sigma_q": "Sunspot volatility σ_q"
+})
+
+(
+    p9.ggplot(plot_df, p9.aes(x="eta", y="value", color="equilibrium",
+                              linetype="equilibrium"))
+    + p9.geom_line(size=0.9)
+    + p9.facet_wrap("~series", scales="free_y", ncol=2)
+    + p9.scale_color_manual(values=["#2E5090", "#5B8BD0", "#9DB7E3",
+                                    "#C0392B"])
+    + p9.scale_linetype_manual(values=["solid", "solid", "solid", "dashed"])
+    + p9.labs(x="Experts' wealth share η", y="", color="", linetype="")
+    + p9.theme_minimal()
+    + p9.theme(figure_size=(10, 4.5), legend_position="bottom")
+)
+```
+
+Ba đặc điểm của @fig-fire-sale-equilibrium thể hiện phần kinh tế học. Dưới một ngưỡng về tỷ trọng tài sản của chuyên gia, khoảng một phần ba theo niềm tin bán tháo hoàn toàn, các hộ gia đình nắm giữ một phần vốn, giá của nó thấp hơn giá cân bằng an toàn và vẫn dao động mạnh mặc dù không ai gánh rủi ro cơ bản. Biến động bằng không khi các chuyên gia đủ giàu để hấp thụ sunspot, nhảy vọt ngay khi tỷ trọng tài sản của họ rơi xuống dưới ngưỡng, và chỉ giảm trở lại về không khi các chuyên gia nghèo đến mức còn rất ít vốn để bán. Và một niềm tin lạc quan hơn về thảm họa làm thu hẹp vùng bán tháo và giảm biến động ở mọi mức, đó là kênh mà qua đó một lưới an toàn mua tài sản đáng tin cậy sẽ phát huy tác dụng.
+
+Cách đọc cho bối cảnh Việt Nam bắt đầu từ giả định về phòng ngừa rủi ro, vốn khác xa thực tế trong nước. Việt Nam không có hợp đồng tương lai hay quyền chọn trên cổ phiếu riêng lẻ, bán khống thực tế không khả dụng (@tbl-exchange-comparison), và hợp đồng tương lai chỉ số VN30 cùng chứng quyền có bảo đảm là những công cụ chính để chuyển giao rủi ro cổ phiếu. Phần lớn các cú sốc đối với bảng cân đối kế toán của các nhà đầu tư Việt Nam sử dụng đòn bẩy là không thể phòng ngừa, nên bộ gia tốc thông thường áp dụng trực tiếp. Thông điệp sắc nét hơn của mô hình là việc xây dựng các thị trường phòng ngừa rủi ro sẽ không loại bỏ được tính mong manh do bán tháo. Nó sẽ chuyển tính mong manh đó sang những cú sốc mà chưa có thị trường nào tồn tại, chẳng hạn cuộc khủng hoảng trái phiếu doanh nghiệp năm 2022, vốn đánh vào một thị trường không có công cụ nào để phòng ngừa rủi ro tín dụng của tổ chức phát hành hay của ngành.
+
+Các vai trò trong mô hình có những hình ảnh tương ứng dễ nhận ra. Các "chuyên gia" là những người nắm giữ sử dụng đòn bẩy và định giá tài sản cao nhất: các nhà đầu tư vay ký quỹ và những người sáng lập cầm cố chính cổ phiếu của mình làm tài sản bảo đảm. Các "hộ gia đình" là những người mua cá nhân không dùng đòn bẩy, hấp thụ các đợt bán cưỡng bức ở mức định giá thấp hơn. Việc các công ty chứng khoán buộc phải thanh lý khi giá trị tài sản bảo đảm giảm là cơ chế khiến tỷ trọng vốn của chuyên gia giảm cùng với tài sản của họ. Biên độ giá thay đổi hình thức của đợt bán tháo. Một đợt bán phối hợp đẩy cổ phiếu xuống giá sàn, nơi nó bị khóa với một hàng chờ lệnh bán chưa khớp, là một cú nhảy rời rạc thay vì một sự giảm trơn, điều này làm cho biến thể cú sốc nhảy của bài báo trở nên phù hợp và liên kết mục này với động lực chạm biên độ trong @sec-price-limit-magnet.
+
+Sau đây là bốn thiết kế nghiên cứu.
+
+1.  **Đo lường biến trạng thái.** Trạng thái của mô hình là tỷ trọng tài sản của những người nắm giữ sử dụng đòn bẩy. Tổng dư nợ cho vay ký quỹ, được báo cáo trong báo cáo tài chính quý của các công ty chứng khoán, chia cho vốn hóa thị trường là một đại diện tự nhiên, ở cấp thị trường và, nếu dữ liệu cấp công ty chứng khoán cho phép, theo từng cổ phiếu.
+2.  **Kiểm định tính phi tuyến.** Mô hình dự báo rằng biến động giá bằng không phía trên một ngưỡng của biến trạng thái đó, nhảy vọt khi vượt ngưỡng, và chỉ giảm trở lại khi tài sản của chuyên gia rất thấp. Một hồi quy tuyến tính của biến động thực hiện trên dư nợ ký quỹ không thể phát hiện điều này; một đặc tả phi tham số hoặc đặc tả ngưỡng thì có thể.
+3.  **Đừng đọc sự khuếch đại là do yếu tố cơ bản.** Sự tương đương quan sát có nghĩa là phản ứng giá lớn trước tin tức nhỏ tự nó không phải là bằng chứng của một cú sốc cơ bản lớn hay của sức mạnh của bộ gia tốc cơ bản. Các thiết kế so sánh những giai đoạn có tin tức cơ bản tương tự nhưng trạng thái đòn bẩy khác nhau cung cấp nhiều thông tin hơn so với việc ước lượng một hệ số khuếch đại duy nhất.
+4.  **Đánh giá các lưới an toàn qua tác động của chúng lên niềm tin về đuôi.** Các biện pháp năm 2023 cho phép gia hạn thanh toán trái phiếu doanh nghiệp và các hoạt động hỗ trợ của Ngân hàng Nhà nước có thể được xem là những nỗ lực nhằm nâng $\psi_0$. Trong mô hình, một lưới an toàn đáng tin cậy làm giảm biến động và nâng giá *trước* cả khi nó được sử dụng. Các nghiên cứu sự kiện quanh các thông báo chính sách, tập trung vào những cổ phiếu có mức phơi nhiễm cao với ký quỹ hoặc cổ phiếu cầm cố, có thể kiểm định liệu thị trường có coi các cam kết đó là đáng tin cậy hay không.
+
+<!-- ## Bài tập
+
+1.  **Các yếu tố quyết định rủi ro sụp đổ.** Ước lượng hồi quy bảng của NCSKEW theo các đặc điểm doanh nghiệp có độ trễ: quy mô, tỷ số giá trị sổ sách trên giá trị thị trường, đòn bẩy, biến động lợi nhuận, khối lượng giao dịch, biến giả sở hữu nhà nước và NCSKEW có độ trễ. Đưa vào hiệu ứng cố định theo ngành và theo năm. Tính sai số chuẩn theo cụm theo doanh nghiệp. Những đặc điểm nào dự báo rủi ro sụp đổ trong tương lai? Sở hữu nhà nước khuếch đại hay làm giảm rủi ro sụp đổ?
+
+2.  **So sánh các mô hình VaR.** Triển khai mô hình GARCH(1,1)-$t$ cho lợi nhuận thị trường và tính VaR trước một ngày ở mức 1%. So sánh hiệu quả kiểm định ngược (các kiểm định Kupiec và Christoffersen) với bốn phương pháp tĩnh được triển khai trong chương này. Mô hình nào tốt nhất về độ bao phủ không điều kiện? Mô hình nào tốt nhất về tính độc lập?
+
+3.  **Độ nhạy với ngưỡng.** Ước lượng lại mô hình GPD từ @sec-gpd bằng các ngưỡng ở bách phân vị thứ 90, 92.5, 95 và 97.5. Vẽ đồ thị các ước lượng VaR và ES thu được theo hàm của ngưỡng. Các ước lượng ổn định ở ngưỡng nào? Liên hệ phát hiện của bạn với đồ thị mức vượt trung bình.
+
+4.  **Phụ thuộc đuôi qua các trạng thái thị trường.** Chia mẫu thành trạng thái thị trường tăng và giảm (ví dụ: trên/dưới đường trung bình động 12 tháng của chỉ số thị trường). Ước lượng riêng các hệ số phụ thuộc đuôi theo cặp cho từng trạng thái. Phụ thuộc đuôi có đối xứng giữa các trạng thái hay cao hơn một cách bất đối xứng trong thị trường giảm?
 
 5.  **Contagion During Multiple Crises.** Apply the Forbes-Rigobon contagion test to at least three distinct crisis episodes in Vietnam (e.g., 2011 banking stress, 2018 trade war, 2020 COVID-19, 2022 Vạn Thịnh Phát/corporate bond crisis). Compare the fraction of sector pairs showing contagion across episodes. Which crises were most contagious? What structural features of each crisis might explain the differences?
 
-6.  **Price Limit Bias in Tail Estimation.** Simulate a stock return series from a Student-$t$ distribution with known parameters, then censor it at Vietnamese daily price limits ($\pm 7\%$ for HOSE, $\pm 10\%$ for HNX). Compare VaR, ES, and Hill tail index estimates from the censored and uncensored series. Quantify the underestimation bias as a function of the true tail thickness and price limit width. -->
+6.  **Độ chệch do biên độ giá trong ước lượng đuôi.** Mô phỏng một chuỗi lợi nhuận cổ phiếu từ phân phối Student-$t$ với các tham số đã biết, sau đó kiểm duyệt nó tại biên độ giá hằng ngày của Việt Nam ($\pm 7\%$ với HOSE, $\pm 10\%$ với HNX). So sánh các ước lượng VaR, ES và chỉ số đuôi Hill từ chuỗi bị kiểm duyệt và chuỗi không bị kiểm duyệt. Định lượng độ chệch đánh giá thấp theo hàm của độ dày đuôi thực và độ rộng biên độ giá. -->
 
-## Summary
+## Tóm tắt
 
-This chapter developed a comprehensive toolkit for measuring and diagnosing tail risk in Vietnamese equity markets. The key objects estimated (crash risk measures, VaR and Expected Shortfall, tail indices, and tail dependence coefficients) capture distinct but complementary aspects of extreme event behavior.
+Chương này đã xây dựng một bộ công cụ toàn diện để đo lường và chẩn đoán rủi ro đuôi trên thị trường cổ phiếu Việt Nam. Các đối tượng chính được ước lượng (các thước đo rủi ro sụp đổ, VaR và Thiếu hụt kỳ vọng, các chỉ số đuôi và các hệ số phụ thuộc đuôi) nắm bắt những khía cạnh khác biệt nhưng bổ trợ cho nhau của hành vi sự kiện cực đoan.
 
-At the individual stock level, the NCSKEW, DUVOL, and crash count measures quantify asymmetry in firm-specific return distributions, providing forward-looking indicators of crash vulnerability. At the portfolio level, EVT-based approaches to VaR and ES estimation avoid the parametric misspecification that plagues Gaussian and even Student-$t$ models in the deep tails. At the system level, tail dependence and co-exceedance measures reveal the extent to which crashes propagate across sectors, and the Forbes-Rigobon contagion test distinguishes genuine contagion from the mechanical increase in co-movement driven by higher volatility.
+Ở cấp độ từng cổ phiếu, các thước đo NCSKEW, DUVOL và số lần sụp đổ định lượng tính bất đối xứng trong phân phối lợi nhuận đặc thù của doanh nghiệp, cung cấp các chỉ báo hướng tới tương lai về mức dễ tổn thương trước sụp đổ. Ở cấp độ danh mục, các cách tiếp cận dựa trên EVT để ước lượng VaR và ES tránh được việc chỉ định sai tham số vốn gây khó khăn cho các mô hình Gauss và thậm chí cả Student-$t$ ở phần đuôi sâu. Ở cấp độ hệ thống, các thước đo phụ thuộc đuôi và đồng vượt ngưỡng cho thấy mức độ các đợt sụp đổ lan truyền giữa các ngành, và kiểm định lây lan Forbes-Rigobon phân biệt sự lây lan thực sự với sự gia tăng cơ học của đồng biến động do biến động cao hơn.
 
-Several features of Vietnamese markets deserve emphasis. Price limits censor the observed return distribution, causing systematic underestimation of true tail risk. The concentration of trading among retail investors amplifies herding-driven crash dynamics. State ownership of large firms creates correlated exposure to policy shocks that is not captured by standard diversification. And the absence of deep derivatives markets limits the hedging instruments available for tail risk management, making accurate measurement all the more critical.
+Một số đặc điểm của thị trường Việt Nam đáng được nhấn mạnh. Biên độ giá kiểm duyệt phân phối lợi nhuận quan sát được, gây ra việc đánh giá thấp có hệ thống rủi ro đuôi thực. Sự tập trung giao dịch ở nhà đầu tư cá nhân khuếch đại các động lực sụp đổ do hành vi bầy đàn. Sở hữu nhà nước đối với các doanh nghiệp lớn tạo ra mức phơi nhiễm tương quan với các cú sốc chính sách mà đa dạng hóa thông thường không nắm bắt được. Và việc thiếu các thị trường phái sinh sâu hạn chế các công cụ phòng ngừa sẵn có cho quản trị rủi ro đuôi, khiến việc đo lường chính xác càng trở nên quan trọng.

@@ -1,4 +1,4 @@
-# Earnings Management: Detection and Measurement
+# Quản trị lợi nhuận: Phát hiện và đo lường
 
 ```{python}
 #| label: setup
@@ -23,108 +23,108 @@ plt.rcParams.update({
 })
 ```
 
-Earnings management refers to the purposeful intervention by managers in the financial reporting process to achieve outcomes that serve private objectives, whether to meet analyst forecasts, trigger bonus thresholds, avoid covenant violations, or influence equity valuations. While the concept is intuitive, its rigorous detection poses one of the most enduring methodological challenges in empirical accounting research.
+Quản trị lợi nhuận là việc các nhà quản lý can thiệp có chủ đích vào quá trình lập báo cáo tài chính nhằm đạt được những kết quả phục vụ mục tiêu riêng, dù là để đạt dự báo của các nhà phân tích, kích hoạt ngưỡng thưởng, tránh vi phạm điều khoản vay nợ, hay tác động đến định giá cổ phiếu. Tuy khái niệm này khá trực quan, việc phát hiện nó một cách chặt chẽ lại là một trong những thách thức phương pháp luận lâu đời nhất của nghiên cứu kế toán thực nghiệm.
 
-The difficulty is fundamental: researchers observe *total* accruals, which combine a legitimate component (reflecting genuine economic activity) with a discretionary component (reflecting managerial intervention). Separating these two components requires a model of what accruals *should* be absent manipulation, what the literature calls **non-discretionary accruals (NDA)**. Any residual, the gap between observed accruals and the model's prediction, is then attributed to managerial discretion. The quality of the detection method therefore hinges entirely on the quality of this model.
+Khó khăn này mang tính căn bản: nhà nghiên cứu chỉ quan sát được các khoản dồn tích *tổng cộng*, vốn gồm một thành phần hợp lý (phản ánh hoạt động kinh tế thực) và một thành phần tùy ý (phản ánh sự can thiệp của nhà quản lý). Tách hai thành phần này đòi hỏi một mô hình về mức dồn tích mà *lẽ ra* phải có nếu không có thao túng, mà tài liệu nghiên cứu gọi là **các khoản dồn tích không tùy ý (NDA)**. Phần dư bất kỳ, tức khoảng chênh giữa các khoản dồn tích quan sát được và dự báo của mô hình, sau đó được quy cho sự tùy ý của nhà quản lý. Do đó, chất lượng của phương pháp phát hiện phụ thuộc hoàn toàn vào chất lượng của mô hình này.
 
-This chapter examines three foundational approaches to measuring earnings management (i.e., the @healy1985effect model, the @jones1991earnings model, and the modified Jones model of @dechow1995detecting) and evaluates their statistical properties using simulation. We then adapt the analysis to the institutional setting of Vietnam, where distinct governance structures, accounting standards, and enforcement regimes create both unique incentives for earnings management and unique challenges for its detection.
+Chương này xem xét ba cách tiếp cận nền tảng để đo lường quản trị lợi nhuận (tức là mô hình @healy1985effect, mô hình @jones1991earnings và mô hình Jones điều chỉnh của @dechow1995detecting) và đánh giá các tính chất thống kê của chúng bằng mô phỏng. Sau đó, chúng ta điều chỉnh phân tích cho bối cảnh thể chế của Việt Nam, nơi cơ cấu quản trị, chuẩn mực kế toán và chế độ thực thi khác biệt tạo ra cả những động cơ quản trị lợi nhuận đặc thù lẫn những thách thức đặc thù trong việc phát hiện nó.
 
-### Defining Earnings Management
+### Định nghĩa quản trị lợi nhuận
 
-A useful taxonomy distinguishes three forms:
+Một cách phân loại hữu ích phân biệt ba hình thức:
 
-1.  **Accrual-based earnings management (AEM).** Managers exploit discretion within accounting standards to shift the timing of revenue or expense recognition. Examples include aggressive revenue recognition, delays in write-downs, or manipulation of allowance estimates. This form does not alter the firm's underlying cash flows.
+1.  **Quản trị lợi nhuận dựa trên dồn tích (AEM).** Nhà quản lý tận dụng quyền tùy ý trong khuôn khổ chuẩn mực kế toán để dịch chuyển thời điểm ghi nhận doanh thu hoặc chi phí. Ví dụ gồm ghi nhận doanh thu quá tích cực, trì hoãn việc ghi giảm giá trị tài sản, hoặc thao túng các ước tính dự phòng. Hình thức này không làm thay đổi dòng tiền cơ bản của doanh nghiệp.
 
-2.  **Real earnings management (REM).** Managers take genuine economic actions (e.g., overproduction to reduce unit costs, cutting R&D or advertising expenditure, offering price discounts to accelerate sales) that have real cash flow consequences [@roychowdhury2006earnings]. These actions may improve current-period earnings at the expense of future value.
+2.  **Quản trị lợi nhuận thực (REM).** Nhà quản lý thực hiện các hành động kinh tế thực sự (ví dụ: sản xuất vượt mức để giảm chi phí đơn vị, cắt giảm chi phí R&D hoặc quảng cáo, giảm giá bán để đẩy nhanh doanh số) có hệ quả thực đối với dòng tiền [@roychowdhury2006earnings]. Những hành động này có thể cải thiện lợi nhuận kỳ hiện tại với cái giá là giá trị tương lai.
 
-3.  **Classification shifting.** Managers reclassify core expenses as non-recurring items to inflate core earnings without changing bottom-line net income. This form leaves both total accruals and cash flows unchanged.
+3.  **Dịch chuyển phân loại (classification shifting).** Nhà quản lý phân loại lại các khoản chi phí cốt lõi thành các khoản không thường xuyên để thổi phồng lợi nhuận cốt lõi mà không làm thay đổi lợi nhuận ròng cuối cùng. Hình thức này giữ nguyên cả tổng dồn tích lẫn dòng tiền.
 
-### Why Vietnam?
+### Vì sao là Việt Nam?
 
-Vietnam's institutional environment amplifies several channels relevant to earnings management research:
+Môi trường thể chế của Việt Nam khuếch đại một số kênh liên quan đến nghiên cứu quản trị lợi nhuận:
 
--   **State-owned enterprise (SOE) incentives.** Partially privatized SOEs face dual pressures: political targets from state shareholders and market expectations from minority investors.
+-   **Động cơ của doanh nghiệp nhà nước (DNNN).** Các DNNN được cổ phần hóa một phần chịu hai áp lực: chỉ tiêu chính trị từ cổ đông nhà nước và kỳ vọng thị trường từ các nhà đầu tư thiểu số.
 
--   **Regulatory enforcement.** Vietnam's State Securities Commission (SSC) has limited resources and a short institutional history relative to bodies like the U.S. SEC. Weaker enforcement reduces the expected cost of manipulation, potentially increasing its prevalence [@leuz2003earnings].
+-   **Thực thi pháp luật.** Ủy ban Chứng khoán Nhà nước (SSC) của Việt Nam có nguồn lực hạn chế và lịch sử thể chế ngắn so với các cơ quan như SEC của Hoa Kỳ. Thực thi yếu làm giảm chi phí kỳ vọng của việc thao túng, có thể làm tăng mức độ phổ biến của nó [@leuz2003earnings].
 
--   **Accounting standards.** VAS (Vietnamese Accounting Standards) are based on older IAS versions and have not fully converged with IFRS. Certain VAS provisions, such as rules-based revenue recognition criteria and prescribed depreciation methods, constrain some forms of discretion while creating predictable opportunities for others.
+-   **Chuẩn mực kế toán.** VAS (Chuẩn mực Kế toán Việt Nam) dựa trên các phiên bản IAS cũ hơn và chưa hội tụ hoàn toàn với IFRS. Một số quy định của VAS, như tiêu chí ghi nhận doanh thu dựa trên quy tắc và các phương pháp khấu hao được quy định sẵn, hạn chế một số hình thức tùy ý nhưng lại tạo ra những cơ hội có thể dự đoán cho các hình thức khác.
 
--   **Benchmark-beating behavior.** @burgstahler1997earnings documented discontinuities around zero earnings and zero earnings changes in U.S. data. The Vietnamese market, with its high retail participation and emphasis on headline profitability, may exhibit similar or even more pronounced patterns.
+-   **Hành vi vượt ngưỡng chuẩn.** @burgstahler1997earnings ghi nhận sự gián đoạn quanh mức lợi nhuận bằng không và mức thay đổi lợi nhuận bằng không trong dữ liệu Hoa Kỳ. Thị trường Việt Nam, với mức độ tham gia cao của nhà đầu tư cá nhân và sự chú trọng vào lợi nhuận hiển thị, có thể cho thấy những mô thức tương tự hoặc thậm chí rõ nét hơn.
 
-## Models of Non-Discretionary Accruals {#sec-models}
+## Các mô hình về dồn tích không tùy ý {#sec-models}
 
-### Notation and Setup
+### Ký hiệu và thiết lập
 
-Let $i$ index firms and $t$ index fiscal years. Define:
+Gọi $i$ là chỉ số doanh nghiệp và $t$ là chỉ số năm tài chính. Ta định nghĩa:
 
-| Symbol | Definition |
+| Ký hiệu | Định nghĩa |
 |-------------------------------|-----------------------------------------|
-| $TA_{i,t}$ | Total accruals (scaled by lagged assets) |
-| $NDA_{i,t}$ | Non-discretionary accruals (model prediction) |
-| $DA_{i,t}$ | Discretionary accruals: $DA_{i,t} = TA_{i,t} - NDA_{i,t}$ |
-| $A_{i,t}$ | Total assets |
-| $\Delta Rev_{i,t}$ | Change in revenues, scaled by $A_{i,t-1}$ |
-| $\Delta Rec_{i,t}$ | Change in net receivables, scaled by $A_{i,t-1}$ |
-| $PPE_{i,t}$ | Gross property, plant, and equipment, scaled by $A_{i,t-1}$ |
-| $PART_{i,t}$ | Indicator equal to 1 for the test (event) year |
+| $TA_{i,t}$ | Tổng dồn tích (chia cho tài sản năm trước) |
+| $NDA_{i,t}$ | Dồn tích không tùy ý (dự báo của mô hình) |
+| $DA_{i,t}$ | Dồn tích tùy ý: $DA_{i,t} = TA_{i,t} - NDA_{i,t}$ |
+| $A_{i,t}$ | Tổng tài sản |
+| $\Delta Rev_{i,t}$ | Thay đổi doanh thu, chia cho $A_{i,t-1}$ |
+| $\Delta Rec_{i,t}$ | Thay đổi các khoản phải thu ròng, chia cho $A_{i,t-1}$ |
+| $PPE_{i,t}$ | Tài sản cố định hữu hình gộp (nguyên giá), chia cho $A_{i,t-1}$ |
+| $PART_{i,t}$ | Biến chỉ báo bằng 1 cho năm kiểm định (năm sự kiện) |
 
-: Notation for earnings management models {#tbl-em-notation}
+: Ký hiệu cho các mô hình quản trị lợi nhuận {#tbl-em-notation}
 
-Total accruals are computed using the balance sheet approach:
+Tổng dồn tích được tính theo phương pháp bảng cân đối kế toán:
 
 $$
 TA_{i,t} = \frac{(\Delta CA_{i,t} - \Delta Cash_{i,t}) - (\Delta CL_{i,t} - \Delta STD_{i,t}) - Dep_{i,t}}{A_{i,t-1}}
 $$ {#eq-total-accruals}
 
-where $\Delta CA$ is the change in current assets, $\Delta Cash$ is the change in cash, $\Delta CL$ is the change in current liabilities, $\Delta STD$ is the change in short-term debt, and $Dep$ is depreciation expense.
+trong đó $\Delta CA$ là thay đổi tài sản ngắn hạn, $\Delta Cash$ là thay đổi tiền mặt, $\Delta CL$ là thay đổi nợ ngắn hạn phải trả, $\Delta STD$ là thay đổi nợ vay ngắn hạn, và $Dep$ là chi phí khấu hao.
 
-### Five Models
+### Năm mô hình
 
-We implement five models, each estimating $NDA$ during a firm-specific estimation window and computing $DA$ for the test year as the residual.
+Chúng ta triển khai năm mô hình, mỗi mô hình ước lượng $NDA$ trong một cửa sổ ước lượng riêng của từng doanh nghiệp và tính $DA$ cho năm kiểm định như phần dư.
 
-**Model 1**: @healy1985effect. Non-discretionary accruals equal the mean of total accruals during the estimation period:
+**Mô hình 1**: @healy1985effect. Dồn tích không tùy ý bằng trung bình của tổng dồn tích trong kỳ ước lượng:
 
 $$
 NDA^{Healy}_{i,t} = \frac{1}{T} \sum_{s \in \text{est}} TA_{i,s}
 $$ {#eq-healy}
 
-This is the simplest possible benchmark. Its limitation is obvious: it treats *all* time-variation in accruals as discretionary, even variation driven by changes in the firm's economic environment.
+Đây là chuẩn so sánh đơn giản nhất có thể. Hạn chế của nó rất rõ: nó coi *mọi* biến thiên theo thời gian của dồn tích là tùy ý, kể cả biến thiên do sự thay đổi môi trường kinh tế của doanh nghiệp gây ra.
 
-**Model 2**: @deangelo1986accounting. Non-discretionary accruals equal last period's total accruals:
+**Mô hình 2**: @deangelo1986accounting. Dồn tích không tùy ý bằng tổng dồn tích của kỳ trước:
 
 $$
 NDA^{DeAngelo}_{i,t} = TA_{i,t-1}
 $$ {#eq-deangelo}
 
-This is equivalent to assuming that the change in total accruals is entirely discretionary. It performs well when accruals follow a random walk, but poorly when they exhibit mean-reversion or trend.
+Điều này tương đương với giả định rằng thay đổi của tổng dồn tích hoàn toàn là tùy ý. Mô hình hoạt động tốt khi dồn tích tuân theo bước ngẫu nhiên, nhưng kém khi chúng có xu hướng hồi quy về trung bình hoặc có xu thế.
 
-**Model 3**: @jones1991earnings. This model controls for changes in a firm's economic environment by regressing accruals on revenue changes and the level of fixed assets:
+**Mô hình 3**: @jones1991earnings. Mô hình này kiểm soát sự thay đổi của môi trường kinh tế doanh nghiệp bằng cách hồi quy dồn tích theo thay đổi doanh thu và mức tài sản cố định:
 
 $$
 TA_{i,t} = \alpha_1 \frac{1}{A_{i,t-1}} + \alpha_2 \Delta Rev_{i,t} + \alpha_3 PPE_{i,t} + \varepsilon_{i,t}
 $$ {#eq-jones}
 
-The parameters $\hat{\alpha}_1, \hat{\alpha}_2, \hat{\alpha}_3$ are estimated on the estimation-period data. Non-discretionary accruals for the test year are the fitted values from this regression applied to test-year covariates.
+Các tham số $\hat{\alpha}_1, \hat{\alpha}_2, \hat{\alpha}_3$ được ước lượng trên dữ liệu kỳ ước lượng. Dồn tích không tùy ý của năm kiểm định là các giá trị khớp từ hồi quy này áp dụng cho các biến giải thích của năm kiểm định.
 
-The economic logic is that revenue growth generates legitimate working capital accruals (higher receivables and inventory), while fixed assets proxy for non-discretionary depreciation charges. The intercept is scaled by lagged assets rather than included as a conventional constant, following @jones1991earnings.
+Logic kinh tế là tăng trưởng doanh thu tạo ra các khoản dồn tích vốn lưu động hợp lý (khoản phải thu và hàng tồn kho cao hơn), còn tài sản cố định đại diện cho chi phí khấu hao không tùy ý. Hệ số chặn được chia cho tài sản năm trước thay vì đưa vào như một hằng số thông thường, theo @jones1991earnings.
 
-**Model 4: Modified Jones** [@dechow1995detecting]. The modification adjusts revenue changes for changes in receivables during the test year, on the premise that credit revenue growth is more susceptible to manipulation than cash revenue growth:
+**Mô hình 4: Jones điều chỉnh** [@dechow1995detecting]. Điều chỉnh này hiệu chỉnh thay đổi doanh thu theo thay đổi khoản phải thu trong năm kiểm định, với tiền đề rằng tăng trưởng doanh thu bán chịu dễ bị thao túng hơn tăng trưởng doanh thu tiền mặt:
 
 $$
 NDA^{ModJones}_{i,t} = \hat{\alpha}_1 \frac{1}{A_{i,t-1}} + \hat{\alpha}_2 (\Delta Rev_{i,t} - \Delta Rec_{i,t}) + \hat{\alpha}_3 PPE_{i,t}
 $$ {#eq-mod-jones}
 
-The coefficients are still estimated from the *unadjusted* Jones model (@eq-jones) on estimation-period data, but receivables are subtracted from revenues only when computing fitted values for the test year.
+Các hệ số vẫn được ước lượng từ mô hình Jones *chưa điều chỉnh* (@eq-jones) trên dữ liệu kỳ ước lượng, nhưng khoản phải thu chỉ được trừ khỏi doanh thu khi tính các giá trị khớp cho năm kiểm định.
 
-**Model 5: Industry Model.** This model assumes that the common component of accruals within an industry captures non-discretionary variation:
+**Mô hình 5: Mô hình ngành.** Mô hình này giả định rằng thành phần chung của dồn tích trong một ngành phản ánh biến thiên không tùy ý:
 
 $$
 TA_{i,t} = \phi_0 + \phi_1 \cdot \widetilde{TA}_{j,t} + \eta_{i,t}
 $$ {#eq-industry}
 
-where $\widetilde{TA}_{j,t}$ is the median total accrual across all firms in industry $j$ (excluding firm $i$), estimated during the estimation period.
+trong đó $\widetilde{TA}_{j,t}$ là trung vị tổng dồn tích của tất cả doanh nghiệp trong ngành $j$ (không kể doanh nghiệp $i$), được ước lượng trong kỳ ước lượng.
 
-### Implementation
+### Triển khai
 
 ```{python}
 #| label: calc-accruals-fn
@@ -291,19 +291,19 @@ def get_all_nda(df: pd.DataFrame) -> pd.DataFrame:
     return pd.concat(results, ignore_index=True)
 ```
 
-### The Salkever (1976) Correction
+### Hiệu chỉnh Salkever (1976)
 
-An important but underappreciated methodological issue arises when computing standard errors for discretionary accruals under the Jones-type models. In the standard two-stage procedure, the researcher first estimates the Jones model on the estimation period, then computes discretionary accruals for the test year as a *prediction error*. But the standard error of a prediction error is larger than the standard error of a fitted residual, because it incorporates parameter uncertainty from the first-stage estimation. Ignoring this distinction leads to understated standard errors and inflated rejection rates,exactly the problem documented in @dechow1995detecting.
+Một vấn đề phương pháp quan trọng nhưng ít được chú ý nảy sinh khi tính sai số chuẩn cho dồn tích tùy ý theo các mô hình dạng Jones. Trong quy trình hai giai đoạn tiêu chuẩn, nhà nghiên cứu trước hết ước lượng mô hình Jones trên kỳ ước lượng, rồi tính dồn tích tùy ý cho năm kiểm định như một *sai số dự báo*. Nhưng sai số chuẩn của sai số dự báo lớn hơn sai số chuẩn của phần dư khớp, vì nó bao hàm sự bất định của tham số từ ước lượng giai đoạn đầu. Bỏ qua sự khác biệt này dẫn đến sai số chuẩn bị đánh giá thấp và tỷ lệ bác bỏ bị thổi phồng, chính là vấn đề đã được ghi nhận trong @dechow1995detecting.
 
-@salkever1976use provides an elegant solution: run a single regression on the *combined* estimation and test periods, including a dummy variable $PART$ for the test year. The coefficient on $PART$ equals the prediction error (discretionary accruals), and its standard error correctly accounts for first-stage estimation uncertainty.
+@salkever1976use đưa ra một giải pháp thanh lịch: chạy một hồi quy duy nhất trên kỳ ước lượng và kỳ kiểm định *gộp lại*, có thêm biến giả $PART$ cho năm kiểm định. Hệ số của $PART$ bằng sai số dự báo (dồn tích tùy ý), và sai số chuẩn của nó phản ánh đúng sự bất định ước lượng của giai đoạn đầu.
 
-For the Jones model, the Salkever single-stage regression is:
+Với mô hình Jones, hồi quy một giai đoạn của Salkever là:
 
 $$
 TA_{i,t} = \alpha_1 \frac{1}{A_{i,t-1}} + \alpha_2 \Delta Rev_{i,t} + \alpha_3 PPE_{i,t} + \delta \cdot PART_{i,t} + u_{i,t}
 $$ {#eq-salkever}
 
-The coefficient $\hat{\delta}$ is numerically identical to the two-stage $DA$ estimate, but its standard error $\text{se}(\hat{\delta})$ is the correct prediction error standard error.
+Hệ số $\hat{\delta}$ giống hệt về số học với ước lượng $DA$ hai giai đoạn, nhưng sai số chuẩn $\text{se}(\hat{\delta})$ của nó là sai số chuẩn đúng của sai số dự báo.
 
 ```{python}
 #| label: salkever-demo
@@ -349,24 +349,24 @@ def demonstrate_salkever(df_firm: pd.DataFrame) -> pd.DataFrame:
     })
 ```
 
-## Type I Error Under the Null Hypothesis {#sec-type1}
+## Sai lầm loại I dưới giả thuyết không {#sec-type1}
 
-### Experimental Design
+### Thiết kế thực nghiệm
 
-To evaluate whether the five models produce well-calibrated test statistics, we conduct a simulation experiment parallel to Table 2 of @dechow1995detecting. The procedure is:
+Để đánh giá liệu năm mô hình có cho ra các thống kê kiểm định được hiệu chỉnh tốt hay không, chúng ta tiến hành một thực nghiệm mô phỏng song song với Bảng 2 của @dechow1995detecting. Quy trình như sau:
 
-1.  Generate a panel of $N$ firms, each with $T$ years of financial statement data.
-2.  For each firm, randomly designate one year as the test year ($PART = 1$). By construction, *no earnings management occurs* in this year.
-3.  Estimate discretionary accruals using each of the five models.
-4.  Regress $DA$ on $PART$ for each firm and record whether the null $H_0:
-    \delta = 0$ is rejected at the 5% and 1% significance levels.
-5.  Compute the rejection rate across all $N$ firms.
+1.  Tạo một bảng dữ liệu (panel) gồm $N$ doanh nghiệp, mỗi doanh nghiệp có $T$ năm dữ liệu báo cáo tài chính.
+2.  Với mỗi doanh nghiệp, chọn ngẫu nhiên một năm làm năm kiểm định ($PART = 1$). Theo cách xây dựng, *không có quản trị lợi nhuận nào xảy ra* trong năm này.
+3.  Ước lượng dồn tích tùy ý bằng từng mô hình trong năm mô hình.
+4.  Hồi quy $DA$ theo $PART$ cho từng doanh nghiệp và ghi nhận liệu giả thuyết không $H_0:
+    \delta = 0$ có bị bác bỏ ở mức ý nghĩa 5% và 1% hay không.
+5.  Tính tỷ lệ bác bỏ trên toàn bộ $N$ doanh nghiệp.
 
-If the model is well-specified, rejection rates should equal the nominal test size (5% or 1%). Systematic over-rejection indicates that the model produces biased test statistics, a critical flaw for research that relies on these measures to draw causal inferences.
+Nếu mô hình được xác định đúng, tỷ lệ bác bỏ phải bằng mức ý nghĩa danh nghĩa của kiểm định (5% hoặc 1%). Việc bác bỏ quá mức một cách hệ thống cho thấy mô hình tạo ra các thống kê kiểm định chệch, một khiếm khuyết nghiêm trọng đối với nghiên cứu dựa vào các thước đo này để đưa ra suy luận nhân quả.
 
-### Data Generation
+### Tạo dữ liệu
 
-We generate synthetic panel data that preserves the key cross-sectional and time-series properties of Vietnamese listed firms while allowing us to know with certainty that no manipulation exists.
+Chúng ta tạo dữ liệu panel tổng hợp giữ được các tính chất chính theo mặt cắt ngang và chuỗi thời gian của các doanh nghiệp niêm yết Việt Nam, đồng thời cho phép ta biết chắc chắn rằng không có thao túng nào tồn tại.
 
 ```{python}
 #| label: gen-panel
@@ -474,9 +474,9 @@ print(f"Panel: {panel_raw.shape[0]:,} firm-years, "
       f"{panel_raw['ticker'].nunique()} firms")
 ```
 
-### Sample Construction
+### Xây dựng mẫu
 
-We construct a sample of 500 firms, each with a randomly designated test year, mirroring the design of @dechow1995detecting.
+Chúng ta xây dựng một mẫu gồm 500 doanh nghiệp, mỗi doanh nghiệp có một năm kiểm định được chọn ngẫu nhiên, mô phỏng thiết kế của @dechow1995detecting.
 
 ```{python}
 #| label: sample-construction
@@ -539,7 +539,7 @@ print(f"Sample 1: {sample_1.shape[0]:,} firm-years, "
       f"{sample_1['part'].sum()} test years")
 ```
 
-### Estimating Discretionary Accruals
+### Ước lượng dồn tích tùy ý
 
 ```{python}
 #| label: estimate-da
@@ -554,9 +554,9 @@ print("Test-year discretionary accruals (first 5 firms):")
 test_da.head().round(4)
 ```
 
-### Firm-Level Regressions and Rejection Rates
+### Hồi quy cấp doanh nghiệp và tỷ lệ bác bỏ
 
-For each firm and each model, we regress $DA$ on $PART$ and record whether the null hypothesis of zero discretionary accruals in the test year is rejected.
+Với mỗi doanh nghiệp và mỗi mô hình, chúng ta hồi quy $DA$ theo $PART$ và ghi nhận liệu giả thuyết không về dồn tích tùy ý bằng không trong năm kiểm định có bị bác bỏ hay không.
 
 ```{python}
 #| label: type1-regressions
@@ -613,13 +613,13 @@ models = ["healy", "deangelo", "jones", "mod_jones", "industry"]
 reg_results = firm_regressions(da_results, models)
 ```
 
-### Results
+### Kết quả
 
-@tbl-type1-coefs reports the distribution of estimated coefficients on $PART$ across firms. Under the null of no manipulation, we expect the mean coefficient to be approximately zero.
+@tbl-type1-coefs báo cáo phân phối của các hệ số ước lượng trên $PART$ qua các doanh nghiệp. Dưới giả thuyết không là không có thao túng, ta kỳ vọng hệ số trung bình xấp xỉ bằng không.
 
 ```{python}
 #| label: tbl-type1-coefs
-#| tbl-cap: "Distribution of firm-level discretionary accrual estimates (coefficient on PART) under the null hypothesis of no earnings management. All five models produce mean estimates near zero, as expected."
+#| tbl-cap: "Phân phối các ước lượng dồn tích tùy ý cấp doanh nghiệp (hệ số trên PART) dưới giả thuyết không là không có quản trị lợi nhuận. Cả năm mô hình đều cho ước lượng trung bình gần bằng không, như kỳ vọng."
 
 coef_stats = (
     reg_results
@@ -632,11 +632,11 @@ coef_stats.index.name = "Model"
 coef_stats.round(4)
 ```
 
-@tbl-type1-rejection reports rejection rates. The critical comparison is whether these rates approximate the nominal test size.
+@tbl-type1-rejection báo cáo tỷ lệ bác bỏ. So sánh then chốt là liệu các tỷ lệ này có xấp xỉ mức ý nghĩa danh nghĩa của kiểm định hay không.
 
 ```{python}
 #| label: tbl-type1-rejection
-#| tbl-cap: "Type I error rates for one-sided tests of earnings management under the null hypothesis. Rates exceeding the nominal size (5% or 1%) indicate that the model over-rejects—a significant concern for the Jones and Modified Jones models."
+#| tbl-cap: "Tỷ lệ sai lầm loại I của các kiểm định một phía về quản trị lợi nhuận dưới giả thuyết không. Tỷ lệ vượt mức ý nghĩa danh nghĩa (5% hoặc 1%) cho thấy mô hình bác bỏ quá mức, một mối quan ngại đáng kể đối với các mô hình Jones và Jones điều chỉnh."
 
 rejection_rates = (
     reg_results
@@ -651,13 +651,13 @@ rejection_rates.index.name = "Model"
 rejection_rates
 ```
 
-### Binomial Test for Size Distortion
+### Kiểm định nhị thức cho sai lệch mức ý nghĩa thực tế của kiểm định
 
-We formally test whether observed rejection rates differ from nominal sizes using a two-sided binomial test. Small $p$-values indicate significant mis-calibration of the test statistic.
+Chúng ta kiểm định chính thức liệu các tỷ lệ bác bỏ quan sát được có khác mức ý nghĩa danh nghĩa hay không bằng kiểm định nhị thức hai phía. Giá trị $p$ nhỏ cho thấy thống kê kiểm định bị hiệu chỉnh sai đáng kể.
 
 ```{python}
 #| label: tbl-binom-test
-#| tbl-cap: "Binomial test p-values for whether rejection rates equal nominal test sizes. Small values (e.g., < 0.05) indicate statistically significant size distortion."
+#| tbl-cap: "Giá trị p của kiểm định nhị thức về việc tỷ lệ bác bỏ có bằng mức ý nghĩa danh nghĩa hay không. Giá trị nhỏ (ví dụ < 0.05) cho thấy mức ý nghĩa thực tế lệch khỏi mức danh nghĩa một cách có ý nghĩa thống kê."
 
 def binom_test_rate(series: pd.Series, nominal: float) -> float:
     """Two-sided binomial test for rejection rate = nominal."""
@@ -683,18 +683,18 @@ binom_df
 ```
 
 ::: callout-warning
-## Interpreting Over-Rejection
+## Diễn giải việc bác bỏ quá mức
 
-If the Jones and Modified Jones models show rejection rates significantly above 5%, this signals that the standard two-stage procedure produces anti-conservative test statistics. The @salkever1976use correction addresses this by computing standard errors that reflect first-stage estimation uncertainty. In practical research on Vietnamese firms, where sample sizes per firm are often short (10–15 years of listed history), this correction is especially important because prediction error variance is a larger fraction of residual variance with fewer estimation-period observations.
+Nếu các mô hình Jones và Jones điều chỉnh cho thấy tỷ lệ bác bỏ cao hơn 5% một cách có ý nghĩa, điều này báo hiệu rằng quy trình hai giai đoạn tiêu chuẩn tạo ra các thống kê kiểm định phản bảo thủ (anti-conservative). Hiệu chỉnh của @salkever1976use giải quyết vấn đề này bằng cách tính sai số chuẩn phản ánh sự bất định ước lượng của giai đoạn đầu. Trong nghiên cứu thực tế về các doanh nghiệp Việt Nam, nơi chuỗi quan sát theo từng doanh nghiệp thường ngắn (10–15 năm lịch sử niêm yết), hiệu chỉnh này đặc biệt quan trọng vì phương sai sai số dự báo chiếm tỷ trọng lớn hơn trong phương sai phần dư khi số quan sát kỳ ước lượng ít hơn.
 :::
 
-## Extreme Performance Firms {#sec-extreme}
+## Các doanh nghiệp có kết quả hoạt động cực đoan {#sec-extreme}
 
-A well-known weakness of accrual-based models is their poor performance when test firms experience extreme economic performance. @dechow1995detecting documented that all five models over-reject the null hypothesis when test firm-years are drawn from the tails of the earnings or cash flow distribution. @kothari2005performance subsequently proposed "performance matching" as a partial remedy.
+Một điểm yếu quen thuộc của các mô hình dựa trên dồn tích là hiệu quả kém khi các doanh nghiệp kiểm định trải qua kết quả kinh tế cực đoan. @dechow1995detecting ghi nhận rằng cả năm mô hình đều bác bỏ quá mức giả thuyết không khi các quan sát doanh nghiệp–năm kiểm định được lấy từ phần đuôi của phân phối lợi nhuận hoặc dòng tiền. @kothari2005performance sau đó đề xuất "ghép cặp theo hiệu quả hoạt động" (performance matching) như một biện pháp khắc phục một phần.
 
-The intuition for the problem is straightforward: the Jones model assumes a linear, symmetric relationship between revenue changes and accruals. But firms experiencing extreme growth or contraction generate accruals that deviate nonlinearly from the model's predictions, even absent any manipulation. This nonlinearity is misattributed to discretionary accruals.
+Trực giác của vấn đề khá đơn giản: mô hình Jones giả định một quan hệ tuyến tính, đối xứng giữa thay đổi doanh thu và dồn tích. Nhưng các doanh nghiệp trải qua tăng trưởng hoặc suy giảm cực đoan tạo ra các khoản dồn tích lệch phi tuyến khỏi dự báo của mô hình, ngay cả khi không có bất kỳ thao túng nào. Tính phi tuyến này bị quy nhầm cho dồn tích tùy ý.
 
-### Constructing Extreme-Performance Samples
+### Xây dựng các mẫu có kết quả hoạt động cực đoan
 
 ```{python}
 #| label: extreme-sample
@@ -739,7 +739,7 @@ print(f"Low-earnings sample: {sample_low['ticker'].nunique()} firms")
 
 ```{python}
 #| label: tbl-extreme-rejection
-#| tbl-cap: "Type I error rates (5% one-sided) when test firm-years are drawn from extreme earnings deciles. Over-rejection is expected because accrual models misattribute performance-driven accrual variation to managerial discretion."
+#| tbl-cap: "Tỷ lệ sai lầm loại I (một phía, 5%) khi các quan sát doanh nghiệp–năm kiểm định được lấy từ các thập phân vị lợi nhuận cực đoan. Việc bác bỏ quá mức là điều được kỳ vọng vì các mô hình dồn tích quy nhầm biến thiên dồn tích do kết quả hoạt động cho sự tùy ý của nhà quản lý."
 
 extreme_results = {}
 for label, sample_df in [("High earners", sample_high), ("Low earners", sample_low)]:
@@ -755,31 +755,31 @@ if extreme_results:
     extreme_df
 ```
 
-### Performance Matching
+### Ghép cặp theo hiệu quả hoạt động
 
-@kothari2005performance propose adjusting discretionary accruals by subtracting the DA of a performance-matched firm (one in the same industry with similar ROA). This removes the systematic component of accruals correlated with performance. The matched discretionary accrual is:
+@kothari2005performance đề xuất điều chỉnh dồn tích tùy ý bằng cách trừ đi DA của một doanh nghiệp được ghép cặp theo hiệu quả hoạt động (cùng ngành và có ROA tương tự). Cách này loại bỏ thành phần hệ thống của dồn tích có tương quan với hiệu quả hoạt động. Dồn tích tùy ý sau ghép cặp là:
 
 $$
 DA^{PM}_{i,t} = DA_{i,t} - DA_{i^*,t}
 $$ {#eq-performance-match}
 
-where $i^*$ is the matched control firm. This approach is particularly relevant in Vietnam, where the cross-section of listed firms includes many high-growth firms alongside stagnant SOEs, which is performance heterogeneity that standard models may mischaracterize.
+trong đó $i^*$ là doanh nghiệp đối chứng được ghép cặp. Cách tiếp cận này đặc biệt phù hợp với Việt Nam, nơi mặt cắt ngang các doanh nghiệp niêm yết gồm nhiều doanh nghiệp tăng trưởng cao bên cạnh các DNNN trì trệ, một sự không đồng nhất về hiệu quả hoạt động mà các mô hình tiêu chuẩn có thể mô tả sai.
 
-## Power Analysis {#sec-power}
+## Phân tích sức mạnh kiểm định {#sec-power}
 
-### Artificially Introducing Earnings Management
+### Đưa quản trị lợi nhuận nhân tạo vào dữ liệu
 
-A model that never rejects is useless even if its Type I error rate is perfect. We need to evaluate **power**: the probability of detecting manipulation when it truly exists. Following @dechow1995detecting, we introduce known artificial manipulation into test-year financial statements and measure detection rates.
+Một mô hình không bao giờ bác bỏ là vô dụng dù tỷ lệ sai lầm loại I của nó hoàn hảo. Chúng ta cần đánh giá **sức mạnh kiểm định (power)**: xác suất phát hiện thao túng khi nó thực sự tồn tại. Theo @dechow1995detecting, chúng ta đưa vào báo cáo tài chính của năm kiểm định một lượng thao túng nhân tạo đã biết và đo tỷ lệ phát hiện.
 
-We consider three forms of manipulation at varying magnitudes:
+Chúng ta xét ba hình thức thao túng ở các mức độ khác nhau:
 
-1.  **Expense manipulation.** Decrease current liabilities by the manipulation amount (e.g., delaying recognition of accrued expenses): $$LCT'_{i,t} = LCT_{i,t} - \lambda \cdot A_{i,t-1}$$
+1.  **Thao túng chi phí.** Giảm nợ ngắn hạn phải trả đi một lượng bằng mức thao túng (ví dụ: trì hoãn ghi nhận chi phí phải trả): $$LCT'_{i,t} = LCT_{i,t} - \lambda \cdot A_{i,t-1}$$
 
-2.  **Revenue manipulation.** Increase sales and receivables by the manipulation amount (e.g., premature revenue recognition or channel stuffing): $$Sale'_{i,t} = Sale_{i,t} + \lambda \cdot A_{i,t-1}, \quad Rect'_{i,t} = Rect_{i,t} + \lambda \cdot A_{i,t-1}$$
+2.  **Thao túng doanh thu.** Tăng doanh thu và khoản phải thu một lượng bằng mức thao túng (ví dụ: ghi nhận doanh thu sớm hoặc nhồi hàng vào kênh phân phối): $$Sale'_{i,t} = Sale_{i,t} + \lambda \cdot A_{i,t-1}, \quad Rect'_{i,t} = Rect_{i,t} + \lambda \cdot A_{i,t-1}$$
 
-3.  **Margin manipulation.** Increase sales by the gross amount needed to inflate net income by $\lambda \cdot A_{i,t-1}$, increasing both receivables and current liabilities proportionally.
+3.  **Thao túng biên lợi nhuận.** Tăng doanh thu một lượng gộp cần thiết để thổi phồng lợi nhuận ròng thêm $\lambda \cdot A_{i,t-1}$, đồng thời tăng cả khoản phải thu và nợ ngắn hạn phải trả theo tỷ lệ.
 
-The parameter $\lambda$ represents manipulation as a fraction of lagged total assets, ranging from 0% to 50%.
+Tham số $\lambda$ biểu thị mức thao túng dưới dạng tỷ lệ của tổng tài sản năm trước, dao động từ 0% đến 50%.
 
 ```{python}
 #| label: manipulate-fn
@@ -920,13 +920,13 @@ power_df = pd.DataFrame(flat)
 ```
 
 
-### Power Functions
+### Các hàm sức mạnh kiểm định
 
-@fig-power plots the estimated power functions. The key questions are: (i) which model has the highest power for a given manipulation level and type, and (ii) at what magnitudes does manipulation become reliably detectable?
+@fig-power vẽ các hàm sức mạnh kiểm định ước lượng được. Các câu hỏi then chốt là: (i) mô hình nào có sức mạnh cao nhất với một mức và loại thao túng cho trước, và (ii) ở quy mô nào thì thao túng trở nên có thể phát hiện một cách đáng tin cậy?
 
 ```{python}
 #| label: fig-power
-#| fig-cap: "Power functions for the five earnings management detection models across three manipulation types. Power increases with manipulation magnitude but remains low for economically plausible levels (< 10% of assets), highlighting the fundamental difficulty of detecting earnings management."
+#| fig-cap: "Các hàm sức mạnh kiểm định của năm mô hình phát hiện quản trị lợi nhuận qua ba loại thao túng. Sức mạnh tăng theo quy mô thao túng nhưng vẫn thấp ở các mức hợp lý về mặt kinh tế (< 10% tài sản), cho thấy khó khăn căn bản của việc phát hiện quản trị lợi nhuận."
 
 fig, axes = plt.subplots(1, 3, figsize=(14, 5), sharey=True)
 
@@ -962,13 +962,13 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Summary Statistics
+### Thống kê tóm tắt
 
-@tbl-power-summary reports power at selected manipulation levels for the Jones and Modified Jones models, which are most commonly used in applied research.
+@tbl-power-summary báo cáo sức mạnh kiểm định tại một số mức thao túng chọn lọc cho các mô hình Jones và Jones điều chỉnh, là hai mô hình được dùng phổ biến nhất trong nghiên cứu ứng dụng.
 
 ```{python}
 #| label: tbl-power-summary
-#| tbl-cap: "Power of the Jones and Modified Jones models at selected manipulation levels. Even at 10% of assets—a large amount of manipulation—detection rates remain well below 50% for most manipulation types, underscoring the low statistical power of standard tests."
+#| tbl-cap: "Sức mạnh kiểm định của các mô hình Jones và Jones điều chỉnh tại một số mức thao túng chọn lọc. Ngay cả ở mức 10% tài sản, một lượng thao túng lớn, tỷ lệ phát hiện vẫn thấp hơn nhiều so với 50% với hầu hết các loại thao túng, nhấn mạnh sức mạnh thống kê thấp của các kiểm định tiêu chuẩn."
 
 power_summary = (
     power_df[power_df["model"].isin(["jones", "mod_jones"])]
@@ -980,34 +980,34 @@ power_summary
 ```
 
 ::: callout-important
-## Implications for Vietnamese Research
+## Hàm ý cho nghiên cứu về Việt Nam
 
-The power analysis has stark implications for earnings management research in Vietnam. The typical Vietnamese listed firm has been listed for 10–15 years, providing far fewer estimation-period observations than in the U.S. context where @dechow1995detecting had decades of Compustat data. Shorter estimation windows increase parameter uncertainty in the Jones model, further reducing power. Combined with the noisier financial data common in emerging markets, researchers should interpret non-rejection of the null as uninformative rather than as evidence of clean financial reporting.
+Phân tích sức mạnh kiểm định có những hàm ý rõ rệt đối với nghiên cứu quản trị lợi nhuận ở Việt Nam. Một doanh nghiệp niêm yết Việt Nam điển hình đã niêm yết 10–15 năm, cung cấp ít quan sát kỳ ước lượng hơn nhiều so với bối cảnh Hoa Kỳ, nơi @dechow1995detecting có hàng thập kỷ dữ liệu Compustat. Cửa sổ ước lượng ngắn hơn làm tăng sự bất định tham số trong mô hình Jones, làm giảm thêm sức mạnh kiểm định. Kết hợp với dữ liệu tài chính nhiễu hơn vốn phổ biến ở các thị trường mới nổi, nhà nghiên cứu nên diễn giải việc không bác bỏ giả thuyết không là không mang thông tin, thay vì là bằng chứng cho thấy báo cáo tài chính trong sạch.
 :::
 
-## Vietnamese Institutional Context {#sec-vietnam}
+## Bối cảnh thể chế Việt Nam {#sec-vietnam}
 
-### Channels of Earnings Management
+### Các kênh quản trị lợi nhuận
 
-Several features of the Vietnamese institutional environment create distinctive earnings management incentives and opportunities:
+Một số đặc điểm của môi trường thể chế Việt Nam tạo ra những động cơ và cơ hội quản trị lợi nhuận đặc thù:
 
-**Tax-driven manipulation.** Vietnamese corporate income tax (CIT) rates have declined from 28% (pre-2009) to 20% (2016 onwards), with preferential rates for firms in Special Economic Zones and high-tech sectors. The close alignment between VAS accounting and tax accounting creates incentives to manage earnings downward to reduce tax obligations—a pattern documented in developing economies with code-law accounting traditions [@ball2003incentives].
+**Thao túng do thuế.** Thuế suất thuế thu nhập doanh nghiệp (CIT) của Việt Nam đã giảm từ 28% (trước năm 2009) xuống 20% (từ năm 2016 trở đi), kèm các mức ưu đãi cho doanh nghiệp trong Khu kinh tế đặc biệt và các ngành công nghệ cao. Sự gắn kết chặt chẽ giữa kế toán VAS và kế toán thuế tạo động cơ quản trị lợi nhuận theo hướng giảm để giảm nghĩa vụ thuế, một mô thức đã được ghi nhận ở các nền kinh tế đang phát triển có truyền thống kế toán theo luật thành văn [@ball2003incentives].
 
-**IPO and seasoned equity offering (SEO) incentives.** Vietnam has experienced several waves of SOE equitization (partial privatization). Managers have incentives to inflate earnings before share offerings to maximize proceeds. The SSC requires minimum profitability thresholds for listing eligibility, creating sharp incentives around these regulatory cutoffs, which is a natural setting for the discontinuity analysis of @burgstahler1997earnings.
+**Động cơ IPO và phát hành thêm cổ phiếu (SEO).** Việt Nam đã trải qua nhiều làn sóng cổ phần hóa DNNN (tư nhân hóa một phần). Các nhà quản lý có động cơ thổi phồng lợi nhuận trước các đợt chào bán cổ phiếu để tối đa hóa số tiền thu được. SSC yêu cầu các ngưỡng lợi nhuận tối thiểu để đủ điều kiện niêm yết, tạo ra động cơ mạnh quanh các ngưỡng quy định này, vốn là bối cảnh tự nhiên cho phân tích gián đoạn của @burgstahler1997earnings. Sự tùy ý kế toán quanh các đợt IPO không chỉ giới hạn ở lợi nhuận báo cáo: nó mở rộng sang việc định giá thù lao bằng cổ phần trước IPO. @badertscher2026cheap nghiên cứu "cheap stock" (cổ phiếu giá rẻ)—thù lao bằng cổ phần được cấp trước IPO với giá thực hiện thấp hơn nhiều so với giá chào bán cuối cùng (trong mẫu Hoa Kỳ của họ, giá IPO cao hơn giá thực hiện quyền chọn trước IPO hơn năm lần)—và chỉ ra rằng việc định giá thấp cổ phiếu trước IPO cho phép doanh nghiệp báo cáo chi phí thù lao nhỏ hơn trong khi chuyển giao một lượng giá trị đáng kể cho nội bộ. Quan trọng hơn, họ ghi nhận rằng cheap stock có những hệ quả thực: các doanh nghiệp sử dụng nó có thù lao CEO cao hơn (tính theo giá IPO), đầu tư sau IPO thấp hơn, lợi nhuận cổ phiếu sau IPO yếu hơn và mức định giá thấp khi IPO lớn hơn. Cơ chế này rất phù hợp với các đợt IPO cổ phần hóa ở Việt Nam, nơi việc phân bổ cổ phần cho nội bộ ở mức giá ưu đãi trước khi niêm yết là mối quan ngại quản trị công ty lặp đi lặp lại và nơi việc định giá quyền chọn cổ phần của nhân viên và ban quản lý trước khi niêm yết còn mang tính tùy ý đáng kể.
 
-**Real earnings management in manufacturing.** @roychowdhury2006earnings identifies overproduction, discretionary expenditure cuts, and sales manipulation as the three main channels of real earnings management. Vietnam's large manufacturing sector (textiles, electronics assembly, food processing) provides ample scope for overproduction-based REM, where unit costs are reduced by spreading fixed overhead across larger production runs.
+**Quản trị lợi nhuận thực trong ngành sản xuất.** @roychowdhury2006earnings xác định sản xuất vượt mức, cắt giảm chi tiêu tùy ý và thao túng doanh số là ba kênh chính của quản trị lợi nhuận thực. Ngành sản xuất lớn của Việt Nam (dệt may, lắp ráp điện tử, chế biến thực phẩm) tạo nhiều dư địa cho REM dựa trên sản xuất vượt mức, trong đó chi phí đơn vị được giảm bằng cách phân bổ chi phí cố định chung lên các đợt sản xuất lớn hơn.
 
 **Related-party transactions.** Transactions with affiliated entities are a well-documented channel for earnings manipulation in Asian markets. Vietnamese conglomerates (*tập đoàn*) often feature complex cross-ownership structures where transfer pricing between subsidiaries can shift profits across reporting entities.
 
-### The Earnings Distribution Test
+### Kiểm định phân phối lợi nhuận
 
-@burgstahler1997earnings observed a striking discontinuity in the distribution of reported earnings around zero: far more firms report small positive earnings than small losses, relative to what a smooth distribution would predict. This pattern is interpreted as evidence that firms manage earnings to avoid reporting losses.
+@burgstahler1997earnings quan sát thấy một sự gián đoạn đáng chú ý trong phân phối lợi nhuận báo cáo quanh mức không: số doanh nghiệp báo cáo lợi nhuận dương nhỏ nhiều hơn hẳn số báo cáo khoản lỗ nhỏ, so với những gì một phân phối trơn sẽ dự báo. Mô thức này được diễn giải là bằng chứng cho thấy các doanh nghiệp quản trị lợi nhuận để tránh báo cáo lỗ.
 
-We apply this test to Vietnamese-style data to illustrate the methodology.
+Chúng ta áp dụng kiểm định này cho dữ liệu mô phỏng kiểu Việt Nam để minh họa phương pháp.
 
 ```{python}
 #| label: fig-earnings-distribution
-#| fig-cap: "Distribution of scaled earnings around zero. A discontinuity—excess density just above zero and a deficit just below—would suggest benchmark-beating behavior. The red dashed line marks the zero threshold."
+#| fig-cap: "Phân phối lợi nhuận đã chia theo quy mô quanh mức không. Một sự gián đoạn, tức mật độ dư ngay trên mức không và thiếu hụt ngay dưới mức không, sẽ gợi ý hành vi vượt ngưỡng chuẩn. Đường đứt nét màu đỏ đánh dấu ngưỡng không."
 
 # Generate earnings for a larger sample with benchmark-beating behavior
 rng_dist = np.random.default_rng(2024)
@@ -1041,7 +1041,7 @@ plt.show()
 
 ```{python}
 #| label: fig-earnings-change-dist
-#| fig-cap: "Distribution of year-over-year earnings changes around zero. A discontinuity here suggests that firms manage earnings to avoid reporting declines, even when small."
+#| fig-cap: "Phân phối thay đổi lợi nhuận theo năm quanh mức không. Một sự gián đoạn ở đây gợi ý rằng các doanh nghiệp quản trị lợi nhuận để tránh báo cáo sụt giảm, dù nhỏ."
 
 # Year-over-year changes
 earn_changes = np.diff(earn_array.reshape(n_firms_dist, n_years_dist), axis=1).flatten()
@@ -1059,66 +1059,66 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Accrual-Based vs. Real Earnings Management
+### Quản trị lợi nhuận dựa trên dồn tích so với quản trị lợi nhuận thực
 
-@cohen2008real document a shift from AEM to REM following the passage of the Sarbanes-Oxley Act (SOX) in 2002, suggesting that tighter regulatory scrutiny redirects manipulation toward less detectable channels. @zang2012evidence provides further evidence that firms trade off between AEM and REM based on their relative costs.
+@cohen2008real ghi nhận sự chuyển dịch từ AEM sang REM sau khi Đạo luật Sarbanes-Oxley (SOX) được thông qua năm 2002, cho thấy việc giám sát quy định chặt chẽ hơn đẩy hoạt động thao túng sang các kênh khó phát hiện hơn. @zang2012evidence cung cấp thêm bằng chứng rằng các doanh nghiệp đánh đổi giữa AEM và REM dựa trên chi phí tương đối của chúng.
 
-In Vietnam, where regulatory enforcement of accounting standards is weaker than in post-SOX America, we might expect AEM to remain the dominant channel. However, as Vietnam moves toward IFRS adoption and strengthens SSC oversight, the AEM-to-REM substitution hypothesis becomes testable.
+Ở Việt Nam, nơi việc thực thi chuẩn mực kế toán yếu hơn so với nước Mỹ thời hậu SOX, ta có thể kỳ vọng AEM vẫn là kênh chiếm ưu thế. Tuy nhiên, khi Việt Nam tiến tới áp dụng IFRS và tăng cường giám sát của SSC, giả thuyết thay thế từ AEM sang REM trở nên có thể kiểm định được.
 
-We can measure REM using the @roychowdhury2006earnings approach. Three proxies capture different manipulation channels:
+Chúng ta có thể đo REM bằng cách tiếp cận của @roychowdhury2006earnings. Ba chỉ báo thay thế nắm bắt các kênh thao túng khác nhau:
 
-**Abnormal cash flow from operations.** Estimate normal CFO as a function of sales and sales changes:
+**Dòng tiền hoạt động bất thường.** Ước lượng CFO bình thường như một hàm của doanh thu và thay đổi doanh thu:
 
 $$
 \frac{CFO_{i,t}}{A_{i,t-1}} = \beta_0 + \beta_1 \frac{1}{A_{i,t-1}} + \beta_2 \frac{S_{i,t}}{A_{i,t-1}} + \beta_3 \frac{\Delta S_{i,t}}{A_{i,t-1}} + \varepsilon_{i,t}
 $$ {#eq-abnormal-cfo}
 
-**Abnormal production costs.** Production costs = COGS + change in inventory. Normal levels are modeled as:
+**Chi phí sản xuất bất thường.** Chi phí sản xuất = giá vốn hàng bán (COGS) + thay đổi hàng tồn kho. Mức bình thường được mô hình hóa như sau:
 
 $$
 \frac{PROD_{i,t}}{A_{i,t-1}} = \beta_0 + \beta_1 \frac{1}{A_{i,t-1}} + \beta_2 \frac{S_{i,t}}{A_{i,t-1}} + \beta_3 \frac{\Delta S_{i,t}}{A_{i,t-1}} + \beta_4 \frac{\Delta S_{i,t-1}}{A_{i,t-1}} + \varepsilon_{i,t}
 $$ {#eq-abnormal-prod}
 
-**Abnormal discretionary expenditures.** R&D + advertising + SGA, modeled as:
+**Chi tiêu tùy ý bất thường.** R&D + quảng cáo + chi phí bán hàng và quản lý (SGA), được mô hình hóa như sau:
 
 $$
 \frac{DISC_{i,t}}{A_{i,t-1}} = \beta_0 + \beta_1 \frac{1}{A_{i,t-1}} + \beta_2 \frac{S_{i,t-1}}{A_{i,t-1}} + \varepsilon_{i,t}
 $$ {#eq-abnormal-disc}
 
-Residuals from these regressions serve as proxies for real manipulation. A firm that overproduces will show abnormally *high* production costs and abnormally *low* CFO (cash tied up in inventory).
+Phần dư từ các hồi quy này đóng vai trò chỉ báo thay thế cho thao túng thực. Một doanh nghiệp sản xuất vượt mức sẽ có chi phí sản xuất *cao* bất thường và CFO *thấp* bất thường (tiền bị giam trong hàng tồn kho).
 
-## Summary
+## Tóm tắt
 
-This chapter examined the measurement and detection of earnings management, with a focus on methodological rigor and adaptation to Vietnam's institutional environment. The key takeaways are:
+Chương này đã xem xét việc đo lường và phát hiện quản trị lợi nhuận, tập trung vào tính chặt chẽ về phương pháp luận và sự điều chỉnh cho môi trường thể chế của Việt Nam. Các điểm chính cần ghi nhớ là:
 
--   Detecting earnings management requires separating discretionary from non-discretionary accruals, which depends critically on the quality of the non-discretionary accrual model. All five canonical models have known weaknesses.
+-   Phát hiện quản trị lợi nhuận đòi hỏi tách dồn tích tùy ý khỏi dồn tích không tùy ý, điều này phụ thuộc quyết định vào chất lượng của mô hình dồn tích không tùy ý. Cả năm mô hình kinh điển đều có những điểm yếu đã biết.
 
--   Under the null hypothesis of no manipulation, the Jones and Modified Jones models over-reject when standard two-stage standard errors are used. The @salkever1976use correction provides properly calibrated inference.
+-   Dưới giả thuyết không là không có thao túng, các mô hình Jones và Jones điều chỉnh bác bỏ quá mức khi dùng sai số chuẩn hai giai đoạn tiêu chuẩn. Hiệu chỉnh của @salkever1976use cho phép suy luận được hiệu chỉnh đúng.
 
--   When test firms experience extreme financial performance, all models exhibit severe size distortion, misattributing performance-driven accrual variation to managerial discretion. Performance matching [@kothari2005performance] partially addresses this.
+-   Khi các doanh nghiệp kiểm định có kết quả tài chính cực đoan, mọi mô hình đều có mức ý nghĩa thực tế lệch nghiêm trọng khỏi mức danh nghĩa, quy nhầm biến thiên dồn tích do kết quả hoạt động cho sự tùy ý của nhà quản lý. Ghép cặp theo hiệu quả hoạt động [@kothari2005performance] giải quyết một phần vấn đề này.
 
--   Power analysis reveals that economically plausible levels of manipulation (below 10% of assets) are detected with very low probability. This casts doubt on studies that report null results as evidence of no manipulation.
+-   Phân tích sức mạnh kiểm định cho thấy các mức thao túng hợp lý về mặt kinh tế (dưới 10% tài sản) được phát hiện với xác suất rất thấp. Điều này đặt nghi vấn về các nghiên cứu báo cáo kết quả không bác bỏ như bằng chứng của việc không có thao túng.
 
--   Vietnam's institutional features, such aSOE governance, VAS accounting rules, weak enforcement, and thin audit coverage—create a rich setting for earnings management research, but the methodological challenges are amplified by shorter time series and noisier data.
+-   Các đặc điểm thể chế của Việt Nam, như quản trị DNNN, quy tắc kế toán VAS, thực thi yếu và phạm vi kiểm toán mỏng, tạo ra bối cảnh phong phú cho nghiên cứu quản trị lợi nhuận, nhưng các thách thức phương pháp luận bị khuếch đại bởi chuỗi thời gian ngắn hơn và dữ liệu nhiễu hơn.
 
-Researchers working with Vietnamese data should: (i) use the Salkever correction for proper inference, (ii) implement performance matching, (iii) consider multiple models and triangulate results, and (iv) supplement accrual-based approaches with real earnings management and distributional tests.
+Các nhà nghiên cứu làm việc với dữ liệu Việt Nam nên: (i) dùng hiệu chỉnh Salkever để suy luận đúng, (ii) triển khai ghép cặp theo hiệu quả hoạt động, (iii) xem xét nhiều mô hình và đối chiếu chéo kết quả, và (iv) bổ sung cho các phương pháp dựa trên dồn tích bằng quản trị lợi nhuận thực và các kiểm định về phân phối.
 
-<!-- ## Exercises
+<!-- ## Bài tập
 
-1.  **Salkever equivalence.** Using the `demonstrate_salkever()` function, verify numerically that the two-stage Jones $DA$ estimate equals the Salkever coefficient on $PART$ for a randomly selected firm. Report both estimates to six decimal places.
+1.  **Tương đương Salkever.** Dùng hàm `demonstrate_salkever()`, hãy kiểm chứng bằng số rằng ước lượng $DA$ Jones hai giai đoạn bằng hệ số Salkever trên $PART$ cho một doanh nghiệp được chọn ngẫu nhiên. Báo cáo cả hai ước lượng đến sáu chữ số thập phân.
 
-2.  **Modified Jones with Salkever.** Extend the Salkever approach to the Modified Jones model. In the one-stage regression, how should $\Delta Rev$ be specified—adjusted or unadjusted? Justify your choice.
+2.  **Jones điều chỉnh với Salkever.** Mở rộng cách tiếp cận Salkever cho mô hình Jones điều chỉnh. Trong hồi quy một giai đoạn, $\Delta Rev$ nên được xác định là đã điều chỉnh hay chưa điều chỉnh? Hãy biện luận cho lựa chọn của bạn.
 
-3.  **Performance matching.** Implement the @kothari2005performance performance-matching procedure: for each test firm-year, find a control firm in the same 2-digit industry with the closest ROA, and subtract its $DA$. Re-run the Type I error analysis with performance-matched $DA$. Does performance matching reduce over-rejection for extreme-performance samples?
+3.  **Ghép cặp theo hiệu quả hoạt động.** Triển khai quy trình ghép cặp theo hiệu quả hoạt động của @kothari2005performance: với mỗi quan sát doanh nghiệp–năm kiểm định, tìm một doanh nghiệp đối chứng cùng ngành 2 chữ số có ROA gần nhất, rồi trừ $DA$ của nó. Chạy lại phân tích sai lầm loại I với $DA$ đã ghép cặp. Việc ghép cặp có làm giảm tình trạng bác bỏ quá mức đối với các mẫu có hiệu quả hoạt động cực đoan không?
 
-4.  **SOE vs. non-SOE detection.** Split the sample by SOE status and estimate discretionary accruals separately for each subsample. Are there systematic differences in estimated $DA$ that might reflect genuine differences in accrual quality, or could they be artifacts of the model specification?
+4.  **Phát hiện ở DNNN so với doanh nghiệp ngoài nhà nước.** Chia mẫu theo tình trạng DNNN và ước lượng dồn tích tùy ý riêng cho từng mẫu con. Có sự khác biệt hệ thống nào trong $DA$ ước lượng có thể phản ánh khác biệt thực sự về chất lượng dồn tích, hay chúng có thể là sản phẩm nhân tạo của cách đặc tả mô hình?
 
-5.  **Earnings discontinuity test.** Using the synthetic earnings data (or actual Vietnamese data if available), formally test for a discontinuity at zero using the approach of @burgstahler1997earnings. Compute the standardized difference between the bin just above and just below zero: $$
+5.  **Kiểm định gián đoạn lợi nhuận.** Dùng dữ liệu lợi nhuận tổng hợp (hoặc dữ liệu thực của Việt Nam nếu có), hãy kiểm định chính thức sự gián đoạn tại mức không theo cách tiếp cận của @burgstahler1997earnings. Tính chênh lệch chuẩn hóa giữa khoảng ngay trên và ngay dưới mức không: $$
     z = \frac{n_{+} - n_{-}}{\sqrt{N \cdot p \cdot (1-p)}}
-    $$ where $n_{+}$ and $n_{-}$ are the counts in the two adjacent bins and $p$ is the expected proportion under smoothness.
+    $$ trong đó $n_{+}$ và $n_{-}$ là số quan sát trong hai khoảng liền kề và $p$ là tỷ lệ kỳ vọng dưới giả định phân phối trơn.
 
-6.  **Real earnings management.** Implement the @roychowdhury2006earnings model for abnormal production costs (@eq-abnormal-prod) using the synthetic panel. Estimate the model cross-sectionally by year and 2-digit industry. What fraction of the cross-sectional variation in production costs is explained by the model?
+6.  **Quản trị lợi nhuận thực.** Triển khai mô hình @roychowdhury2006earnings cho chi phí sản xuất bất thường (@eq-abnormal-prod) bằng panel tổng hợp. Ước lượng mô hình theo mặt cắt ngang theo từng năm và ngành 2 chữ số. Mô hình giải thích được bao nhiêu phần biến thiên mặt cắt ngang của chi phí sản xuất?
 
-7.  **Power under Vietnamese conditions.** Re-run the power analysis with a shortened estimation window (7 years instead of 10) to simulate the typical data availability for Vietnamese firms listed after 2007. How does the reduction in estimation data affect detection power? What is the minimum manipulation level that can be detected with 50% power?
+7.  **Sức mạnh kiểm định trong điều kiện Việt Nam.** Chạy lại phân tích sức mạnh kiểm định với cửa sổ ước lượng rút ngắn (7 năm thay vì 10) để mô phỏng mức sẵn có dữ liệu điển hình của các doanh nghiệp Việt Nam niêm yết sau năm 2007. Việc giảm dữ liệu ước lượng ảnh hưởng thế nào đến sức mạnh phát hiện? Mức thao túng tối thiểu có thể phát hiện với sức mạnh 50% là bao nhiêu?
 
-8.  **Stub-period revenue manipulation.** @stubben2010discretionary proposes a revenue-based measure of earnings management that regresses changes in receivables on changes in revenue, arguing that revenue manipulation is easier to detect through its receivable footprint than through the broad accrual models. Implement this approach and compare its Type I error and power properties to the Jones model on Vietnamese data. -->
+8.  **Thao túng doanh thu trong kỳ lẻ (stub period).** @stubben2010discretionary đề xuất một thước đo quản trị lợi nhuận dựa trên doanh thu, hồi quy thay đổi khoản phải thu theo thay đổi doanh thu, cho rằng thao túng doanh thu dễ phát hiện qua dấu vết khoản phải thu hơn là qua các mô hình dồn tích rộng. Hãy triển khai cách tiếp cận này và so sánh tính chất sai lầm loại I và sức mạnh kiểm định của nó với mô hình Jones trên dữ liệu Việt Nam. -->

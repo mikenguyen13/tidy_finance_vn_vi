@@ -1,12 +1,12 @@
-# Image and Visual Data in Finance
+# Dữ liệu hình ảnh và dữ liệu thị giác trong tài chính
 
-The previous chapter demonstrated how unstructured text (e.g., earnings reports, news articles, business descriptions) can be transformed into structured signals for financial analysis. This chapter extends the alternative data toolkit to a second modality: images. Visual data is abundant in financial contexts yet systematically underexploited. Satellite photographs reveal real economic activity (e.g., parking lot occupancy at retail locations, construction progress at industrial sites, nighttime luminosity as a proxy for regional GDP, ship traffic at port terminals, crop health across agricultural zones). Corporate documents arrive as scanned PDFs whose tables and figures resist standard text extraction. Financial charts encode information that analysts interpret visually but that systematic strategies cannot consume without digitization. And the visual content of social media, advertising, and product imagery carries sentiment and brand signals that complement textual analysis.
+Chương trước đã trình bày cách văn bản phi cấu trúc (ví dụ: báo cáo kết quả kinh doanh, bài báo tin tức, phần mô tả hoạt động kinh doanh) có thể được chuyển thành các tín hiệu có cấu trúc cho phân tích tài chính. Chương này mở rộng bộ công cụ dữ liệu thay thế sang một dạng thức thứ hai: hình ảnh. Dữ liệu thị giác rất dồi dào trong bối cảnh tài chính nhưng bị khai thác chưa đầy đủ một cách có hệ thống. Ảnh vệ tinh phản ánh hoạt động kinh tế thực (ví dụ: mức độ lấp đầy bãi đỗ xe tại các điểm bán lẻ, tiến độ xây dựng tại các khu công nghiệp, độ sáng ban đêm như một biến đại diện cho GDP khu vực, lưu lượng tàu tại các cảng, sức khỏe cây trồng trên các vùng nông nghiệp). Các tài liệu của doanh nghiệp đến dưới dạng PDF quét, với các bảng biểu và hình vẽ khó trích xuất bằng các phương pháp trích xuất văn bản tiêu chuẩn. Các biểu đồ tài chính mã hóa thông tin mà các nhà phân tích diễn giải bằng mắt nhưng các chiến lược có hệ thống không thể sử dụng nếu chưa được số hóa. Và nội dung thị giác của mạng xã hội, quảng cáo và hình ảnh sản phẩm mang các tín hiệu về cảm xúc và thương hiệu bổ sung cho phân tích văn bản.
 
-The core challenge is representational: an image is a three-dimensional tensor of pixel intensities with no inherent semantic structure. Converting this raw array into a financial signal (i.e., a number that predicts returns, measures risk, or proxies for economic activity) requires either hand-crafted feature engineering or learned representations via deep convolutional neural networks (CNNs) and vision transformers (ViTs). This chapter covers both approaches.
+Thách thức cốt lõi nằm ở khâu biểu diễn: một hình ảnh là một tensor ba chiều gồm các cường độ điểm ảnh, không có cấu trúc ngữ nghĩa vốn có. Việc chuyển mảng thô này thành một tín hiệu tài chính (tức là một con số dự báo lợi nhuận, đo lường rủi ro hoặc đại diện cho hoạt động kinh tế) đòi hỏi hoặc kỹ thuật thiết kế đặc trưng thủ công, hoặc các biểu diễn được học thông qua mạng nơ-ron tích chập sâu (CNN) và vision transformer (ViT). Chương này trình bày cả hai cách tiếp cận.
 
-We organize the material around five application domains, each with distinct data sources, modeling requirements, and economic motivations. First, satellite and geospatial imagery for nowcasting economic activity. Second, document image analysis for extracting structured data from Vietnamese financial filings. Third, chart and figure digitization for systematic backtesting. Fourth, visual sentiment analysis from social and news media. Fifth, multimodal fusion, combining image and text signals into joint predictive models.
+Chúng ta tổ chức nội dung xoay quanh năm lĩnh vực ứng dụng, mỗi lĩnh vực có nguồn dữ liệu, yêu cầu mô hình hóa và động cơ kinh tế riêng. Thứ nhất, ảnh vệ tinh và ảnh địa không gian để dự báo tức thời (nowcasting) hoạt động kinh tế. Thứ hai, phân tích ảnh tài liệu để trích xuất dữ liệu có cấu trúc từ các hồ sơ tài chính tiếng Việt. Thứ ba, số hóa biểu đồ và hình vẽ cho kiểm định ngược có hệ thống. Thứ tư, phân tích cảm xúc thị giác từ mạng xã hội và truyền thông tin tức. Thứ năm, hợp nhất đa phương thức, kết hợp tín hiệu hình ảnh và văn bản thành các mô hình dự báo chung.
 
-Vietnamese markets present particular opportunities in this space. Satellite imagery is especially informative in an economy with large agricultural and manufacturing sectors where ground-truth data arrives with significant lags. Vietnamese financial filings are often distributed as scanned images rather than machine-readable formats, making document AI essential rather than optional. And the rapid urbanization visible in construction and infrastructure imagery provides high-frequency proxies for macroeconomic momentum that official statistics cannot match.
+Thị trường Việt Nam có những cơ hội đặc thù trong lĩnh vực này. Ảnh vệ tinh đặc biệt hữu ích trong một nền kinh tế có các ngành nông nghiệp và sản xuất lớn, nơi dữ liệu thực địa đến với độ trễ đáng kể. Các hồ sơ tài chính của Việt Nam thường được phát hành dưới dạng ảnh quét thay vì định dạng máy đọc được, khiến AI xử lý tài liệu trở thành điều thiết yếu chứ không phải tùy chọn. Và quá trình đô thị hóa nhanh chóng thể hiện trong ảnh xây dựng và hạ tầng cung cấp các biến đại diện tần suất cao cho động lực kinh tế vĩ mô mà thống kê chính thức không thể sánh được.
 
 ```{python}
 #| label: setup
@@ -40,50 +40,50 @@ import statsmodels.formula.api as smf
 from linearmodels.panel import PanelOLS
 ```
 
-## Foundations: From Pixels to Financial Signals
+## Nền tảng: Từ điểm ảnh đến tín hiệu tài chính
 
-### Image Representation
+### Biểu diễn hình ảnh
 
-A digital image is a function $I: \{1, \ldots, H\} \times \{1, \ldots, W\} \times \{1, \ldots, C\} \rightarrow [0, 255]$ mapping spatial coordinates and color channels to intensity values. For an RGB image of height $H$ and width $W$, the representation is a tensor $\mathbf{I} \in \mathbb{R}^{H \times W \times 3}$. A single $224 \times 224$ RGB image (i.e., the standard input for modern CNNs) contains $224 \times 224 \times 3 = 150{,}528$ dimensions. This extreme dimensionality, combined with spatial structure (nearby pixels are correlated), makes images fundamentally different from tabular financial data and demands specialized architectures.
+Một hình ảnh số là một hàm $I: \{1, \ldots, H\} \times \{1, \ldots, W\} \times \{1, \ldots, C\} \rightarrow [0, 255]$ ánh xạ tọa độ không gian và các kênh màu thành các giá trị cường độ. Với một ảnh RGB có chiều cao $H$ và chiều rộng $W$, biểu diễn là một tensor $\mathbf{I} \in \mathbb{R}^{H \times W \times 3}$. Một ảnh RGB $224 \times 224$ đơn lẻ (tức là đầu vào tiêu chuẩn của các CNN hiện đại) chứa $224 \times 224 \times 3 = 150{,}528$ chiều. Số chiều cực lớn này, kết hợp với cấu trúc không gian (các điểm ảnh lân cận tương quan với nhau), khiến hình ảnh khác biệt căn bản so với dữ liệu tài chính dạng bảng và đòi hỏi các kiến trúc chuyên biệt.
 
-The key insight of convolutional neural networks is parameter sharing via local filters. A convolutional layer applies a kernel $\mathbf{K} \in \mathbb{R}^{k \times k \times C_{\text{in}}}$ to produce a feature map:
+Điểm mấu chốt của mạng nơ-ron tích chập là chia sẻ tham số thông qua các bộ lọc cục bộ. Một lớp tích chập áp dụng một nhân $\mathbf{K} \in \mathbb{R}^{k \times k \times C_{\text{in}}}$ để tạo ra một bản đồ đặc trưng:
 
 $$
 (\mathbf{I} * \mathbf{K})(i, j) = \sum_{m=0}^{k-1} \sum_{n=0}^{k-1} \sum_{c=1}^{C_{\text{in}}} I(i+m, j+n, c) \cdot K(m, n, c)
 $$ {#eq-convolution}
 
-By stacking convolutional layers with nonlinearities and pooling operations, the network builds a hierarchy of representations: early layers detect edges and textures; middle layers detect parts and patterns; deep layers detect objects and scenes. The final layer output $\mathbf{z} \in \mathbb{R}^{d}$ (with $d$ typically 512-2048) is a compact representation of the image's semantic content, which can be used directly as a feature vector for financial prediction.
+Bằng cách xếp chồng các lớp tích chập với các hàm phi tuyến và các phép gộp (pooling), mạng xây dựng một hệ thống phân cấp các biểu diễn: các lớp đầu phát hiện cạnh và kết cấu; các lớp giữa phát hiện các bộ phận và mẫu hình; các lớp sâu phát hiện đối tượng và cảnh vật. Đầu ra của lớp cuối $\mathbf{z} \in \mathbb{R}^{d}$ (với $d$ thường là 512-2048) là một biểu diễn gọn của nội dung ngữ nghĩa của hình ảnh, có thể được dùng trực tiếp làm vector đặc trưng cho dự báo tài chính.
 
-Financial images span a wide range of resolutions and modalities:
+Hình ảnh tài chính trải rộng trên nhiều độ phân giải và dạng thức:
 
-| Source               | Resolution | Channels | Typical Size    | Update Frequency  |
+| Nguồn               | Độ phân giải | Kênh | Kích thước điển hình    | Tần suất cập nhật  |
 |---------------|---------------|---------------|---------------|---------------|
-| Sentinel-2 satellite | 10m/pixel  | 13 bands | 10,980 × 10,980 | 5 days            |
-| Planet Labs          | 3m/pixel   | 4 bands  | 4,000 × 4,000   | Daily             |
-| VIIRS nightlights    | 500m/pixel | 1 (DNB)  | 3,000 × 1,800   | Monthly composite |
-| Annual report scan   | 300 DPI    | 3 (RGB)  | 2,480 × 3,508   | Annual            |
-| CEO photograph       | Varies     | 3 (RGB)  | 500 × 500       | Annual            |
-| News photograph      | Varies     | 3 (RGB)  | 800 × 600       | Real-time         |
-| Financial chart      | Varies     | 3 (RGB)  | 1,000 × 600     | Real-time         |
+| Vệ tinh Sentinel-2 | 10m/pixel  | 13 băng tần | 10,980 × 10,980 | 5 ngày            |
+| Planet Labs          | 3m/pixel   | 4 băng tần  | 4,000 × 4,000   | Hằng ngày             |
+| Độ sáng ban đêm VIIRS    | 500m/pixel | 1 (DNB)  | 3,000 × 1,800   | Tổng hợp hằng tháng |
+| Bản quét báo cáo thường niên   | 300 DPI    | 3 (RGB)  | 2,480 × 3,508   | Hằng năm            |
+| Ảnh chân dung CEO       | Thay đổi     | 3 (RGB)  | 500 × 500       | Hằng năm            |
+| Ảnh tin tức      | Thay đổi     | 3 (RGB)  | 800 × 600       | Thời gian thực         |
+| Biểu đồ tài chính      | Thay đổi     | 3 (RGB)  | 1,000 × 600     | Thời gian thực         |
 
-: Image Data Sources for Vietnamese Financial Markets {#tbl-image-sources}
+: Các nguồn dữ liệu hình ảnh cho thị trường tài chính Việt Nam {#tbl-image-sources}
 
-### Transfer Learning for Finance
+### Học chuyển giao cho tài chính
 
-Training a CNN from scratch requires millions of labeled images, which is far more than any financial application can provide. Transfer learning solves this by using networks pre-trained on ImageNet (1.2 million images, 1,000 classes) as feature extractors. The pre-trained network has already learned generic visual representations (edges, textures, shapes, objects); we simply replace the final classification layer with a task-specific head.
+Huấn luyện một CNN từ đầu đòi hỏi hàng triệu ảnh có gán nhãn, nhiều hơn rất nhiều so với bất kỳ ứng dụng tài chính nào có thể cung cấp. Học chuyển giao (transfer learning) giải quyết vấn đề này bằng cách dùng các mạng đã được tiền huấn luyện trên ImageNet (1,2 triệu ảnh, 1.000 lớp) làm bộ trích xuất đặc trưng. Mạng tiền huấn luyện đã học được các biểu diễn thị giác chung (cạnh, kết cấu, hình dạng, đối tượng); chúng ta chỉ cần thay lớp phân loại cuối cùng bằng một lớp đầu ra (head) riêng cho tác vụ.
 
-Formally, let $f_{\boldsymbol{\theta}}(\mathbf{I})$ denote a pre-trained network with parameters $\boldsymbol{\theta}$ partitioned into feature extractor $\boldsymbol{\theta}_{\text{feat}}$ and classifier $\boldsymbol{\theta}_{\text{cls}}$. For financial applications, we:
+Về mặt hình thức, gọi $f_{\boldsymbol{\theta}}(\mathbf{I})$ là một mạng tiền huấn luyện với các tham số $\boldsymbol{\theta}$ được chia thành bộ trích xuất đặc trưng $\boldsymbol{\theta}_{\text{feat}}$ và bộ phân loại $\boldsymbol{\theta}_{\text{cls}}$. Đối với các ứng dụng tài chính, chúng ta:
 
-1.  **Feature extraction**: Freeze $\boldsymbol{\theta}_{\text{feat}}$, extract $\mathbf{z} = f_{\boldsymbol{\theta}_{\text{feat}}}(\mathbf{I})$, and train a simple model (linear regression, gradient boosting) on $\mathbf{z}$.
-2.  **Fine-tuning**: Initialize from $\boldsymbol{\theta}$ and train all parameters on the financial task with a small learning rate to avoid catastrophic forgetting.
+1.  **Trích xuất đặc trưng**: Đóng băng $\boldsymbol{\theta}_{\text{feat}}$, trích xuất $\mathbf{z} = f_{\boldsymbol{\theta}_{\text{feat}}}(\mathbf{I})$, và huấn luyện một mô hình đơn giản (hồi quy tuyến tính, gradient boosting) trên $\mathbf{z}$.
+2.  **Tinh chỉnh**: Khởi tạo từ $\boldsymbol{\theta}$ và huấn luyện tất cả các tham số trên tác vụ tài chính với tốc độ học nhỏ để tránh quên thảm khốc (catastrophic forgetting).
 
-The key architectural families are:
+Các họ kiến trúc chính là:
 
-**ResNet** \[@he2016deep\]. Residual connections ($y = F(x) + x$) enable training of very deep networks (50-152 layers). The skip connection solves the vanishing gradient problem. ResNet-50 produces a 2,048-dimensional feature vector from the penultimate layer.
+**ResNet** \[@he2016deep\]. Các kết nối phần dư ($y = F(x) + x$) cho phép huấn luyện các mạng rất sâu (50-152 lớp). Kết nối tắt giải quyết vấn đề triệt tiêu gradient. ResNet-50 tạo ra một vector đặc trưng 2.048 chiều từ lớp áp chót.
 
-**EfficientNet** \[@tan2019efficientnet\]. Compound scaling of depth, width, and resolution simultaneously. EfficientNet-B0 achieves ResNet-50 accuracy with 5.3M parameters (vs. 25.6M), making it practical for processing thousands of satellite tiles.
+**EfficientNet** \[@tan2019efficientnet\]. Mở rộng kết hợp (compound scaling) đồng thời độ sâu, độ rộng và độ phân giải. EfficientNet-B0 đạt độ chính xác của ResNet-50 với 5,3 triệu tham số (so với 25,6 triệu), khiến nó khả thi để xử lý hàng nghìn ô ảnh vệ tinh.
 
-**Vision Transformer (ViT)** \[@dosovitskiy2020image\]. Treats an image as a sequence of $16 \times 16$ patches, processes them through a standard Transformer encoder. ViT-B/16 produces a 768-dimensional embedding. Particularly effective for document images where spatial relationships between elements (tables, headers, text blocks) matter.
+**Vision Transformer (ViT)** \[@dosovitskiy2020image\]. Xem một hình ảnh như một chuỗi các mảnh ảnh (patch) $16 \times 16$, xử lý chúng qua một bộ mã hóa Transformer tiêu chuẩn. ViT-B/16 tạo ra một vector nhúng 768 chiều. Đặc biệt hiệu quả đối với ảnh tài liệu, nơi các quan hệ không gian giữa các thành phần (bảng, tiêu đề, khối văn bản) đóng vai trò quan trọng.
 
 ```{python}
 #| label: feature-extractor
@@ -184,21 +184,21 @@ def extract_features(image_paths, model, transform, device="cpu",
     return np.vstack(features)
 ```
 
-## Satellite and Geospatial Imagery
+## Ảnh vệ tinh và ảnh địa không gian
 
-### Economic Activity from Space
+### Hoạt động kinh tế nhìn từ không gian
 
-Satellite imagery provides high-frequency, spatially granular measurements of economic activity that are independent of and often lead official statistics. The foundational work of @henderson2012measuring demonstrated that nighttime luminosity, measured by the Defense Meteorological Satellite Program (DMSP), is a reliable proxy for GDP, particularly in countries where official statistics are noisy or delayed. @donaldson2016view survey the broad applications of satellite data in economics, from agricultural productivity to urban growth to conflict measurement. @donaldson2018railroads use satellite-derived agricultural output measures to study the welfare gains from railroads in colonial India. @jean2016combining combine daytime satellite imagery with CNNs to predict poverty from space with $r^2 > 0.7$.
-
-
-The political economy literature exploits satellite data to answer questions impossible with official statistics. @hodler2014regional use nighttime lights to show that subnational regions politically aligned with the national leader receive differentially more economic activity (e.g., a finding on regional favoritism that has direct relevance for Vietnam's province-level investment allocation). @henderson2018global extend the lights framework to study the global distribution of economic activity, showing how geography, history, and trade jointly determine the spatial pattern of prosperity.
+Ảnh vệ tinh cung cấp các phép đo hoạt động kinh tế có tần suất cao và chi tiết về không gian, độc lập với và thường đi trước thống kê chính thức. Công trình nền tảng của @henderson2012measuring đã chứng minh rằng độ sáng ban đêm, được đo bởi Chương trình Vệ tinh Khí tượng Quốc phòng (DMSP), là một biến đại diện đáng tin cậy cho GDP, đặc biệt ở những quốc gia có thống kê chính thức nhiều nhiễu hoặc chậm trễ. @donaldson2016view khảo cứu các ứng dụng rộng rãi của dữ liệu vệ tinh trong kinh tế học, từ năng suất nông nghiệp đến tăng trưởng đô thị và đo lường xung đột. @donaldson2018railroads dùng các thước đo sản lượng nông nghiệp lấy từ vệ tinh để nghiên cứu lợi ích phúc lợi của đường sắt ở Ấn Độ thuộc địa. @jean2016combining kết hợp ảnh vệ tinh ban ngày với các CNN để dự đoán nghèo đói từ không gian với $r^2 > 0.7$.
 
 
-For financial applications, the key insight is that satellite data arrives faster than corporate earnings or government statistics. A retailer's quarterly revenue is reported 4-8 weeks after the quarter ends; satellite imagery of its parking lots is available within days. This temporal advantage creates a natural use case for nowcasting (i.e., estimating current economic conditions before official data arrives) and for constructing trading signals based on information that is public but costly to process.
+Tài liệu kinh tế chính trị khai thác dữ liệu vệ tinh để trả lời những câu hỏi không thể giải đáp bằng thống kê chính thức. @hodler2014regional dùng độ sáng ban đêm để cho thấy các vùng dưới cấp quốc gia có liên kết chính trị với nhà lãnh đạo quốc gia có mức hoạt động kinh tế cao hơn hẳn so với các vùng khác (ví dụ: một phát hiện về sự thiên vị theo vùng có liên quan trực tiếp đến việc phân bổ đầu tư cấp tỉnh của Việt Nam). @henderson2018global mở rộng khung độ sáng để nghiên cứu phân bố toàn cầu của hoạt động kinh tế, cho thấy địa lý, lịch sử và thương mại cùng quyết định hình thái phân bố không gian của sự thịnh vượng.
 
-### Application 1: Nighttime Luminosity and Provincial GDP
 
-Vietnam's General Statistics Office (GSO) publishes provincial GDP with a lag of several months. Nighttime luminosity from the VIIRS (Visible Infrared Imaging Radiometer Suite) sensor provides a near-real-time alternative. We construct a firm-level exposure measure by linking each listed firm's registered location to the luminosity of its province.
+Đối với các ứng dụng tài chính, điểm mấu chốt là dữ liệu vệ tinh đến nhanh hơn lợi nhuận kế toán của doanh nghiệp hay thống kê của chính phủ. Doanh thu hằng quý của một nhà bán lẻ được báo cáo 4-8 tuần sau khi quý kết thúc; ảnh vệ tinh về các bãi đỗ xe của họ có sẵn trong vòng vài ngày. Lợi thế về thời gian này tạo ra một trường hợp sử dụng tự nhiên cho dự báo tức thời (tức là ước tính các điều kiện kinh tế hiện tại trước khi dữ liệu chính thức được công bố) và cho việc xây dựng các tín hiệu giao dịch dựa trên thông tin công khai nhưng tốn kém để xử lý.
+
+### Ứng dụng 1: Độ sáng ban đêm và GDP cấp tỉnh
+
+Tổng cục Thống kê (GSO) của Việt Nam công bố GDP cấp tỉnh với độ trễ vài tháng. Độ sáng ban đêm từ cảm biến VIIRS (Visible Infrared Imaging Radiometer Suite) cung cấp một giải pháp thay thế gần như theo thời gian thực. Chúng ta xây dựng một thước đo mức độ phơi nhiễm ở cấp doanh nghiệp bằng cách liên kết địa điểm đăng ký của mỗi doanh nghiệp niêm yết với độ sáng của tỉnh đó.
 
 ```{python}
 #| label: nightlight-data
@@ -267,7 +267,7 @@ print(f"Avg R² (ln GDP ~ ln Luminosity): {validation_df['r_squared'].mean():.3f
 ```{python}
 #| label: fig-nightlight-gdp
 #| eval: false
-#| fig-cap: "Nighttime Luminosity as a Predictor of Provincial GDP"
+#| fig-cap: "Độ sáng ban đêm như một biến dự báo GDP cấp tỉnh"
 
 (
     p9.ggplot(nl_gdp[nl_gdp["year"] == 2023],
@@ -349,7 +349,7 @@ nl_wide["L-S"] = nl_wide[5] - nl_wide[1]  # High NL growth - Low
 ```{python}
 #| label: tbl-nightlight-portfolios
 #| eval: false
-#| tbl-cap: "Nighttime Luminosity Growth Quintile Portfolio Returns"
+#| tbl-cap: "Lợi nhuận của danh mục theo nhóm ngũ phân vị tăng trưởng độ sáng ban đêm"
 
 nl_summary = nl_wide.describe().T[["mean", "std"]].copy()
 nl_summary["mean_ann"] = nl_summary["mean"] * 12
@@ -367,21 +367,21 @@ nl_summary.columns = ["Ann. Return", "Sharpe", "t-stat"]
 nl_summary
 ```
 
-### Application 2: Satellite Imagery for Sector Nowcasting
+### Ứng dụng 2: Ảnh vệ tinh cho dự báo tức thời theo ngành
 
-Beyond luminosity, daytime satellite imagery provides sector-specific signals. We implement three channels relevant to the Vietnamese economy.
+Ngoài độ sáng ban đêm, ảnh vệ tinh ban ngày cung cấp các tín hiệu đặc thù theo ngành. Chúng ta triển khai ba kênh liên quan đến nền kinh tế Việt Nam.
 
 **Port activity.** Vietnam is a major export-oriented economy. Satellite imagery of container ports (Cát Lái, Hải Phòng) captures trade throughput before customs statistics are released. Ship detection algorithms applied to synthetic aperture radar (SAR) imagery count vessels and estimate cargo volumes.
 
-**Construction progress.** Real estate and construction constitute a significant fraction of Vietnamese GDP and market capitalization. Change detection algorithms applied to high-resolution optical imagery identify construction starts, completion rates, and land-use conversion.
+**Tiến độ xây dựng.** Bất động sản và xây dựng chiếm một tỷ trọng đáng kể trong GDP và vốn hóa thị trường của Việt Nam. Các thuật toán phát hiện thay đổi áp dụng cho ảnh quang học độ phân giải cao nhận diện các công trình khởi công, tỷ lệ hoàn thành và việc chuyển đổi mục đích sử dụng đất.
 
-**Agricultural monitoring.** Vietnam is a leading exporter of rice, coffee, rubber, and seafood. The Normalized Difference Vegetation Index (NDVI), computed from multispectral satellite data, provides crop health assessments:
+**Giám sát nông nghiệp.** Việt Nam là nước xuất khẩu hàng đầu về gạo, cà phê, cao su và thủy sản. Chỉ số khác biệt thực vật chuẩn hóa (NDVI), được tính từ dữ liệu vệ tinh đa phổ, cung cấp đánh giá về sức khỏe cây trồng:
 
 $$
 \text{NDVI} = \frac{\rho_{\text{NIR}} - \rho_{\text{Red}}}{\rho_{\text{NIR}} + \rho_{\text{Red}}}
 $$ {#eq-ndvi}
 
-where $\rho_{\text{NIR}}$ and $\rho_{\text{Red}}$ are reflectance in the near-infrared and red bands. NDVI ranges from $-1$ to $+1$, with values above 0.3 indicating healthy vegetation. Deviations from seasonal norms proxy for crop yield surprises.
+trong đó $\rho_{\text{NIR}}$ và $\rho_{\text{Red}}$ là độ phản xạ ở các băng cận hồng ngoại và băng đỏ. NDVI nhận giá trị từ $-1$ đến $+1$, với các giá trị trên 0,3 cho thấy thực vật khỏe mạnh. Các độ lệch so với chuẩn theo mùa là biến đại diện cho các bất ngờ về năng suất cây trồng.
 
 ```{python}
 #| label: ndvi-agriculture
@@ -433,7 +433,7 @@ mekong_monthly = (
 ```{python}
 #| label: fig-ndvi-timeseries
 #| eval: false
-#| fig-cap: "NDVI Anomaly in Mekong Delta: Crop Health Signal"
+#| fig-cap: "Bất thường NDVI ở Đồng bằng sông Cửu Long: tín hiệu sức khỏe cây trồng"
 
 ndvi_plot = ndvi_data[ndvi_data["region"] == "mekong_delta"].copy()
 
@@ -489,9 +489,9 @@ print(f"  t-stat: {model_ndvi.tstats['ndvi_lag1']:.3f}")
 print(f"  R² (within): {model_ndvi.rsquared_within:.4f}")
 ```
 
-### Satellite Feature Extraction with CNNs
+### Trích xuất đặc trưng từ ảnh vệ tinh bằng CNN
 
-For raw satellite imagery (rather than pre-computed indices like NDVI), we use transfer learning from CNNs to extract spatial features. The approach follows @jean2016combining: use a CNN pre-trained on ImageNet to extract feature vectors from satellite tiles, then regress economic outcomes on these features.
+Đối với ảnh vệ tinh thô (thay vì các chỉ số tính sẵn như NDVI), chúng ta dùng học chuyển giao từ các CNN để trích xuất các đặc trưng không gian. Cách tiếp cận theo @jean2016combining: dùng một CNN đã tiền huấn luyện trên ImageNet để trích xuất các vector đặc trưng từ các ô ảnh vệ tinh, sau đó hồi quy các kết quả kinh tế theo các đặc trưng này.
 
 ```{python}
 #| label: satellite-cnn-pipeline
@@ -587,20 +587,20 @@ def predict_economic_activity(features_df, labels_df, label_col,
     }
 ```
 
-## Document Image Analysis
+## Phân tích ảnh tài liệu
 
-### The Vietnamese Filing Problem
+### Vấn đề hồ sơ tài chính của Việt Nam
 
-A substantial fraction of Vietnamese corporate disclosures (e.g., annual reports, financial statements, board resolutions, shareholder meeting minutes) are distributed as scanned PDF images rather than machine-readable text. This creates a data extraction bottleneck: the information exists but is trapped in pixel format. Unlike filings in more developed markets (where XBRL mandates ensure machine readability), Vietnamese filings require Optical Character Recognition (OCR) and layout analysis before any quantitative analysis can begin.
+Một tỷ lệ đáng kể các bản công bố thông tin của doanh nghiệp Việt Nam (ví dụ: báo cáo thường niên, báo cáo tài chính, nghị quyết hội đồng quản trị, biên bản họp cổ đông) được phát hành dưới dạng ảnh PDF quét thay vì văn bản máy đọc được. Điều này tạo ra một nút thắt trong trích xuất dữ liệu: thông tin tồn tại nhưng bị mắc kẹt trong định dạng điểm ảnh. Không như các hồ sơ ở những thị trường phát triển hơn (nơi các quy định bắt buộc XBRL bảo đảm khả năng máy đọc được), các hồ sơ của Việt Nam đòi hỏi nhận dạng ký tự quang học (OCR) và phân tích bố cục trước khi có thể bắt đầu bất kỳ phân tích định lượng nào.
 
-The document AI pipeline for Vietnamese financial filings involves four stages:
+Quy trình AI xử lý tài liệu cho các hồ sơ tài chính Việt Nam gồm bốn giai đoạn:
 
-1.  **Page classification**: Identify which pages contain financial statements, management discussion, audit opinions, etc.
-2.  **Layout analysis**: Detect the spatial structure such as headers, paragraphs, tables, figures, captions.
-3.  **OCR**: Convert image regions to text, using Vietnamese-optimized models.
-4.  **Structured extraction**: Parse the recognized text into structured data (e.g., revenue figures, balance sheet items).
+1.  **Phân loại trang**: Xác định những trang nào chứa báo cáo tài chính, thảo luận của ban điều hành, ý kiến kiểm toán, v.v.
+2.  **Phân tích bố cục**: Phát hiện cấu trúc không gian như tiêu đề, đoạn văn, bảng, hình vẽ, chú thích.
+3.  **OCR**: Chuyển các vùng ảnh thành văn bản, dùng các mô hình được tối ưu cho tiếng Việt.
+4.  **Trích xuất có cấu trúc**: Phân tích cú pháp văn bản đã nhận dạng thành dữ liệu có cấu trúc (ví dụ: số liệu doanh thu, các khoản mục bảng cân đối kế toán).
 
-### OCR for Vietnamese Financial Documents
+### OCR cho tài liệu tài chính tiếng Việt
 
 Standard OCR engines (Tesseract, Google Cloud Vision) struggle with Vietnamese financial documents due to the combination of Vietnamese diacritics (ă, ơ, ư, ê, etc.), mixed Vietnamese-English content, and complex table layouts. We implement a pipeline using PaddleOCR (which has strong CJK and Southeast Asian language support) and VietOCR (a Vietnamese-specific model based on the transformer architecture of @baek2019wrong).
 
@@ -703,9 +703,9 @@ def classify_page_type(ocr_results, page_num):
     return max(scores, key=scores.get)
 ```
 
-### Table Extraction from Financial Statements
+### Trích xuất bảng từ báo cáo tài chính
 
-The highest-value extraction task is recovering structured tables from financial statements. We implement a two-stage approach: first detect table regions using a layout analysis model, then parse the detected regions into row-column structure.
+Tác vụ trích xuất có giá trị cao nhất là khôi phục các bảng có cấu trúc từ báo cáo tài chính. Chúng ta triển khai một cách tiếp cận hai giai đoạn: trước tiên phát hiện các vùng bảng bằng một mô hình phân tích bố cục, sau đó phân tích cú pháp các vùng được phát hiện thành cấu trúc hàng-cột.
 
 ```{python}
 #| label: table-extraction
@@ -806,9 +806,9 @@ def parse_financial_numbers(text):
         return np.nan
 ```
 
-### Layout-Aware Document Understanding
+### Hiểu tài liệu có nhận biết bố cục
 
-Modern document AI goes beyond OCR by jointly modeling text content and spatial layout. LayoutLM [@huang2022layoutlmv3] and its successors treat each token as having both a text embedding and a positional embedding derived from its bounding box coordinates. This allows the model to understand that a number positioned below a "Revenue" header and to the right of "2023" is the 2023 revenue figure, even without explicit table detection.
+AI xử lý tài liệu hiện đại vượt ra ngoài OCR bằng cách mô hình hóa đồng thời nội dung văn bản và bố cục không gian. LayoutLM [@huang2022layoutlmv3] và các mô hình kế tiếp coi mỗi token có cả vector nhúng văn bản lẫn vector nhúng vị trí được suy ra từ tọa độ khung bao của nó. Điều này cho phép mô hình hiểu rằng một con số nằm bên dưới tiêu đề "Revenue" và bên phải của "2023" là số liệu doanh thu năm 2023, ngay cả khi không có phát hiện bảng một cách tường minh.
 
 ```{python}
 #| label: layoutlm-extraction
@@ -903,19 +903,19 @@ def layoutlm_extract(document_pages, model_name="layoutlmv3"):
     return extracted
 ```
 
-## Chart and Figure Digitization
+## Số hóa biểu đồ và hình vẽ
 
-### Motivation: Unlocking Visual Financial Data
+### Động cơ: Vì sao hình ảnh mang thông tin tài chính
 
-Financial charts (e.g., price time series, bar charts of earnings, scatter plots of risk-return tradeoffs) embed information that analysts process visually. For systematic strategies, this information must be converted to numerical form. Three use cases motivate chart digitization:
+Các biểu đồ tài chính (ví dụ: chuỗi thời gian giá, biểu đồ cột về lợi nhuận kế toán, biểu đồ phân tán về đánh đổi rủi ro-lợi nhuận) chứa thông tin mà các nhà phân tích xử lý bằng mắt. Đối với các chiến lược có hệ thống, thông tin này phải được chuyển sang dạng số. Ba trường hợp sử dụng thúc đẩy việc số hóa biểu đồ:
 
-1.  **Historical data recovery.** Pre-digital financial data often exists only in printed charts. Digitizing these charts extends historical time series beyond the electronic era.
-2.  **Broker report extraction.** Sell-side research reports contain charts with projections and scenario analyses. Extracting these programmatically enables systematic aggregation of analyst views.
-3.  **Regulatory filings.** Vietnamese regulatory filings sometimes embed data as images (charts, scanned tables) rather than as machine-readable values.
+1.  **Khôi phục dữ liệu lịch sử.** Dữ liệu tài chính thời kỳ tiền số hóa thường chỉ tồn tại trong các biểu đồ in. Việc số hóa các biểu đồ này kéo dài các chuỗi thời gian lịch sử vượt ra ngoài kỷ nguyên điện tử.
+2.  **Trích xuất báo cáo của công ty môi giới.** Các báo cáo phân tích bên bán chứa các biểu đồ với dự phóng và phân tích kịch bản. Việc trích xuất chúng bằng chương trình cho phép tổng hợp có hệ thống quan điểm của các nhà phân tích.
+3.  **Hồ sơ quy định.** Các hồ sơ quy định của Việt Nam đôi khi nhúng dữ liệu dưới dạng hình ảnh (biểu đồ, bảng quét) thay vì các giá trị máy đọc được.
 
-### Chart Type Classification
+### Phân loại kiểu biểu đồ
 
-The first step is classifying the chart type (line, bar, scatter, pie, candlestick), which determines the appropriate digitization algorithm.
+Bước đầu tiên là phân loại kiểu biểu đồ (đường, cột, phân tán, tròn, nến), từ đó xác định thuật toán số hóa phù hợp.
 
 ```{python}
 #| label: chart-classification
@@ -964,9 +964,9 @@ def classify_chart(image_path, model, transform):
     }
 ```
 
-### Line Chart Digitization
+### Số hóa biểu đồ đường
 
-For line charts, the digitization task is to recover the $(x, y)$ data series from the image. The pipeline involves axis detection, scale calibration, and curve tracing.
+Đối với biểu đồ đường, nhiệm vụ số hóa là khôi phục chuỗi dữ liệu $(x, y)$ từ hình ảnh. Quy trình bao gồm phát hiện trục, hiệu chỉnh thang đo và dò đường cong.
 
 ```{python}
 #| label: line-chart-digitizer
@@ -1041,15 +1041,15 @@ def digitize_line_chart(image_path, x_range=None, y_range=None):
     return pd.DataFrame(data_points)
 ```
 
-## Visual Sentiment Analysis
+## Phân tích cảm xúc thị giác
 
-### Image Sentiment in Financial News
+### Cảm xúc của hình ảnh trong tin tức tài chính
 
-News articles are accompanied by images that carry sentiment independent of the text. A photograph of a CEO smiling at a press conference conveys different information than the same CEO facing protesters. @obaid2022picture demonstrate that the visual sentiment of Wall Street Journal photographs predicts market returns: days with more negative imagery precede lower returns.
+Các bài báo tin tức đi kèm các hình ảnh mang cảm xúc độc lập với văn bản. Bức ảnh một CEO mỉm cười tại buổi họp báo truyền tải thông tin khác với bức ảnh cùng CEO đó đối mặt với người biểu tình. @obaid2022picture chứng minh rằng cảm xúc thị giác của các bức ảnh trên Wall Street Journal dự báo lợi nhuận thị trường: những ngày có nhiều hình ảnh tiêu cực hơn đi trước mức lợi nhuận thấp hơn.
 
-We implement visual sentiment analysis using two approaches: a pre-trained sentiment classifier and a vision-language model that interprets images in financial context.
+Chúng ta triển khai phân tích cảm xúc thị giác bằng hai cách tiếp cận: một bộ phân loại cảm xúc tiền huấn luyện và một mô hình thị giác-ngôn ngữ diễn giải hình ảnh trong bối cảnh tài chính.
 
-### CNN-Based Visual Sentiment
+### Cảm xúc thị giác dựa trên CNN
 
 ```{python}
 #| label: visual-sentiment
@@ -1108,9 +1108,9 @@ def compute_visual_sentiment(image_paths, model_name="resnet50"):
     })
 ```
 
-### Vision-Language Models for Financial Image Understanding
+### Mô hình thị giác-ngôn ngữ cho việc hiểu hình ảnh tài chính
 
-The most powerful approach to financial image analysis uses vision-language models (VLMs), which jointly process images and text. Models such as CLIP [@radford2021learning], BLIP-2 [@li2023blip], and GPT-4V can be prompted to interpret financial images in context. For instance, given an aerial photograph of a factory, a VLM can answer "Is this factory operating at full capacity?" or "Is there visible construction of additional facilities?"
+Cách tiếp cận mạnh nhất cho phân tích hình ảnh tài chính sử dụng các mô hình thị giác-ngôn ngữ (VLM), xử lý đồng thời hình ảnh và văn bản. Các mô hình như CLIP [@radford2021learning], BLIP-2 [@li2023blip] và GPT-4V có thể được nhắc lệnh để diễn giải các hình ảnh tài chính trong ngữ cảnh. Chẳng hạn, với một bức ảnh chụp từ trên không của một nhà máy, một VLM có thể trả lời "Nhà máy này có đang hoạt động hết công suất không?" hoặc "Có thấy việc xây dựng thêm các cơ sở không?"
 
 ```{python}
 #| label: vlm-analysis
@@ -1243,7 +1243,7 @@ sentiment_returns["mkt_ret_lead1"] = sentiment_returns["mkt_ret"].shift(-1)
 ```{python}
 #| label: tbl-visual-sentiment-predictability
 #| eval: false
-#| tbl-cap: "Visual Sentiment and Market Return Predictability"
+#| tbl-cap: "Cảm xúc thị giác và khả năng dự báo lợi nhuận thị trường"
 
 # Regression: next-day return on today's visual sentiment
 sr_clean = sentiment_returns.dropna(
@@ -1264,19 +1264,19 @@ sent_results = pd.DataFrame({
 sent_results
 ```
 
-## Multimodal Fusion: Combining Image and Text
+## Hợp nhất đa phương thức: Kết hợp hình ảnh và văn bản
 
-### Why Multimodal?
+### Vì sao cần đa phương thức?
 
-Text and images capture different dimensions of the same underlying economic reality. An earnings report describes financial performance in words and numbers; the accompanying photographs show factories, products, and management. A news article about a port describes trade volumes in text; the satellite image shows actual ship positions. Combining both modalities yields a richer representation than either alone.
+Văn bản và hình ảnh nắm bắt các khía cạnh khác nhau của cùng một thực tế kinh tế nền tảng. Một báo cáo kết quả kinh doanh mô tả hiệu quả tài chính bằng lời và số; các bức ảnh đi kèm cho thấy nhà máy, sản phẩm và ban điều hành. Một bài báo về một cảng mô tả khối lượng thương mại bằng văn bản; ảnh vệ tinh cho thấy vị trí thực tế của các tàu. Kết hợp cả hai phương thức cho ra một biểu diễn phong phú hơn so với từng phương thức riêng lẻ.
 
-The fusion architecture depends on the application:
+Kiến trúc hợp nhất phụ thuộc vào ứng dụng:
 
-**Early fusion.** Concatenate image features $\mathbf{z}^{\text{img}}$ and text features $\mathbf{z}^{\text{txt}}$ into a single vector $[\mathbf{z}^{\text{img}}; \mathbf{z}^{\text{txt}}]$ before prediction. Simple but ignores cross-modal interactions.
+**Hợp nhất sớm.** Nối các đặc trưng hình ảnh $\mathbf{z}^{\text{img}}$ và các đặc trưng văn bản $\mathbf{z}^{\text{txt}}$ thành một vector duy nhất $[\mathbf{z}^{\text{img}}; \mathbf{z}^{\text{txt}}]$ trước khi dự báo. Đơn giản nhưng bỏ qua các tương tác chéo phương thức.
 
-**Late fusion.** Train separate models on each modality and combine predictions: $\hat{y} = \alpha \hat{y}^{\text{img}} + (1-\alpha) \hat{y}^{\text{txt}}$. Robust but cannot learn cross-modal features.
+**Hợp nhất muộn.** Huấn luyện các mô hình riêng cho từng phương thức và kết hợp các dự báo: $\hat{y} = \alpha \hat{y}^{\text{img}} + (1-\alpha) \hat{y}^{\text{txt}}$. Vững chắc nhưng không thể học các đặc trưng chéo phương thức.
 
-**Cross-attention fusion.** Use transformer cross-attention to let each modality attend to the other. Most powerful but requires more data and computation.
+**Hợp nhất bằng chú ý chéo.** Dùng cơ chế chú ý chéo (cross-attention) của transformer để mỗi phương thức chú ý đến phương thức còn lại. Mạnh nhất nhưng đòi hỏi nhiều dữ liệu và tính toán hơn.
 
 $$
 \mathbf{z}^{\text{fused}} = \text{CrossAttention}(\mathbf{z}^{\text{img}}, \mathbf{z}^{\text{txt}}) = \text{softmax}\left(\frac{\mathbf{Q}^{\text{img}} (\mathbf{K}^{\text{txt}})^\top}{\sqrt{d}}\right) \mathbf{V}^{\text{txt}}
@@ -1474,29 +1474,29 @@ def run_multimodal_experiment(image_features, text_features, returns,
     return pd.DataFrame(results)
 ```
 
-### Practical Considerations for Vietnamese Markets
+### Những cân nhắc thực tiễn đối với thị trường Việt Nam
 
-Multimodal analysis in Vietnamese markets faces several practical considerations:
+Phân tích đa phương thức trên thị trường Việt Nam đối mặt với một số cân nhắc thực tiễn:
 
-**Data alignment.** Satellite images, news articles, and market data operate on different temporal frequencies and spatial resolutions. Satellite composites are available weekly or biweekly; news is daily; trading is intraday. Proper alignment requires specifying the information set available to an investor at the time of the trading decision to avoid look-ahead bias.
+**Căn chỉnh dữ liệu.** Ảnh vệ tinh, bài báo tin tức và dữ liệu thị trường vận hành ở các tần suất thời gian và độ phân giải không gian khác nhau. Ảnh vệ tinh tổng hợp có sẵn hằng tuần hoặc hai tuần một lần; tin tức theo ngày; giao dịch trong ngày. Việc căn chỉnh đúng đòi hỏi xác định tập thông tin mà nhà đầu tư có tại thời điểm ra quyết định giao dịch để tránh thiên lệch nhìn trước.
 
-**Label scarcity.** Supervised learning requires labeled data (e.g., images annotated with economic outcomes). In Vietnam, ground-truth labels (actual retail sales, actual crop yields, actual port throughput) arrive with significant lags and often lack the granularity to match satellite resolution. Semi-supervised and self-supervised approaches are therefore essential.
+**Khan hiếm nhãn.** Học có giám sát đòi hỏi dữ liệu có gán nhãn (ví dụ: hình ảnh được chú thích bằng các kết quả kinh tế). Ở Việt Nam, các nhãn thực địa (doanh số bán lẻ thực tế, năng suất cây trồng thực tế, thông lượng cảng thực tế) đến với độ trễ đáng kể và thường thiếu độ chi tiết để khớp với độ phân giải của vệ tinh. Do đó, các cách tiếp cận bán giám sát và tự giám sát là thiết yếu.
 
-**Regulatory considerations.** High-resolution satellite imagery of specific commercial or military installations may be restricted. Researchers should verify that their imagery sources comply with Vietnamese regulations on geospatial data.
+**Cân nhắc về quy định.** Ảnh vệ tinh độ phân giải cao của các cơ sở thương mại hoặc quân sự cụ thể có thể bị hạn chế. Các nhà nghiên cứu nên xác minh rằng các nguồn ảnh của họ tuân thủ quy định của Việt Nam về dữ liệu địa không gian.
 
-**Computational cost.** Processing satellite tiles through CNNs is computationally intensive. A single Sentinel-2 tile at 10m resolution covering Ho Chi Minh City contains approximately $10{,}980 \times 10{,}980$ pixels per band. Tiling into $224 \times 224$ patches for CNN input generates $\sim 2{,}400$ patches per tile, each requiring a forward pass through the network.
+**Chi phí tính toán.** Xử lý các ô ảnh vệ tinh qua CNN đòi hỏi tính toán nặng. Một ô Sentinel-2 đơn lẻ ở độ phân giải 10m bao phủ Thành phố Hồ Chí Minh chứa khoảng $10{,}980 \times 10{,}980$ điểm ảnh trên mỗi băng tần. Việc chia thành các mảnh ảnh $224 \times 224$ làm đầu vào cho CNN tạo ra $\sim 2{,}400$ mảnh trên mỗi ô, mỗi mảng cần một lượt lan truyền xuôi qua mạng.
 
-| Application | Image Source | Resolution | Frequency | Vietnamese Availability |
+| Ứng dụng | Nguồn ảnh | Độ phân giải | Tần suất | Khả năng tiếp cận tại Việt Nam |
 |---------------|---------------|---------------|---------------|---------------|
-| Nighttime luminosity | VIIRS/DMSP | 500m | Monthly | Free (NOAA/EOG) |
-| Crop health | MODIS/Sentinel-2 | 250m/10m | 16-day/5-day | Free (NASA/ESA) |
-| Port/ship detection | Sentinel-1 (SAR) | 10m | 12-day | Free (ESA Copernicus) |
-| Construction monitoring | Commercial (Maxar) | 30cm | On demand | Paid (\$) |
-| Urban density | Sentinel-2 | 10m | 5-day | Free (ESA) |
-| Document OCR | Corporate filings | N/A | Event-driven | DataCore.vn |
-| News images | Financial media | N/A | Daily | Web scraping |
+| Độ sáng ban đêm | VIIRS/DMSP | 500m | Hằng tháng | Miễn phí (NOAA/EOG) |
+| Sức khỏe cây trồng | MODIS/Sentinel-2 | 250m/10m | 16 ngày/5 ngày | Miễn phí (NASA/ESA) |
+| Phát hiện cảng/tàu | Sentinel-1 (SAR) | 10m | 12 ngày | Miễn phí (ESA Copernicus) |
+| Giám sát xây dựng | Thương mại (Maxar) | 30cm | Theo yêu cầu | Trả phí (\$) |
+| Mật độ đô thị | Sentinel-2 | 10m | 5 ngày | Miễn phí (ESA) |
+| OCR tài liệu | Hồ sơ của doanh nghiệp | N/A | Theo sự kiện | DataCore.vn |
+| Ảnh tin tức | Truyền thông tài chính | N/A | Hằng ngày | Thu thập dữ liệu web |
 
-: Image Data Sources for Vietnamese Financial Applications {#tbl-image-sources}
+: Các nguồn dữ liệu hình ảnh cho các ứng dụng tài chính tại Việt Nam {#tbl-image-sources}
 
 ```{=html}
 <!-- ## Exercises
@@ -1514,16 +1514,16 @@ Multimodal analysis in Vietnamese markets faces several practical considerations
 6.  **Chart Digitization for Historical Vietnamese Market Data.** Obtain scanned charts of the VN-Index from pre-2005 sources (before electronic data was widely available). Digitize the index level time series using the line chart digitization algorithm. Cross-validate against any available electronic data for overlapping periods. Estimate the digitization error and assess whether the recovered time series is sufficiently accurate for computing return statistics (mean, volatility, maximum drawdown). -->
 ```
 
-## Summary
+## Tóm tắt
 
-This chapter extended the alternative data toolkit from text (the previous chapter) to images. We demonstrated five distinct application domains for visual data in Vietnamese financial markets.
+Chương này đã mở rộng bộ công cụ dữ liệu thay thế từ văn bản (chương trước) sang hình ảnh. Chúng ta đã trình bày năm lĩnh vực ứng dụng riêng biệt của dữ liệu thị giác trên thị trường tài chính Việt Nam.
 
-First, satellite and geospatial imagery provides high-frequency, spatially granular economic signals that lead official statistics. Nighttime luminosity serves as a provincial GDP proxy with cross-sectional $R^2$ exceeding 0.7; NDVI crop health indices predict agricultural firm returns; and CNN features extracted from satellite tiles enable rich spatial representations of economic activity.
+Thứ nhất, ảnh vệ tinh và ảnh địa không gian cung cấp các tín hiệu kinh tế tần suất cao, chi tiết về không gian, đi trước thống kê chính thức. Độ sáng ban đêm đóng vai trò biến đại diện cho GDP cấp tỉnh với $R^2$ theo mặt cắt ngang vượt 0.7; các chỉ số sức khỏe cây trồng NDVI dự báo lợi nhuận của các doanh nghiệp nông nghiệp; và các đặc trưng CNN được trích xuất từ các ô ảnh vệ tinh cho phép các biểu diễn không gian phong phú về hoạt động kinh tế.
 
-Second, document image analysis solves the practical problem of extracting structured data from Vietnamese financial filings that arrive as scanned images. The pipeline (e.g., OCR with Vietnamese-optimized engines, layout analysis, table extraction, and LayoutLM-based document understanding) converts unstructured pixels into the structured financial data that all downstream analyses require.
+Thứ hai, phân tích ảnh tài liệu giải quyết vấn đề thực tiễn là trích xuất dữ liệu có cấu trúc từ các hồ sơ tài chính của Việt Nam vốn đến dưới dạng ảnh quét. Quy trình (ví dụ: OCR với các công cụ được tối ưu cho tiếng Việt, phân tích bố cục, trích xuất bảng và hiểu tài liệu dựa trên LayoutLM) chuyển các điểm ảnh phi cấu trúc thành dữ liệu tài chính có cấu trúc mà mọi phân tích phía sau đều cần.
 
-Third, chart digitization recovers numerical data series from visual representations, extending historical coverage and enabling systematic consumption of analyst outputs. Fourth, visual sentiment analysis from news imagery provides a signal dimension orthogonal to textual sentiment, with potential predictive power for market returns.
+Thứ ba, số hóa biểu đồ khôi phục các chuỗi dữ liệu số từ các biểu diễn thị giác, mở rộng phạm vi lịch sử và cho phép sử dụng có hệ thống các sản phẩm của nhà phân tích. Thứ tư, phân tích cảm xúc thị giác từ hình ảnh tin tức cung cấp một chiều tín hiệu trực giao với cảm xúc văn bản, với sức dự báo tiềm năng đối với lợi nhuận thị trường.
 
-Fifth, multimodal fusion (combining image and text representations via early, late, or cross-attention architectures) yields richer predictive models than either modality alone. The practical benefit of multimodal approaches scales with the diversity and quality of available data, making it increasingly relevant as Vietnamese alternative data ecosystems mature.
+Thứ năm, hợp nhất đa phương thức (kết hợp các biểu diễn hình ảnh và văn bản thông qua các kiến trúc hợp nhất sớm, muộn hoặc chú ý chéo) cho ra các mô hình dự báo phong phú hơn so với từng phương thức riêng lẻ. Lợi ích thực tiễn của các cách tiếp cận đa phương thức tăng theo mức độ đa dạng và chất lượng của dữ liệu sẵn có, khiến nó ngày càng phù hợp khi hệ sinh thái dữ liệu thay thế của Việt Nam trưởng thành.
 
-The common thread across all applications is the transformation pipeline: raw pixel tensor $\to$ feature representation (via CNN, ViT, or VLM) $\to$ financial signal $\to$ economic interpretation. The choice of architecture and the quality of the domain adaptation determine whether the resulting signal has genuine predictive content or merely captures noise.
+Mạch xuyên suốt tất cả các ứng dụng là quy trình biến đổi: tensor điểm ảnh thô $\to$ biểu diễn đặc trưng (qua CNN, ViT hoặc VLM) $\to$ tín hiệu tài chính $\to$ diễn giải kinh tế. Việc lựa chọn kiến trúc và chất lượng của việc thích ứng miền quyết định liệu tín hiệu thu được có nội dung dự báo thực sự hay chỉ nắm bắt nhiễu.

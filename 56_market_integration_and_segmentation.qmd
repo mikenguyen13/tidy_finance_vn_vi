@@ -1,54 +1,54 @@
-# Market Integration and Segmentation
+# Hội nhập và phân khúc thị trường
 
 ::: callout-note
-In this chapter, we measure the degree to which the Vietnamese equity market is integrated with or segmented from global capital markets. We construct multiple integration metrics, including correlation-based, factor-based, and pricing-error-based, trace their evolution through Vietnam's liberalization timeline, and quantify the cost of segmentation for Vietnamese firms.
+Trong chương này, chúng ta đo lường mức độ thị trường cổ phiếu Việt Nam hội nhập với, hoặc bị phân khúc khỏi, các thị trường vốn toàn cầu. Chúng ta xây dựng nhiều thước đo hội nhập, gồm các thước đo dựa trên tương quan, dựa trên nhân tố và dựa trên sai số định giá, theo dõi diễn biến của chúng qua tiến trình tự do hóa của Việt Nam, và định lượng chi phí của phân khúc thị trường đối với các doanh nghiệp Việt Nam.
 :::
 
-A market is *fully integrated* when its assets are priced by a global stochastic discount factor: risk premia reflect only exposures to global risk factors, and identical cash flow streams command the same expected return regardless of where the issuer is domiciled. A market is *fully segmented* when domestic risk factors alone determine prices, and the country's risk-return trade-off is independent of the rest of the world. Reality sits somewhere between these poles, and the location shifts over time.
+Một thị trường *hội nhập hoàn toàn* khi tài sản của nó được định giá bởi một hệ số chiết khấu ngẫu nhiên toàn cầu: phần bù rủi ro chỉ phản ánh mức độ phơi nhiễm với các nhân tố rủi ro toàn cầu, và các dòng tiền giống hệt nhau đòi hỏi cùng một mức lợi nhuận kỳ vọng bất kể nơi đặt trụ sở của tổ chức phát hành. Một thị trường *phân khúc hoàn toàn* khi chỉ các nhân tố rủi ro trong nước quyết định giá cả, và sự đánh đổi giữa rủi ro và lợi nhuận của quốc gia đó độc lập với phần còn lại của thế giới. Thực tế nằm đâu đó giữa hai cực này, và vị trí ấy thay đổi theo thời gian.
 
-Vietnam is a particularly interesting case. It opened its stock exchange in July 2000 with heavy restrictions on foreign participation. Foreign ownership limits (initially 20%, raised to 30% in 2003, 49% in 2015, and selectively removed for some firms) have been gradually relaxed. Vietnam joined the WTO in 2007. FTSE Russell upgraded Vietnam from "unclassified" to "secondary emerging" in its frontier index in 2018 and has been evaluating further upgrades. Each of these events has potentially shifted the degree of integration.
+Việt Nam là một trường hợp đặc biệt thú vị. Sàn giao dịch chứng khoán của Việt Nam mở cửa vào tháng 7 năm 2000 với những hạn chế nặng nề đối với sự tham gia của nhà đầu tư nước ngoài. Giới hạn sở hữu nước ngoài (ban đầu là 20%, nâng lên 30% năm 2003, 49% năm 2015, và được bãi bỏ có chọn lọc đối với một số doanh nghiệp) đã dần được nới lỏng. Việt Nam gia nhập WTO năm 2007. FTSE Russell đã nâng hạng Việt Nam từ "unclassified" lên "secondary emerging" trong chỉ số frontier của mình vào năm 2018 và vẫn đang xem xét các đợt nâng hạng tiếp theo. Mỗi sự kiện này đều có thể đã làm dịch chuyển mức độ hội nhập.
 
-@bekaert1995time and @bekaert2002research establish the modern framework for measuring time-varying integration. @errunza1985international develop the "mild segmentation" model in which foreign investors face barriers but can partially replicate emerging market returns through global securities. @pukthuanthong2009global propose a factor-model-based measure that avoids the pitfalls of simple correlation analysis. This chapter implements all three approaches and applies them to Vietnam's integration trajectory.
+@bekaert1995time và @bekaert2002research thiết lập khung phân tích hiện đại để đo lường hội nhập biến đổi theo thời gian. @errunza1985international phát triển mô hình "phân khúc nhẹ" (mild segmentation), trong đó nhà đầu tư nước ngoài đối mặt với các rào cản nhưng vẫn có thể sao chép một phần lợi nhuận của thị trường mới nổi thông qua các chứng khoán toàn cầu. @pukthuanthong2009global đề xuất một thước đo dựa trên mô hình nhân tố, tránh được những cạm bẫy của phân tích tương quan đơn giản. Chương này triển khai cả ba cách tiếp cận và áp dụng chúng vào quỹ đạo hội nhập của Việt Nam.
 
-## Integration in Theory {#sec-market-integration-theory}
+## Hội nhập về mặt lý thuyết {#sec-market-integration-theory}
 
-### The Integrated and Segmented Benchmarks
+### Các chuẩn mực hội nhập và phân khúc
 
-Under full integration, the expected excess return of Vietnamese stock $i$ is:
+Trong điều kiện hội nhập hoàn toàn, lợi nhuận vượt mức kỳ vọng của cổ phiếu Việt Nam $i$ là:
 
 $$
 E[R_{i,t} - R_{f,t}] = \beta_{i,\text{world}} \cdot \lambda_{\text{world},t}
 $$ {#eq-integrated}
 
-where $\beta_{i,\text{world}}$ is the stock's loading on the global market factor and $\lambda_{\text{world},t}$ is the global risk premium. Only global systematic risk is priced; country-specific risk is diversifiable and commands no premium.
+trong đó $\beta_{i,\text{world}}$ là hệ số tải của cổ phiếu trên nhân tố thị trường toàn cầu và $\lambda_{\text{world},t}$ là phần bù rủi ro toàn cầu. Chỉ rủi ro hệ thống toàn cầu được định giá; rủi ro đặc thù quốc gia có thể đa dạng hóa được và không đòi hỏi phần bù.
 
-Under full segmentation:
+Trong điều kiện phân khúc hoàn toàn:
 
 $$
 E[R_{i,t} - R_{f,t}] = \beta_{i,\text{local}} \cdot \lambda_{\text{local},t}
 $$ {#eq-segmented}
 
-where $\beta_{i,\text{local}}$ is the stock's loading on the Vietnamese market and $\lambda_{\text{local},t}$ is the domestic risk premium. The domestic market is effectively a closed economy for pricing purposes.
+trong đó $\beta_{i,\text{local}}$ là hệ số tải của cổ phiếu trên thị trường Việt Nam và $\lambda_{\text{local},t}$ là phần bù rủi ro trong nước. Về mặt định giá, thị trường trong nước thực chất là một nền kinh tế đóng.
 
-@bekaert1995time model the transition between these states as a regime-switching process where the mixing weight $\omega_t \in [0, 1]$ evolves over time:
+@bekaert1995time mô hình hóa sự chuyển đổi giữa hai trạng thái này như một quá trình chuyển đổi chế độ, trong đó trọng số trộn $\omega_t \in [0, 1]$ biến động theo thời gian:
 
 $$
 E[R_{i,t} - R_{f,t}] = \omega_t \cdot \beta_{i,\text{world}} \lambda_{\text{world},t} + (1 - \omega_t) \cdot \beta_{i,\text{local}} \lambda_{\text{local},t}
 $$ {#eq-partial}
 
-The weight $\omega_t$ is the *degree of integration*: $\omega_t = 1$ is full integration, $\omega_t = 0$ is full segmentation.
+Trọng số $\omega_t$ là *mức độ hội nhập*: $\omega_t = 1$ là hội nhập hoàn toàn, $\omega_t = 0$ là phân khúc hoàn toàn.
 
-### The Segmentation Premium
+### Phần bù phân khúc
 
-When a market transitions from segmented to integrated, its cost of capital falls because the relevant risk for pricing narrows from total domestic risk to only the portion correlated with the global market [@henry2000stock; @bekaert2005does]. The *segmentation premium* is the excess expected return that investors in a segmented market require:
+Khi một thị trường chuyển từ phân khúc sang hội nhập, chi phí vốn của thị trường đó giảm vì rủi ro liên quan đến định giá thu hẹp từ tổng rủi ro trong nước xuống chỉ còn phần tương quan với thị trường toàn cầu [@henry2000stock; @bekaert2005does]. *Phần bù phân khúc* là lợi nhuận kỳ vọng vượt mức mà nhà đầu tư trong một thị trường phân khúc đòi hỏi:
 
 $$
 \text{Segmentation premium} = (1 - \omega_t) \cdot (\lambda_{\text{local}} - \beta_{\text{local,world}} \cdot \lambda_{\text{world}})
 $$ {#eq-segmentation-premium}
 
-This premium represents a deadweight cost: it raises the cost of capital for Vietnamese firms, reduces investment, and lowers welfare relative to the integrated benchmark.
+Phần bù này đại diện cho một tổn thất vô ích (deadweight cost): nó làm tăng chi phí vốn của các doanh nghiệp Việt Nam, giảm đầu tư và làm giảm phúc lợi so với chuẩn mực hội nhập.
 
-## Data Construction {#sec-market-integration-data}
+## Xây dựng dữ liệu {#sec-market-integration-data}
 
 ```{python}
 #| label: setup
@@ -156,7 +156,7 @@ print(f"Global indices: {global_indices.shape}")
 print(f"Global factors: {len(global_factors)} months")
 ```
 
-### Vietnam's Liberalization Timeline
+### Tiến trình tự do hóa của Việt Nam
 
 ```{python}
 #| label: timeline
@@ -184,11 +184,11 @@ for _, row in liberalization_events.iterrows():
     print(f"  {row['date'].strftime('%Y-%m')}: {row['event']} [{row['category']}]")
 ```
 
-## Correlation-Based Integration Measures {#sec-market-integration-correlation}
+## Các thước đo hội nhập dựa trên tương quan {#sec-market-integration-correlation}
 
-### Rolling Correlations
+### Tương quan trượt
 
-The simplest integration metric is the correlation between Vietnamese and global market returns. Higher correlation implies more integration (returns are driven by the same global factors). However, simple correlation is confounded by volatility changes (i.e., correlations tend to increase mechanically during high-volatility periods [@longin2001extreme]).
+Thước đo hội nhập đơn giản nhất là tương quan giữa lợi nhuận của thị trường Việt Nam và thị trường toàn cầu. Tương quan càng cao hàm ý hội nhập càng lớn (lợi nhuận được dẫn dắt bởi cùng các nhân tố toàn cầu). Tuy nhiên, tương quan đơn giản bị nhiễu bởi các thay đổi về biến động (tức là tương quan có xu hướng tăng lên một cách cơ học trong các giai đoạn biến động cao [@longin2001extreme]).
 
 ```{python}
 #| label: rolling-correlations
@@ -218,7 +218,7 @@ corr_df = pd.DataFrame(corr_series)
 ```{python}
 #| label: fig-rolling-corr
 #| eval: false
-#| fig-cap: "Rolling 36-month correlations between Vietnamese equity returns (USD) and major global/regional indices. Vietnam's correlation with the MSCI World rose from near zero in the early 2000s to 0.3–0.5 by the mid-2010s, reflecting gradual integration. The correlation is highest with ASEAN peers (Thailand, Indonesia) and MSCI Emerging Markets, and lowest with the S&P 500. Liberalization events (vertical lines) precede periods of rising correlation."
+#| fig-cap: "Tương quan trượt 36 tháng giữa lợi nhuận cổ phiếu Việt Nam (USD) và các chỉ số toàn cầu/khu vực chính. Tương quan của Việt Nam với MSCI World tăng từ gần bằng không vào đầu những năm 2000 lên 0,3–0,5 vào giữa thập niên 2010, phản ánh quá trình hội nhập dần dần. Tương quan cao nhất với các nước ASEAN (Thái Lan, Indonesia) và MSCI Emerging Markets, và thấp nhất với S&P 500. Các sự kiện tự do hóa (đường thẳng đứng) đi trước các giai đoạn tương quan gia tăng."
 #| code-summary: "Plot rolling correlations with event timeline"
 fig, ax = plt.subplots(figsize=(14, 6))
 
@@ -250,15 +250,15 @@ plt.tight_layout()
 plt.show()
 ```
 
-### DCC-GARCH Dynamic Correlations
+### Tương quan động DCC-GARCH
 
-To separate changes in correlation from changes in volatility, we estimate a Dynamic Conditional Correlation (DCC) model [@engle2002dynamic]. The DCC decomposes the time-varying covariance matrix into time-varying volatilities and a time-varying correlation matrix:
+Để tách các thay đổi về tương quan khỏi các thay đổi về biến động, chúng ta ước lượng mô hình tương quan có điều kiện động (Dynamic Conditional Correlation, DCC) [@engle2002dynamic]. DCC phân rã ma trận hiệp phương sai biến đổi theo thời gian thành các độ biến động biến đổi theo thời gian và một ma trận tương quan biến đổi theo thời gian:
 
 $$
 H_t = D_t R_t D_t
 $$ {#eq-dcc-decomp}
 
-where $D_t = \text{diag}(\sigma_{1,t}, \ldots, \sigma_{n,t})$ and $R_t$ is the conditional correlation matrix that evolves according to:
+trong đó $D_t = \text{diag}(\sigma_{1,t}, \ldots, \sigma_{n,t})$ và $R_t$ là ma trận tương quan có điều kiện biến đổi theo:
 
 $$
 Q_t = (1 - a - b) \bar{Q} + a \epsilon_{t-1} \epsilon_{t-1}' + b Q_{t-1}
@@ -388,7 +388,7 @@ print(f"  Max:  {dcc_result['dcc_corr'].max():.3f}")
 ```{python}
 #| label: fig-dcc
 #| eval: false
-#| fig-cap: "DCC-GARCH dynamic correlation between Vietnam and the MSCI World Index. Unlike simple rolling correlation, the DCC isolates true changes in co-movement from volatility effects. The trend is clearly upward from near zero in the early 2000s to 0.3–0.5 in recent years. Major liberalization events (colored lines) are associated with sustained increases in the conditional correlation."
+#| fig-cap: "Tương quan động DCC-GARCH giữa Việt Nam và chỉ số MSCI World. Khác với tương quan trượt đơn giản, DCC tách biệt những thay đổi thực sự về mức đồng biến động khỏi các hiệu ứng biến động. Xu hướng rõ ràng là đi lên, từ gần bằng không vào đầu những năm 2000 lên 0,3–0,5 trong những năm gần đây. Các sự kiện tự do hóa quan trọng (đường màu) gắn với sự gia tăng bền vững của tương quan có điều kiện."
 #| code-summary: "Plot DCC dynamic correlation with event annotations"
 fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True,
                           gridspec_kw={'height_ratios': [2, 1]})
@@ -436,9 +436,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Asymmetric Integration
+### Hội nhập bất đối xứng
 
-Integration may be state-dependent: co-movement often increases during global crises (contagion) but not during local booms. @longin2001extreme and @ang2002asymmetric show that equity correlations are higher during market downturns. We test for asymmetry:
+Hội nhập có thể phụ thuộc vào trạng thái: đồng biến động thường tăng trong các cuộc khủng hoảng toàn cầu (lây lan) nhưng không tăng trong các giai đoạn bùng nổ cục bộ trong nước. @longin2001extreme và @ang2002asymmetric cho thấy tương quan giữa các thị trường cổ phiếu cao hơn khi thị trường suy giảm. Chúng ta kiểm định tính bất đối xứng:
 
 ```{python}
 #| label: asymmetric-corr
@@ -496,11 +496,11 @@ z, p = fisher_z_test(
 print(f"\nFisher z-test (bear vs bull): z = {z:.2f}, p = {p:.4f}")
 ```
 
-## Factor-Based Integration Measures {#sec-market-integration-factor}
+## Các thước đo hội nhập dựa trên nhân tố {#sec-market-integration-factor}
 
-### The Pukthuanthong-Roll R² Measure
+### Thước đo R² của Pukthuanthong-Roll
 
-@pukthuanthong2009global propose measuring integration as the $R^2$ from regressing a country's returns on a set of global principal components. The intuition: if a market is fully integrated, global factors should explain all of its systematic return variation.
+@pukthuanthong2009global đề xuất đo lường hội nhập bằng $R^2$ từ hồi quy lợi nhuận của một quốc gia trên một tập các thành phần chính toàn cầu. Trực giác như sau: nếu một thị trường hội nhập hoàn toàn, các nhân tố toàn cầu phải giải thích toàn bộ biến thiên hệ thống của lợi nhuận thị trường đó.
 
 ```{python}
 #| label: pr-measure
@@ -584,9 +584,9 @@ if len(pr_result) > 0:
     print(f"  2019-2024: {pr_result[pr_result['date'] >= '2019']['r_squared'].mean():.3f}")
 ```
 
-### Global vs. Local Factor Pricing
+### Định giá theo nhân tố toàn cầu và nhân tố nội địa
 
-@griffin2002fama tests whether global or local versions of the Fama-French factors better explain country-level returns. We implement this horse race for Vietnam:
+@griffin2002fama kiểm định xem phiên bản toàn cầu hay phiên bản nội địa của các nhân tố Fama-French giải thích tốt hơn lợi nhuận cấp quốc gia. Chúng ta triển khai cuộc "đua ngựa" này cho Việt Nam:
 
 ```{python}
 #| label: global-vs-local
@@ -644,7 +644,7 @@ for name, mod in [('Global FF5', model_global),
 ```{python}
 #| label: fig-global-local-r2
 #| eval: false
-#| fig-cap: "Rolling 36-month R² from regressing Vietnamese market excess returns on global factors (MSCI World FF5) versus local factors (Vietnamese FF5). Panel A shows the R² time series for each model. When the local model dominates (higher R²), the market is more segmented; when the global model's R² approaches the local model's, the market is more integrated. Panel B shows the ratio of global R² to local R², which serves as an alternative integration metric."
+#| fig-cap: "R² trượt 36 tháng từ hồi quy lợi nhuận vượt mức của thị trường Việt Nam trên các nhân tố toàn cầu (MSCI World FF5) so với các nhân tố nội địa (FF5 Việt Nam). Panel A thể hiện chuỗi thời gian R² của từng mô hình. Khi mô hình nội địa chiếm ưu thế (R² cao hơn), thị trường phân khúc hơn; khi R² của mô hình toàn cầu tiến gần R² của mô hình nội địa, thị trường hội nhập hơn. Panel B thể hiện tỷ số giữa R² toàn cầu và R² nội địa, đóng vai trò một thước đo hội nhập thay thế."
 #| code-summary: "Rolling R² comparison of global and local models"
 rolling_r2 = []
 rw = 36
@@ -701,11 +701,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Pricing-Error-Based Integration {#sec-market-integration-pricing-error}
+## Hội nhập dựa trên sai số định giá {#sec-market-integration-pricing-error}
 
-### The Bekaert-Harvey Approach
+### Cách tiếp cận của Bekaert-Harvey
 
-@bekaert1995time measure integration as the ability of a global CAPM to price local assets. Under integration, the local market alpha (intercept) in a regression on the global market should be zero, and the global risk premium should explain the local expected return. Under segmentation, the local alpha captures the segmentation premium.
+@bekaert1995time đo lường hội nhập bằng khả năng của một CAPM toàn cầu trong việc định giá các tài sản nội địa. Trong điều kiện hội nhập, alpha (hệ số chặn) của thị trường nội địa trong hồi quy trên thị trường toàn cầu phải bằng không, và phần bù rủi ro toàn cầu phải giải thích lợi nhuận kỳ vọng nội địa. Trong điều kiện phân khúc, alpha nội địa phản ánh phần bù phân khúc.
 
 ```{python}
 #| label: bh-integration
@@ -752,9 +752,9 @@ print(f"  Mean β_world: {bh_result['beta_global'].mean():.3f}")
 print(f"  Mean R²: {bh_result['r_squared'].mean():.3f}")
 ```
 
-### Composite Integration Index
+### Chỉ số hội nhập tổng hợp
 
-We combine all measures into a single composite index of Vietnamese market integration:
+Chúng ta kết hợp tất cả các thước đo thành một chỉ số tổng hợp duy nhất về hội nhập của thị trường Việt Nam:
 
 ```{python}
 #| label: composite-index
@@ -798,7 +798,7 @@ measures['composite_smooth'] = measures['composite'].rolling(6).mean()
 ```{python}
 #| label: fig-composite
 #| eval: false
-#| fig-cap: "Composite integration index for the Vietnamese equity market, combining DCC correlation, Pukthuanthong-Roll R², global/local factor R² ratio, and global CAPM alpha. The index is scaled to [0, 1] where 1 represents maximum observed integration. Vietnam has followed a broad upward trend with significant setbacks during the GFC (2008–2009) and COVID (2020). The post-2018 period shows the highest sustained integration, coinciding with FTSE inclusion and relaxed foreign ownership limits."
+#| fig-cap: "Chỉ số hội nhập tổng hợp của thị trường cổ phiếu Việt Nam, kết hợp tương quan DCC, R² Pukthuanthong-Roll, tỷ số R² nhân tố toàn cầu/nội địa và alpha của CAPM toàn cầu. Chỉ số được chuẩn hóa về khoảng [0, 1], trong đó 1 là mức hội nhập tối đa quan sát được. Việt Nam theo xu hướng đi lên chung với những lần thụt lùi đáng kể trong khủng hoảng tài chính toàn cầu (2008–2009) và COVID (2020). Giai đoạn sau 2018 cho thấy mức hội nhập bền vững cao nhất, trùng với việc được đưa vào FTSE và nới lỏng giới hạn sở hữu nước ngoài."
 #| code-summary: "Plot the composite integration index with milestones"
 fig, ax = plt.subplots(figsize=(14, 6))
 
@@ -829,11 +829,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Structural Break Detection {#sec-market-integration-breaks}
+## Phát hiện điểm gãy cấu trúc {#sec-market-integration-breaks}
 
-### Bai-Perron Tests for Integration Regime Shifts
+### Kiểm định Bai-Perron đối với các thay đổi chế độ hội nhập
 
-We test whether Vietnam's integration trajectory contains discrete structural breaks (i.e., sudden shifts in the integration level) rather than a smooth trend:
+Chúng ta kiểm định xem quỹ đạo hội nhập của Việt Nam có chứa các điểm gãy cấu trúc rời rạc (tức là những dịch chuyển đột ngột về mức hội nhập) hay chỉ là một xu hướng trơn tru:
 
 ```{python}
 #| label: structural-breaks
@@ -903,11 +903,11 @@ for _, event in liberalization_events.iterrows():
           f"{f_stat:>10.2f} {p_val:>10.4f} {sig}")
 ```
 
-## The Segmentation Premium for Vietnam {#sec-market-integration-premium}
+## Phần bù phân khúc của Việt Nam {#sec-market-integration-premium}
 
-### Cross-Sectional Evidence
+### Bằng chứng chéo (cross-sectional)
 
-Under partial segmentation, stocks with higher foreign ownership should have lower expected returns (because foreign investors can diversify away local risk). This yields a testable prediction: foreign ownership should be negatively associated with expected returns, controlling for global risk exposure.
+Trong điều kiện phân khúc một phần, các cổ phiếu có tỷ lệ sở hữu nước ngoài cao hơn phải có lợi nhuận kỳ vọng thấp hơn (vì nhà đầu tư nước ngoài có thể đa dạng hóa bớt rủi ro nội địa). Điều này đưa ra một dự đoán kiểm định được: sở hữu nước ngoài phải có quan hệ nghịch chiều với lợi nhuận kỳ vọng, sau khi kiểm soát mức phơi nhiễm rủi ro toàn cầu.
 
 ```{python}
 #| label: segmentation-premium
@@ -968,7 +968,7 @@ print(f"  Interpretation:   A 10pp increase in foreign ownership is "
 ```{python}
 #| label: fig-segmentation-premium
 #| eval: false
-#| fig-cap: "The segmentation premium in Vietnam. Panel A shows quintile portfolio returns sorted on lagged foreign ownership: a negative gradient (high FOL → lower returns) is consistent with segmentation theory. Panel B shows the rolling Fama-MacBeth coefficient on foreign ownership—the time-varying segmentation premium. The premium has been shrinking over time as the market integrates."
+#| fig-cap: "Phần bù phân khúc ở Việt Nam. Panel A thể hiện lợi nhuận của các danh mục ngũ phân vị sắp xếp theo sở hữu nước ngoài có độ trễ: độ dốc âm (FOL cao → lợi nhuận thấp hơn) phù hợp với lý thuyết phân khúc. Panel B thể hiện hệ số Fama-MacBeth trượt trên sở hữu nước ngoài, tức phần bù phân khúc biến đổi theo thời gian. Phần bù này đã thu hẹp dần theo thời gian khi thị trường hội nhập."
 #| code-summary: "Visualize the segmentation premium"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -1016,11 +1016,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Exchange Rate Risk and Integration {#sec-market-integration-fx}
+## Rủi ro tỷ giá hối đoái và hội nhập {#sec-market-integration-fx}
 
-### Is Currency Risk Priced?
+### Rủi ro tiền tệ có được định giá không?
 
-In a partially integrated market, exchange rate risk may carry a separate premium. @jorion1991pricing and @dumas1995world test whether currency exposure is priced beyond global equity risk. For Vietnam, the VND/USD exchange rate is managed (a crawling peg with occasional step devaluations), creating a specific risk that is neither fully diversifiable nor fully priced by global equity factors.
+Trong một thị trường hội nhập một phần, rủi ro tỷ giá hối đoái có thể mang một phần bù riêng. @jorion1991pricing và @dumas1995world kiểm định xem mức phơi nhiễm tiền tệ có được định giá ngoài rủi ro cổ phiếu toàn cầu hay không. Với Việt Nam, tỷ giá VND/USD được quản lý (neo trượt, thỉnh thoảng có những đợt phá giá theo bậc), tạo ra một rủi ro đặc thù mà không thể đa dạng hóa hoàn toàn cũng không được các nhân tố cổ phiếu toàn cầu định giá đầy đủ.
 
 ```{python}
 #| label: fx-risk
@@ -1071,9 +1071,9 @@ for q, ret in fx_premium.items():
 print(f"  Q5-Q1: {(fx_premium.iloc[-1] - fx_premium.iloc[0])*100:.2f}% ann.")
 ```
 
-## Contagion vs. Interdependence {#sec-market-integration-contagion}
+## Lây lan và phụ thuộc lẫn nhau {#sec-market-integration-contagion}
 
-During global crises, correlations between Vietnam and world markets spike. The question is whether this represents *contagion* (a structural change in the transmission mechanism) or simply *interdependence* (normal co-movement amplified by higher volatility). @longin2001extreme show that correlation increases mechanically with volatility even without any change in the underlying dependence structure.
+Trong các cuộc khủng hoảng toàn cầu, tương quan giữa Việt Nam và các thị trường thế giới tăng vọt. Câu hỏi là điều này thể hiện *lây lan* (contagion, một thay đổi cấu trúc trong cơ chế truyền dẫn) hay chỉ là *phụ thuộc lẫn nhau* (interdependence, đồng biến động bình thường được khuếch đại bởi biến động cao hơn). @longin2001extreme cho thấy tương quan tăng một cách cơ học cùng với biến động, ngay cả khi cấu trúc phụ thuộc cơ bản không hề thay đổi.
 
 ```{python}
 #| label: contagion-test
@@ -1158,14 +1158,14 @@ for name, (start, end) in crises.items():
           f"{verdict:>12}")
 ```
 
-## ASEAN Peer Comparison {#sec-market-integration-asean}
+## So sánh với các nước ASEAN {#sec-market-integration-asean}
 
-Vietnam's integration trajectory is best understood in the context of its ASEAN peers, which share similar starting conditions but have followed different liberalization paths:
+Quỹ đạo hội nhập của Việt Nam được hiểu rõ nhất trong bối cảnh các nước ASEAN, vốn có điều kiện xuất phát tương tự nhưng đã đi theo các con đường tự do hóa khác nhau:
 
 ```{python}
 #| label: fig-asean-comparison
 #| eval: false
-#| fig-cap: "Integration with MSCI World across ASEAN markets, measured by rolling 36-month correlation. Thailand and Malaysia, which liberalized earlier, show higher and more stable correlations. Vietnam's integration has accelerated since 2015, converging toward regional peers but remaining below Thailand and Malaysia. Indonesia and the Philippines occupy an intermediate position."
+#| fig-cap: "Mức độ hội nhập với MSCI World giữa các thị trường ASEAN, đo bằng tương quan trượt 36 tháng. Thái Lan và Malaysia, những nước tự do hóa sớm hơn, có tương quan cao hơn và ổn định hơn. Hội nhập của Việt Nam tăng tốc từ năm 2015, hội tụ dần về phía các nước trong khu vực nhưng vẫn thấp hơn Thái Lan và Malaysia. Indonesia và Philippines ở vị trí trung gian."
 #| code-summary: "Compare integration trajectories across ASEAN markets"
 fig, ax = plt.subplots(figsize=(14, 6))
 
@@ -1206,46 +1206,46 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Practical Implications {#sec-market-integration-implications}
+## Hàm ý thực tiễn {#sec-market-integration-implications}
 
-The degree of integration determines which asset pricing model is appropriate for Vietnamese equities. The evidence in this chapter supports several practical conclusions:
+Mức độ hội nhập quyết định mô hình định giá tài sản nào phù hợp cho cổ phiếu Việt Nam. Bằng chứng trong chương này ủng hộ một số kết luận thực tiễn:
 
-**Vietnam is partially integrated and trending toward integration.** The composite index shows a clear upward trajectory, with the post-2015 period representing the highest sustained integration in the market's history. However, Vietnam remains less integrated than Thailand or Malaysia, and far from fully integrated with global markets.
+**Việt Nam hội nhập một phần và đang có xu hướng hội nhập thêm.** Chỉ số tổng hợp cho thấy quỹ đạo đi lên rõ ràng, trong đó giai đoạn sau năm 2015 là giai đoạn hội nhập bền vững cao nhất trong lịch sử thị trường. Tuy nhiên, Việt Nam vẫn kém hội nhập hơn Thái Lan hoặc Malaysia, và còn xa mới hội nhập hoàn toàn với các thị trường toàn cầu.
 
-**Local factors dominate global factors for pricing Vietnamese stocks.** The rolling $R^2$ comparison shows that local Vietnamese factors consistently explain more return variation than global factors. This means that researchers studying Vietnamese cross-sectional returns should use local factor models (Vietnamese FF5) rather than global factors. Global factors are useful primarily for international investors assessing co-movement risk.
+**Các nhân tố nội địa chiếm ưu thế so với các nhân tố toàn cầu trong định giá cổ phiếu Việt Nam.** So sánh $R^2$ trượt cho thấy các nhân tố nội địa của Việt Nam luôn giải thích được nhiều biến thiên lợi nhuận hơn các nhân tố toàn cầu. Điều này có nghĩa là các nhà nghiên cứu về lợi nhuận cắt ngang (cross-section) của cổ phiếu Việt Nam nên dùng các mô hình nhân tố nội địa (FF5 Việt Nam) thay vì các nhân tố toàn cầu. Các nhân tố toàn cầu chủ yếu hữu ích cho nhà đầu tư quốc tế khi đánh giá rủi ro đồng biến động.
 
-**The segmentation premium is shrinking but not zero.** The Fama-MacBeth evidence shows that stocks with higher foreign ownership earn lower returns, consistent with partial segmentation. The magnitude has declined over time as foreign ownership limits have been relaxed, but a residual premium persists—likely driven by remaining ownership caps in banking and strategic sectors.
+**Phần bù phân khúc đang thu hẹp nhưng chưa bằng không.** Bằng chứng Fama-MacBeth cho thấy các cổ phiếu có sở hữu nước ngoài cao hơn có lợi nhuận thấp hơn, phù hợp với phân khúc một phần. Mức độ này đã giảm theo thời gian khi các giới hạn sở hữu nước ngoài được nới lỏng, nhưng một phần bù còn lại vẫn tồn tại, nhiều khả năng do các mức trần sở hữu còn áp dụng trong ngành ngân hàng và các lĩnh vực chiến lược.
 
-**Crisis-period co-movement is mostly interdependence, not contagion.** The Forbes-Rigobon adjusted correlations show that the spike in Vietnam-World correlation during crises is largely explained by increased global volatility, not a structural change in the transmission mechanism. This is reassuring for diversification: Vietnam continues to offer meaningful diversification benefits even during global stress.
+**Đồng biến động trong thời kỳ khủng hoảng chủ yếu là phụ thuộc lẫn nhau, không phải lây lan.** Các tương quan điều chỉnh Forbes-Rigobon cho thấy việc tương quan Việt Nam-thế giới tăng vọt trong khủng hoảng phần lớn được giải thích bởi biến động toàn cầu gia tăng, chứ không phải do thay đổi cấu trúc trong cơ chế truyền dẫn. Điều này đáng yên tâm đối với đa dạng hóa: Việt Nam vẫn mang lại lợi ích đa dạng hóa đáng kể ngay cả trong thời kỳ căng thẳng toàn cầu.
 
-**The FTSE/MSCI upgrade path matters.** Vietnam's potential upgrade from frontier to emerging market status would trigger mandatory index rebalancing by passive funds, increasing foreign flows and likely accelerating integration. Researchers and investors should monitor upgrade criteria and their implications for the cost of capital.
+**Lộ trình nâng hạng của FTSE/MSCI rất quan trọng.** Việc Việt Nam có thể được nâng hạng từ thị trường cận biên (frontier) lên thị trường mới nổi sẽ kích hoạt việc tái cân bằng danh mục bắt buộc theo chỉ số của các quỹ thụ động, làm tăng dòng vốn nước ngoài và nhiều khả năng đẩy nhanh hội nhập. Các nhà nghiên cứu và nhà đầu tư nên theo dõi các tiêu chí nâng hạng và tác động của chúng đến chi phí vốn.
 
-## Summary {#sec-market-integration-summary}
+## Tóm tắt {#sec-market-integration-summary}
 
-| Measure | What It Captures | Vietnam Range | Current Level | Trend |
+| Thước đo | Nội dung phản ánh | Khoảng giá trị của Việt Nam | Mức hiện tại | Xu hướng |
 |---------------|---------------|---------------|---------------|---------------|
-| DCC correlation (World) | Co-movement | 0.0–0.5 | \~0.35–0.45 | Rising |
-| PR R² (global PCs) | Global factor exposure | 0.05–0.50 | \~0.30–0.40 | Rising |
-| Global/Local R² ratio | Relative pricing power | 0.1–0.8 | \~0.5–0.6 | Rising |
-| Global CAPM α | Pricing error | 0–15% ann. | \~3–5% ann. | Falling |
-| FOL premium (γ) | Segmentation cost | -5% to +2% | \~-1% to 0% | Shrinking |
+| Tương quan DCC (thế giới) | Đồng biến động | 0.0–0.5 | \~0.35–0.45 | Tăng |
+| PR R² (PC toàn cầu) | Mức phơi nhiễm nhân tố toàn cầu | 0.05–0.50 | \~0.30–0.40 | Tăng |
+| Tỷ số R² toàn cầu/nội địa | Sức mạnh định giá tương đối | 0.1–0.8 | \~0.5–0.6 | Tăng |
+| α CAPM toàn cầu | Sai số định giá | 0–15%/năm | \~3–5%/năm | Giảm |
+| Phần bù FOL (γ) | Chi phí phân khúc | -5% đến +2% | \~-1% đến 0% | Thu hẹp |
 
-: Summary of integration measures for the Vietnamese equity market. {#tbl-market-integration-summary}
+: Tóm tắt các thước đo hội nhập của thị trường cổ phiếu Việt Nam. {#tbl-market-integration-summary}
 
-<!-- ## Exercises {#sec-market-integration-exercises}
+<!-- ## Bài tập {#sec-market-integration-exercises}
 
-1.  **Regime-switching model.** Estimate the @bekaert1995time regime-switching model for Vietnam with two states (integrated, segmented). Use Hamilton filtering to extract the smoothed probability of being in the integrated state at each point in time. Does the filtered probability align with the composite index from this chapter?
+1.  **Mô hình chuyển đổi chế độ.** Ước lượng mô hình chuyển đổi chế độ của @bekaert1995time cho Việt Nam với hai trạng thái (hội nhập, phân khúc). Dùng bộ lọc Hamilton để trích xuất xác suất được làm mượt của việc ở trạng thái hội nhập tại mỗi thời điểm. Xác suất được lọc có khớp với chỉ số tổng hợp trong chương này không?
 
-2.  **Spanning test.** Can a U.S. investor replicate the Vietnamese market return using a portfolio of U.S.-listed ETFs (e.g., VNM ETF, EEM, FXI, EWY)? Regress the VN-Index on these ETFs and examine the alpha. A zero alpha means the Vietnamese market is "spanned" and offers no diversification benefit beyond what is available through U.S.-listed instruments [@errunza1985international].
+2.  **Kiểm định bao phủ (spanning).** Một nhà đầu tư Mỹ có thể sao chép lợi nhuận thị trường Việt Nam bằng một danh mục các ETF niêm yết tại Mỹ (ví dụ VNM ETF, EEM, FXI, EWY) không? Hồi quy VN-Index trên các ETF này và xem xét alpha. Alpha bằng không nghĩa là thị trường Việt Nam được "bao phủ" và không mang lại lợi ích đa dạng hóa nào ngoài những gì có thể đạt được qua các công cụ niêm yết tại Mỹ [@errunza1985international].
 
-3.  **Capital flow and integration.** Obtain monthly net foreign capital flow data for Vietnam (from the SSC or central bank). Test whether months of high foreign inflows are followed by higher Vietnam-World correlation. This tests whether integration is driven by capital flows or by other channels (trade, information).
+3.  **Dòng vốn và hội nhập.** Thu thập dữ liệu dòng vốn nước ngoài ròng hằng tháng của Việt Nam (từ UBCKNN hoặc ngân hàng trung ương). Kiểm định xem các tháng có dòng vốn vào cao có được theo sau bởi tương quan Việt Nam-thế giới cao hơn hay không. Điều này kiểm định xem hội nhập được thúc đẩy bởi dòng vốn hay bởi các kênh khác (thương mại, thông tin).
 
-4.  **Sector-level integration.** Estimate DCC correlations separately for Vietnamese banking, real estate, consumer goods, and technology sectors against their global sector counterparts. Which sectors are most integrated? Sectors with heavy state ownership may be more segmented.
+4.  **Hội nhập cấp ngành.** Ước lượng tương quan DCC riêng cho các ngành ngân hàng, bất động sản, hàng tiêu dùng và công nghệ của Việt Nam so với các ngành tương ứng trên thế giới. Ngành nào hội nhập nhất? Các ngành có sở hữu nhà nước lớn có thể bị phân khúc nhiều hơn.
 
-5.  **Integration and the cost of capital.** Using the @bekaert2005does framework, estimate the reduction in Vietnam's implied cost of equity capital associated with the measured increase in integration since 2000. Use the local CAPM vs. global CAPM implied risk premia to quantify the "integration dividend."
+5.  **Hội nhập và chi phí vốn.** Dùng khung phân tích của @bekaert2005does, ước lượng mức giảm chi phí vốn chủ sở hữu hàm ý của Việt Nam gắn với mức tăng hội nhập đo được từ năm 2000. Dùng các phần bù rủi ro hàm ý từ CAPM nội địa so với CAPM toàn cầu để định lượng "cổ tức hội nhập".
 
-6.  **Chinn-Ito index.** Download the @chinn2006what capital account openness index (KAOPEN) for Vietnam and its ASEAN peers. Plot KAOPEN against the market-based integration measures from this chapter. Is de jure openness (legal capital account liberalization) a good predictor of de facto integration (market co-movement)?
+6.  **Chỉ số Chinn-Ito.** Tải chỉ số mức độ mở cửa tài khoản vốn của @chinn2006what (KAOPEN) cho Việt Nam và các nước ASEAN. Vẽ KAOPEN cùng với các thước đo hội nhập dựa trên thị trường trong chương này. Mức độ mở cửa de jure (tự do hóa tài khoản vốn theo pháp lý) có phải là yếu tố dự báo tốt cho hội nhập de facto (đồng biến động thị trường) không?
 
-7.  **Frequency-domain integration.** Decompose Vietnam-World co-movement by frequency band (weekly, monthly, quarterly, annual) using wavelet coherence. Integration may differ at different frequencies: high-frequency co-movement reflects arbitrage and information transmission, while low-frequency co-movement reflects shared business cycles.
+7.  **Hội nhập trong miền tần số.** Phân rã đồng biến động Việt Nam-thế giới theo dải tần số (tuần, tháng, quý, năm) bằng wavelet coherence. Hội nhập có thể khác nhau ở các tần số khác nhau: đồng biến động tần số cao phản ánh chênh lệch giá (arbitrage) và truyền tải thông tin, còn đồng biến động tần số thấp phản ánh các chu kỳ kinh doanh chung.
 
-8.  **COVID stress test.** The March 2020 COVID crash was the most severe global synchronized selloff in a decade. Using daily data, estimate hour-by-hour or day-by-day correlation between Vietnam and global markets during the crisis. Did Vietnam's price limits (Chapter on price limits) prevent full contagion transmission, or merely delay it? -->
+8.  **Kiểm tra sức chịu đựng với COVID.** Cú sụp đổ do COVID vào tháng 3 năm 2020 là đợt bán tháo đồng loạt toàn cầu nghiêm trọng nhất trong một thập kỷ. Dùng dữ liệu hằng ngày, ước lượng tương quan theo giờ hoặc theo ngày giữa Việt Nam và các thị trường toàn cầu trong cuộc khủng hoảng. Biên độ giá của Việt Nam (chương về biên độ giá) có ngăn chặn hoàn toàn sự lây lan, hay chỉ làm chậm lại? -->

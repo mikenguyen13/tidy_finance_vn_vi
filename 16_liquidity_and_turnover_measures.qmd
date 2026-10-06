@@ -1,36 +1,36 @@
-# Liquidity and Turnover Measures
+# Các thước đo Thanh khoản và Vòng quay Giao dịch
 
 ::: callout-note
-In this chapter, we construct a comprehensive suite of liquidity measures for the Vietnamese equity market, validate them against each other and against known benchmarks, test whether liquidity is priced in the cross-section of stock returns, examine commonality in liquidity, and analyze how liquidity conditions vary over time and across market regimes.
+Trong chương này, chúng ta xây dựng một bộ thước đo thanh khoản toàn diện cho thị trường chứng khoán Việt Nam, đối chiếu chúng với nhau và với các chuẩn mực đã biết, kiểm định xem thanh khoản có được định giá trong mặt cắt ngang của lợi nhuận cổ phiếu hay không, khảo sát tính đồng biến (commonality) của thanh khoản, và phân tích cách các điều kiện thanh khoản thay đổi theo thời gian và giữa các trạng thái thị trường.
 :::
 
-Liquidity (i.e., the ability to trade quickly at low cost without moving the price) is arguably the single most important practical consideration for anyone working with Vietnamese equity data. A factor premium that looks attractive in a frictionless backtest may be completely unimplementable if the long and short legs load on illiquid stocks whose prices move against you when you trade. Conversely, a genuine liquidity premium (i.e., compensation for bearing the risk that a stock will be hard to sell when you need to) is one of the most robust and theoretically grounded anomalies in asset pricing.
+Thanh khoản (tức là khả năng giao dịch nhanh với chi phí thấp mà không làm dịch chuyển giá) có lẽ là cân nhắc thực tiễn quan trọng nhất đối với bất kỳ ai làm việc với dữ liệu chứng khoán Việt Nam. Một phần bù nhân tố trông hấp dẫn trong kiểm định ngược (backtest) không có ma sát có thể hoàn toàn không thể triển khai nếu các vị thế mua và bán khống tập trung vào những cổ phiếu kém thanh khoản, vốn có giá dịch chuyển bất lợi cho bạn khi bạn giao dịch. Ngược lại, một phần bù thanh khoản thực sự (tức là khoản bù đắp cho rủi ro cổ phiếu khó bán khi bạn cần bán) là một trong những hiện tượng bất thường vững chắc nhất và có nền tảng lý thuyết tốt nhất trong định giá tài sản.
 
-The challenge is that liquidity is inherently multidimensional and difficult to measure. In developed markets with continuous limit order books and sub-second trade reporting, researchers can observe bid-ask spreads, market depth, and price impact directly. In Vietnam, microstructure data at this granularity are limited: HOSE operates a periodic call auction at open and close with continuous matching in between, the tick size is coarse relative to price levels, and many stocks trade so infrequently that the concept of a "quoted spread" is meaningful only on days when the stock actually trades. This forces researchers to rely on low-frequency proxies computed from daily price and volume data.
+Thách thức nằm ở chỗ thanh khoản vốn đa chiều và khó đo lường. Ở các thị trường phát triển với sổ lệnh giới hạn liên tục và báo cáo giao dịch dưới một giây, các nhà nghiên cứu có thể quan sát trực tiếp chênh lệch giá mua–bán, độ sâu thị trường và tác động giá. Ở Việt Nam, dữ liệu vi cấu trúc ở mức chi tiết này còn hạn chế: HOSE vận hành khớp lệnh định kỳ lúc mở cửa và đóng cửa với khớp lệnh liên tục ở giữa, bước giá thô so với mặt bằng giá, và nhiều cổ phiếu giao dịch thưa đến mức khái niệm "chênh lệch giá chào" chỉ có ý nghĩa vào những ngày cổ phiếu thực sự có giao dịch. Điều này buộc các nhà nghiên cứu phải dựa vào các thước đo xấp xỉ tần suất thấp được tính từ dữ liệu giá và khối lượng theo ngày.
 
-This chapter constructs the major liquidity proxies used in the academic literature, validates them in the Vietnamese context, and demonstrates their use in asset pricing and portfolio construction.
+Chương này xây dựng các thước đo xấp xỉ thanh khoản chính được dùng trong tài liệu học thuật, kiểm chứng chúng trong bối cảnh Việt Nam, và minh họa việc sử dụng chúng trong định giá tài sản và xây dựng danh mục đầu tư.
 
-## Theoretical Foundations {#sec-liquidity-theory}
+## Nền tảng Lý thuyết {#sec-liquidity-theory}
 
-### Why Liquidity Matters
+### Vì sao Thanh khoản Quan trọng
 
-Liquidity affects asset prices through at least three channels:
+Thanh khoản tác động đến giá tài sản qua ít nhất ba kênh:
 
-1.  **Level effect.** Investors demand compensation for the expected cost of trading. @amihud1986asset show that stocks with higher bid-ask spreads earn higher expected returns, with the premium being an increasing function of the investor's holding period. In equilibrium, illiquid stocks must offer higher expected returns to compensate for higher round-trip trading costs.
-2.  **Risk effect.** Liquidity is time-varying and co-moves across stocks. @pastor2003liquidity show that stocks whose returns are more sensitive to aggregate liquidity shocks earn higher expected returns. @acharya2005asset formalize this in a liquidity-adjusted CAPM where the required return includes a premium for bearing liquidity risk (i.e., the risk that the stock becomes illiquid precisely when the investor needs to sell).
-3.  **Commonality effect.** @chordia2000commonality document that individual stock liquidity co-moves strongly with market-wide liquidity. @brunnermeier2009market explain this through a "liquidity spiral": when asset values fall, margin constraints tighten, forcing leveraged investors to sell, which reduces market liquidity, which depresses prices further. This mechanism is particularly relevant in Vietnam, where retail investors with margin accounts are the dominant trading population.
+1.  **Hiệu ứng mức độ.** Nhà đầu tư đòi hỏi được bù đắp cho chi phí giao dịch kỳ vọng. @amihud1986asset chỉ ra rằng các cổ phiếu có chênh lệch giá mua–bán cao hơn mang lại lợi nhuận kỳ vọng cao hơn, với phần bù là hàm tăng của thời gian nắm giữ của nhà đầu tư. Ở trạng thái cân bằng, các cổ phiếu kém thanh khoản phải đem lại lợi nhuận kỳ vọng cao hơn để bù đắp chi phí giao dịch khứ hồi cao hơn.
+2.  **Hiệu ứng rủi ro.** Thanh khoản biến đổi theo thời gian và đồng biến giữa các cổ phiếu. @pastor2003liquidity chỉ ra rằng các cổ phiếu có lợi nhuận nhạy hơn với các cú sốc thanh khoản tổng hợp mang lại lợi nhuận kỳ vọng cao hơn. @acharya2005asset chính thức hóa điều này trong một CAPM điều chỉnh theo thanh khoản, trong đó lợi nhuận đòi hỏi bao gồm phần bù cho rủi ro thanh khoản (tức là rủi ro cổ phiếu trở nên kém thanh khoản đúng vào lúc nhà đầu tư cần bán).
+3.  **Hiệu ứng đồng biến.** @chordia2000commonality ghi nhận rằng thanh khoản của từng cổ phiếu đồng biến mạnh với thanh khoản toàn thị trường. @brunnermeier2009market giải thích điều này qua một "vòng xoáy thanh khoản": khi giá trị tài sản giảm, các ràng buộc ký quỹ siết chặt, buộc các nhà đầu tư dùng đòn bẩy phải bán, làm giảm thanh khoản thị trường, từ đó đẩy giá xuống thấp hơn nữa. Cơ chế này đặc biệt phù hợp với Việt Nam, nơi nhà đầu tư cá nhân có tài khoản ký quỹ là nhóm giao dịch chiếm ưu thế.
 
-### Liquidity Dimensions
+### Các Chiều của Thanh khoản
 
-@kyle1985continuous identifies three dimensions of liquidity:
+@kyle1985continuous xác định ba chiều của thanh khoản:
 
-1.  **Tightness.** The cost of turning around a position quickly, which is measured by the bid-ask spread.
-2.  **Depth.** The volume that can be traded without moving the price, which is related to price impact.
-3.  **Resiliency.** The speed at which prices recover from uninformative order flow shocks.
+1.  **Độ chặt (tightness).** Chi phí để đảo vị thế một cách nhanh chóng, được đo bằng chênh lệch giá mua–bán.
+2.  **Độ sâu (depth).** Khối lượng có thể giao dịch mà không làm dịch chuyển giá, liên quan đến tác động giá.
+3.  **Khả năng phục hồi (resiliency).** Tốc độ giá phục hồi sau các cú sốc dòng lệnh không mang thông tin.
 
-No single measure captures all three dimensions. @goyenko2009liquidity and @fong2017best systematically evaluate which low-frequency proxies best capture each dimension by benchmarking against high-frequency measures. Their key finding: the @amihud2002illiquidity measure best captures the price impact dimension, the @roll1984simple estimator and @corwin2012simple spread best capture tightness, and the @lesmond1999new zero-return measure captures a blend of transaction costs and information asymmetry. For emerging markets specifically, @fong2017best recommend the Amihud measure and the Closing Percent Quoted Spread as the most reliable proxies.
+Không có thước đo đơn lẻ nào nắm bắt được cả ba chiều. @goyenko2009liquidity và @fong2017best đánh giá một cách hệ thống thước đo xấp xỉ tần suất thấp nào nắm bắt tốt nhất từng chiều bằng cách đối chiếu với các thước đo tần suất cao. Phát hiện chính của họ: thước đo @amihud2002illiquidity nắm bắt tốt nhất chiều tác động giá, ước lượng @roll1984simple và chênh lệch @corwin2012simple nắm bắt tốt nhất độ chặt, còn thước đo lợi nhuận bằng không của @lesmond1999new nắm bắt sự kết hợp giữa chi phí giao dịch và bất cân xứng thông tin. Riêng đối với các thị trường mới nổi, @fong2017best khuyến nghị thước đo Amihud và Chênh lệch giá chào theo phần trăm lúc đóng cửa (Closing Percent Quoted Spread) là các thước đo xấp xỉ đáng tin cậy nhất.
 
-## Data Construction {#sec-liquidity-data}
+## Xây dựng Dữ liệu {#sec-liquidity-data}
 
 ```{python}
 #| label: setup
@@ -148,21 +148,21 @@ print(f"\nZero-return days: {daily['zero_return'].mean():.1%}")
 print(f"Zero-volume days: {daily['zero_volume'].mean():.1%}")
 ```
 
-## Constructing Liquidity Measures {#sec-liquidity-measures}
+## Xây dựng các Thước đo Thanh khoản {#sec-liquidity-measures}
 
-We construct seven liquidity proxies that span the dimensions of tightness, depth, and resiliency. Each is computed at the firm-month level, producing a panel that can be merged with monthly return data for cross-sectional tests.
+Chúng ta xây dựng bảy thước đo xấp xỉ thanh khoản bao trùm các chiều độ chặt, độ sâu và khả năng phục hồi. Mỗi thước đo được tính ở cấp công ty–tháng, tạo ra một bảng dữ liệu có thể ghép với dữ liệu lợi nhuận theo tháng cho các kiểm định mặt cắt ngang.
 
-### Amihud Illiquidity Ratio
+### Tỷ số Phi thanh khoản Amihud
 
-The @amihud2002illiquidity illiquidity measure is the ratio of absolute daily return to daily volume (in VND):
+Thước đo phi thanh khoản @amihud2002illiquidity là tỷ số giữa giá trị tuyệt đối của lợi nhuận theo ngày và khối lượng giao dịch theo ngày (tính bằng VND):
 
 $$
 \text{ILLIQ}_{i,m} = \frac{1}{D_{i,m}} \sum_{d=1}^{D_{i,m}} \frac{|R_{i,d}|}{\text{DVOL}_{i,d}}
 $$ {#eq-amihud}
 
-where $|R_{i,d}|$ is the absolute daily return, $\text{DVOL}_{i,d}$ is VND trading volume on day $d$, and $D_{i,m}$ is the number of trading days with positive volume in month $m$. Higher values indicate greater illiquidity.
+trong đó $|R_{i,d}|$ là giá trị tuyệt đối của lợi nhuận theo ngày, $\text{DVOL}_{i,d}$ là khối lượng giao dịch tính bằng VND trong ngày $d$, và $D_{i,m}$ là số ngày giao dịch có khối lượng dương trong tháng $m$. Giá trị càng cao cho thấy mức phi thanh khoản càng lớn.
 
-The Amihud measure captures the price impact dimension of liquidity. It is grounded in the @kyle1985continuous model where the parameter $\lambda$ (Kyle's lambda) measures the price impact of order flow: $\Delta p = \lambda \cdot Q$. The Amihud ratio is a daily-frequency analog of $\lambda$.
+Thước đo Amihud nắm bắt chiều tác động giá của thanh khoản. Nó dựa trên mô hình @kyle1985continuous, trong đó tham số $\lambda$ (lambda của Kyle) đo tác động giá của dòng lệnh: $\Delta p = \lambda \cdot Q$. Tỷ số Amihud là phiên bản tương tự của $\lambda$ ở tần suất theo ngày.
 
 ```{python}
 #| label: amihud
@@ -214,11 +214,210 @@ print(f"\nLog Amihud distribution:")
 print(amihud_monthly['amihud'].describe().round(3))
 ```
 
-### Zero-Return Days (Lesmond Measure)
+#### Định nghĩa Gốc năm 2002 {#sec-liquidity-amihud-original}
 
-@lesmond1999new propose using the proportion of zero-return days as a measure of transaction costs. The intuition is that if the true value change on a given day is smaller than the round-trip transaction cost, a rational marginal investor will not trade, and the observed return will be zero. Thus, the zero-return proportion is an increasing function of effective transaction costs.
+@eq-amihud là dạng *hiện đại* của thước đo, không phải dạng mà @amihud2002illiquidity thực sự ước lượng. Dạng gốc tính theo năm chứ không phải theo tháng:
 
-@lesmond2005liquidity validates this measure for emerging markets and finds it strongly correlated with explicit cost measures. In Vietnam, where zero-return days are common (as documented in the previous chapter), this measure has particular relevance.
+$$
+\text{ILLIQ}_{i,y} = \frac{1}{D_{i,y}}\sum_{d=1}^{D_{i,y}} \frac{|R_{i,y,d}|}{\text{VOLD}_{i,y,d}}
+$$ {#eq-amihud-original}
+
+trong đó $\text{VOLD}_{i,y,d}$ là giá trị giao dịch bằng đô la trong ngày $d$ của năm $y$ và $D_{i,y}$ là số ngày trong năm $y$ có đủ cả dữ liệu lợi nhuận lẫn khối lượng. Những khác biệt so với @eq-amihud không chỉ là hình thức, và mỗi khác biệt là một quyết định mô hình hóa mà các tác giả sau này đã lặng lẽ thay đổi:
+
+1.  **Theo năm, không theo tháng.** Đối tượng quan tâm của Amihud là mức phi thanh khoản *kỳ vọng*, mà ông mô hình hóa như một đại lượng biến đổi chậm. Ông hồi quy lợi nhuận theo tháng trong năm $y$ trên $\text{ILLIQ}$ đo trong năm $y-1$, nên thước đo là một đặc điểm công ty có tính dai dẳng chứ không phải một biến trạng thái theo tháng. Quy ước theo tháng hiện đang thống trị trong tài liệu đánh đổi tính dai dẳng để lấy độ nhạy, và chịu nhiều nhiễu đo lường hơn đáng kể trên mỗi quan sát: lấy trung bình khoảng 21 tỷ số theo ngày thay vì 250 làm sai số lấy mẫu của giá trị trung bình tăng khoảng $\sqrt{250/21} \approx 3.5$ lần.
+
+2.  **Chỉ NYSE.** Amihud cố ý loại NASDAQ, vì các giao dịch giữa các nhà tạo lập trên thị trường qua nhà tạo lập (dealer market) tính trùng khối lượng và sẽ làm nhiễm bẩn mẫu số. Điểm tương ứng ở Việt Nam không phải là thị trường qua nhà tạo lập mà là phân khúc giao dịch thỏa thuận (put-through, giao dịch khối lượng lớn thương lượng) và, trên UPCoM, hoạt động giao dịch cực kỳ rời rạc; cả hai đều làm méo $\text{DVOL}$ theo những cách mà thiết kế gốc được xây dựng để tránh.
+
+3.  **Các bộ lọc.** Ông yêu cầu có hơn 200 ngày dữ liệu trong năm, giá cuối năm trên \$5, và có số cổ phiếu đang lưu hành, đồng thời cắt bỏ 1% cao nhất và thấp nhất của mặt cắt ngang $\text{ILLIQ}$ theo năm như các giá trị ngoại lai. Bộ lọc giá loại bỏ các cổ phiếu mà tính rời rạc của bước giá chi phối tử số, một bộ lọc có tác động thực sự ở Việt Nam, nơi một phần lớn các mã niêm yết giao dịch dưới 10,000 VND với bước giá 10 VND.
+
+4.  **Hệ số quy đổi.** Amihud nhân với $10^6$, đây là một *quy ước đơn vị gắn với đô la*, không phải thuộc tính của ước lượng. Chúng ta sẽ quay lại điểm này bên dưới, vì đây là nguồn phổ biến nhất khiến các con số Amihud trong tài liệu không thể so sánh với nhau.
+
+5.  **Điều chỉnh theo trung bình.** Đây là thành phần của bài báo gốc bị bỏ qua thường xuyên nhất và là thành phần quan trọng nhất đối với Việt Nam. Vì giá trị giao dịch bằng đô la tăng theo xu hướng dài hạn cùng với lạm phát, tăng trưởng thị trường và tỷ lệ vòng quay tăng, $\text{ILLIQ}$ thô mang một xu hướng giảm cơ học không liên quan gì đến việc thanh khoản được cải thiện. Do đó Amihud cũng làm việc với thước đo *đã điều chỉnh theo trung bình*
+
+    $$
+    \text{ILLIQMA}_{i,y} = \frac{\text{ILLIQ}_{i,y}}{\text{AILLIQ}_{y}},
+    \qquad
+    \text{AILLIQ}_{y} = \frac{1}{N_y}\sum_{i=1}^{N_y}\text{ILLIQ}_{i,y}
+    $$ {#eq-amihud-ma}
+
+    vốn không có đơn vị và đã được khử xu hướng theo cấu trúc. Trong một thị trường mà giá trị giao dịch bằng VND tăng gấp cả một bậc độ lớn trong giai đoạn mẫu, việc dùng $\text{ILLIQ}$ thô trong bất kỳ đặc tả gộp (pooled) hay chuỗi thời gian nào mà không có hiệu ứng cố định theo thời kỳ sẽ cho thấy một "sự cải thiện thanh khoản" thực chất là sản phẩm giả tạo của mẫu số.
+
+Hai kết quả chính của ông đáng được tách bạch, vì chúng thường bị nhập làm một. Trong mặt cắt ngang, mức phi thanh khoản kỳ vọng được định giá dương: các cổ phiếu có $\text{ILLIQMA}$ năm trước cao hơn mang lại lợi nhuận sau đó cao hơn. Trong chuỗi thời gian, mức phi thanh khoản *không được kỳ vọng* — cú sốc (innovation) từ một AR(1) khớp với $\text{AILLIQ}_y$ — gắn với lợi nhuận đồng thời *âm*, vì một cú sốc thanh khoản được tính ngay vào giá dưới dạng giá giảm dù nó làm tăng lợi nhuận kỳ vọng trong tương lai. Một kiểm định trộn lẫn hai điều này sẽ thấy dấu của kết quả gây nhầm lẫn.
+
+#### Tiền thân và Lý thuyết: Vì sao là Tỷ số Lợi nhuận trên Khối lượng
+
+Thước đo này không xuất hiện từ hư không. @amihud1986asset đã chỉ ra, cả về lý thuyết lẫn thực nghiệm, rằng lợi nhuận kỳ vọng tăng theo chênh lệch giá mua–bán chào, vì nhà đầu tư phải được bù đắp cho chi phí của một vòng khứ hồi. Vấn đề của kết quả đó là dữ liệu: chênh lệch giá chào đòi hỏi lịch sử các báo giá, vốn không tồn tại ở hầu hết các thị trường và trong phần lớn lịch sử. Thước đo năm 2002 được hiểu tốt nhất như một câu trả lời cho câu hỏi "chỉ từ lợi nhuận và khối lượng theo ngày, ta có thể tính được đại lượng nào hành xử như một chi phí giao dịch?" — cũng chính là câu hỏi thúc đẩy các ước lượng Roll, Corwin–Schultz và Lesmond được phát triển ở những phần khác của chương này. @amihud2005liquidity tổng quan tài liệu phát sinh từ đó.
+
+Cơ sở lý thuyết đến từ @kyle1985continuous. Trong mô hình của Kyle, tác động giá của một dòng lệnh có dấu $Q$ là $\Delta p = \lambda Q$, nên $\lambda = |\Delta p| / |Q|$ đúng là một tỷ số lợi nhuận trên khối lượng. @eq-amihud là tỷ số đó được tính với dòng lệnh *không dấu*, là tất cả những gì dữ liệu theo ngày cung cấp. @brennan1996market chỉ ra trực tiếp rằng các ước lượng tác động giá xây dựng từ dòng lệnh có dấu trong phiên mang theo một phần bù lợi nhuận, còn @goyenko2009liquidity và @goyenko2009stock về sau xác lập rằng tỷ số Amihud là một thước đo xấp xỉ tần suất thấp tốt cho các chuẩn tác động giá tần suất cao đó. @fong2017best mở rộng cuộc đua này sang dữ liệu toàn cầu và thấy nó hoạt động tốt bên ngoài Hoa Kỳ, đó là lý do nó là công cụ chủ lực trong nghiên cứu thị trường mới nổi và cũng là lý do chương này dựa nhiều vào nó.
+
+#### Dòng dõi các Biến thể
+
+@tbl-amihud-variants tập hợp các phép biến đổi đang được dùng phổ biến. Tất cả đều đơn điệu theo $\text{ILLIQ}$ thô trong cùng một thời kỳ, điều này có một hệ quả quan trọng sẽ được phát triển bên dưới.
+
+| Biến thể | Định nghĩa | Nguồn gốc / cách dùng điển hình |
+|:---|:---|:---|
+| Thô | Trung bình của $\lvert R_d\rvert / \text{DVOL}_d$ | Chính ước lượng; hầu như không bao giờ dùng trực tiếp |
+| Amihud đã quy đổi | $\text{ILLIQ}\times 10^6$ | @amihud2002illiquidity, khối lượng bằng đô la |
+| Điều chỉnh theo trung bình | $\text{ILLIQ}_{i}/\overline{\text{ILLIQ}}$ | @amihud2002illiquidity; không có đơn vị, đã khử xu hướng (@eq-amihud-ma) |
+| Logarit | $\log(\text{ILLIQ})$ hoặc $\log(1+\text{ILLIQ})$ | Ổn định phương sai; quy ước dùng trong mã nguồn ở trên |
+| Căn bậc hai | $\sqrt{\text{ILLIQ}}$ | @hasbrouck2009trading; đơn vị gần hơn với chi phí hiệu dụng |
+| Chi phí chuẩn hóa | $\min(a + b\,\text{ILLIQ}\,P^M_{t-1},\,\bar{c})$ | @acharya2005asset; ánh xạ sang chi phí theo phần trăm, có chặn trên |
+| Thứ hạng trong thời kỳ | Phân vị của $\text{ILLIQ}$ trong thời kỳ $t$ | @karolyi2012understanding, @amihud2015illiquidity; so sánh được giữa các thị trường |
+
+: Các phép biến đổi của tỷ số phi thanh khoản Amihud đang được dùng phổ biến. Tất cả đều tăng nghiêm ngặt theo $\text{ILLIQ}$ thô trong cùng một thời kỳ. {#tbl-amihud-variants}
+
+Hai trong số này đáng được bàn kỹ hơn. Phép chuẩn hóa của @acharya2005asset tồn tại vì mô hình của họ đòi hỏi mức phi thanh khoản được biểu thị dưới dạng *chi phí giao dịch theo phần trăm*, để có thể trừ khỏi lợi nhuận. Hiệu chỉnh của họ $\min(0.25 + 0.30\,\text{ILLIQ}\,P^M_{t-1},\,30)$ co giãn theo mức tăng của danh mục thị trường, hấp thụ đúng xu hướng khối lượng mà $\text{ILLIQMA}$ cũng hấp thụ, và chặn kết quả ở mức 30% để đuôi cực đoan không chi phối. Các hằng số được khớp với dữ liệu giá trị giao dịch bằng đô la Mỹ trong một giai đoạn cụ thể và **không thể chuyển sang VND**. Mã nguồn bên dưới cho thấy công thức thất bại theo cả hai hướng chỉ tùy thuộc vào đơn vị khối lượng: với khối lượng tính bằng VND, mọi cổ phiếu đều được gán chi phí hệ số chặn 0.25% với độ phân tán mặt cắt ngang bằng không, và với khối lượng tính bằng tỷ VND, mọi cổ phiếu đều bị ghim ở mức chặn 30%, lại với độ phân tán bằng không. Chỉ có một đơn vị trung gian tình cờ tạo ra biến thiên, và việc chọn đơn vị đó không có gì thuộc về kinh tế. Phép biến đổi thứ hạng trong thời kỳ được dùng trong tài liệu thanh khoản quốc tế [@karolyi2012understanding; @amihud2015illiquidity] tồn tại chính vì lý do này. Đây là phép biến đổi duy nhất trong bảng bất biến đối với đơn vị tiền tệ, đơn vị khối lượng và giai đoạn.
+
+Một cải tiến nữa đáng biết là nghiên cứu của @amihud2021illiquidity, trong đó các tác giả xem xét lại các kết quả gốc bằng một nhân tố kém thanh khoản trừ thanh khoản có thể giao dịch được và một đặc tả có điều kiện. Cách xây dựng của họ là công trình đã công bố gần nhất với nhân tố thanh khoản được xây dựng ở cuối chương này.
+
+#### Việc Quy đổi Không Vô hại
+
+Đoạn mã sau đây độc lập và có thể chạy được. Nó xây dựng một bảng dữ liệu theo ngày tổng hợp với mức phi thanh khoản thật *đã biết và không đổi* rồi cho thấy việc chọn biến thể tác động thế nào đến các con số.
+
+```{python}
+#| label: amihud-variants
+#| code-summary: "All Amihud variants, and what scaling does to them"
+def amihud_variants(daily, ret="ret", dvol="dvol", scale=1e6, min_days=15):
+    """
+    Compute the Amihud (2002) ratio and its common transformations from a
+    daily panel with columns [ticker, date, ret, dvol].
+
+    `dvol` is currency volume in whatever unit the caller supplies; `scale`
+    is Amihud's units convention, which is *not* unit-free (see below).
+    """
+    df = daily.loc[daily[dvol] > 0].copy()
+    df["period"] = df["date"].dt.to_period("M")
+    df["illiq_d"] = df[ret].abs() / df[dvol]
+
+    p = (df.groupby(["ticker", "period"])
+           .agg(illiq=("illiq_d", "mean"), n_days=("illiq_d", "size"))
+           .reset_index())
+    p = p.loc[p["n_days"] >= min_days].copy()
+
+    p["illiq_scaled"] = p["illiq"] * scale                    # Amihud's x10^6
+    p["illiq_ma"] = p["illiq"] / p.groupby("period")["illiq"].transform("mean")
+    p["log_illiq"] = np.log(p["illiq_scaled"])                # variance stabilizing
+    p["sqrt_illiq"] = np.sqrt(p["illiq_scaled"])              # Hasbrouck (2009)
+    p["illiq_rank"] = p.groupby("period")["illiq"].rank(pct=True)
+    return p
+
+
+# A synthetic panel: 40 stocks, two years, TRUE illiquidity constant over time,
+# but market-wide VND volume growing at 35% per year.
+rng_v = np.random.default_rng(11)
+dates_v = pd.bdate_range("2023-01-02", "2024-12-31")
+tickers_v = [f"S{i:02d}" for i in range(40)]
+level_v = rng_v.lognormal(np.log(3e9), 1.1, size=len(tickers_v))  # VND/day
+years_v = (dates_v - dates_v[0]).days / 365.25
+
+demo = pd.concat([
+    pd.DataFrame({
+        "ticker": t,
+        "date": dates_v,
+        "ret": rng_v.normal(0, 0.022, len(dates_v)),
+        "dvol": L * np.exp(rng_v.normal(0, 0.6, len(dates_v))) * np.exp(0.35 * years_v),
+    })
+    for t, L in zip(tickers_v, level_v)
+], ignore_index=True)
+
+# (1) The x10^6 convention is a currency convention, not a normalization.
+print("Median ILLIQ x 10^6, identical economics, three volume units:")
+for unit, divisor in [("VND", 1.0), ("million VND", 1e6), ("USD @ 25,400", 25_400.0)]:
+    med = amihud_variants(demo.assign(dvol=demo["dvol"] / divisor))["illiq_scaled"].median()
+    print(f"  DVOL in {unit:<14s} {med:>12.6g}")
+
+# (2) Mean adjustment removes the volume trend; raw scaling does not.
+v = amihud_variants(demo)
+ts = v.groupby("period")[["illiq_scaled", "illiq_ma"]].median()
+first, last = ts.iloc[0], ts.iloc[-1]
+print("\nTrue illiquidity is constant; volume grows 35%/yr. Median over the panel:")
+for col, name in [("illiq_scaled", "ILLIQ x 10^6"), ("illiq_ma", "ILLIQMA     ")]:
+    print(f"  {name}: {first[col]:>10.4g} -> {last[col]:>10.4g} "
+          f"({100 * (last[col] / first[col] - 1):+.1f}%)")
+
+# (3) Every variant is monotone within a period, so ranks are identical.
+cols_v = ["illiq_scaled", "illiq_ma", "log_illiq", "sqrt_illiq", "illiq_rank"]
+within = (v.groupby("period")[["illiq"] + cols_v]
+            .corr(method="spearman").xs("illiq", level=1)[cols_v].mean())
+print("\nMean within-period Spearman rank correlation with raw ILLIQ:")
+print(within.round(4).to_string())
+
+# (4) But the distributions they induce are very different.
+print("\nPooled distribution shape:")
+print(v[["illiq_scaled", "log_illiq", "sqrt_illiq"]]
+      .agg(["skew", "kurt"]).round(3).to_string())
+
+# (5) Acharya-Pedersen constants are calibrated to US dollar volume, so the
+#     same formula degenerates in opposite directions depending on the unit.
+print("\nAcharya-Pedersen cost min(0.25 + 0.30*ILLIQ*1e6, 30) by volume unit:")
+for unit, divisor in [("VND", 1.0), ("million VND", 1e6), ("billion VND", 1e9)]:
+    s = amihud_variants(demo.assign(dvol=demo["dvol"] / divisor))["illiq_scaled"]
+    ap = np.minimum(0.25 + 0.30 * s, 30.0)
+    print(f"  DVOL in {unit:<12s} mean={ap.mean():8.4f}  sd={ap.std():8.4f}  "
+          f"at cap={100 * (ap >= 30.0).mean():5.1f}%")
+```
+
+Từ đó rút ra năm bài học, và chúng chính là lý do tiểu mục này tồn tại.
+
+**Hệ số $\times 10^6$ không mang thông tin.** Cùng một mức phi thanh khoản kinh tế được báo cáo ở khoảng $5\times10^{-6}$, $5$, hoặc $0.13$ chỉ tùy thuộc vào việc khối lượng được ghi bằng VND, triệu VND hay USD. Do đó các con số "phi thanh khoản Amihud bằng 0.8" được công bố không thể so sánh giữa các bài báo trừ khi đơn vị khối lượng được nêu rõ, mà thường thì không. Hãy nêu rõ đơn vị; tốt hơn nữa, hãy báo cáo một phép biến đổi không phụ thuộc vào nó.
+
+**Mức thô di chuyển theo xu hướng của mẫu số.** Trong mô phỏng, mức phi thanh khoản thật không đổi theo cấu trúc, vậy mà trung vị của thước đo thô giảm khoảng 45% trong hai năm chỉ vì khối lượng tăng. $\text{ILLIQMA}$ thay đổi vài phần trăm, là nhiễu lấy mẫu. Giá trị giao dịch của Việt Nam tăng nhanh hơn nhiều so với 35% mỗi năm trong nhiều giai đoạn sau năm 2015, nên đây là mối quan tâm bậc nhất đối với mọi nhận định dạng "thanh khoản ở Việt Nam đã cải thiện trong giai đoạn mẫu".
+
+**Đối với các phân loại trong cùng thời kỳ, việc chọn biến thể hoàn toàn không quan trọng.** Mọi phép biến đổi trong @tbl-amihud-variants đều tăng nghiêm ngặt trong cùng một thời kỳ, nên tương quan hạng trung bình trong thời kỳ đúng bằng 1.0 và các phân loại danh mục ở phần sau của chương sẽ giống hệt nhau về mặt số học dù dùng biến thể nào. Điều này đáng biết vì nó giới hạn mức độ mà việc chọn lọc biến thể trong tài liệu có thể thực sự quan trọng: nó chỉ có thể quan trọng thông qua các đặc tả dùng *mức* — Fama-MacBeth gộp không có hiệu ứng cố định theo thời kỳ, hồi quy chuỗi thời gian, và mọi thứ so sánh độ lớn giữa các thời kỳ hoặc thị trường.
+
+**Phép biến đổi quan trọng vì lý do về phân phối.** Độ lệch (skewness) gộp giảm từ khoảng 3.0 xuống 0.1 và độ nhọn vượt mức (excess kurtosis) từ khoảng 11.8 xuống $-0.4$ dưới phép biến đổi logarit. Vì các hệ số góc Fama-MacBeth là hệ số OLS và OLS không vững trước một đuôi phải nặng như vậy, phép biến đổi logarit đang làm một việc thực sự trong các hồi quy mặt cắt ngang: không phải sửa các thứ hạng, mà là ngăn một số ít quan sát công ty–tháng quyết định hệ số góc.
+
+**Các hiệu chỉnh vay mượn không giữ được khi chuyển sang bối cảnh khác.** Phép ánh xạ chi phí của @acharya2005asset là trường hợp rõ nhất. Với khối lượng tính bằng VND, nó gán cho mọi quan sát công ty–tháng giá trị hệ số chặn 0.25%, với độ lệch chuẩn mặt cắt ngang đúng bằng không; với khối lượng tính bằng tỷ VND, nó ghim tất cả ở mức chặn 30%, lại với độ phân tán bằng không. Trong cả hai trường hợp, nó đều không thất bại một cách ồn ào — nó trả về một chi phí theo phần trăm trông hợp lý nhưng hoàn toàn không mang thông tin nào về cổ phiếu nào kém thanh khoản. Mọi hằng số đã công bố dạng $a + b\,\text{ILLIQ}$ đều kế thừa đơn vị của dữ liệu mà nó được khớp, và phải được ước lượng lại chứ không được sao chép.
+
+Để áp dụng cùng hàm đó cho bảng dữ liệu thực của chương:
+
+```{python}
+#| label: amihud-variants-real
+#| eval: false
+#| code-summary: "Apply the variant constructor to the Vietnamese daily panel"
+# `daily` carries turnover_value in VND; express it in billions so that the
+# resulting ratio reads as "return per billion VND traded".
+amihud_all = amihud_variants(
+    daily.rename(columns={"turnover_value": "dvol"}).assign(
+        dvol=lambda d: d["dvol"] / 1e9
+    ),
+    scale=100.0,          # report as PERCENT price move per billion VND
+    min_days=10,
+)
+print(amihud_all[["illiq_scaled", "illiq_ma", "log_illiq"]].describe().round(4))
+```
+
+Đặt `scale=100.0` với khối lượng tính bằng tỷ VND cho thước đo một cách đọc có thể giữ nguyên khi chuyển đổi: *mức dịch chuyển giá theo phần trăm gắn với một tỷ VND giao dịch*. Đây là quy ước chúng tôi khuyến nghị cho các nghiên cứu về Việt Nam, và nó luôn phải được nêu cùng với con số.
+
+#### Điều Thực sự được Định giá: Phê bình của Lou--Shu
+
+Có một phản biện sâu hơn đối với @eq-amihud so với bất kỳ câu hỏi nào về việc quy đổi, và nó liên quan trực tiếp đến cải tiến tần suất cao được phát triển trong @sec-liquidity-realized.
+
+@lou2017price phân rã tỷ số Amihud thành phần quy cho mẫu số và phần quy cho tác động giá thực sự theo lợi nhuận trên mỗi đơn vị khối lượng. Phát hiện của họ gây khó chịu đối với cách diễn giải chuẩn: phần bù lợi nhuận gắn với $\text{ILLIQ}$ được dẫn dắt bởi thành phần *khối lượng giao dịch* chứ không phải thành phần tác động giá. Nói thẳng ra, phân loại theo $\text{ILLIQ}$ gần như là phân loại theo nghịch đảo của giá trị giao dịch bằng đô la, và phần bù mà nó đem lại có thể phản ánh bất cứ điều gì mà nghịch đảo giá trị giao dịch đó đại diện — sự nhận biết của nhà đầu tư, sự bị lãng quên, sự chú ý của nhà đầu tư cá nhân — chứ không phải khoản bù đắp cho tác động giá.
+
+Điều này có hai hàm ý đối với cuốn sách.
+
+Hàm ý thứ nhất là một cảnh báo. Ở những phần sau của chương này báo cáo phần bù thanh khoản từ các phân loại theo $\text{ILLIQ}$, cách diễn giải đúng là "một phần bù gắn với đặc điểm Amihud", chứ không phải "khoản bù đắp cho tác động giá". Phân biệt hai điều này đòi hỏi phép phân rã, và đòi hỏi kiểm soát trực tiếp giá trị giao dịch bằng đô la.
+
+Hàm ý thứ hai là một câu hỏi thực sự còn bỏ ngỏ mà ước lượng thực hiện (realized) có khả năng trả lời. Nội dung tác động giá của $\text{ILLIQ}$ nằm ở tử số, và @sec-liquidity-realized cho thấy tử số theo ngày $|R_d|$ mang khoảng 76% sai số đo lường tương đối trong khi mẫu số $\text{DVOL}_d$ được quan sát gần như không có sai số. Một cuộc đua giữa tử số đo với 76% nhiễu và mẫu số đo không nhiễu không phải là một phép thử công bằng xem thành phần nào quan trọng: sai số trong biến cổ điển (errors-in-variables) làm đóng góp ước lượng của tử số suy giảm về không bất kể vai trò kinh tế thật của nó. Liệu kết quả của Lou–Shu có còn đứng vững khi tử số được đo với độ chính xác cao hơn khoảng bảy lần của @lacava2026realized hay không, theo hiểu biết của chúng tôi, vẫn chưa được kiểm định. Chúng tôi đánh dấu đó là một cơ hội nghiên cứu chứ không phải một kết quả, và lưu ý rằng Việt Nam là nơi không thuận lợi để thử nghiệm, vì những lý do về dữ liệu trong phiên được nêu trong @sec-liquidity-realized.
+
+#### Cuốn sách này Dùng Biến thể nào
+
+Để cụ thể, các quy ước được áp dụng trong phần còn lại của chương này và của cuốn sách:
+
+1.  **Tần suất theo tháng**, để nhất quán với bảng dữ liệu lợi nhuận theo tháng, chấp nhận sai số lấy mẫu tăng khoảng 3.5 lần so với cách xây dựng theo năm của Amihud.
+2.  **Khối lượng tính bằng tỷ VND**, chỉ các ngày có khối lượng dương, tối thiểu mười ngày hợp lệ cho mỗi quan sát công ty–tháng.
+3.  **Biến đổi logarit** cho công việc hồi quy, theo mã nguồn đi kèm @eq-amihud ở trên, vì phân phối gộp quá lệch đối với OLS ở dạng mức.
+4.  **Thứ hạng hoặc nhóm ngũ phân vị trong tháng** cho các phân loại danh mục, vốn như đã chỉ ra ở trên, bất biến đối với mọi lựa chọn khác trong danh sách này.
+5.  **Điều chỉnh theo trung bình** bất cứ khi nào các mức được so sánh giữa các thời điểm, trên thực tế nghĩa là mọi đặc tả không có hiệu ứng cố định theo tháng.
+
+Thước đo cũng được báo cáo không qua biến đổi trong các thống kê mô tả, để độc giả có thể quy đổi sang bất kỳ quy ước nào khác.
+
+### Ngày Lợi nhuận bằng Không (Thước đo Lesmond)
+
+@lesmond1999new đề xuất dùng tỷ lệ các ngày có lợi nhuận bằng không làm thước đo chi phí giao dịch. Trực giác là nếu thay đổi giá trị thực trong một ngày nhỏ hơn chi phí giao dịch khứ hồi, một nhà đầu tư cận biên hợp lý sẽ không giao dịch, và lợi nhuận quan sát được sẽ bằng không. Do đó, tỷ lệ lợi nhuận bằng không là hàm tăng của chi phí giao dịch hiệu dụng.
+
+@lesmond2005liquidity kiểm chứng thước đo này cho các thị trường mới nổi và thấy nó tương quan mạnh với các thước đo chi phí tường minh. Ở Việt Nam, nơi các ngày lợi nhuận bằng không rất phổ biến (như đã ghi nhận ở chương trước), thước đo này có ý nghĩa đặc biệt.
 
 $$
 \text{ZeroRet}_{i,m} = \frac{\text{Number of days with } R_{i,d} = 0}{D_{i,m}}
@@ -264,9 +463,9 @@ print(f"\nZero-return proportion distribution:")
 print(zero_monthly['zero_return_pct'].describe().round(3))
 ```
 
-### Turnover Ratio
+### Tỷ lệ Vòng quay Giao dịch
 
-Share turnover (i.e., daily volume divided by shares outstanding) measures trading activity rather than trading cost. @datar1998liquidity use turnover as a liquidity proxy and document a negative cross-sectional relationship between turnover and expected returns, consistent with the liquidity premium hypothesis.
+Tỷ lệ vòng quay cổ phiếu (tức là khối lượng theo ngày chia cho số cổ phiếu đang lưu hành) đo hoạt động giao dịch chứ không phải chi phí giao dịch. @datar1998liquidity dùng tỷ lệ vòng quay làm thước đo xấp xỉ thanh khoản và ghi nhận mối quan hệ mặt cắt ngang âm giữa tỷ lệ vòng quay và lợi nhuận kỳ vọng, phù hợp với giả thuyết phần bù thanh khoản.
 
 $$
 \text{Turn}_{i,m} = \frac{1}{D_{i,m}} \sum_{d=1}^{D_{i,m}} \frac{\text{Volume}_{i,d}}{\text{SharesOut}_{i,d}}
@@ -311,9 +510,9 @@ print(f"\nLog turnover distribution:")
 print(turnover_monthly['log_turnover'].describe().round(3))
 ```
 
-### Roll Spread Estimator
+### Ước lượng Chênh lệch Roll
 
-@roll1984simple derives an implicit bid-ask spread from the serial covariance of price changes. Under the assumptions that the true value follows a random walk and that observed prices bounce between the bid and ask:
+@roll1984simple suy ra một chênh lệch giá mua–bán ngầm định từ hiệp phương sai chuỗi của các thay đổi giá. Với các giả định rằng giá trị thực tuân theo bước ngẫu nhiên và giá quan sát được dao động giữa giá mua và giá bán:
 
 $$
 \text{Roll}_{i,m} = \begin{cases}
@@ -322,7 +521,7 @@ $$
 \end{cases}
 $$ {#eq-roll}
 
-where $\Delta P_{i,d} = P_{i,d} - P_{i,d-1}$. The measure is intuitive: the bid-ask bounce creates negative serial correlation in transaction prices, and the magnitude of this negative correlation reflects the spread.
+trong đó $\Delta P_{i,d} = P_{i,d} - P_{i,d-1}$. Thước đo này mang tính trực giác: dao động giữa giá mua và giá bán tạo ra tương quan chuỗi âm trong giá giao dịch, và độ lớn của tương quan âm này phản ánh chênh lệch giá.
 
 ```{python}
 #| label: roll-spread
@@ -367,21 +566,21 @@ print(f"\nRoll spread distribution:")
 print(roll_monthly['roll_spread'].describe().round(4))
 ```
 
-### Corwin-Schultz High-Low Spread
+### Chênh lệch Cao–Thấp Corwin-Schultz
 
-@corwin2012simple estimate the effective spread from daily high and low prices. The key insight is that daily high and low prices contain information about both volatility and the spread—the high is typically a buy and the low a sell, so the high-low range reflects both true volatility and the bid-ask spread. By comparing one-day and two-day high-low ranges, the method separates the two components:
+@corwin2012simple ước lượng chênh lệch giá hiệu dụng từ giá cao nhất và thấp nhất theo ngày. Điểm then chốt là giá cao nhất và thấp nhất theo ngày chứa thông tin về cả biến động lẫn chênh lệch giá—giá cao nhất thường là một lệnh mua và giá thấp nhất là một lệnh bán, nên biên độ cao–thấp phản ánh cả biến động thực lẫn chênh lệch giá mua–bán. Bằng cách so sánh biên độ cao–thấp một ngày và hai ngày, phương pháp tách hai thành phần này:
 
 $$
 \hat{S}_{i,m} = \frac{2(e^{\hat{\alpha}} - 1)}{1 + e^{\hat{\alpha}}}
 $$ {#eq-corwin-schultz}
 
-where:
+trong đó:
 
 $$
 \hat{\alpha} = \frac{\sqrt{2\hat{\beta}} - \sqrt{\hat{\beta}}}{3 - 2\sqrt{2}} - \sqrt{\frac{\hat{\gamma}}{3 - 2\sqrt{2}}}
 $$ {#eq-cs-alpha}
 
-with $\hat{\beta}$ and $\hat{\gamma}$ computed from one-day and two-day log high-low ratios.
+với $\hat{\beta}$ và $\hat{\gamma}$ được tính từ các tỷ số cao–thấp lấy logarit trong một ngày và hai ngày.
 
 ```{python}
 #| label: corwin-schultz
@@ -452,9 +651,9 @@ print(f"\nCS spread distribution:")
 print(cs_monthly['cs_spread'].describe().round(4))
 ```
 
-### Quoted Bid-Ask Spread
+### Chênh lệch Giá mua–Giá bán Chào
 
-When bid and ask quotes are available, the quoted percentage spread provides a direct measure of tightness:
+Khi có sẵn các báo giá mua và bán, chênh lệch theo phần trăm của giá chào cung cấp một thước đo trực tiếp về độ chặt:
 
 $$
 \text{PQSPR}_{i,m} = \frac{1}{D_{i,m}} \sum_{d=1}^{D_{i,m}} \frac{\text{Ask}_{i,d} - \text{Bid}_{i,d}}{(\text{Ask}_{i,d} + \text{Bid}_{i,d})/2}
@@ -498,15 +697,15 @@ print(f"\nQuoted spread distribution:")
 print(quoted_monthly['quoted_spread'].describe().round(4))
 ```
 
-### Kyle's Lambda (Price Impact Regression)
+### Lambda của Kyle (Hồi quy Tác động Giá)
 
-We estimate Kyle's lambda (i.e., the price impact per unit of signed order flow) using a daily regression:
+Chúng ta ước lượng lambda của Kyle (tức là tác động giá trên mỗi đơn vị dòng lệnh có dấu) bằng một hồi quy theo ngày:
 
 $$
 R_{i,d} = \alpha_i + \lambda_i \cdot \text{Sign}(R_{i,d}) \cdot \sqrt{\text{Volume}_{i,d}} + \varepsilon_{i,d}
 $$ {#eq-kyle-lambda}
 
-This is an adaptation of the @hasbrouck2009trading effective cost measure. The coefficient $\lambda_i$ measures how much prices move per unit of (unsigned, square-rooted) volume.
+Đây là một sự điều chỉnh của thước đo chi phí hiệu dụng @hasbrouck2009trading. Hệ số $\lambda_i$ đo giá dịch chuyển bao nhiêu trên mỗi đơn vị khối lượng (không dấu, lấy căn bậc hai).
 
 ```{python}
 #| label: kyle-lambda
@@ -555,33 +754,33 @@ print(f"\nLog Kyle lambda distribution:")
 print(kyle_monthly['log_kyle'].describe().round(3))
 ```
 
-## Kém Thanh khoản Thực hiện: Một Cải tiến Tần suất Cao cho Thước đo Amihud {#sec-liquidity-realized}
+## Phi thanh khoản Thực hiện: Một Cải tiến Tần suất Cao cho Thước đo Amihud {#sec-liquidity-realized}
 
 ### Động cơ
 
-Trong bảy thước đo được xây dựng ở trên, tỷ số @amihud2002illiquidity trong @eq-amihud là thước đo mà cuốn sách này dựa vào nhiều nhất: nó là biến phân nhóm trong các phân nhóm danh mục và hồi quy Fama-MacBeth ở phần sau, là đầu vào cho các hồi quy về tính đồng biến của thanh khoản, và là cơ sở của nhân tố thanh khoản có thể giao dịch được xây dựng ở cuối chương. Đây cũng chính là thước đo mà @fong2017best khuyến nghị riêng cho các thị trường mới nổi. Vì vậy, rất đáng để đặt câu hỏi: nó đo lường chính xác đến mức nào điều mà nó tuyên bố đo lường?
+Trong bảy thước đo xấp xỉ được xây dựng ở trên, tỷ số @amihud2002illiquidity trong @eq-amihud là thước đo mà cuốn sách này dựa vào nhiều nhất: nó là biến phân loại trong các phân loại danh mục và hồi quy Fama-MacBeth ở phần sau, là đầu vào cho các hồi quy về tính đồng biến, và là cơ sở của nhân tố thanh khoản có thể giao dịch được xây dựng ở cuối chương. Đây cũng chính là thước đo mà @fong2017best khuyến nghị riêng cho các thị trường mới nổi. Vì vậy, rất đáng để đặt câu hỏi: nó đo lường chính xác đến mức nào điều mà nó tuyên bố đo lường?
 
-Câu trả lời là: kém chính xác hơn nhiều so với mức độ phổ biến của nó gợi ý, và vì một lý do không hề liên quan đến mẫu số khối lượng. Tử số $|R_{i,d}|$ là một *quan sát đơn lẻ* được dùng để tóm tắt toàn bộ biến động giá trong ngày. Xét như một thống kê, nó gần như không chệch đối với độ biến động của ngày nhưng lại nhiễu một cách phi thường — chúng ta sẽ định lượng điều này dưới đây ở mức khoảng 76% độ lệch chuẩn tương đối *mỗi ngày*. Mỗi đơn vị nhiễu đó lan truyền vào các phân nhóm danh mục dưới dạng suy giảm do sai số trong biến (errors-in-variables) cổ điển, làm phẳng phần bù thanh khoản đo được về phía không.
+Câu trả lời là: kém chính xác hơn nhiều so với mức độ phổ biến của nó gợi ý, và vì một lý do không hề liên quan đến mẫu số khối lượng. Tử số $|R_{i,d}|$ là một *quan sát đơn lẻ* được dùng để tóm tắt toàn bộ biến động giá trong ngày. Xét như một thống kê, nó gần như không chệch đối với độ biến động của ngày nhưng lại nhiễu một cách phi thường — chúng ta sẽ định lượng điều này dưới đây ở mức khoảng 76% độ lệch chuẩn tương đối *mỗi ngày*. Mỗi đơn vị nhiễu đó lan truyền vào các phân loại danh mục dưới dạng suy giảm do sai số trong biến (errors-in-variables) cổ điển, làm phẳng các phần bù thanh khoản đo được về phía không.
 
-@lacava2026realized giải quyết đúng vấn đề này. Họ định nghĩa *kém thanh khoản thực hiện* là tỷ số giữa độ biến động thực hiện và khối lượng giao dịch, và giới thiệu **thước đo Amihud thực hiện**, thay thế giá trị tuyệt đối của lợi suất ngày đơn lẻ bằng một ước lượng tần suất cao của cùng đại lượng đó. Họ chỉ ra rằng nó nắm bắt một cách vững chắc độ nhạy tích lũy của giá trong phiên đối với hoạt động giao dịch, ngay cả khi có độ biến động ngẫu nhiên, nhiễu vi cấu trúc và các bước nhảy thông tin; ghi nhận hiện tượng phân cụm không đồng nhất và hiệu ứng đòn bẩy trong chuỗi kết quả; và tìm thấy rằng nó dự báo được lợi suất ngắn hạn. Phần này phát triển ước lượng theo ký hiệu của cuốn sách, dẫn giải vì sao mức cải thiện độ chính xác lại lớn đến vậy, và trình bày cái giá phải trả để triển khai nó trên HOSE.
+@lacava2026realized giải quyết đúng vấn đề này. Họ định nghĩa *phi thanh khoản thực hiện* là tỷ số giữa độ biến động thực hiện và khối lượng giao dịch, và giới thiệu **thước đo Amihud thực hiện**, thay giá trị tuyệt đối của lợi nhuận theo ngày đơn lẻ bằng một ước lượng tần suất cao của cùng đại lượng đó. Họ chỉ ra rằng nó nắm bắt một cách vững chắc độ nhạy giá tích lũy trong phiên đối với giao dịch, ngay cả khi có độ biến động ngẫu nhiên, nhiễu vi cấu trúc và các bước nhảy thông tin; ghi nhận hiện tượng phân cụm không đồng nhất và hiệu ứng đòn bẩy trong chuỗi kết quả; và thấy rằng nó dự báo được lợi nhuận ngắn hạn. Phần này phát triển ước lượng theo ký hiệu của cuốn sách, dẫn giải vì sao mức cải thiện độ chính xác lại lớn đến vậy, và trình bày cái giá phải trả để triển khai nó trên HOSE.
 
 ### Thiết lập và Ký hiệu
 
-Gọi $p_{i,t}$ là log giá hiệu quả của cổ phiếu $i$ tại thời điểm $t$, diễn biến trong ngày giao dịch $d$ theo một nửa martingale Itô:
+Let $p_{i,t}$ denote the efficient log price of stock $i$ at time $t$, evolving over trading day $d$ as an Itô semimartingale:
 
 $$
 dp_{i,t} = \mu_{i,t}\,dt + \sigma_{i,t}\,dW_{i,t} + dJ_{i,t}
 $$ {#eq-semimartingale}
 
-trong đó $\sigma_{i,t}$ là quá trình độ biến động ngẫu nhiên càdlàg, $W_{i,t}$ là chuyển động Brown chuẩn, và $J_{i,t}$ là quá trình bước nhảy hữu hạn hoạt độ, thể hiện các lần thông tin đến rời rạc. Đại lượng tóm tắt biến động giá của ngày là **phương sai tích hợp**
+where $\sigma_{i,t}$ is a càdlàg stochastic volatility process, $W_{i,t}$ a standard Brownian motion, and $J_{i,t}$ a finite-activity jump process capturing discrete information arrivals. The object that summarizes the day's price variation is the **integrated variance**
 
 $$
 \text{IV}_{i,d} = \int_{d-1}^{d} \sigma_{i,s}^2\,ds
 $$ {#eq-integrated-variance}
 
-Chia ngày giao dịch liên tục thành $M$ khoảng và ký hiệu log lợi suất trong phiên là $r_{i,d,j}$, $j = 1,\dots,M$, sao cho lợi suất ngày thỏa mãn $R_{i,d} = \sum_{j=1}^{M} r_{i,d,j}$. Như trước, $\text{DVOL}_{i,d}$ là khối lượng giao dịch tính bằng VND trong ngày $d$ và $D_{i,m}$ là số ngày có khối lượng dương trong tháng $m$.
+Chia ngày giao dịch liên tục thành $M$ khoảng và ký hiệu log lợi nhuận trong phiên là $r_{i,d,j}$, $j = 1,\dots,M$, sao cho lợi nhuận theo ngày thỏa mãn $R_{i,d} = \sum_{j=1}^{M} r_{i,d,j}$. Như trước, $\text{DVOL}_{i,d}$ là khối lượng giao dịch tính bằng VND trong ngày $d$ và $D_{i,m}$ là số ngày có khối lượng dương trong tháng $m$.
 
-**Phương sai thực hiện** và **biến phân song lũy thừa** được định nghĩa là
+**Phương sai thực hiện** và **biến phân song lũy thừa (bipower variation)** là
 
 $$
 \text{RV}_{i,d} = \sum_{j=1}^{M} r_{i,d,j}^2,
@@ -595,23 +794,23 @@ Cả hai đều vững đối với $\text{IV}_{i,d}$ khi $M \to \infty$ trong t
 
 **(A1) Giá hiệu quả là nửa martingale.** Log giá hiệu quả tuân theo @eq-semimartingale với $\int_{d-1}^{d}\sigma_{i,s}^4\,ds < \infty$.
 
-*Diễn giải.* Giá được dẫn dắt bởi một quá trình khuếch tán với độ biến động có thể ngẫu nhiên và dai dẳng, cộng với các bước nhảy không thường xuyên. Đây là giả định yếu và nhìn chung không gây tranh cãi. Nó sẽ bị vi phạm bởi một quá trình giá có bước nhảy hoạt độ vô hạn với cường độ đủ lớn, hoặc bởi một thị trường mỏng đến mức không một xấp xỉ thời gian liên tục nào còn có ý nghĩa — trường hợp sau là mối lo thực tế đối với các cổ phiếu vốn hóa nhỏ trên HOSE.
+*Diễn giải.* Giá được dẫn dắt bởi một quá trình khuếch tán với độ biến động có thể ngẫu nhiên và dai dẳng, cộng với các bước nhảy không thường xuyên. Đây là giả định yếu và nhìn chung không gây tranh cãi. Nó sẽ bị vi phạm bởi một quá trình giá có bước nhảy hoạt động vô hạn với cường độ đủ lớn, hoặc bởi một thị trường mỏng đến mức không một xấp xỉ thời gian liên tục nào còn có ý nghĩa — trường hợp sau là mối lo thực tế đối với các cổ phiếu vốn hóa nhỏ trên HOSE.
 
 **(A2) Nhiễu vi cấu trúc không đáng kể tại tần suất lấy mẫu.** Giá quan sát được thỏa mãn $\tilde{p}_{i,t} = p_{i,t} + u_{i,t}$, và khoảng lấy mẫu đủ thô để $2M\,\mathbb{V}[u_{i,t}]$ là nhỏ so với $\text{IV}_{i,d}$.
 
-*Diễn giải.* Dao động giữa giá mua và giá bán, tính rời rạc của bước giá, và giá cũ không cập nhật đều bơm nhiễu vào giá quan sát được. Vì $\text{RV}$ cộng dồn *bình phương* lợi suất, nhiễu này tích lũy theo $M$ thay vì triệt tiêu — lấy mẫu quá dày làm ước lượng tệ đi chứ không tốt lên. Trên HOSE, bước giá thô so với mặt bằng giá khiến ràng buộc này phát huy tác dụng sớm hơn so với dữ liệu Mỹ. Đây là giả định dễ bị vi phạm nhất trong thực tế, và chúng ta sẽ chỉ ra điều gì xảy ra khi nó bị vi phạm.
+*Diễn giải.* Dao động giữa giá mua và giá bán, tính rời rạc của bước giá, và giá cũ không được cập nhật đều bơm nhiễu vào giá quan sát được. Vì $\text{RV}$ cộng dồn lợi nhuận *bình phương*, nhiễu này tích lũy theo $M$ thay vì triệt tiêu — lấy mẫu quá dày làm ước lượng tệ đi chứ không tốt lên. Trên HOSE, bước giá thô so với mặt bằng giá khiến ràng buộc này phát huy tác dụng sớm hơn so với dữ liệu Mỹ. Đây là giả định dễ bị vi phạm nhất trong thực tế, và chúng ta sẽ chỉ ra điều gì xảy ra khi nó bị vi phạm.
 
 **(A3) Không có bước nhảy, đối với thước đo Amihud thực hiện dạng thuần.** $J_{i,t} \equiv 0$ trong ngày $d$.
 
-*Diễn giải.* Một bất ngờ về lợi nhuận hay một phiên chạm biên độ là một thay đổi giá lớn *không phải* do tác động giá của khối lượng giao dịch, nhưng $\text{RV}$ vẫn tính nó như thể đúng là như vậy. Với tần suất cổ phiếu Việt Nam chạm biên độ $\pm7\%$ của HOSE (xem thảo luận về biên độ giá trong chương vi cấu trúc thị trường), (A3) không hề vô hại ở đây. Nới lỏng giả định này chính là lý do chúng ta duy trì song song $\text{BV}_{i,d}$.
+*Diễn giải.* Một bất ngờ lợi nhuận hay một phiên chạm biên độ là một thay đổi giá lớn *không phải* do tác động giá của khối lượng giao dịch, nhưng $\text{RV}$ vẫn tính nó như thể đúng là như vậy. Với tần suất cổ phiếu Việt Nam chạm biên độ $\pm7\%$ của HOSE (xem thảo luận về biên độ giá trong chương vi cấu trúc thị trường), (A3) không hề vô hại ở đây. Nới lỏng giả định này chính là lý do chúng ta duy trì song song $\text{BV}_{i,d}$.
 
-**(A4) Khối lượng đồng thời.** $\text{DVOL}_{i,d}$ được đo trên cùng cửa sổ thời gian với các lợi suất trong phiên.
+**(A4) Khối lượng đồng thời.** $\text{DVOL}_{i,d}$ được đo trên cùng cửa sổ thời gian với các lợi nhuận trong phiên.
 
-*Diễn giải.* Nếu lợi suất được tính trên các phiên khớp lệnh liên tục nhưng khối lượng lại bao gồm cả các giao dịch thỏa thuận sau giờ đóng cửa, thì tử số và mẫu số đang nói về hai hoạt động giao dịch khác nhau. Trên HOSE, phiên thỏa thuận 14:45–15:00 khiến đây là một vấn đề hạch toán thực sự chứ không phải chi tiết kỹ thuật.
+*Diễn giải.* Nếu lợi nhuận được tính trên các phiên khớp lệnh liên tục nhưng khối lượng lại bao gồm cả các giao dịch thỏa thuận sau giờ đóng cửa, thì tử số và mẫu số đang nói về hai hoạt động giao dịch khác nhau. Trên HOSE, phiên thỏa thuận 14:45–15:00 khiến đây là một vấn đề hạch toán thực sự chứ không phải chi tiết kỹ thuật.
 
 ### Ước lượng
 
-Thước đo Amihud thực hiện thay $|R_{i,d}|$ bằng một ước lượng tần suất cao đã được chuẩn hóa tỷ lệ cho chính biến động giá của ngày đó:
+Thước đo Amihud thực hiện thay $|R_{i,d}|$ bằng một ước lượng tần suất cao đã được quy đổi tỷ lệ cho chính biến động giá của ngày đó:
 
 $$
 \text{RILLIQ}_{i,m} = \frac{1}{D_{i,m}}\sum_{d=1}^{D_{i,m}} \sqrt{\frac{2}{\pi}}\,\frac{\sqrt{\text{RV}_{i,d}}}{\text{DVOL}_{i,d}}
@@ -677,27 +876,26 @@ $$ {#eq-rv-relsd}
 
 Ở tần suất lấy mẫu năm phút, *phương sai* nhiễu trong tử số giảm khoảng 51 lần.
 
-**Bước 4: Vì sao điều này quan trọng đối với các kết quả của cuốn sách.** Viết biến phân nhóm theo tháng dưới dạng giá trị thật cộng sai số, $\widehat{x}_{i,m} = x_{i,m} + \eta_{i,m}$. Trong các phân nhóm thanh khoản đơn biến và các hồi quy Fama-MacBeth ở phần sau của chương, sai số trong biến cổ điển làm suy giảm hệ số góc ước lượng theo tỷ số tin cậy
+**Bước 4: Vì sao điều này quan trọng đối với các kết quả của cuốn sách.** Viết biến phân loại theo tháng dưới dạng giá trị thật cộng sai số, $\widehat{x}_{i,m} = x_{i,m} + \eta_{i,m}$. Trong các phân loại thanh khoản đơn biến và các hồi quy Fama-MacBeth ở phần sau của chương, sai số trong biến cổ điển làm suy giảm hệ số góc ước lượng theo tỷ số tin cậy
 
 $$
 \text{plim}\;\frac{\widehat{\gamma}}{\gamma} = \frac{\mathbb{V}[x]}{\mathbb{V}[x] + \mathbb{V}[\eta]}
 $$ {#eq-attenuation}
 
-Giảm $\mathbb{V}[\eta]$ khoảng 51 lần sẽ đẩy tỷ số tin cậy tiến về một, điều này *làm tăng* phần bù thanh khoản đo được cùng thống kê $t$ của nó. Hệ quả thực tiễn khá khó chịu và đáng nói thẳng: phần bù thanh khoản ước lượng bằng tỷ số Amihud theo ngày là một **cận dưới**. Một phần bù yếu hoặc không có ý nghĩa thống kê trong dữ liệu Việt Nam có thể phản ánh một biến phân nhóm nhiều nhiễu chứ không phải sự vắng mặt của phần bù.
+Giảm $\mathbb{V}[\eta]$ khoảng 51$\times$ sẽ đẩy tỷ số tin cậy tiến về một, điều này *làm tăng* phần bù thanh khoản đo được cùng thống kê $t$ của nó. Hệ quả thực tiễn khá khó chịu và đáng nói thẳng: phần bù thanh khoản ước lượng bằng tỷ số Amihud theo ngày là một **cận dưới**. Một phần bù yếu hoặc không có ý nghĩa thống kê trong dữ liệu Việt Nam có thể phản ánh một biến phân loại nhiều nhiễu chứ không phải sự vắng mặt của phần bù.
 
 ### Trực giác
 
-Tỷ số Amihud đặt câu hỏi "giá đã dịch chuyển bao nhiêu trên mỗi đồng VND được giao dịch?" và trả lời bằng đúng một con số mà ngày hôm đó tình cờ mang lại — mức dịch chuyển từ mở cửa đến đóng cửa. Nhưng một ngày mà giá đi lên 4%, quay đầu giảm 5%, rồi đóng cửa thấp hơn 1% là một ngày có độ nhạy giá đáng kể đối với giao dịch, trong khi $|R_d| = 1\%$ hầu như không ghi nhận được điều đó. Độ biến động thực hiện đo *cả quỹ đạo* thay vì chỉ hai đầu mút, nhờ vậy nắm bắt được đúng độ nhạy tích lũy của giá trong phiên mà Amihud đang cố gắng xấp xỉ. Lấy trung bình $M$ bình phương lợi suất trong phiên thay vì lấy một giá trị tuyệt đối của lợi suất ngày, xét về mặt thống kê, chính là khác biệt giữa một quan sát và $M$ quan sát.
+Tỷ số Amihud đặt câu hỏi "giá đã dịch chuyển bao nhiêu trên mỗi đồng VND được giao dịch?" và trả lời bằng đúng một con số mà ngày hôm đó tình cờ mang lại — mức dịch chuyển từ mở cửa đến đóng cửa. Nhưng một ngày mà giá đi lên 4%, quay đầu giảm 5%, rồi đóng cửa thấp hơn 1% là một ngày có độ nhạy giá đáng kể đối với giao dịch, trong khi $|R_d| = 1\%$ hầu như không ghi nhận được điều đó. Độ biến động thực hiện đo *cả quỹ đạo* thay vì chỉ hai đầu mút, nhờ vậy nắm bắt được đúng độ nhạy giá tích lũy trong phiên mà Amihud đang cố gắng xấp xỉ. Lấy trung bình $M$ bình phương lợi nhuận trong phiên thay vì lấy một giá trị tuyệt đối của lợi nhuận theo ngày, xét về mặt thống kê, chính là khác biệt giữa một quan sát và $M$ quan sát.
 
 Điểm vướng là quỹ đạo chỉ quan sát được thông qua lớp vi cấu trúc. Đẩy $M$ lên đủ cao thì ta không còn đo quỹ đạo giá hiệu quả nữa mà bắt đầu đo dao động giữa giá mua và giá bán. Toàn bộ nghệ thuật của ước lượng này nằm ở việc chọn $M$ đủ lớn để có thêm độ chính xác và đủ nhỏ để giữ (A2) còn hiệu lực.
 
 ### Thiết kế Mô phỏng {#sec-liquidity-realized-sim}
 
-Thí nghiệm dưới đây so sánh @eq-realized-amihud với @eq-amihud trên cùng một quá trình sinh dữ liệu, sau đó lần lượt phá vỡ (A2) và (A3) để làm lộ ra các dạng thất bại. Đại lượng mục tiêu là mức kém thanh khoản thật theo ngày đã chuẩn hóa tỷ lệ $\sqrt{2/\pi}\sqrt{\text{IV}_{i,d}}/\text{DVOL}_{i,d}$, nhờ đó độ chệch và RMSE được đo so với một đại lượng đã biết.
+Thí nghiệm sau đây đối chiếu @eq-realized-amihud với @eq-amihud trên cùng một quá trình sinh dữ liệu (DGP), rồi lần lượt phá vỡ (A2) và (A3) để làm lộ các kiểu thất bại. Đại lượng mục tiêu là mức phi thanh khoản thật theo ngày đã quy đổi $\sqrt{2/\pi}\sqrt{\text{IV}_{i,d}}/\text{DVOL}_{i,d}$, nhờ đó độ chệch và RMSE được đo so với một đại lượng đã biết.
 
 ```{python}
 #| label: realized-amihud-simulation
-#| eval: false
 #| code-summary: "Monte Carlo: realized vs. classic Amihud under noise and jumps"
 rng = np.random.default_rng(20260812)
 
@@ -778,40 +976,42 @@ score(simulate_days(30_000, M_HOSE, jump_prob=0.2, jump_sd=0.03),
       "Information jumps (~1 per 5 days, 3% size)")
 ```
 
-Ba kết quả sẽ xuất hiện, và mỗi kết quả đều có đối chiếu trực tiếp với phần giải tích ở trên. Thứ nhất, dưới (A1)–(A4), thước đo Amihud thực hiện sẽ giảm RMSE tương đối khoảng đúng hệ số trong @tbl-realized-precision và nâng tương quan hạng với mức kém thanh khoản thật từ khoảng 0.7 lên trên 0.99 — chính tương quan hạng này quyết định việc phân nhóm danh mục có xếp cổ phiếu vào đúng nhóm hay không. Thứ hai, việc phá vỡ (A2) sẽ làm thước đo Amihud thực hiện chệch *lên trên*, và lấy mẫu ở một phút thay vì năm phút sẽ khiến độ chệch tệ hơn gấp nhiều lần chứ không tốt hơn — đây là bài học không hiển nhiên: khi có nhiễu, nhiều dữ liệu hơn được lấy mẫu dày hơn lại gây hại. Thứ ba, khi có bước nhảy, thước đo Amihud thực hiện dạng thuần sẽ mang độ chệch lên trên rõ rệt, trong khi phiên bản song lũy thừa trong @eq-realized-amihud-bv vẫn gần như không chệch.
+Ba kết quả xuất hiện, và mỗi kết quả có một đối ứng trực tiếp trong phần giải tích ở trên.
 
-::: callout-warning
-## Khối lệnh này chưa được thực thi
+Thứ nhất, dưới (A1)–(A4), cả hai ước lượng đều gần như không chệch — tử số Amihud theo ngày, như @eq-halfnormal đã nói, không chệch đối với mục tiêu đúng — nhưng độ chính xác của chúng khác nhau một trời một vực. RMSE tương đối giảm từ khoảng 1.28 xuống khoảng 0.18, một tỷ lệ khoảng 7.2, đúng bằng hệ số cải thiện mà @tbl-realized-precision dự báo bằng giải tích cho $M = 45$. Tương quan hạng với mức phi thanh khoản thật tăng từ khoảng 0.70 lên khoảng 0.99. Tương quan hạng là con số quan trọng nhất đối với cuốn sách này, vì nó quyết định việc một phân loại danh mục có xếp cổ phiếu vào đúng nhóm ngũ phân vị hay không: ở mức 0.70, một tỷ lệ đáng kể các cổ phiếu bị xếp sai chỉ vì biến phân loại.
 
-Giống như mọi khối lệnh trong chương này, phần mô phỏng ở trên được đánh dấu `eval: false` và kết quả của nó không được tái hiện tại đây. Các con số giải tích trong @tbl-realized-precision là kết quả dạng đóng từ @eq-abs-relsd và @eq-rv-relsd, không phụ thuộc vào việc chạy khối lệnh. Hãy chạy khối lệnh để tạo ra bảng Monte Carlo.
-:::
+Thứ hai, việc phá vỡ (A2) làm thước đo Amihud thực hiện chệch *lên trên*, và lấy mẫu ở một phút thay vì năm phút làm độ chệch tệ hơn khoảng bốn lần chứ không tốt hơn — khoảng +16% tại $M = 45$ so với khoảng +66% tại $M = 225$. Đây là bài học không hiển nhiên của toàn bộ phần này: khi có nhiễu, nhiều dữ liệu hơn được lấy mẫu dày hơn lại gây hại thực sự. Cũng lưu ý rằng thước đo Amihud theo ngày thuần túy gần như miễn nhiễm với vấn đề cụ thể này, vì một mức lợi nhuận từ mở cửa đến đóng cửa chỉ chứa một liều nhiễu. Độ vững trước nhiễu vi cấu trúc là chiều duy nhất mà thước đo cổ điển thắng.
+
+Thứ ba, khi có bước nhảy, thước đo Amihud thực hiện dạng thuần kế thừa một độ chệch lên trên rõ rệt (khoảng +9%) trong khi phiên bản song lũy thừa trong @eq-realized-amihud-bv vẫn gần như không chệch (khoảng +1%) và còn cho RMSE thấp nhất trong ba thước đo. Với việc cổ phiếu Việt Nam thường xuyên chạm biên độ giá, đây là cấu hình nên ưu tiên cho thị trường Việt Nam.
 
 ### Tái lập trên Dữ liệu Việt Nam
 
-@lacava2026realized sử dụng dữ liệu tần suất cao của Mỹ, nên không thể tái lập trực tiếp bằng bảng dữ liệu theo ngày đã lắp ráp ở phần trước của chương. Quan điểm trung thực cho cuốn sách này là thước đo Amihud thực hiện hiện **nằm ngoài tầm với đối với phần lớn mặt cắt ngang HOSE**, vì một lý do đáng nói rõ: độ chính xác của ước lượng được dẫn dắt bởi $M$, tức số lượng lợi suất trong phiên *không tầm thường*. Một cổ phiếu chỉ khớp lệnh vài lần mỗi phiên không có 45 lợi suất năm phút mang thông tin — nó có một lưới năm phút phần lớn được lấp đầy bằng giá cũ và các số không mang tính cơ học, điều này làm $\text{RV}$ chệch *xuống dưới* và khiến cổ phiếu trông thanh khoản một cách giả tạo. Đây chính là vấn đề giao dịch mỏng đã thúc đẩy thước đo lợi suất bằng không trong @eq-zero-return, và nó tác động lên thước đo Amihud thực hiện mạnh hơn so với phiên bản theo ngày.
+@lacava2026realized sử dụng dữ liệu tần suất cao của Mỹ, nên không thể tái lập trực tiếp bằng bảng dữ liệu theo ngày đã lắp ráp ở phần trước của chương. Quan điểm trung thực cho cuốn sách này là thước đo Amihud thực hiện hiện **nằm ngoài tầm với đối với phần lớn mặt cắt ngang HOSE**, vì một lý do đáng nói rõ: độ chính xác của ước lượng được dẫn dắt bởi $M$, tức số lượng lợi nhuận trong phiên *thực sự khác không*. Một cổ phiếu chỉ khớp lệnh vài lần mỗi phiên không có 45 lợi nhuận năm phút mang thông tin — nó có một lưới năm phút phần lớn được lấp đầy bằng giá cũ được điền tiếp (forward-fill), với các lợi nhuận bằng không mang tính cơ học không đóng góp gì cho $\text{RV}$. Chương vi cấu trúc thị trường mô phỏng trực tiếp điều này (@sec-micro-realized-illiq) và đi đến một kết luận rõ ràng hơn người ta có thể đoán. Mức tăng độ chính xác được quyết định bởi số khoảng mà giá thực sự thay đổi chứ không phải số điểm trên lưới, nên nó suy giảm từ mức 7.2$\times$ theo lý thuyết xuống dưới 2$\times$ đối với một cổ phiếu giao dịch năm lần mỗi ngày. Độ chệch xuống đi kèm trong $\text{RV}$ là có thật nhưng chỉ ở bậc hai so với điều đó, vì việc thô hóa lấy mẫu của một martingale không làm chệch phương sai thực hiện về kỳ vọng; điều mà tình trạng giá cũ loại bỏ là biến động trước giao dịch đầu tiên và sau giao dịch cuối cùng. Đây chính là vấn đề giao dịch mỏng đã thúc đẩy thước đo lợi nhuận bằng không trong @eq-zero-return, và nó tác động lên thước đo Amihud thực hiện mạnh hơn so với phiên bản theo ngày.
 
-Hệ quả thực tiễn là ước lượng này là một cải tiến dành cho nhóm thanh khoản cao của thị trường — đại khái là các cổ phiếu thuộc VN30 và các mã vốn hóa trung bình lớn hơn — chứ không phải vật thay thế cho @eq-amihud trên toàn bộ bảng dữ liệu. Việc xây dựng nó cho Việt Nam đòi hỏi dữ liệu khớp lệnh trong phiên từ HOSE, vốn không nằm trong quy trình dữ liệu theo ngày được sử dụng ở những phần khác của chương.
+Hệ quả thực tiễn là ước lượng này là một cải tiến dành cho nhóm thanh khoản cao của thị trường — đại khái là các cổ phiếu thuộc VN30 và các mã vốn hóa trung bình lớn hơn — chứ không phải vật thay thế cho @eq-amihud trên toàn bộ bảng dữ liệu. Việc xây dựng nó cho Việt Nam đòi hỏi dữ liệu khớp lệnh (tick) trong phiên từ HOSE, vốn không nằm trong quy trình dữ liệu theo ngày được sử dụng ở những phần khác của chương.
 
 ### Hướng dẫn Thực hành
 
-1.  **Lấy mẫu ở năm phút, không dày hơn.** Với 225 phút khớp lệnh liên tục của HOSE, điều này cho $M = 45$ và mức tăng độ chính xác 7.2$\times$. Nên cưỡng lại cám dỗ hạ xuống một phút: @tbl-realized-precision cho thấy mức cải thiện *lý thuyết*, nhưng (A2) sẽ đổ vỡ từ lâu trước khi bạn thu được nó.
+1.  **Lấy mẫu ở năm phút, không dày hơn.** Với 225 phút khớp lệnh liên tục của HOSE, điều này cho $M = 45$ và mức tăng độ chính xác 7.2$\times$. Nên cưỡng lại cám dỗ hạ xuống một phút: @tbl-realized-precision cho thấy mức cải thiện *lý thuyết*, nhưng (A2) sẽ đổ vỡ từ lâu trước khi bạn thu được nó. Năm phút không phải là một quy ước tùy tiện — đó là tần suất mà sự đánh đổi chệch–phương sai giữa sai số lấy mẫu và sự tích lũy nhiễu thường được chọn [@andersen2003modeling], các tính toán lấy mẫu tối ưu của @aitsahalia2005often và @bandi2008microstructure cho kết quả quanh vùng đó đối với cổ phiếu Mỹ có thanh khoản cao, và @liu2015does thấy trên nhiều loại tài sản rằng rất ít thước đo thực hiện nào luôn vượt được $\text{RV}$ năm phút. Vì HOSE mỏng hơn và bước giá thô hơn các thị trường mà những nghiên cứu đó khảo sát, khoảng tối ưu ở đây nếu có khác thì là *dài hơn* năm phút, không bao giờ ngắn hơn.
 2.  **Sàng lọc theo tần suất giao dịch trước khi tính.** Yêu cầu một số lượng tối thiểu các khoảng có giao dịch thực sự xảy ra — chứ không đơn thuần là có giá — và quay về @eq-amihud khi dưới ngưỡng đó. Hãy báo cáo những cổ phiếu nào phải dùng phương án dự phòng.
-3.  **Xử lý giờ nghỉ trưa và các phiên khớp lệnh định kỳ một cách tường minh.** Khoảng 11:30–13:00 không phải là một khoảng tính lợi suất, và giá ATO cùng ATC đến từ khớp lệnh định kỳ chứ không phải khớp lệnh liên tục. Hãy tính $\text{RV}$ trong từng phiên liên tục rồi cộng lại, thay vì lấy sai phân xuyên qua giờ nghỉ hoặc xuyên qua các phiên định kỳ.
+3.  **Xử lý giờ nghỉ trưa và các phiên khớp lệnh định kỳ một cách tường minh.** Khoảng 11:30–13:00 không phải là một khoảng tính lợi nhuận, và giá ATO cùng ATC đến từ khớp lệnh định kỳ chứ không phải khớp lệnh liên tục. Hãy tính $\text{RV}$ trong từng phiên liên tục rồi cộng lại, thay vì lấy sai phân xuyên qua giờ nghỉ hoặc xuyên qua các phiên định kỳ.
 4.  **Loại giao dịch thỏa thuận khỏi mẫu số**, theo (A4), để phiên thỏa thuận 14:45–15:00 không thổi phồng $\text{DVOL}$ so với một tử số chỉ được đo trên phần khớp lệnh liên tục.
 5.  **Ưu tiên phiên bản song lũy thừa trong các ngày chạm biên độ.** Biên độ giá theo ngày của Việt Nam khiến các bước dịch chuyển rời rạc lớn trở nên phổ biến, và @eq-realized-amihud-bv là phiên bản trụ được trước chúng.
-6.  **Phần mềm.** Không có gói chuyên dụng nào; $\text{RV}$ và $\text{BV}$ chỉ là vài dòng `pandas` như ở trên. Đối với các phương án vững với nhiễu khi thực sự cần lấy mẫu dày hơn, ước lượng hai thang thời gian của @zhang2005tale là tài liệu tham chiếu chuẩn để triển khai.
+6.  **Chỉ chuyển sang ước lượng vững với nhiễu khi buộc phải lấy mẫu dày.** Các ước lượng trong @eq-rv-bv là lựa chọn mặc định đúng ở năm phút. Nếu ứng dụng thực sự đòi hỏi lưới dày hơn, tài liệu đưa ra ba họ phương pháp, xếp theo chi phí triển khai tăng dần: ước lượng hai thang thời gian của @zhang2005tale, lấy mẫu con ở hai tần suất và ngoại suy để loại bỏ nhiễu; cách tiếp cận tiền lấy trung bình (pre-averaging) của @jacod2009microstructure, lấy trung bình lợi nhuận trong từng khối trước khi bình phương; và các hạt nhân thực hiện (realized kernels) của @barndorff2008designing, gán trọng số cho các tự hiệp phương sai của lợi nhuận trong phiên. @hansen2006realized là tài liệu tham chiếu chuẩn để chẩn đoán mức độ nhiễu hiện diện ngay từ đầu, và biểu đồ chữ ký (signature plot) của họ — $\text{RV}$ theo tần suất lấy mẫu — nên được lập cho mặt cắt ngang Việt Nam trước khi thử bất kỳ điều nào ở trên.
+7.  **Cân nhắc cắt cụt theo láng giềng gần nhất như một phương án thay cho song lũy thừa.** @andersen2012jump đề xuất các ước lượng MinRV và MedRV, vững với bước nhảy như $\text{BV}$ nhưng hoạt động tốt hơn khi các bước nhảy đến ở các khoảng liền kề — một kịch bản thực tế vào ngày chạm biên độ, khi biên độ bị tiếp cận qua nhiều khoảng liên tiếp chứ không phải trong một lần dịch chuyển.
+8.  **Phần mềm.** Không có gói đơn lẻ nào làm trọn vẹn việc này; $\text{RV}$ và $\text{BV}$ chỉ là vài dòng `pandas`, như trong phần mô phỏng ở trên. Các hàm `realized` trong hệ sinh thái `arch` bao phủ các ước lượng vững với nhiễu cho độc giả không muốn tự triển khai.
 
 ### Những Sai lầm Thường gặp
 
 -   **Lấy mẫu quá dày.** Đây là lỗi phổ biến nhất. Nhiều quan sát hơn trông có vẻ là nhiều thông tin hơn, nhưng @eq-rv-clt giả định rằng thứ đang được lấy mẫu là giá hiệu quả. Quá vài phút trên HOSE thì điều đó không còn đúng nữa.
--   **Coi lợi suất bằng không trong phiên là thông tin.** Trên lưới năm phút, một mức giá cũ tạo ra lợi suất bằng không mà $\text{RV}$ đọc thành độ biến động bằng không. Nếu không sàng lọc, điều này khiến những cổ phiếu kém thanh khoản nhất trông thanh khoản nhất — dấu của sai số ngược lại với phỏng đoán trực giác.
--   **Nhầm lẫn thang đo.** Bỏ đi hằng số $\sqrt{2/\pi}$ sẽ làm @eq-realized-amihud lớn hơn @eq-amihud khoảng 25%, và điều đó âm thầm phá vỡ mọi so sánh với các mức Amihud đã công bố trước đây hoặc với các phân nhóm ở những phần khác của chương.
--   **Cho rằng mức cải thiện chuyển thành phần bù theo tỷ lệ một-đổi-một.** @eq-attenuation nói rằng một biến phân nhóm sạch hơn sẽ nâng phần bù *đo được* tiến về phần bù thật. Nó không tạo ra một phần bù vốn không tồn tại, và nó cũng không khắc phục các vấn đề sống sót và hủy niêm yết vốn quyết định những quan sát công ty-tháng nào được đưa vào bảng dữ liệu ngay từ đầu.
--   **Quên rằng mẫu số không thay đổi.** Tất cả những điều trên chỉ cải thiện tử số. Khối lượng vẫn chịu ảnh hưởng của các quy ước báo cáo và các phức tạp liên quan đến giao dịch thỏa thuận đã thảo luận trong chương vi cấu trúc.
+-   **Coi lợi nhuận bằng không trong phiên là thông tin.** Trên lưới năm phút, một mức giá cũ tạo ra lợi nhuận bằng không mà $\text{RV}$ đọc thành độ biến động bằng không. Nếu không sàng lọc, điều này khiến những cổ phiếu kém thanh khoản nhất trông thanh khoản nhất — dấu của sai số ngược lại với phỏng đoán trực giác.
+-   **Nhầm lẫn thang đo.** Bỏ đi hằng số $\sqrt{2/\pi}$ sẽ làm @eq-realized-amihud lớn hơn @eq-amihud khoảng 25%, và điều đó âm thầm phá vỡ mọi so sánh với các mức Amihud đã công bố trước đây hoặc với các phân loại ở những phần khác của chương.
+-   **Cho rằng mức cải thiện chuyển thành phần bù theo tỷ lệ một-đổi-một.** @eq-attenuation nói rằng một biến phân loại sạch hơn sẽ nâng phần bù *đo được* tiến về phần bù thật. Nó không tạo ra một phần bù vốn không tồn tại, và nó cũng không khắc phục các vấn đề thiên kiến sống sót và hủy niêm yết vốn quyết định những quan sát công ty–tháng nào được đưa vào bảng dữ liệu ngay từ đầu.
+-   **Quên rằng mẫu số không thay đổi.** Tất cả những điều trên chỉ cải thiện tử số. Khối lượng vẫn chịu ảnh hưởng của các quy ước báo cáo và các phức tạp liên quan đến giao dịch thỏa thuận đã thảo luận trong chương vi cấu trúc thị trường.
 
-## Assembling the Liquidity Panel {#sec-liquidity-panel}
+## Lắp ráp Bảng dữ liệu Thanh khoản {#sec-liquidity-panel}
 
-We merge all seven measures into a single firm-month panel for comparative analysis.
+Chúng ta ghép cả bảy thước đo vào một bảng dữ liệu công ty–tháng duy nhất để phân tích so sánh.
 
 ```{python}
 #| label: merge-panel
@@ -861,11 +1061,11 @@ for col in liquidity_cols:
     print(f"  {col:<20}: {pct:.1%}")
 ```
 
-## Cross-Sectional Properties of Liquidity {#sec-liquidity-cross-section}
+## Đặc điểm Mặt cắt ngang của Thanh khoản {#sec-liquidity-cross-section}
 
-### Summary Statistics by Size Quintile
+### Thống kê Mô tả theo Nhóm Ngũ phân vị Quy mô
 
-Liquidity varies enormously across the size distribution. Small-cap Vietnamese stocks can be orders of magnitude less liquid than large-caps.
+Thanh khoản biến thiên rất lớn trên phân phối quy mô. Các cổ phiếu vốn hóa nhỏ của Việt Nam có thể kém thanh khoản hơn các cổ phiếu vốn hóa lớn nhiều bậc độ lớn.
 
 ```{python}
 #| label: liquidity-by-size
@@ -894,7 +1094,7 @@ print(liq_by_size.to_string())
 ```{python}
 #| label: fig-liquidity-by-size
 #| eval: false
-#| fig-cap: "Liquidity measures by market capitalization quintile. All measures confirm the strong negative relationship between size and illiquidity: the smallest quintile is 10--50x more illiquid than the largest by any metric. This gradient is steeper in Vietnam than in developed markets, reflecting the extreme heterogeneity of the listed universe."
+#| fig-cap: "Các thước đo thanh khoản theo nhóm ngũ phân vị vốn hóa thị trường. Mọi thước đo đều xác nhận mối quan hệ nghịch mạnh giữa quy mô và mức phi thanh khoản: nhóm nhỏ nhất kém thanh khoản hơn nhóm lớn nhất từ 10 đến 50 lần theo bất kỳ thước đo nào. Gradient này dốc hơn ở Việt Nam so với các thị trường phát triển, phản ánh sự không đồng nhất cực độ của tập các mã niêm yết."
 #| code-summary: "Bar charts of liquidity measures by size quintile"
 fig, axes = plt.subplots(2, 3, figsize=(16, 10))
 axes = axes.flatten()
@@ -922,14 +1122,14 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Correlation Structure
+### Cấu trúc Tương quan
 
-How strongly do the different liquidity measures correlate? If they capture the same underlying dimension, we expect high correlations. If they capture different dimensions (tightness vs. depth vs. activity), correlations will be moderate.
+Các thước đo thanh khoản khác nhau tương quan mạnh đến mức nào? Nếu chúng nắm bắt cùng một chiều cơ bản, chúng ta kỳ vọng tương quan cao. Nếu chúng nắm bắt các chiều khác nhau (độ chặt so với độ sâu so với hoạt động giao dịch), tương quan sẽ ở mức vừa phải.
 
 ```{python}
 #| label: fig-liquidity-correlations
 #| eval: false
-#| fig-cap: "Pairwise rank correlations among liquidity measures. The measures are positively correlated (all point in the same direction—higher values indicate lower liquidity, except turnover where higher means more liquid), but correlations are far from perfect. This confirms that liquidity is multidimensional: each measure captures a different aspect of trading friction."
+#| fig-cap: "Tương quan hạng từng cặp giữa các thước đo thanh khoản. Các thước đo tương quan dương (tất cả cùng chiều—giá trị càng cao nghĩa là thanh khoản càng thấp, ngoại trừ tỷ lệ vòng quay, nơi giá trị càng cao nghĩa là thanh khoản càng cao), nhưng các tương quan còn xa mức hoàn hảo. Điều này xác nhận rằng thanh khoản là đa chiều: mỗi thước đo nắm bắt một khía cạnh khác nhau của ma sát giao dịch."
 #| code-summary: "Compute and plot cross-sectional rank correlations"
 # Rank correlations (Spearman) among liquidity measures
 # Reverse turnover sign so higher = less liquid (consistent direction)
@@ -957,9 +1157,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Principal Component Analysis of Liquidity
+### Phân tích Thành phần Chính của Thanh khoản
 
-Given the multidimensionality of liquidity, we extract a composite liquidity factor using PCA:
+Do tính đa chiều của thanh khoản, chúng ta trích xuất một nhân tố thanh khoản tổng hợp bằng PCA:
 
 ```{python}
 #| label: pca-liquidity
@@ -1012,16 +1212,16 @@ liq_complete['illiq_pc1'] = pca.transform(
 )[:, 0]
 ```
 
-## Aggregate Liquidity and Market Conditions {#sec-liquidity-aggregate}
+## Thanh khoản Tổng hợp và Điều kiện Thị trường {#sec-liquidity-aggregate}
 
-### Time Series of Market Liquidity
+### Chuỗi Thời gian của Thanh khoản Thị trường
 
-Aggregate liquidity (i.e., the average illiquidity across all stocks) varies substantially over time. @chordia2001market document that market-wide liquidity declines during periods of high volatility and negative market returns.
+Thanh khoản tổng hợp (tức là mức phi thanh khoản trung bình trên tất cả cổ phiếu) biến đổi đáng kể theo thời gian. @chordia2001market ghi nhận rằng thanh khoản toàn thị trường suy giảm trong các giai đoạn biến động cao và lợi nhuận thị trường âm.
 
 ```{python}
 #| label: fig-aggregate-liquidity
 #| eval: false
-#| fig-cap: "Aggregate liquidity conditions in the Vietnamese equity market. Panel A shows the cross-sectional median of three illiquidity measures over time (standardized). Panel B shows the VN-Index return for context. Liquidity deteriorated sharply during the 2008--2009 global financial crisis, the 2011 domestic tightening cycle, and the March 2020 COVID crash. Each episode is marked by simultaneous spikes in all illiquidity measures."
+#| fig-cap: "Điều kiện thanh khoản tổng hợp trên thị trường chứng khoán Việt Nam. Panel A cho thấy trung vị mặt cắt ngang của ba thước đo phi thanh khoản theo thời gian (đã chuẩn hóa). Panel B cho thấy lợi nhuận VN-Index để làm bối cảnh. Thanh khoản suy giảm mạnh trong cuộc khủng hoảng tài chính toàn cầu 2008--2009, chu kỳ thắt chặt trong nước năm 2011, và đợt sụt giảm do COVID tháng 3 năm 2020. Mỗi giai đoạn được đánh dấu bằng sự tăng vọt đồng thời của mọi thước đo phi thanh khoản."
 #| code-summary: "Plot aggregate liquidity time series"
 # Compute monthly cross-sectional aggregates
 agg_liquidity = (
@@ -1088,15 +1288,15 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Commonality in Liquidity
+### Tính Đồng biến của Thanh khoản
 
-@chordia2000commonality find that individual stock liquidity co-moves with market liquidity, even after controlling for firm-specific factors. We test for commonality in Vietnam by regressing changes in firm-level liquidity on changes in market-level liquidity:
+@chordia2000commonality thấy rằng thanh khoản của từng cổ phiếu đồng biến với thanh khoản thị trường, ngay cả sau khi kiểm soát các nhân tố riêng của công ty. Chúng ta kiểm định tính đồng biến ở Việt Nam bằng cách hồi quy các thay đổi của thanh khoản cấp công ty trên các thay đổi của thanh khoản cấp thị trường:
 
 $$
 \Delta L_{i,m} = \alpha_i + \beta_i \Delta L_{M,m} + \gamma_i \Delta L_{M,m-1} + \delta_i \Delta L_{M,m+1} + \varepsilon_{i,m}
 $$ {#eq-commonality}
 
-where $\Delta L_{i,m}$ is the change in firm $i$'s illiquidity, $\Delta L_{M,m}$ is the change in market-average illiquidity (excluding firm $i$), and the lead/lag terms capture non-synchronous adjustment. The coefficient $\beta_i$ measures the sensitivity of firm $i$'s liquidity to market-wide liquidity shocks.
+trong đó $\Delta L_{i,m}$ là thay đổi mức phi thanh khoản của công ty $i$, $\Delta L_{M,m}$ là thay đổi mức phi thanh khoản trung bình thị trường (không tính công ty $i$), và các số hạng dẫn/trễ nắm bắt sự điều chỉnh không đồng bộ. Hệ số $\beta_i$ đo độ nhạy của thanh khoản công ty $i$ đối với các cú sốc thanh khoản toàn thị trường.
 
 ```{python}
 #| label: commonality
@@ -1154,11 +1354,11 @@ print(f"  % significant at 5%: "
 print(f"  Mean R-squared: {commonality['r_squared'].mean():.3f}")
 ```
 
-## Is Liquidity Priced? {#sec-liquidity-pricing}
+## Thanh khoản có được Định giá không? {#sec-liquidity-pricing}
 
-### Portfolio Sorts
+### Phân loại Danh mục
 
-We test whether illiquidity predicts future returns by sorting stocks into quintile portfolios based on lagged liquidity measures and comparing average returns across quintiles.
+Chúng ta kiểm định xem mức phi thanh khoản có dự báo lợi nhuận tương lai hay không bằng cách phân loại cổ phiếu vào các danh mục ngũ phân vị dựa trên các thước đo thanh khoản có độ trễ và so sánh lợi nhuận trung bình giữa các nhóm ngũ phân vị.
 
 ```{python}
 #| label: portfolio-sorts
@@ -1241,7 +1441,7 @@ for name, col in sort_measures_actual.items():
 ```{python}
 #| label: fig-liquidity-premium
 #| eval: false
-#| fig-cap: "Annualized average returns by illiquidity quintile for each liquidity measure. A monotonically increasing pattern from Q1 (most liquid) to Q5 (most illiquid) indicates a liquidity premium—compensation for holding harder-to-trade stocks."
+#| fig-cap: "Lợi nhuận trung bình quy năm theo nhóm ngũ phân vị phi thanh khoản cho từng thước đo thanh khoản. Một dạng thức tăng đơn điệu từ Q1 (thanh khoản nhất) đến Q5 (kém thanh khoản nhất) cho thấy có phần bù thanh khoản—khoản bù đắp cho việc nắm giữ các cổ phiếu khó giao dịch hơn."
 #| code-summary: "Bar chart of quintile returns by liquidity measure"
 fig, axes = plt.subplots(2, 3, figsize=(16, 10))
 axes = axes.flatten()
@@ -1271,15 +1471,15 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Fama-MacBeth Cross-Sectional Regressions
+### Hồi quy Mặt cắt ngang Fama-MacBeth
 
-Portfolio sorts are informative but cannot control for multiple characteristics simultaneously. We use @fama1993common -style cross-sectional regressions to test whether liquidity predicts returns after controlling for size, value, and momentum:
+Các phân loại danh mục mang tính thông tin nhưng không thể kiểm soát đồng thời nhiều đặc điểm. Chúng ta dùng các hồi quy mặt cắt ngang theo kiểu @fama1993common để kiểm định xem thanh khoản có dự báo lợi nhuận sau khi kiểm soát quy mô, giá trị và động lượng hay không:
 
 $$
 R_{i,m+1} = \gamma_{0,m} + \gamma_{1,m} \text{ILLIQ}_{i,m} + \gamma_{2,m} \ln(\text{MCap}_{i,m}) + \gamma_{3,m} \text{BM}_{i,m} + \gamma_{4,m} R_{i,m-12:m-1} + \varepsilon_{i,m+1}
 $$ {#eq-fama-macbeth}
 
-The time-series average of the monthly coefficient $\bar{\gamma}_1$ estimates the illiquidity premium, and its t-statistic uses the @fama1993common standard error.
+Trung bình chuỗi thời gian của hệ số theo tháng $\bar{\gamma}_1$ ước lượng phần bù phi thanh khoản, và thống kê t của nó dùng sai số chuẩn của @fama1993common.
 
 ```{python}
 #| label: fama-macbeth
@@ -1350,9 +1550,9 @@ for name, col in [('Amihud', 'amihud'),
     print(results[['Coefficient', 't-stat']].round(4).to_string())
 ```
 
-### Factor-Adjusted Liquidity Premium
+### Phần bù Thanh khoản đã Điều chỉnh Nhân tố
 
-The liquidity premium may be partially or fully explained by existing risk factors (size, value, momentum). We test this by regressing the long-short liquidity portfolio returns on the Fama-French-Carhart factors:
+Phần bù thanh khoản có thể được giải thích một phần hoặc toàn bộ bởi các nhân tố rủi ro hiện có (quy mô, giá trị, động lượng). Chúng ta kiểm định điều này bằng cách hồi quy lợi nhuận danh mục mua–bán khống thanh khoản trên các nhân tố Fama-French-Carhart:
 
 ```{python}
 #| label: factor-adjusted
@@ -1392,11 +1592,11 @@ for name, ports in sort_results.items():
           f"{mkt_b:>8.3f} {smb_b:>8.3f} {hml_b:>8.3f} {r2:>6.3f}")
 ```
 
-## Liquidity and Transaction Cost Estimation {#sec-liquidity-implementation}
+## Thanh khoản và Ước lượng Chi phí Giao dịch {#sec-liquidity-implementation}
 
-### Translating Measures to Trading Costs
+### Chuyển các Thước đo thành Chi phí Giao dịch
 
-For practitioners, the key question is: what does a given Amihud or spread value *mean* in terms of actual VND cost per trade? We calibrate the relationship between our low-frequency proxies and explicit trading costs.
+Đối với các nhà thực hành, câu hỏi then chốt là: một giá trị Amihud hay chênh lệch giá nhất định *có ý nghĩa* gì về chi phí VND thực tế cho mỗi giao dịch? Chúng ta hiệu chỉnh mối quan hệ giữa các thước đo xấp xỉ tần suất thấp và chi phí giao dịch tường minh.
 
 ```{python}
 #| label: cost-calibration
@@ -1440,7 +1640,7 @@ print((rtc_by_size * 100).round(2).to_string())
 ```{python}
 #| label: fig-cost-distribution
 #| eval: false
-#| fig-cap: "Estimated round-trip trading costs by market cap quintile. Small-cap Vietnamese stocks have estimated costs of 3--8%, making high-frequency rebalancing strategies uneconomical. Even large-cap stocks carry costs of 0.5--1.5%, substantially higher than in developed markets."
+#| fig-cap: "Chi phí giao dịch khứ hồi ước lượng theo nhóm ngũ phân vị vốn hóa thị trường. Các cổ phiếu vốn hóa nhỏ của Việt Nam có chi phí ước lượng 3--8%, khiến các chiến lược tái cân bằng tần suất cao không kinh tế. Ngay cả các cổ phiếu vốn hóa lớn cũng chịu chi phí 0.5--1.5%, cao hơn đáng kể so với các thị trường phát triển."
 #| code-summary: "Plot estimated trading costs by size quintile"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -1473,9 +1673,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Strategy Implementability
+### Tính Khả thi của Chiến lược
 
-A critical application of liquidity measurement is testing whether a given anomaly strategy remains profitable after accounting for realistic trading costs. We compute net-of-cost returns for the liquidity-sorted portfolios themselves. This is an inherently conservative test because the illiquid long leg carries the highest costs.
+Một ứng dụng quan trọng của việc đo lường thanh khoản là kiểm định xem một chiến lược khai thác hiện tượng bất thường có còn sinh lời sau khi tính đến chi phí giao dịch thực tế hay không. Chúng ta tính lợi nhuận sau chi phí cho chính các danh mục phân loại theo thanh khoản. Đây vốn là một phép kiểm định thận trọng vì vị thế mua kém thanh khoản chịu chi phí cao nhất.
 
 ```{python}
 #| label: net-of-cost
@@ -1504,11 +1704,11 @@ for name, ports in sort_results.items():
           f"Net = {net_ann*100:>6.2f}%")
 ```
 
-## Liquidity During Market Stress {#sec-liquidity-stress}
+## Thanh khoản trong Giai đoạn Căng thẳng Thị trường {#sec-liquidity-stress}
 
-### Flight to Liquidity
+### Tháo chạy sang Thanh khoản
 
-During market stress, investors sell illiquid assets and buy liquid ones, which is a "flight to liquidity" that widens the return differential between liquid and illiquid stocks. @hameed2010stock show that this pattern is strongest when market returns are most negative.
+Trong giai đoạn căng thẳng thị trường, nhà đầu tư bán các tài sản kém thanh khoản và mua các tài sản thanh khoản, đó là hiện tượng "tháo chạy sang thanh khoản" (flight to liquidity) làm nới rộng chênh lệch lợi nhuận giữa các cổ phiếu thanh khoản và kém thanh khoản. @hameed2010stock chỉ ra rằng dạng thức này mạnh nhất khi lợi nhuận thị trường âm nhất.
 
 ```{python}
 #| label: flight-to-liquidity
@@ -1551,7 +1751,7 @@ if amihud_ports is not None and 'long_short' in amihud_ports.columns:
 ```{python}
 #| label: fig-flight-to-liquidity
 #| eval: false
-#| fig-cap: "Illiquidity premium (Q5 minus Q1 Amihud) conditional on market returns. In bear markets, illiquid stocks underperform liquid stocks---the illiquidity premium reverses. In normal and bull markets, the premium is positive. This asymmetry reflects flight-to-liquidity behavior: investors flee illiquid stocks during stress, depressing their prices and generating negative contemporaneous returns."
+#| fig-cap: "Phần bù phi thanh khoản (Amihud Q5 trừ Q1) có điều kiện theo lợi nhuận thị trường. Trong thị trường giá xuống, các cổ phiếu kém thanh khoản có lợi nhuận thấp hơn các cổ phiếu thanh khoản---phần bù phi thanh khoản đảo chiều. Trong thị trường bình thường và giá lên, phần bù là dương. Sự bất đối xứng này phản ánh hành vi tháo chạy sang thanh khoản: nhà đầu tư bỏ chạy khỏi các cổ phiếu kém thanh khoản trong giai đoạn căng thẳng, làm giá của chúng giảm và tạo ra lợi nhuận đồng thời âm."
 #| code-summary: "Bar chart of conditional illiquidity premium"
 fig, ax = plt.subplots(figsize=(8, 5))
 
@@ -1575,9 +1775,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Liquidity Co-Movement with Global Risk
+### Đồng biến của Thanh khoản với Rủi ro Toàn cầu
 
-Vietnamese market liquidity may be driven by global risk factors, particularly for stocks held by foreign investors. We test whether global risk measures (VIX, USD strength) predict Vietnamese aggregate liquidity:
+Thanh khoản thị trường Việt Nam có thể bị chi phối bởi các nhân tố rủi ro toàn cầu, đặc biệt đối với các cổ phiếu do nhà đầu tư nước ngoài nắm giữ. Chúng ta kiểm định xem các thước đo rủi ro toàn cầu (VIX, sức mạnh của USD) có dự báo thanh khoản tổng hợp của Việt Nam hay không:
 
 ```{python}
 #| label: global-risk
@@ -1610,9 +1810,9 @@ print("Aggregate Illiquidity ~ Global Risk:")
 print(model.summary().tables[1])
 ```
 
-## Constructing a Tradeable Liquidity Factor {#sec-liquidity-factor}
+## Xây dựng một Nhân tố Thanh khoản có thể Giao dịch {#sec-liquidity-factor}
 
-Following @pastor2003liquidity, we construct an aggregate liquidity factor that can be used in asset pricing tests. The factor captures innovations in aggregate liquidity (unexpected changes in market-wide trading conditions).
+Theo @pastor2003liquidity, chúng ta xây dựng một nhân tố thanh khoản tổng hợp có thể dùng trong các kiểm định định giá tài sản. Nhân tố này nắm bắt các cú sốc (innovations) của thanh khoản tổng hợp (những thay đổi không được kỳ vọng của điều kiện giao dịch toàn thị trường).
 
 ```{python}
 #| label: liquidity-factor
@@ -1677,51 +1877,51 @@ print(f"\nLiquidity Beta Distribution:")
 print(liq_betas['liq_beta'].describe().round(4))
 ```
 
-## Practical Guidance for Vietnam {#sec-liquidity-practical}
+## Hướng dẫn Thực hành cho Việt Nam {#sec-liquidity-practical}
 
-The analysis in this chapter yields the following recommendations:
+Phân tích trong chương này đưa ra các khuyến nghị sau:
 
-**For researchers:** The Amihud illiquidity ratio is the single best all-purpose liquidity proxy for Vietnamese equities. It has the highest coverage, the strongest cross-sectional return predictability, and the most robust relationship with firm size. When a second measure is needed for robustness, the zero-return proportion is the natural complement—it captures a different dimension (transaction cost threshold) and has near-complete coverage.
+**Dành cho nhà nghiên cứu:** Tỷ số phi thanh khoản Amihud là thước đo xấp xỉ thanh khoản đa dụng tốt nhất cho chứng khoán Việt Nam. Nó có độ bao phủ cao nhất, khả năng dự báo lợi nhuận mặt cắt ngang mạnh nhất, và mối quan hệ vững chắc nhất với quy mô công ty. Khi cần một thước đo thứ hai để kiểm tra độ vững, tỷ lệ lợi nhuận bằng không là bổ sung tự nhiên—nó nắm bắt một chiều khác (ngưỡng chi phí giao dịch) và có độ bao phủ gần như đầy đủ.
 
-**For portfolio construction:** Any backtest of a Vietnamese equity strategy should compute and report estimated round-trip costs by quintile. Strategies that load on the bottom two size quintiles face costs of 2--5% per round trip, making monthly rebalancing uneconomical. Quarterly or annual rebalancing with a turnover constraint is more realistic.
+**Dành cho xây dựng danh mục đầu tư:** Mọi kiểm định ngược của một chiến lược chứng khoán Việt Nam nên tính và báo cáo chi phí khứ hồi ước lượng theo nhóm ngũ phân vị. Các chiến lược tập trung vào hai nhóm ngũ phân vị quy mô thấp nhất chịu chi phí 2--5% mỗi vòng khứ hồi, khiến việc tái cân bằng hằng tháng không kinh tế. Tái cân bằng theo quý hoặc theo năm với ràng buộc về tỷ lệ vòng quay thì thực tế hơn.
 
-**For risk management:** Monitor aggregate liquidity conditions using the cross-sectional median Amihud or the market-wide zero-return fraction. Liquidity deterioration predicts negative market returns and wider spreads in subsequent months. Tighten risk limits when aggregate illiquidity exceeds its 90th historical percentile.
+**Dành cho quản trị rủi ro:** Theo dõi điều kiện thanh khoản tổng hợp bằng trung vị mặt cắt ngang của Amihud hoặc tỷ lệ lợi nhuận bằng không toàn thị trường. Sự suy giảm thanh khoản dự báo lợi nhuận thị trường âm và chênh lệch giá rộng hơn trong các tháng tiếp theo. Hãy siết chặt giới hạn rủi ro khi mức phi thanh khoản tổng hợp vượt phân vị 90 lịch sử.
 
-**For international comparisons:** When comparing Vietnamese factor premia to U.S. or other developed market evidence, always report results on a "liquid universe" subset (top 60% by market cap) alongside the full sample. Many anomalies that appear large in the full sample shrink substantially when restricted to stocks that can actually be traded at scale.
+**Dành cho so sánh quốc tế:** Khi so sánh các phần bù nhân tố của Việt Nam với bằng chứng của Mỹ hoặc các thị trường phát triển khác, hãy luôn báo cáo kết quả trên một tập con "nhóm cổ phiếu thanh khoản" (60% hàng đầu theo vốn hóa thị trường) bên cạnh toàn bộ mẫu. Nhiều hiện tượng bất thường trông lớn trong toàn bộ mẫu thu hẹp đáng kể khi giới hạn ở các cổ phiếu thực sự có thể giao dịch ở quy mô lớn.
 
-## Summary {#sec-liquidity-summary}
+## Tóm tắt {#sec-liquidity-summary}
 
-Table @tbl-liquidity-summary shows different measures of liquidity.
+Bảng @tbl-liquidity-summary trình bày các thước đo thanh khoản khác nhau.
 
-| Measure | Dimension | Coverage | Size Gradient | Return Predictive | Recommended Use |
+| Thước đo | Chiều | Độ bao phủ | Gradient theo Quy mô | Khả năng Dự báo Lợi nhuận | Cách dùng Khuyến nghị |
 |------------|------------|------------|------------|------------|------------|
-| Amihud | Price impact | High | Very steep | Strong | Primary proxy; portfolio sorts; Fama-MacBeth |
-| Zero-Return | Transaction cost | Complete | Steep | Strong | Robustness check; emerging market studies |
-| Turnover | Trading activity | High | Moderate | Moderate | Volume-based filters; flow analysis |
-| Roll Spread | Tightness | Moderate | Moderate | Moderate | Spread estimation without bid-ask data |
-| Corwin-Schultz | Tightness | Moderate | Moderate | Moderate | High-low based spread; calibration |
-| Quoted Spread | Tightness | Variable | Steep | Strong | Direct measure when available |
-| Kyle Lambda | Price impact | Moderate | Steep | Strong | Market microstructure research |
+| Amihud | Tác động giá | Cao | Rất dốc | Mạnh | Thước đo chính; phân loại danh mục; Fama-MacBeth |
+| Lợi nhuận bằng không | Chi phí giao dịch | Đầy đủ | Dốc | Mạnh | Kiểm tra độ vững; nghiên cứu thị trường mới nổi |
+| Tỷ lệ vòng quay | Hoạt động giao dịch | Cao | Vừa phải | Vừa phải | Bộ lọc dựa trên khối lượng; phân tích dòng tiền |
+| Chênh lệch Roll | Độ chặt | Vừa phải | Vừa phải | Vừa phải | Ước lượng chênh lệch giá khi không có dữ liệu mua–bán |
+| Corwin-Schultz | Độ chặt | Vừa phải | Vừa phải | Vừa phải | Chênh lệch giá dựa trên cao–thấp; hiệu chỉnh |
+| Chênh lệch giá chào | Độ chặt | Thay đổi | Dốc | Mạnh | Thước đo trực tiếp khi có sẵn |
+| Lambda của Kyle | Tác động giá | Vừa phải | Dốc | Mạnh | Nghiên cứu vi cấu trúc thị trường |
 
-: Summary of liquidity measure properties in the Vietnamese market. {#tbl-liquidity-summary}
+: Tóm tắt các thuộc tính của các thước đo thanh khoản trên thị trường Việt Nam. {#tbl-liquidity-summary}
 
-Liquidity is not a secondary consideration for Vietnamese equity research; it is a first-order determinant of which strategies are implementable, which anomalies are real, and which results are artifacts of trading in stocks that cannot actually be traded. Every empirical finding in this book should be evaluated through the lens of the liquidity analysis developed in this chapter.
+Thanh khoản không phải là một cân nhắc thứ yếu đối với nghiên cứu chứng khoán Việt Nam; nó là yếu tố quyết định bậc nhất việc chiến lược nào có thể triển khai, hiện tượng bất thường nào là thật, và kết quả nào là sản phẩm giả tạo của việc giao dịch những cổ phiếu thực tế không thể giao dịch. Mọi phát hiện thực nghiệm trong cuốn sách này nên được đánh giá qua lăng kính của phân tích thanh khoản được phát triển trong chương này.
 
 
-<!-- ## Exercises {#sec-liquidity-exercises}
+<!-- ## Bài tập {#sec-liquidity-exercises}
 
-1. **Closing percent quoted spread.** @fong2017best recommend the closing percent quoted spread as the best global liquidity proxy. Compute this as the closing bid-ask spread divided by the midpoint, averaged over the month. Compare its correlation with the Amihud measure and the Corwin-Schultz spread. Does the recommendation hold for Vietnam?
+1. **Chênh lệch giá chào theo phần trăm lúc đóng cửa.** @fong2017best khuyến nghị chênh lệch giá chào theo phần trăm lúc đóng cửa là thước đo xấp xỉ thanh khoản toàn cầu tốt nhất. Hãy tính nó bằng chênh lệch giá mua–bán lúc đóng cửa chia cho giá trung điểm, lấy trung bình trong tháng. So sánh tương quan của nó với thước đo Amihud và chênh lệch Corwin-Schultz. Khuyến nghị này có đúng với Việt Nam không?
 
-2. **Liquidity-adjusted momentum.** Compute momentum portfolio returns (12-1 month) separately within each Amihud illiquidity tercile. Is the momentum premium concentrated in illiquid stocks? What does this imply about the implementability of momentum strategies in Vietnam? Connect your findings to @novy2016taxonomy.
+2. **Động lượng điều chỉnh theo thanh khoản.** Tính lợi nhuận danh mục động lượng (12-1 tháng) riêng trong từng nhóm tam phân vị phi thanh khoản Amihud. Phần bù động lượng có tập trung ở các cổ phiếu kém thanh khoản không? Điều này hàm ý gì về tính khả thi của các chiến lược động lượng ở Việt Nam? Hãy liên hệ các phát hiện của bạn với @novy2016taxonomy.
 
-3. **Foreign investor liquidity demand.** Using foreign buy and sell volume data, compute a net foreign flow measure for each stock. Test whether foreign net buying predicts next-month liquidity improvements (lower Amihud, lower spreads). Does foreign ownership create a liquidity externality?
+3. **Nhu cầu thanh khoản của nhà đầu tư nước ngoài.** Dùng dữ liệu khối lượng mua và bán của nhà đầu tư nước ngoài, hãy tính một thước đo dòng vốn ngoại ròng cho từng cổ phiếu. Kiểm định xem việc nước ngoài mua ròng có dự báo sự cải thiện thanh khoản tháng sau (Amihud thấp hơn, chênh lệch giá thấp hơn) hay không. Sở hữu nước ngoài có tạo ra ngoại tác thanh khoản không?
 
-4. **Intraday liquidity patterns.** If intraday data are available, compute the Amihud ratio separately for the opening call auction, the morning continuous session, and the afternoon continuous session. How does intraday liquidity variation compare to cross-sectional variation?
+4. **Các dạng thức thanh khoản trong phiên.** Nếu có dữ liệu trong phiên, hãy tính tỷ số Amihud riêng cho phiên khớp lệnh định kỳ mở cửa, phiên khớp lệnh liên tục buổi sáng và phiên khớp lệnh liên tục buổi chiều. Biến thiên thanh khoản trong phiên so với biến thiên mặt cắt ngang như thế nào?
 
-5. **Liquidity and earnings announcements.** Test whether liquidity deteriorates before and improves after quarterly earnings announcements. Use an event study framework with the Amihud ratio as the dependent variable. Is the pre-announcement illiquidity increase consistent with the @glosten1985bid adverse selection model?
+5. **Thanh khoản và công bố lợi nhuận.** Kiểm định xem thanh khoản có xấu đi trước và cải thiện sau các công bố lợi nhuận hằng quý hay không. Dùng khung nghiên cứu sự kiện với tỷ số Amihud làm biến phụ thuộc. Việc mức phi thanh khoản tăng trước công bố có phù hợp với mô hình lựa chọn bất lợi của @glosten1985bid không?
 
-6. **Market-making profitability.** Using the Roll spread as a proxy for the bid-ask bounce, estimate the gross profit a hypothetical market maker would earn from providing liquidity in Vietnamese stocks. How does this compare to the explicit cost of capital for market making?
+6. **Khả năng sinh lời của tạo lập thị trường.** Dùng chênh lệch Roll làm thước đo xấp xỉ cho dao động giữa giá mua và giá bán, hãy ước lượng lợi nhuận gộp mà một nhà tạo lập thị trường giả định sẽ kiếm được từ việc cung cấp thanh khoản cho các cổ phiếu Việt Nam. So sánh con số này với chi phí vốn tường minh của hoạt động tạo lập thị trường như thế nào?
 
-7. **Liquidity factor mimicking portfolio.** Construct a tradeable liquidity factor by sorting stocks into deciles based on their liquidity beta (sensitivity to aggregate liquidity innovations). The long-short return of this factor should be correlated with aggregate liquidity changes. Test whether this factor earns a significant premium and whether it explains returns beyond the Fama-French factors.
+7. **Danh mục mô phỏng nhân tố thanh khoản.** Xây dựng một nhân tố thanh khoản có thể giao dịch bằng cách phân loại cổ phiếu vào các nhóm thập phân vị dựa trên beta thanh khoản của chúng (độ nhạy với các cú sốc thanh khoản tổng hợp). Lợi nhuận mua–bán khống của nhân tố này nên tương quan với các thay đổi thanh khoản tổng hợp. Kiểm định xem nhân tố này có đem lại phần bù đáng kể không và có giải thích được lợi nhuận vượt ngoài các nhân tố Fama-French không.
 
-8. **COVID-19 liquidity shock.** Analyze the liquidity dynamics around the March 2020 COVID-19 market crash. How quickly did aggregate liquidity deteriorate? Which firms experienced the largest liquidity drops? Did the SBV's policy responses (rate cuts, reserve requirement reductions) improve liquidity, and with what lag? -->
+8. **Cú sốc thanh khoản COVID-19.** Phân tích động thái thanh khoản quanh đợt sụt giảm thị trường do COVID-19 tháng 3 năm 2020. Thanh khoản tổng hợp suy giảm nhanh đến mức nào? Những công ty nào trải qua mức sụt giảm thanh khoản lớn nhất? Các phản ứng chính sách của NHNN (cắt giảm lãi suất, giảm dự trữ bắt buộc) có cải thiện thanh khoản không, và với độ trễ bao lâu? -->

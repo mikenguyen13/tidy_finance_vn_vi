@@ -1,4 +1,4 @@
-# Institutional Ownership Analytics in Vietnam
+# Phân tích sở hữu tổ chức tại Việt Nam
 
 ```{python}
 #| label: setup
@@ -64,34 +64,34 @@ pd.set_option('display.width', 120)
 pd.set_option('display.float_format', '{:.4f}'.format)
 ```
 
-## Institutional Ownership in Vietnam: A Distinct Landscape
+## Sở hữu tổ chức tại Việt Nam: một bức tranh khác biệt
 
-Vietnam's equity market presents a fundamentally different institutional ownership landscape from the mature markets of the US, Europe, or Japan. Since the Ho Chi Minh City Securities Trading Center (now HOSE) opened on July 28, 2000 with just two listed stocks, the market has grown to over 1,700 listed companies across three exchanges (HOSE, HNX, and UPCOM) with a combined market capitalization exceeding 200 billion USD. Yet the ownership structure remains distinctive in several critical ways:
+Thị trường cổ phiếu Việt Nam có bức tranh sở hữu tổ chức khác biệt căn bản so với các thị trường phát triển như Mỹ, châu Âu hay Nhật Bản. Kể từ khi Trung tâm Giao dịch Chứng khoán Thành phố Hồ Chí Minh (nay là HOSE) khai trương ngày 28 tháng 7 năm 2000 với chỉ hai cổ phiếu niêm yết, thị trường đã tăng trưởng lên hơn 1.700 công ty niêm yết trên ba sàn giao dịch (HOSE, HNX và UPCOM) với tổng vốn hóa thị trường vượt 200 tỷ USD. Tuy nhiên, cấu trúc sở hữu vẫn mang những nét riêng biệt ở nhiều khía cạnh quan trọng:
 
--   **Retail dominance.** Individual investors account for approximately 85% of trading value on Vietnamese exchanges, far exceeding the institutional share. This contrasts sharply with the US, where institutional investors dominate both ownership and trading [@bao2024institutional]. The implications for market efficiency, price discovery, and volatility are profound.
+-   **Sự thống trị của nhà đầu tư cá nhân.** Nhà đầu tư cá nhân chiếm khoảng 85% giá trị giao dịch trên các sàn giao dịch Việt Nam, vượt xa tỷ trọng của các tổ chức. Điều này tương phản rõ rệt với Mỹ, nơi các nhà đầu tư tổ chức chi phối cả sở hữu lẫn giao dịch [@bao2024institutional]. Các hệ quả đối với hiệu quả thị trường, quá trình khám phá giá và biến động là rất sâu rộng.
 
 -   **State ownership legacy.** Vietnam's equitization (privatization) program, initiated under Đổi Mới reforms in 1986, means that the state remains a significant or controlling shareholder in many listed companies. As of 2022, SOEs (firms with state ownership \> 50%) account for approximately 30% of total market capitalization despite representing less than 10% of listed firms [@huang2023factors]. State ownership introduces unique agency problems, governance dynamics, and liquidity constraints.
 
--   **Foreign Ownership Limits (FOLs).** Vietnam imposes sector-specific caps on aggregate foreign ownership, typically 49% for most sectors, 30% for banking, and varying limits for aviation, media, and telecommunications. When a stock reaches its FOL, foreign investors can only buy from other foreign sellers, creating a segmented market with distinct pricing dynamics and a well-documented "FOL premium" [@vo2015foreign].
+-   **Giới hạn sở hữu nước ngoài (FOL).** Việt Nam áp đặt mức trần theo ngành đối với tổng tỷ lệ sở hữu nước ngoài, thường là 49% đối với hầu hết các ngành, 30% đối với ngân hàng, và các mức giới hạn khác nhau đối với hàng không, truyền thông và viễn thông. Khi một cổ phiếu chạm FOL, nhà đầu tư nước ngoài chỉ có thể mua từ những người bán là nhà đầu tư nước ngoài khác, tạo ra một thị trường bị phân khúc với động lực hình thành giá riêng và một "phần bù FOL" đã được ghi nhận rõ [@vo2015foreign].
 
--   **Disclosure regime.** Unlike the US quarterly 13F filing system, Vietnam's ownership disclosure is event-driven and periodic. Major shareholders (≥5%) must disclose within 7 business days of crossing thresholds. Annual reports contain detailed shareholder registers. Semi-annual fund reports provide portfolio snapshots. This creates a patchwork of disclosure frequencies that require careful handling.
+-   **Chế độ công bố thông tin.** Khác với hệ thống báo cáo 13F hằng quý của Mỹ, việc công bố thông tin sở hữu tại Việt Nam diễn ra theo sự kiện và theo định kỳ. Cổ đông lớn (≥5%) phải công bố trong vòng 7 ngày làm việc kể từ khi vượt các ngưỡng sở hữu. Báo cáo thường niên chứa danh sách cổ đông chi tiết. Báo cáo quỹ bán niên cung cấp ảnh chụp danh mục. Điều này tạo ra một bức tranh chắp vá về tần suất công bố, đòi hỏi phải xử lý cẩn thận.
 
-## Data Infrastructure: DataCore.vn {#sec-datacore}
+## Hạ tầng dữ liệu: DataCore.vn {#sec-datacore}
 
-**DataCore.vn** is a comprehensive Vietnamese financial data platform that provides academic-grade datasets for the Vietnamese market. Throughout this chapter, we assume all data is sourced exclusively from DataCore.vn, which provides:
+**DataCore.vn** là một nền tảng dữ liệu tài chính toàn diện của Việt Nam, cung cấp các bộ dữ liệu đạt chuẩn học thuật cho thị trường Việt Nam. Xuyên suốt chương này, chúng ta giả định toàn bộ dữ liệu được lấy riêng từ DataCore.vn, nền tảng cung cấp:
 
-| DataCore.vn Dataset | Content | Key Variables |
+| Bộ dữ liệu DataCore.vn | Nội dung | Biến chính |
 |:------------------------|:------------------|:---------------------------|
-| **Stock Prices** | Daily/monthly OHLCV for HOSE, HNX, UPCOM | `ticker`, `date`, `close`, `adjusted_close`, `volume`, `shares_outstanding` |
-| **Ownership Structure** | Shareholder composition snapshots | `ticker`, `date`, `shareholder_name`, `shares_held`, `ownership_pct`, `shareholder_type` |
-| **Major Shareholders** | Detailed ≥5% holders | `ticker`, `date`, `shareholder_name`, `shares_held`, `is_foreign`, `is_state`, `is_institution` |
-| **Corporate Actions** | Dividends, stock splits, bonus shares, rights issues | `ticker`, `ex_date`, `action_type`, `ratio`, `record_date` |
-| **Company Profile** | Sector, exchange, listing date, charter capital | `ticker`, `exchange`, `industry_code`, `listing_date`, `fol_limit` |
-| **Financial Statements** | Quarterly/annual financials | `ticker`, `period`, `revenue`, `net_income`, `total_assets`, `equity` |
-| **Foreign Ownership** | Daily foreign ownership tracking | `ticker`, `date`, `foreign_shares`, `foreign_pct`, `fol_limit`, `foreign_room` |
-| **Fund Holdings** | Semi-annual fund portfolio disclosures | `fund_name`, `report_date`, `ticker`, `shares_held`, `market_value` |
+| **Giá cổ phiếu** | OHLCV hằng ngày/hằng tháng của HOSE, HNX, UPCOM | `ticker`, `date`, `close`, `adjusted_close`, `volume`, `shares_outstanding` |
+| **Cơ cấu sở hữu** | Ảnh chụp cơ cấu cổ đông | `ticker`, `date`, `shareholder_name`, `shares_held`, `ownership_pct`, `shareholder_type` |
+| **Cổ đông lớn** | Chi tiết các cổ đông nắm giữ ≥5% | `ticker`, `date`, `shareholder_name`, `shares_held`, `is_foreign`, `is_state`, `is_institution` |
+| **Sự kiện doanh nghiệp** | Cổ tức, chia tách cổ phiếu, cổ phiếu thưởng, phát hành quyền mua | `ticker`, `ex_date`, `action_type`, `ratio`, `record_date` |
+| **Hồ sơ công ty** | Ngành, sàn giao dịch, ngày niêm yết, vốn điều lệ | `ticker`, `exchange`, `industry_code`, `listing_date`, `fol_limit` |
+| **Báo cáo tài chính** | Báo cáo tài chính quý/năm | `ticker`, `period`, `revenue`, `net_income`, `total_assets`, `equity` |
+| **Sở hữu nước ngoài** | Theo dõi sở hữu nước ngoài hằng ngày | `ticker`, `date`, `foreign_shares`, `foreign_pct`, `fol_limit`, `foreign_room` |
+| **Danh mục nắm giữ của quỹ** | Công bố danh mục quỹ bán niên | `fund_name`, `report_date`, `ticker`, `shares_held`, `market_value` |
 
-: DataCore.vn Data Tables Used in This Chapter {#tbl-datacore-tables}
+: Các bảng dữ liệu DataCore.vn sử dụng trong chương này {#tbl-datacore-tables}
 
 ```{python}
 #| label: datacore-reader
@@ -212,13 +212,13 @@ class DataCoreReader:
 # dc = DataCoreReader('/path/to/datacore_data', file_format='parquet')
 ```
 
-This chapter proceeds as follows. @sec-data-pipeline builds the complete data pipeline from raw DataCore.vn extracts to clean, analysis-ready datasets, with particular attention to corporate action adjustments. @sec-ownership-taxonomy defines Vietnam's unique ownership taxonomy. @sec-ownership-metrics computes institutional ownership ratios, concentration, and breadth for the Vietnamese market. @sec-foreign-ownership develops specialized foreign ownership analytics including FOL utilization and room premium. @sec-trades derives institutional trades from ownership disclosure snapshots. @sec-flows-turnover computes fund-level flows and turnover. @sec-state-ownership analyzes state ownership dynamics. @sec-modern-extensions introduces network analysis, ML classification, and event-study frameworks. @sec-empirical-applications presents complete empirical applications, and @sec-conclusion concludes.
+Chương này được tổ chức như sau. @sec-data-pipeline xây dựng quy trình dữ liệu hoàn chỉnh từ các bản trích xuất thô của DataCore.vn đến các bộ dữ liệu sạch, sẵn sàng phân tích, đặc biệt chú ý đến việc điều chỉnh theo sự kiện doanh nghiệp. @sec-ownership-taxonomy định nghĩa hệ phân loại sở hữu đặc thù của Việt Nam. @sec-ownership-metrics tính tỷ lệ sở hữu tổ chức, mức độ tập trung và độ rộng cho thị trường Việt Nam. @sec-foreign-ownership phát triển các phân tích chuyên biệt về sở hữu nước ngoài, gồm mức sử dụng FOL và phần bù room. @sec-trades suy ra các giao dịch của tổ chức từ các ảnh chụp công bố sở hữu. @sec-flows-turnover tính dòng vốn và tỷ lệ vòng quay ở cấp quỹ. @sec-state-ownership phân tích động lực của sở hữu nhà nước. @sec-modern-extensions giới thiệu phân tích mạng lưới, phân loại bằng học máy và các khung nghiên cứu sự kiện. @sec-empirical-applications trình bày các ứng dụng thực nghiệm hoàn chỉnh, và @sec-conclusion kết luận chương.
 
-## Data Pipeline {#sec-data-pipeline}
+## Quy trình dữ liệu {#sec-data-pipeline}
 
-### Stock Price Data and Corporate Action Adjustments {#sec-price-pipeline}
+### Dữ liệu giá cổ phiếu và điều chỉnh theo sự kiện doanh nghiệp {#sec-price-pipeline}
 
-Vietnam's equity market is notorious for frequent corporate actions, particularly stock dividends and bonus share issuances, that dramatically alter share counts. A company issuing a 30% stock dividend means every 100 shares become 130 shares, and the reference price adjusts downward proportionally. Failure to properly adjust historical shares and prices for these events is the single most common source of error in Vietnamese equity research.
+Thị trường cổ phiếu Việt Nam nổi tiếng với các sự kiện doanh nghiệp diễn ra thường xuyên, đặc biệt là cổ tức bằng cổ phiếu và phát hành cổ phiếu thưởng, làm thay đổi mạnh số lượng cổ phiếu. Một công ty chi trả cổ tức bằng cổ phiếu 30% nghĩa là cứ 100 cổ phiếu trở thành 130 cổ phiếu, và giá tham chiếu được điều chỉnh giảm tương ứng. Việc không điều chỉnh đúng số cổ phiếu và giá lịch sử cho các sự kiện này là nguồn sai sót phổ biến nhất trong nghiên cứu thị trường cổ phiếu Việt Nam.
 
 ```{python}
 #| label: corporate-actions
@@ -368,8 +368,8 @@ def adjust_shares(shares: float, ticker: str, from_date, to_date,
 # adj_factors = build_adjustment_factors(dc.corporate_actions)
 ```
 
-::: {.callout-important title="The Stock Dividend Problem in Vietnam"}
-Vietnamese companies issue stock dividends with remarkable frequency, many growth companies do so 2-3 times per year. Consider **Vinhomes (VHM)** or **FPT Corporation**: their share counts may double or triple over a 5-year period purely from stock dividends. If you compare raw ownership shares from 2019 to 2024 without adjustment, you will obtain nonsensical ownership ratios. **Every time-series analysis of Vietnamese ownership data must use adjusted shares.** This is the Vietnamese equivalent of the CRSP cfacshr adjustment factor problem in US data, but more severe because the events are more frequent and larger in magnitude.
+::: {.callout-important title="Vấn đề cổ tức bằng cổ phiếu tại Việt Nam"}
+Các công ty Việt Nam chi trả cổ tức bằng cổ phiếu với tần suất đáng kể, nhiều công ty tăng trưởng làm như vậy 2-3 lần mỗi năm. Hãy xem xét **Vinhomes (VHM)** hoặc **FPT Corporation**: số lượng cổ phiếu của họ có thể tăng gấp đôi hoặc gấp ba trong vòng 5 năm chỉ nhờ cổ tức bằng cổ phiếu. Nếu bạn so sánh số cổ phiếu sở hữu thô từ năm 2019 đến 2024 mà không điều chỉnh, bạn sẽ thu được các tỷ lệ sở hữu vô nghĩa. **Mọi phân tích chuỗi thời gian về dữ liệu sở hữu của Việt Nam đều phải sử dụng số cổ phiếu đã điều chỉnh.** Đây là vấn đề tương đương với hệ số điều chỉnh cfacshr của CRSP trong dữ liệu Mỹ, nhưng nghiêm trọng hơn vì các sự kiện xảy ra thường xuyên hơn và có quy mô lớn hơn.
 :::
 
 ```{python}
@@ -482,9 +482,9 @@ def process_price_data(prices: pd.DataFrame,
 # prices_q = process_price_data(dc.prices, adj_factors, dc.company_profile)
 ```
 
-### Ownership Structure Data {#sec-ownership-data}
+### Dữ liệu cơ cấu sở hữu {#sec-ownership-data}
 
-Vietnamese ownership data captures the composition of shareholders as disclosed in annual reports, semi-annual reports, and event-driven disclosures. The key distinction from US 13F data is that Vietnamese disclosures provide a **complete ownership decomposition**, not just institutional long positions, but the full breakdown into state, institutional, foreign, and individual ownership.
+Dữ liệu sở hữu của Việt Nam ghi nhận cơ cấu cổ đông như được công bố trong báo cáo thường niên, báo cáo bán niên và các công bố theo sự kiện. Điểm khác biệt chính so với dữ liệu 13F của Mỹ là các công bố của Việt Nam cung cấp **sự phân rã sở hữu đầy đủ**, không chỉ các vị thế mua của tổ chức, mà là toàn bộ cơ cấu gồm sở hữu nhà nước, tổ chức, nước ngoài và cá nhân.
 
 ```{python}
 #| label: ownership-processing
@@ -640,11 +640,11 @@ def classify_shareholders(ownership: pd.DataFrame) -> pd.DataFrame:
 
 ------------------------------------------------------------------------
 
-## Vietnam's Ownership Taxonomy {#sec-ownership-taxonomy}
+## Hệ phân loại sở hữu của Việt Nam {#sec-ownership-taxonomy}
 
-### The Five Ownership Categories
+### Năm nhóm sở hữu
 
-Vietnam's ownership structure is decomposed into five mutually exclusive categories that together sum to 100% of shares outstanding:
+Cơ cấu sở hữu của Việt Nam được phân rã thành năm nhóm loại trừ lẫn nhau, có tổng bằng 100% số cổ phiếu đang lưu hành:
 
 | Category | Vietnamese Term | Description | Typical Share (2020s) |
 |:-----------------|:-----------------|:-----------------|:------------------|
@@ -654,14 +654,14 @@ Vietnam's ownership structure is decomposed into five mutually exclusive categor
 | **Individual** | Cá nhân | Retail investors (both Vietnamese and foreign individuals) | \~55-65% |
 | **Treasury** | Cổ phiếu quỹ | Company's own repurchased shares | \~0-2% |
 
-: Vietnam's Ownership Taxonomy {#tbl-ownership-taxonomy}
+: Hệ phân loại sở hữu của Việt Nam {#tbl-ownership-taxonomy}
 
-This taxonomy differs fundamentally from the US 13F framework in several ways:
+Hệ phân loại này khác căn bản với khung 13F của Mỹ ở nhiều điểm:
 
-1.  **Completeness:** We observe 100% of ownership, not just institutional long positions above \$100 million AUM.
-2.  **State as a category:** State ownership is a first-class analytical category, not subsumed under "All Others" as in the LSEG type code system.
-3.  **Individual visibility:** We observe aggregate individual ownership directly, whereas in the US, individual ownership is merely the residual (100% − institutional ownership).
-4.  **No short position ambiguity:** Vietnam's market has very limited short-selling infrastructure, so ownership data genuinely represents long positions.
+1.  **Tính đầy đủ:** Chúng ta quan sát được 100% sở hữu, chứ không chỉ các vị thế mua của tổ chức có tài sản quản lý trên \$100 triệu.
+2.  **Nhà nước là một nhóm riêng:** Sở hữu nhà nước là một nhóm phân tích độc lập, không bị gộp vào "Các nhóm khác" như trong hệ mã loại hình của LSEG.
+3.  **Khả năng quan sát cá nhân:** Chúng ta quan sát trực tiếp tổng sở hữu của cá nhân, trong khi ở Mỹ, sở hữu cá nhân chỉ đơn thuần là phần còn lại (100% − sở hữu tổ chức).
+4.  **Không có sự mơ hồ về vị thế bán khống:** Thị trường Việt Nam có hạ tầng bán khống rất hạn chế, nên dữ liệu sở hữu thực sự phản ánh các vị thế mua.
 
 ```{python}
 #| label: ownership-decomposition
@@ -790,19 +790,19 @@ def compute_ownership_decomposition(ownership: pd.DataFrame,
 
 ------------------------------------------------------------------------
 
-## Institutional Ownership Measures {#sec-ownership-metrics}
+## Các thước đo sở hữu tổ chức {#sec-ownership-metrics}
 
-### Ownership Ratio {#sec-io-ratio}
+### Tỷ lệ sở hữu {#sec-io-ratio}
 
-The **Institutional Ownership Ratio (IOR)** for stock $i$ at time $t$ in Vietnam is:
+**Tỷ lệ sở hữu tổ chức (IOR)** của cổ phiếu $i$ tại thời điểm $t$ ở Việt Nam là:
 
 $$
 IOR_{i,t} = \frac{S_{i,t}^{state} + S_{i,t}^{foreign\_inst} + S_{i,t}^{domestic\_inst}}{TSO_{i,t}}
 $$ {#eq-ior-vn}
 
-where $S_{i,t}^{type}$ denotes adjusted shares held by each ownership category and $TSO_{i,t}$ is total shares outstanding. Unlike the US where the IOR can exceed 100% due to long-only reporting and short selling, the Vietnamese IOR is bounded by construction in $[0, 1]$ because we observe the complete ownership decomposition.
+trong đó $S_{i,t}^{type}$ ký hiệu số cổ phiếu đã điều chỉnh do mỗi nhóm sở hữu nắm giữ và $TSO_{i,t}$ là tổng số cổ phiếu đang lưu hành. Khác với Mỹ, nơi IOR có thể vượt 100% do báo cáo chỉ các vị thế mua và do bán khống, IOR của Việt Nam bị chặn theo cấu trúc trong khoảng $[0, 1]$ vì chúng ta quan sát được toàn bộ sự phân rã sở hữu.
 
-We also compute category-specific ownership ratios:
+Chúng ta cũng tính các tỷ lệ sở hữu theo từng nhóm:
 
 $$
 \begin{aligned}
@@ -812,38 +812,38 @@ IOR_{i,t}^{domestic} &= \frac{S_{i,t}^{domestic\_inst}}{TSO_{i,t}}
 \end{aligned}
 $$ {#eq-ior-components}
 
-### Concentration: Herfindahl-Hirschman Index {#sec-hhi}
+### Mức độ tập trung: chỉ số Herfindahl-Hirschman {#sec-hhi}
 
-The **Institutional Ownership Concentration** via the Herfindahl-Hirschman Index is:
+**Mức độ tập trung sở hữu tổ chức** theo chỉ số Herfindahl-Hirschman là:
 
 $$
 IOC_{i,t}^{HHI} = \sum_{j=1}^{N_{i,t}} \left(\frac{S_{i,j,t}}{\sum_{k=1}^{N_{i,t}} S_{i,k,t}}\right)^2
 $$ {#eq-hhi-vn}
 
-In Vietnam, the HHI is particularly informative because it captures the dominance of state shareholders. A company where the government holds 65% will have a mechanically high HHI even if the remaining 35% is diversely held.
+Ở Việt Nam, HHI đặc biệt hữu ích vì nó phản ánh sự chi phối của các cổ đông nhà nước. Một công ty mà Chính phủ nắm 65% sẽ có HHI cao một cách cơ học, ngay cả khi 35% còn lại được nắm giữ phân tán.
 
-We therefore compute **separate HHI measures** for different ownership categories:
+Do đó, chúng ta tính **các thước đo HHI riêng biệt** cho các nhóm sở hữu khác nhau:
 
 $$
 HHI_{i,t}^{total} = \sum_{j} w_{i,j,t}^2, \quad
 HHI_{i,t}^{non-state} = \sum_{j \notin state} \left(\frac{S_{i,j,t}}{\sum_{k \notin state} S_{i,k,t}}\right)^2
 $$ {#eq-hhi-decomposed}
 
-The non-state HHI is more comparable to the US institutional HHI, as it captures concentration among market-driven investors.
+HHI phi nhà nước có tính so sánh cao hơn với HHI tổ chức của Mỹ, vì nó phản ánh mức độ tập trung giữa các nhà đầu tư hoạt động theo cơ chế thị trường.
 
-### Breadth of Ownership {#sec-breadth}
+### Độ rộng sở hữu {#sec-breadth}
 
-Following @chen2002breadth, **Institutional Breadth** ($N_{i,t}$) is the number of institutional investors holding stock $i$ in period $t$. The **Change in Breadth** is:
+Theo @chen2002breadth, **độ rộng tổ chức** ($N_{i,t}$) là số nhà đầu tư tổ chức nắm giữ cổ phiếu $i$ trong kỳ $t$. **Thay đổi độ rộng** là:
 
 $$
 \Delta Breadth_{i,t} = \frac{N_{i,t}^{cont} - N_{i,t-1}^{cont}}{TotalInstitutions_{t-1}}
 $$ {#eq-dbreadth-vn}
 
-where $N_{i,t}^{cont}$ counts only institutions that appear in the disclosure universe in both periods $t$ and $t-1$, following the @lehavy2008investor algorithm. This adjustment is particularly important in Vietnam where:
+trong đó $N_{i,t}^{cont}$ chỉ đếm các tổ chức xuất hiện trong tập hợp công bố ở cả hai kỳ $t$ và $t-1$, theo thuật toán của @lehavy2008investor. Điều chỉnh này đặc biệt quan trọng ở Việt Nam vì:
 
--   New funds launch frequently (especially ETFs tracking VN30)
--   Foreign funds enter and exit the market
--   Domestic securities firms consolidate or spin off asset management divisions
+-   Các quỹ mới được thành lập thường xuyên (đặc biệt là các ETF bám sát VN30)
+-   Các quỹ nước ngoài gia nhập và rút khỏi thị trường
+-   Các công ty chứng khoán trong nước hợp nhất hoặc tách các mảng quản lý tài sản
 
 ```{python}
 #| label: compute-all-metrics
@@ -994,11 +994,11 @@ def compute_io_metrics_vietnam(ownership: pd.DataFrame,
 # )
 ```
 
-### Time Series Visualization
+### Trực quan hóa chuỗi thời gian
 
 ```{python}
 #| label: fig-io-timeseries-vn
-#| fig-cap: "Time Series of Ownership Structure in Vietnamese Listed Companies. Panel A shows the evolution of ownership composition across all HOSE/HNX stocks. Panel B decomposes institutional ownership by foreign vs domestic components. The decline in state ownership reflects Vietnam's ongoing equitization program, while the growth in foreign institutional ownership tracks the market's progressive opening to international investors."
+#| fig-cap: "Chuỗi thời gian của cơ cấu sở hữu tại các công ty niêm yết Việt Nam. Panel A thể hiện sự thay đổi của cơ cấu sở hữu trên tất cả cổ phiếu HOSE/HNX. Panel B phân rã sở hữu tổ chức thành các thành phần nước ngoài và trong nước. Sự suy giảm của sở hữu nhà nước phản ánh chương trình cổ phần hóa đang diễn ra của Việt Nam, trong khi sự tăng lên của sở hữu tổ chức nước ngoài phản ánh quá trình mở cửa dần của thị trường đối với nhà đầu tư quốc tế."
 #| fig-height: 12
 #| eval: false
 
@@ -1086,7 +1086,7 @@ def plot_ownership_timeseries_vietnam(metrics: pd.DataFrame):
 
 ```{python}
 #| label: fig-io-by-exchange
-#| fig-cap: "Mean Institutional Ownership by Exchange and Size Quintile. HOSE-listed firms attract significantly more institutional (especially foreign) ownership than HNX or UPCOM firms, consistent with size, liquidity, and governance quality differences across exchanges."
+#| fig-cap: "Sở hữu tổ chức trung bình theo sàn giao dịch và nhóm quy mô ngũ phân vị. Các công ty niêm yết trên HOSE thu hút sở hữu tổ chức (đặc biệt là nước ngoài) cao hơn đáng kể so với các công ty trên HNX hoặc UPCOM, phù hợp với sự khác biệt về quy mô, thanh khoản và chất lượng quản trị công ty giữa các sàn."
 #| eval: false
 
 def plot_io_by_exchange_size(metrics: pd.DataFrame):
@@ -1133,7 +1133,7 @@ def plot_io_by_exchange_size(metrics: pd.DataFrame):
 
 ```{python}
 #| label: tbl-io-summary
-#| tbl-cap: "Summary Statistics of Ownership Structure in Vietnam by Size Quintile and Exchange (Pooled 2010-2024)"
+#| tbl-cap: "Thống kê mô tả cơ cấu sở hữu tại Việt Nam theo nhóm quy mô ngũ phân vị và sàn giao dịch (gộp 2010-2024)"
 #| eval: false
 
 def tabulate_io_summary(metrics: pd.DataFrame, start_year: int = 2010) -> pd.DataFrame:
@@ -1186,29 +1186,29 @@ def tabulate_io_summary(metrics: pd.DataFrame, start_year: int = 2010) -> pd.Dat
 
 ------------------------------------------------------------------------
 
-## Foreign Ownership Dynamics {#sec-foreign-ownership}
+## Động lực của sở hữu nước ngoài {#sec-foreign-ownership}
 
-### Foreign Ownership Limits and the FOL Premium {#sec-fol}
+### Giới hạn sở hữu nước ngoài và phần bù FOL {#sec-fol}
 
-Vietnam's Foreign Ownership Limits create a unique market segmentation. When a stock reaches its FOL, the only way for a new foreign investor to buy is if an existing foreign holder sells. This creates a de facto "foreign-only" market for FOL-constrained stocks, with documented price premiums [@vo2015foreign].
+Giới hạn sở hữu nước ngoài của Việt Nam tạo ra sự phân khúc thị trường đặc thù. Khi một cổ phiếu chạm FOL, cách duy nhất để một nhà đầu tư nước ngoài mới mua được là một chủ sở hữu nước ngoài hiện hữu bán ra. Điều này tạo ra một thị trường "chỉ dành cho người nước ngoài" trên thực tế đối với các cổ phiếu bị ràng buộc bởi FOL, với các phần bù giá đã được ghi nhận [@vo2015foreign].
 
-The **FOL Utilization Ratio** for stock $i$ at time $t$ is:
+**Tỷ lệ sử dụng FOL** của cổ phiếu $i$ tại thời điểm $t$ là:
 
 $$
 FOL\_Util_{i,t} = \frac{ForeignOwnership_{i,t}}{FOL\_Limit_i}
 $$ {#eq-fol-util}
 
-Stocks are classified by FOL proximity (@tbl-fol-zones).
+Các cổ phiếu được phân loại theo mức độ gần với FOL (@tbl-fol-zones).
 
-| FOL Zone   | Utilization Range | Market Implication                            |
+| Vùng FOL   | Khoảng sử dụng    | Hàm ý đối với thị trường                      |
 |:------------------|:------------------|:-----------------------------------|
-| **Green**  | \< 50%            | Ample foreign room; normal trading            |
-| **Yellow** | 50-80%            | Moderate room; some foreign interest pressure |
-| **Orange** | 80-95%            | Limited room; foreign premium emerging        |
-| **Red**    | 95-100%           | Near cap; significant foreign premium         |
-| **Capped** | ≈ 100%            | At limit; foreign-only secondary market       |
+| **Xanh lục**  | \< 50%            | Room nước ngoài dồi dào; giao dịch bình thường            |
+| **Vàng** | 50-80%            | Room vừa phải; có một số áp lực từ sự quan tâm của nước ngoài |
+| **Cam** | 80-95%            | Room hạn chế; phần bù nước ngoài bắt đầu xuất hiện        |
+| **Đỏ**    | 95-100%           | Gần chạm trần; phần bù nước ngoài đáng kể     |
+| **Kịch trần** | ≈ 100%            | Chạm giới hạn; thị trường thứ cấp chỉ dành cho người nước ngoài |
 
-: FOL Proximity Zones {#tbl-fol-zones}
+: Các vùng tiệm cận FOL {#tbl-fol-zones}
 
 ```{python}
 #| label: fol-analysis
@@ -1380,7 +1380,7 @@ class FOLAnalyzer:
 
 ```{python}
 #| label: fig-fol-utilization
-#| fig-cap: "Foreign Ownership Limit Utilization Distribution by Sector. Banking stocks cluster near the 30% cap, while many large-cap non-bank stocks approach the standard 49% limit. The bimodal distribution in 'Others' reflects the mix of stocks with and without meaningful foreign interest."
+#| fig-cap: "Phân phối mức sử dụng giới hạn sở hữu nước ngoài theo ngành. Các cổ phiếu ngân hàng tập trung gần mức trần 30%, trong khi nhiều cổ phiếu vốn hóa lớn phi ngân hàng tiệm cận giới hạn tiêu chuẩn 49%. Phân phối hai đỉnh ở nhóm 'Others' phản ánh sự pha trộn giữa các cổ phiếu có và không có sự quan tâm đáng kể của nhà đầu tư nước ngoài."
 #| eval: false
 
 def plot_fol_utilization(metrics: pd.DataFrame):
@@ -1416,18 +1416,20 @@ def plot_fol_utilization(metrics: pd.DataFrame):
 # plot_fol_utilization(io_metrics)
 ```
 
-## Institutional Trades {#sec-trades}
+## Giao dịch của tổ chức {#sec-trades}
 
-### Trade Inference in Vietnam {#sec-trade-inference}
+### Suy luận giao dịch tại Việt Nam {#sec-trade-inference}
 
-In the US, institutional trades are inferred from quarterly 13F holding snapshots. In Vietnam, the challenge is more acute because disclosure frequency varies:
+Ở Mỹ, các giao dịch của tổ chức được suy ra từ các ảnh chụp danh mục nắm giữ 13F hằng quý. Ở Việt Nam, thách thức còn gay gắt hơn vì tần suất công bố không đồng nhất:
 
--   **Major shareholders (**$\ge$ **5%)**: Must disclose within 7 business days of crossing ownership thresholds (5%, 10%, 15%, 20%, 25%, 50%, 65%, 75%)
--   **Fund portfolio reports:** Semi-annual disclosure required; some funds report quarterly
--   **Annual reports:** Provide complete shareholder register but only once per year
--   **Daily foreign ownership:** HOSE/HNX publish aggregate daily foreign buy/sell data
+-   **Cổ đông lớn (**$\ge$ **5%)**: Phải công bố trong vòng 7 ngày làm việc kể từ khi vượt các ngưỡng sở hữu (5%, 10%, 15%, 20%, 25%, 50%, 65%, 75%)
+-   **Báo cáo danh mục của quỹ:** Bắt buộc công bố bán niên; một số quỹ báo cáo hằng quý
+-   **Báo cáo thường niên:** Cung cấp danh sách cổ đông đầy đủ nhưng chỉ một lần mỗi năm
+-   **Sở hữu nước ngoài hằng ngày:** HOSE/HNX công bố dữ liệu tổng hợp mua/bán của nhà đầu tư nước ngoài hằng ngày
 
-We derive trades from the **change in ownership between consecutive disclosure dates**, applying the same logic as the US @ben2013hedge algorithm but adapted for Vietnam's irregular disclosure intervals.
+Chúng ta suy ra các giao dịch từ **thay đổi sở hữu giữa các ngày công bố liên tiếp**, áp dụng cùng logic với thuật toán @ben2013hedge của Mỹ nhưng điều chỉnh cho phù hợp với các khoảng cách công bố không đều của Việt Nam.
+
+Cần lưu ý rằng mọi bài tập suy luận giao dịch dựa trên danh mục nắm giữ được công bố đều có một hạn chế: bản thân các công bố có thể mang tính chiến lược. Ngay cả trong chế độ 13F hằng quý bắt buộc của Mỹ, @cao2026hedge ghi nhận rằng các quỹ phòng hộ đôi khi khai sai báo cáo gốc và lặng lẽ sửa lại sau đó thông qua các bản điều chỉnh (phổ biến ngang với các báo cáo bảo mật và ảnh hưởng đến số cổ phiếu nhiều gấp khoảng ba lần), với các mô thức lợi nhuận cho thấy việc khai sai che giấu ý định giao dịch trong lúc các vị thế đang được xây dựng. Các công bố sở hữu của Việt Nam (theo sự kiện, ít chuẩn hóa hơn và ít bị giám sát chặt chẽ hơn so với báo cáo 13F) đáng được hoài nghi ít nhất ở mức tương đương: hãy coi các ảnh chụp là những báo cáo có thể được chọn thời điểm một cách chiến lược hoặc chưa đầy đủ thay vì là sự thật tuyệt đối, và đối chiếu chéo chúng với các nguồn độc lập như dữ liệu dòng vốn nước ngoài hằng ngày và danh sách cổ đông thường niên bất cứ khi nào có thể.
 
 ```{python}
 #| label: derive-trades-vn
@@ -1553,8 +1555,8 @@ def derive_trades_vietnam(ownership: pd.DataFrame,
 # trades = derive_trades_vietnam(ownership_classified, adj_factors)
 ```
 
-::: {.callout-warning title="Corporate Action Adjustment in Trade Derivation"}
-When computing trades as $\Delta Shares = Shares_t - Shares_{t-1}$, the previous period's shares **must** be adjusted for any corporate actions between $t-1$ and $t$. If VNM issued a 20% stock dividend between the two disclosure dates, then 1,000 shares at $t-1$ should be compared to 1,200 adjusted shares, not 1,000 raw shares. Failing to make this adjustment would create a phantom "buy" of 200 shares that never actually occurred.
+::: {.callout-warning title="Điều chỉnh theo sự kiện doanh nghiệp khi suy ra giao dịch"}
+Khi tính giao dịch dưới dạng $\Delta Shares = Shares_t - Shares_{t-1}$, số cổ phiếu của kỳ trước **phải** được điều chỉnh theo mọi sự kiện doanh nghiệp xảy ra giữa $t-1$ và $t$. Nếu VNM phát hành cổ tức bằng cổ phiếu 20% giữa hai ngày công bố, thì 1.000 cổ phiếu tại $t-1$ cần được so sánh với 1.200 cổ phiếu đã điều chỉnh, chứ không phải 1.000 cổ phiếu thô. Việc không thực hiện điều chỉnh này sẽ tạo ra một giao dịch "mua" ảo 200 cổ phiếu chưa từng thực sự xảy ra.
 :::
 
 ```{python}
@@ -1627,11 +1629,11 @@ def derive_trades_vectorized_vietnam(ownership: pd.DataFrame,
 # trades = derive_trades_vectorized_vietnam(ownership_classified, adj_factors)
 ```
 
-## Fund-Level Flows and Turnover {#sec-flows-turnover}
+## Dòng vốn và tỷ lệ vòng quay ở cấp quỹ {#sec-flows-turnover}
 
-### Portfolio Assets and Returns from Fund Holdings
+### Tài sản và lợi nhuận của danh mục từ dữ liệu nắm giữ của quỹ
 
-Using DataCore.vn's fund holdings data, we compute fund-level portfolio analytics analogous to the US 13F approach:
+Sử dụng dữ liệu danh mục nắm giữ của quỹ từ DataCore.vn, chúng ta tính các phân tích danh mục ở cấp quỹ tương tự cách tiếp cận 13F của Mỹ:
 
 $$
 Assets_{j,t} = \sum_{i=1}^{N_{j,t}} S_{i,j,t} \times P_{i,t}
@@ -1645,9 +1647,9 @@ $$
 NetFlows_{j,t} = Assets_{j,t} - Assets_{j,t-1} \times (1 + R_{j,t-1 \to t}^{holdings})
 $$ {#eq-flows-vn}
 
-### Turnover Measures
+### Các thước đo tỷ lệ vòng quay
 
-Following @carhart1997persistence, adapted for Vietnam's fund reporting:
+Theo @carhart1997persistence, được điều chỉnh cho phù hợp với báo cáo quỹ của Việt Nam:
 
 $$
 Turnover_{j,t}^{Carhart} = \frac{\min(TotalBuys_{j,t}, TotalSales_{j,t})}{\overline{Assets}_{j,t}}
@@ -1772,9 +1774,9 @@ def compute_fund_analytics(fund_holdings: pd.DataFrame,
 
 ------------------------------------------------------------------------
 
-## State Ownership Analysis {#sec-state-ownership}
+## Phân tích sở hữu nhà nước {#sec-state-ownership}
 
-### Equitization and the Decline of State Ownership
+### Cổ phần hóa và sự suy giảm của sở hữu nhà nước
 
 Vietnam's equitization (cổ phần hóa) program has been a defining feature of the market since the early 2000s. The program converts state-owned enterprises into joint-stock companies, typically with the state retaining a controlling or significant minority stake that is then gradually reduced through secondary offerings.
 
@@ -1849,7 +1851,7 @@ def analyze_state_ownership(metrics: pd.DataFrame) -> Dict:
 
 ```{python}
 #| label: fig-state-ownership
-#| fig-cap: "Evolution of State Ownership in Vietnam. Panel A shows the declining share of SOEs and their market cap weight. Panel B shows the distribution of state ownership percentages, illustrating the bimodal pattern between firms with negligible state ownership and those with dominant state control."
+#| fig-cap: "Diễn biến sở hữu nhà nước tại Việt Nam. Panel A thể hiện tỷ trọng suy giảm của các doanh nghiệp nhà nước (SOE) và trọng số vốn hóa thị trường của họ. Panel B thể hiện phân phối của các tỷ lệ sở hữu nhà nước, minh họa mô thức hai đỉnh giữa các công ty có sở hữu nhà nước không đáng kể và những công ty chịu sự kiểm soát chi phối của nhà nước."
 #| fig-height: 10
 #| eval: false
 
@@ -1892,11 +1894,11 @@ def plot_state_ownership(state_analysis: Dict, metrics: pd.DataFrame):
 
 ------------------------------------------------------------------------
 
-## Modern Extensions {#sec-modern-extensions}
+## Các mở rộng hiện đại {#sec-modern-extensions}
 
-### Network Analysis of Co-Ownership {#sec-network}
+### Phân tích mạng lưới đồng sở hữu {#sec-network}
 
-Institutional co-ownership networks capture how stocks are connected through shared investors. In Vietnam, these networks reveal the influence structure of major domestic conglomerates (e.g., Vingroup, Masan, FPT) and the overlap between foreign fund portfolios.
+Các mạng lưới đồng sở hữu của tổ chức cho thấy các cổ phiếu được kết nối với nhau như thế nào thông qua các nhà đầu tư chung. Ở Việt Nam, các mạng lưới này tiết lộ cấu trúc ảnh hưởng của các tập đoàn lớn trong nước (ví dụ: Vingroup, Masan, FPT) và sự chồng lấn giữa các danh mục của quỹ nước ngoài.
 
 ```{python}
 #| label: coownership-network
@@ -2002,9 +2004,9 @@ def construct_stock_coownership_network(ownership: pd.DataFrame,
 # )
 ```
 
-### ML-Enhanced Investor Classification {#sec-ml-classification}
+### Phân loại nhà đầu tư nâng cao bằng học máy {#sec-ml-classification}
 
-Vietnam's investor classification challenge is distinct from the US. While the US has the Bushee typology based on portfolio turnover and concentration, Vietnam requires classification of both investor **type** (when not explicitly labeled) and investor **behavior** (active vs passive, short-term vs long-term).
+Thách thức phân loại nhà đầu tư của Việt Nam khác với Mỹ. Trong khi Mỹ có phân loại Bushee dựa trên tỷ lệ vòng quay và mức độ tập trung của danh mục, Việt Nam đòi hỏi phân loại cả **loại hình** nhà đầu tư (khi không được gắn nhãn rõ ràng) lẫn **hành vi** nhà đầu tư (chủ động so với thụ động, ngắn hạn so với dài hạn).
 
 ```{python}
 #| label: ml-classification-vn
@@ -2110,9 +2112,9 @@ def classify_investors_vietnam(ownership: pd.DataFrame,
 # investor_classes = classify_investors_vietnam(ownership_classified, prices_q)
 ```
 
-### Event Study: Ownership Disclosure Shocks {#sec-event-study}
+### Nghiên cứu sự kiện: các cú sốc công bố sở hữu {#sec-event-study}
 
-Vietnam's threshold-based major shareholder disclosure creates natural events for studying the price impact of ownership changes.
+Việc công bố cổ đông lớn dựa trên ngưỡng của Việt Nam tạo ra các sự kiện tự nhiên để nghiên cứu tác động lên giá của những thay đổi sở hữu.
 
 ```{python}
 #| label: event-study
@@ -2265,11 +2267,11 @@ def ownership_event_study(major_shareholders: pd.DataFrame,
 
 ------------------------------------------------------------------------
 
-## Empirical Applications {#sec-empirical-applications}
+## Các ứng dụng thực nghiệm {#sec-empirical-applications}
 
-### Application 1: Foreign Ownership and Stock Returns in Vietnam
+### Ứng dụng 1: Sở hữu nước ngoài và lợi nhuận cổ phiếu tại Việt Nam
 
-Does foreign institutional ownership predict returns in Vietnam? @huang2023factors find evidence consistent with the information advantage hypothesis.
+Liệu sở hữu tổ chức nước ngoài có dự báo được lợi nhuận tại Việt Nam không? @huang2023factors tìm thấy bằng chứng phù hợp với giả thuyết lợi thế thông tin.
 
 ```{python}
 #| label: foreign-io-returns
@@ -2339,7 +2341,7 @@ def test_foreign_io_returns(metrics: pd.DataFrame) -> pd.DataFrame:
 # foreign_return_results = test_foreign_io_returns(io_metrics)
 ```
 
-### Application 2: State Divestiture and Value Creation
+### Ứng dụng 2: Thoái vốn nhà nước và tạo lập giá trị
 
 ```{python}
 #| label: equitization-value
@@ -2428,7 +2430,7 @@ def analyze_equitization_value(metrics: pd.DataFrame,
 # equitization_results = analyze_equitization_value(io_metrics, state_analysis)
 ```
 
-### Application 3: Institutional Herding in Vietnam
+### Ứng dụng 3: Hành vi bầy đàn của tổ chức tại Việt Nam
 
 ```{python}
 #| label: herding-vn
@@ -2518,54 +2520,54 @@ def compute_herding_vietnam(trades: pd.DataFrame,
 # )
 ```
 
-## Conclusion and Practical Recommendations {#sec-conclusion}
+## Kết luận và khuyến nghị thực tiễn {#sec-conclusion}
 
-### Summary of Measures
+### Tóm tắt các thước đo
 
-@tbl-summary-all summarizes all institutional ownership measures developed in this chapter for the Vietnamese market.
+@tbl-summary-all tóm tắt tất cả các thước đo sở hữu tổ chức được phát triển trong chương này cho thị trường Việt Nam.
 
-| Measure | Definition | Key Adaptation for Vietnam | Python Function |
+| Thước đo | Định nghĩa | Điều chỉnh chính cho Việt Nam | Hàm Python |
 |:-----------------|:-----------------|:------------------|:-----------------|
-| IO Ratio | Inst. shares / TSO | Decomposed into state, foreign, domestic | `compute_ownership_decomposition()` |
-| HHI Concentration | $\sum w_j^2$ | Separate HHI for total, non-state, foreign | `compute_io_metrics_vietnam()` |
-| ΔBreadth | Lehavy-Sloan adjusted | Applied to irregular disclosure intervals | `compute_io_metrics_vietnam()` |
-| FOL Utilization | Foreign % / FOL limit | Vietnam-specific; no US equivalent | `FOLAnalyzer` |
-| FOL Premium | Price impact of FOL proximity | Cross-sectional regression approach | `FOLAnalyzer.estimate_fol_premium()` |
-| Trades | ΔShares (corp-action adjusted) | Critical: adjust for stock dividends | `derive_trades_vectorized_vietnam()` |
-| Fund Turnover | min(B,S)/avg(A) | Semi-annual frequency; annualized | `compute_fund_analytics()` |
-| SOE Status | State ownership \> 50% | Tracks equitization program | `analyze_state_ownership()` |
-| LSV Herding | $|p - E[p]| - E[|p - E[p]|]$ | Separate foreign vs domestic herding | `compute_herding_vietnam()` |
-| Co-Ownership Network | Shared institutional holders | Reveals conglomerate linkages | `construct_stock_coownership_network()` |
+| Tỷ lệ IO | Cổ phiếu tổ chức / TSO | Phân rã thành nhà nước, nước ngoài, trong nước | `compute_ownership_decomposition()` |
+| Mức tập trung HHI | $\sum w_j^2$ | HHI riêng cho tổng, phi nhà nước, nước ngoài | `compute_io_metrics_vietnam()` |
+| ΔĐộ rộng | Điều chỉnh theo Lehavy-Sloan | Áp dụng cho các khoảng công bố không đều | `compute_io_metrics_vietnam()` |
+| Mức sử dụng FOL | % nước ngoài / giới hạn FOL | Đặc thù Việt Nam; không có tương đương ở Mỹ | `FOLAnalyzer` |
+| Phần bù FOL | Tác động lên giá của mức tiệm cận FOL | Cách tiếp cận hồi quy mặt cắt ngang | `FOLAnalyzer.estimate_fol_premium()` |
+| Giao dịch | ΔShares (đã điều chỉnh sự kiện doanh nghiệp) | Quan trọng: điều chỉnh theo cổ tức bằng cổ phiếu | `derive_trades_vectorized_vietnam()` |
+| Vòng quay quỹ | min(B,S)/avg(A) | Tần suất bán niên; quy đổi theo năm | `compute_fund_analytics()` |
+| Tình trạng SOE | Sở hữu nhà nước \> 50% | Theo dõi chương trình cổ phần hóa | `analyze_state_ownership()` |
+| Hành vi bầy đàn LSV | $|p - E[p]| - E[|p - E[p]|]$ | Tách riêng hành vi bầy đàn của nước ngoài và trong nước | `compute_herding_vietnam()` |
+| Mạng lưới đồng sở hữu | Các cổ đông tổ chức chung | Làm lộ các mối liên kết tập đoàn | `construct_stock_coownership_network()` |
 
-: Summary of All Ownership Measures for Vietnam {#tbl-summary-all}
+: Tóm tắt tất cả các thước đo sở hữu cho Việt Nam {#tbl-summary-all}
 
-### Data Quality Checklist for Vietnam
+### Danh mục kiểm tra chất lượng dữ liệu cho Việt Nam
 
-::: {.callout-tip title="Vietnam Data Quality Checklist"}
-1.  [ ] **Corporate actions:** Have you built and applied adjustment factors for ALL stock dividends, bonus shares, splits, and rights issues?
-2.  [ ] **Shareholder classification:** Have you verified the owner type classification (state vs foreign vs domestic institutional vs individual)?
-3.  [ ] **FOL limits:** Are sector-specific FOL limits correctly assigned (30% for banks, 49% standard, unlimited for some sectors)?
-4.  [ ] **Disclosure dates:** Are you using the actual disclosure date (not the record date or ex-date) for ownership snapshots?
-5.  [ ] **Treasury shares:** Are treasury shares excluded from ownership ratio denominators?
-6.  [ ] **UPCOM coverage:** Does your sample include or exclude UPCOM stocks (which have weaker disclosure requirements)?
-7.  [ ] **Cross-listings:** Are you handling NVDR (Non-Voting Depository Receipts) if applicable after market reforms?
-8.  [ ] **Name consistency:** Are shareholder names standardized across disclosure periods (Vietnamese names can have multiple romanization forms)?
-9.  [ ] **Trade adjustment:** When deriving trades between periods, have you adjusted previous shares for ALL intervening corporate actions?
-10. [ ] **Fund mandate changes:** For fund analytics, have you accounted for fund mergers, closures, and mandate changes that affect time-series continuity?
+::: {.callout-tip title="Danh mục kiểm tra chất lượng dữ liệu Việt Nam"}
+1.  [ ] **Sự kiện doanh nghiệp:** Bạn đã xây dựng và áp dụng hệ số điều chỉnh cho TẤT CẢ cổ tức bằng cổ phiếu, cổ phiếu thưởng, chia tách và phát hành quyền mua chưa?
+2.  [ ] **Phân loại cổ đông:** Bạn đã kiểm tra việc phân loại loại hình chủ sở hữu (nhà nước, nước ngoài, tổ chức trong nước, cá nhân) chưa?
+3.  [ ] **Giới hạn FOL:** Các giới hạn FOL theo ngành có được gán đúng không (30% đối với ngân hàng, 49% tiêu chuẩn, không giới hạn đối với một số ngành)?
+4.  [ ] **Ngày công bố:** Bạn có đang sử dụng ngày công bố thực tế (không phải ngày chốt danh sách hay ngày giao dịch không hưởng quyền) cho các ảnh chụp sở hữu không?
+5.  [ ] **Cổ phiếu quỹ:** Cổ phiếu quỹ có được loại khỏi mẫu số của tỷ lệ sở hữu không?
+6.  [ ] **Phạm vi UPCOM:** Mẫu của bạn bao gồm hay loại trừ các cổ phiếu UPCOM (vốn có yêu cầu công bố thông tin yếu hơn)?
+7.  [ ] **Niêm yết chéo:** Bạn có xử lý NVDR (Chứng chỉ lưu ký không có quyền biểu quyết) nếu áp dụng sau các cải cách thị trường không?
+8.  [ ] **Tính nhất quán của tên:** Tên cổ đông có được chuẩn hóa giữa các kỳ công bố không (tên tiếng Việt có thể có nhiều dạng La-tinh hóa)?
+9.  [ ] **Điều chỉnh giao dịch:** Khi suy ra giao dịch giữa các kỳ, bạn đã điều chỉnh số cổ phiếu kỳ trước theo TẤT CẢ sự kiện doanh nghiệp xen giữa chưa?
+10. [ ] **Thay đổi chính sách đầu tư của quỹ:** Đối với phân tích quỹ, bạn đã tính đến việc sáp nhập, đóng cửa quỹ và thay đổi chính sách đầu tư ảnh hưởng đến tính liên tục của chuỗi thời gian chưa?
 :::
 
-### Comparison with US Framework
+### So sánh với khung của Mỹ
 
-| Dimension | US (WRDS/13F) | Vietnam (DataCore.vn) |
+| Khía cạnh | Mỹ (WRDS/13F) | Việt Nam (DataCore.vn) |
 |:------------------|:--------------------|:-------------------------------|
-| **Disclosure** | Quarterly 13F (mandatory) | Annual reports + event-driven |
-| **Coverage** | Institutions \> \$100M AUM | All shareholders in annual reports |
-| **Ownership observed** | Long positions only | Complete decomposition |
-| **IO can exceed 100%** | Yes (short selling) | No (by construction) |
-| **Permanent ID** | CRSP PERMNO | Ticker (with manual tracking of changes) |
-| **Adjustment factors** | CRSP cfacshr | Must build from corporate actions |
-| **Investor classification** | LSEG typecode / Bushee | State/Foreign/Domestic/Individual |
-| **Short selling** | Not in 13F; exists in market | Very limited; not a concern |
-| **Unique features** | — | FOL, SOE ownership, stock dividend frequency |
+| **Công bố** | 13F hằng quý (bắt buộc) | Báo cáo thường niên + theo sự kiện |
+| **Phạm vi** | Tổ chức có AUM \> \$100 triệu | Tất cả cổ đông trong báo cáo thường niên |
+| **Sở hữu quan sát được** | Chỉ các vị thế mua | Phân rã đầy đủ |
+| **IO có thể vượt 100%** | Có (do bán khống) | Không (theo cấu trúc) |
+| **Mã định danh cố định** | CRSP PERMNO | Mã cổ phiếu (cần theo dõi thủ công các thay đổi) |
+| **Hệ số điều chỉnh** | CRSP cfacshr | Phải xây dựng từ các sự kiện doanh nghiệp |
+| **Phân loại nhà đầu tư** | LSEG typecode / Bushee | Nhà nước/Nước ngoài/Trong nước/Cá nhân |
+| **Bán khống** | Không có trong 13F; tồn tại trên thị trường | Rất hạn chế; không đáng lo ngại |
+| **Đặc điểm riêng** | — | FOL, sở hữu của SOE, tần suất cổ tức bằng cổ phiếu |
 
-: US vs Vietnam Institutional Ownership Framework Comparison {#tbl-us-vn-comparison}
+: So sánh khung sở hữu tổ chức giữa Mỹ và Việt Nam {#tbl-us-vn-comparison}

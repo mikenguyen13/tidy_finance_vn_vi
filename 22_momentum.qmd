@@ -1,63 +1,63 @@
-# Momentum Strategies
+# Chiến lược động lượng
 
-Momentum is one of the most robust and pervasive anomalies in financial economics. Stocks that have performed well over the past three to twelve months tend to continue performing well over the subsequent three to twelve months, and stocks that have performed poorly tend to continue underperforming. This pattern, first documented by @jegadeesh1993returns, has been replicated across virtually every equity market, asset class, and time period examined, earning it a central place in the canon of empirical asset pricing.
+Động lượng là một trong những hiện tượng bất thường vững chắc và phổ biến nhất trong kinh tế học tài chính. Những cổ phiếu có kết quả tốt trong ba đến mười hai tháng trước đó có xu hướng tiếp tục có kết quả tốt trong ba đến mười hai tháng tiếp theo, còn những cổ phiếu có kết quả kém có xu hướng tiếp tục kém. Mô thức này, được @jegadeesh1993returns ghi nhận lần đầu, đã được lặp lại trên hầu như mọi thị trường cổ phiếu, loại tài sản và giai đoạn được khảo sát, qua đó có vị trí trung tâm trong hệ thống kiến thức nền tảng của định giá tài sản thực nghiệm.
 
-In this chapter, we provide an implementation of momentum strategies following the methodology of @jegadeesh1993returns. We construct momentum portfolios based on past cumulative returns, evaluate their performance across different formation and holding period combinations, and examine whether the momentum premium exists in the Vietnamese equity market..
+Trong chương này, chúng ta triển khai các chiến lược động lượng theo phương pháp của @jegadeesh1993returns. Chúng ta xây dựng các danh mục động lượng dựa trên lợi nhuận tích lũy trong quá khứ, đánh giá hiệu quả của chúng qua các tổ hợp khác nhau của thời kỳ hình thành và thời kỳ nắm giữ, và xem xét liệu phần bù động lượng có tồn tại trên thị trường cổ phiếu Việt Nam hay không.
 
-## Theoretical Background
+## Cơ sở lý thuyết
 
-### The Momentum Effect
+### Hiệu ứng động lượng
 
-The momentum effect refers to the tendency of assets with high recent returns to continue generating high returns, and assets with low recent returns to continue generating low returns. More formally, if we define the cumulative return of stock $i$ over the past $J$ months as
+Hiệu ứng động lượng là xu hướng các tài sản có lợi nhuận gần đây cao tiếp tục tạo ra lợi nhuận cao, và các tài sản có lợi nhuận gần đây thấp tiếp tục tạo ra lợi nhuận thấp. Chính thức hơn, nếu chúng ta định nghĩa lợi nhuận tích lũy của cổ phiếu $i$ trong $J$ tháng gần nhất là
 
 $$
 R_{i,t-J:t-1} = \prod_{s=t-J}^{t-1} (1 + r_{i,s}) - 1
 $$ {#eq-cumret}
 
-then momentum predicts a positive cross-sectional relationship between $R_{i,t-J:t-1}$ and future returns $r_{i,t}$. That is, stocks in the top decile of past returns (winners) should outperform stocks in the bottom decile (losers) in subsequent months.
+thì động lượng dự báo một mối quan hệ chéo dương giữa $R_{i,t-J:t-1}$ và lợi nhuận tương lai $r_{i,t}$. Nghĩa là, các cổ phiếu thuộc thập phân vị cao nhất về lợi nhuận quá khứ (cổ phiếu thắng) sẽ vượt trội các cổ phiếu thuộc thập phân vị thấp nhất (cổ phiếu thua) trong các tháng tiếp theo.
 
-The @jegadeesh1993returns framework parameterizes momentum strategies by two key dimensions:
+Khung của @jegadeesh1993returns tham số hóa các chiến lược động lượng theo hai chiều chính:
 
-1.  **Formation period** ($J$): The number of months over which past returns are computed to rank stocks. Typical values range from 3 to 12 months.
-2.  **Holding period** ($K$): The number of months for which the momentum portfolios are held after formation. Typical values also range from 3 to 12 months.
+1.  **Thời kỳ hình thành** ($J$): Số tháng dùng để tính lợi nhuận quá khứ nhằm xếp hạng cổ phiếu. Giá trị điển hình từ 3 đến 12 tháng.
+2.  **Thời kỳ nắm giữ** ($K$): Số tháng các danh mục động lượng được nắm giữ sau khi hình thành. Giá trị điển hình cũng từ 3 đến 12 tháng.
 
-A strategy is therefore characterized by the pair $(J, K)$. For example, a $(6, 6)$ strategy ranks stocks based on their cumulative returns over the past 6 months and holds the resulting portfolios for 6 months.
+Do đó, một chiến lược được đặc trưng bởi cặp $(J, K)$. Chẳng hạn, chiến lược $(6, 6)$ xếp hạng cổ phiếu dựa trên lợi nhuận tích lũy trong 6 tháng gần nhất và nắm giữ các danh mục thu được trong 6 tháng.
 
-### Overlapping Portfolios and Calendar-Time Returns
+### Danh mục chồng lấn và lợi nhuận theo thời gian lịch
 
-A critical implementation detail in @jegadeesh1993returns is the use of overlapping portfolios. In each month $t$, a new set of portfolios is formed based on the most recent $J$-month returns. However, portfolios formed in months $t-1$, $t-2$, $\ldots$, $t-K+1$ are still within their holding periods and therefore remain active. The return of the momentum strategy in month $t$ is thus the equally weighted average across all $K$ active cohorts:
+Một chi tiết triển khai then chốt trong @jegadeesh1993returns là việc sử dụng các danh mục chồng lấn. Trong mỗi tháng $t$, một bộ danh mục mới được hình thành dựa trên lợi nhuận $J$ tháng gần nhất. Tuy nhiên, các danh mục hình thành vào các tháng $t-1$, $t-2$, $\ldots$, $t-K+1$ vẫn nằm trong thời kỳ nắm giữ và do đó vẫn còn hoạt động. Lợi nhuận của chiến lược động lượng trong tháng $t$ vì vậy là trung bình trọng số bằng nhau của tất cả $K$ nhóm (cohort) đang hoạt động:
 
 $$
 r_{p,t} = \frac{1}{K} \sum_{k=0}^{K-1} r_{p,t}^{(t-k)}
 $$ {#eq-overlapping}
 
-where $r_{p,t}^{(t-k)}$ denotes the return in month $t$ of the portfolio formed in month $t-k$. This overlapping portfolio approach serves two purposes. First, it reduces the impact of any single formation date on the strategy's performance. Second, it produces a monthly return series that can be analyzed using standard time-series methods, even when the holding period $K$ exceeds one month.
+trong đó $r_{p,t}^{(t-k)}$ ký hiệu lợi nhuận trong tháng $t$ của danh mục được hình thành vào tháng $t-k$. Cách tiếp cận danh mục chồng lấn này phục vụ hai mục đích. Thứ nhất, nó giảm tác động của bất kỳ ngày hình thành đơn lẻ nào lên hiệu quả của chiến lược. Thứ hai, nó tạo ra một chuỗi lợi nhuận hằng tháng có thể phân tích bằng các phương pháp chuỗi thời gian chuẩn, ngay cả khi thời kỳ nắm giữ $K$ vượt quá một tháng.
 
-### Theoretical Explanations
+### Các cách giải thích lý thuyết
 
-The academic literature offers two broad classes of explanations for the momentum effect.
+Tài liệu học thuật đưa ra hai nhóm giải thích rộng cho hiệu ứng động lượng.
 
-1.  **Behavioral explanations** attribute momentum to systematic cognitive biases among investors. @daniel1998investor propose a model based on investor overconfidence and biased self-attribution: investors overweight private signals and attribute confirming outcomes to their own skill, leading to initial underreaction followed by delayed overreaction. @hong1999unified develop a model in which information diffuses gradually across heterogeneous investors, generating underreaction to firm-specific news. @barberis1998model formalize a model combining conservatism bias (slow updating of beliefs in response to new evidence) and representativeness heuristic (extrapolation of recent trends).
-2.  **Risk-based explanations** argue that momentum profits represent compensation for systematic risk that varies over time. @johnson2002rational show that momentum can arise in a rational framework if expected returns are stochastic and time-varying. @grundy2001understanding document that momentum portfolios have substantial time-varying factor exposures, suggesting that at least part of the momentum premium reflects dynamic risk. However, standard risk models such as the Fama-French three-factor model have generally struggled to explain momentum returns, which motivated the development of explicit momentum factors such as the Winners-Minus-Losers (WML) factor in @carhart1997persistence.
+1.  **Các giải thích hành vi** quy động lượng cho những thiên lệch nhận thức mang tính hệ thống ở nhà đầu tư. @daniel1998investor đề xuất một mô hình dựa trên sự tự tin thái quá và sự tự quy kết thiên lệch của nhà đầu tư: nhà đầu tư đặt trọng số quá lớn vào các tín hiệu riêng và quy các kết quả xác nhận cho năng lực của bản thân, dẫn đến phản ứng dưới mức ban đầu rồi phản ứng thái quá muộn. @hong1999unified xây dựng một mô hình trong đó thông tin lan truyền dần dần giữa các nhà đầu tư không đồng nhất, tạo ra phản ứng dưới mức với tin tức riêng của doanh nghiệp. @barberis1998model chính thức hóa một mô hình kết hợp thiên lệch bảo thủ (cập nhật niềm tin chậm trước bằng chứng mới) và kinh nghiệm suy đoán theo tính đại diện (ngoại suy các xu hướng gần đây).
+2.  **Các giải thích dựa trên rủi ro** lập luận rằng lợi nhuận động lượng là sự bù đắp cho rủi ro hệ thống biến thiên theo thời gian. @johnson2002rational chỉ ra rằng động lượng có thể xuất hiện trong khung duy lý nếu lợi nhuận kỳ vọng mang tính ngẫu nhiên và biến thiên theo thời gian. @grundy2001understanding ghi nhận rằng các danh mục động lượng có mức độ phơi nhiễm nhân tố biến thiên theo thời gian đáng kể, cho thấy ít nhất một phần phần bù động lượng phản ánh rủi ro động. Tuy nhiên, các mô hình rủi ro chuẩn như mô hình ba nhân tố Fama-French nhìn chung khó giải thích lợi nhuận động lượng, điều này thúc đẩy việc phát triển các nhân tố động lượng tường minh như nhân tố Winners-Minus-Losers (WML) trong @carhart1997persistence.
 
-### Momentum in Emerging Markets
+### Động lượng ở các thị trường mới nổi
 
-The behavior of momentum in emerging markets differs substantially from developed markets, and understanding these differences is essential for interpreting our Vietnamese market results.
+Hành vi của động lượng ở các thị trường mới nổi khác đáng kể so với các thị trường phát triển, và việc hiểu những khác biệt này là thiết yếu để diễn giải kết quả của thị trường Việt Nam.
 
-@rouwenhorst1998international provides early evidence that momentum profits exist in European markets. @chan2000profitability extend the analysis to international equity markets and find that momentum profits are present in most developed markets but are weaker or absent in several Asian markets. @chui2010individualism offer a cultural explanation, documenting that momentum profits are positively related to a country's degree of individualism as measured by @hofstede2001culture. Countries with collectivist cultures, including many in East and Southeast Asia, tend to exhibit weaker momentum effects.
+@rouwenhorst1998international cung cấp bằng chứng sớm rằng lợi nhuận động lượng tồn tại ở các thị trường châu Âu. @chan2000profitability mở rộng phân tích sang các thị trường cổ phiếu quốc tế và thấy rằng lợi nhuận động lượng hiện diện ở hầu hết các thị trường phát triển nhưng yếu hơn hoặc không có ở một số thị trường châu Á. @chui2010individualism đưa ra một giải thích văn hóa, ghi nhận rằng lợi nhuận động lượng có quan hệ dương với mức độ chủ nghĩa cá nhân của một quốc gia theo đo lường của @hofstede2001culture. Các quốc gia có văn hóa tập thể, trong đó có nhiều nước ở Đông Á và Đông Nam Á, có xu hướng thể hiện hiệu ứng động lượng yếu hơn.
 
-Several market microstructure features common in emerging markets may attenuate momentum:
+Một số đặc điểm vi cấu trúc thị trường phổ biến ở các thị trường mới nổi có thể làm suy yếu động lượng:
 
--   **Trading band limits** constrain daily price movements, potentially slowing the adjustment process that generates momentum. Vietnam's HOSE imposes a $\pm 7\%$ daily limit, while HNX allows $\pm 10\%$.
--   **Lower liquidity and higher transaction costs** can erode momentum profits, as documented by @lesmond2004illusory.
--   **Foreign ownership limits** segment the investor base, potentially altering the information diffusion dynamics that underlie momentum.
--   **Shorter market history** limits the statistical power available to detect the effect.
+-   **Giới hạn biên độ giao dịch** hạn chế biến động giá hằng ngày, có thể làm chậm quá trình điều chỉnh tạo ra động lượng. HOSE của Việt Nam áp dụng biên độ $\pm 7\%$ mỗi ngày, trong khi HNX cho phép $\pm 10\%$.
+-   **Thanh khoản thấp hơn và chi phí giao dịch cao hơn** có thể làm xói mòn lợi nhuận động lượng, như được ghi nhận bởi @lesmond2004illusory.
+-   **Giới hạn sở hữu nước ngoài** chia tách cơ sở nhà đầu tư, có thể làm thay đổi động lực lan truyền thông tin vốn nền tảng cho động lượng.
+-   **Lịch sử thị trường ngắn hơn** hạn chế sức mạnh thống kê sẵn có để phát hiện hiệu ứng này.
 
-These considerations motivate our careful empirical analysis of whether, and to what extent, momentum manifests in Vietnamese equities.
+Những cân nhắc này là lý do để chúng ta phân tích thực nghiệm một cách cẩn thận xem động lượng có biểu hiện trên cổ phiếu Việt Nam hay không và ở mức độ nào.
 
-## Setting Up the Environment
+## Thiết lập môi trường
 
-We begin by loading the necessary Python packages. The core packages include `pandas` for data manipulation, `numpy` for numerical operations, and `sqlite3` for database connectivity. We also import `plotnine` for creating publication-quality figures and `scipy` for statistical tests.
+Chúng ta bắt đầu bằng việc nạp các gói Python cần thiết. Các gói cốt lõi gồm `pandas` để xử lý dữ liệu, `numpy` cho các phép toán số và `sqlite3` để kết nối cơ sở dữ liệu. Chúng ta cũng nhập `plotnine` để tạo các hình ảnh chất lượng xuất bản và `scipy` cho các kiểm định thống kê.
 
 ```{python}
 import pandas as pd
@@ -71,7 +71,7 @@ from mizani.formatters import comma_format, percent_format
 from scipy import stats
 ```
 
-We connect to our SQLite database, which stores the cleaned datasets prepared previous chapters.
+Chúng ta kết nối với cơ sở dữ liệu SQLite, nơi lưu trữ các bộ dữ liệu đã làm sạch được chuẩn bị ở các chương trước.
 
 ```{python}
 tidy_finance = sqlite3.connect(
@@ -79,11 +79,11 @@ tidy_finance = sqlite3.connect(
 )
 ```
 
-## Data Preparation
+## Chuẩn bị dữ liệu
 
-### Loading Monthly Stock Returns
+### Nạp lợi nhuận cổ phiếu hằng tháng
 
-We load the monthly stock price data from our database. The `prices_monthly` table contains adjusted returns, market capitalizations, and other variables for all stocks listed on HOSE and HNX.
+Chúng ta nạp dữ liệu giá cổ phiếu hằng tháng từ cơ sở dữ liệu. Bảng `prices_monthly` chứa lợi nhuận đã điều chỉnh, vốn hóa thị trường và các biến khác của tất cả cổ phiếu niêm yết trên HOSE và HNX.
 
 ```{python}
 prices_monthly = pd.read_sql_query(
@@ -102,13 +102,13 @@ print(f"Date range: {prices_monthly['date'].min().date()} "
       f"to {prices_monthly['date'].max().date()}")
 ```
 
-### Inspecting the Data
+### Kiểm tra dữ liệu
 
-Before proceeding with portfolio construction, we examine the key variables in our dataset. @tbl-data-summary presents the summary statistics for the main variables used in momentum portfolio construction.
+Trước khi xây dựng danh mục, chúng ta xem xét các biến chính trong bộ dữ liệu. @tbl-data-summary trình bày thống kê mô tả của các biến chính dùng để xây dựng danh mục động lượng.
 
 ```{python}
 #| label: tbl-data-summary
-#| tbl-cap: "Summary statistics for monthly stock return data. The table reports the count, mean, standard deviation, minimum, 25th percentile, median, 75th percentile, and maximum for monthly returns (ret), excess returns (ret_excess), and market capitalization (mktcap, in billion VND)."
+#| tbl-cap: "Thống kê mô tả của dữ liệu lợi nhuận cổ phiếu hằng tháng. Bảng báo cáo số quan sát, trung bình, độ lệch chuẩn, giá trị nhỏ nhất, phân vị 25, trung vị, phân vị 75 và giá trị lớn nhất của lợi nhuận hằng tháng (ret), lợi nhuận vượt mức (ret_excess) và vốn hóa thị trường (mktcap, tính bằng tỷ VND)."
 summary_stats = (prices_monthly
     [["ret", "ret_excess", "mktcap"]]
     .describe()
@@ -118,12 +118,12 @@ summary_stats = (prices_monthly
 summary_stats
 ```
 
-We also examine the cross-sectional distribution of stocks over time, which is important for understanding whether we have sufficient breadth for decile portfolio construction.
+Chúng ta cũng xem xét phân phối chéo của các cổ phiếu theo thời gian, điều này quan trọng để hiểu liệu chúng ta có đủ độ rộng để xây dựng các danh mục thập phân vị hay không.
 
 ```{python}
 #| label: fig-stock-count
-#| fig-cap: "Number of stocks with available return data over time. The figure shows the monthly cross-section of stocks available for momentum portfolio construction. A minimum number of stocks is needed to form meaningful decile portfolios."
-#| fig-alt: "A line chart showing the number of stocks with available monthly returns over time, generally increasing from a small number in the early 2000s to several hundred in recent years."
+#| fig-cap: "Số cổ phiếu có dữ liệu lợi nhuận theo thời gian. Hình thể hiện mặt cắt ngang hằng tháng của các cổ phiếu có thể dùng để xây dựng danh mục động lượng. Cần một số lượng cổ phiếu tối thiểu để hình thành các danh mục thập phân vị có ý nghĩa."
+#| fig-alt: "Biểu đồ đường thể hiện số cổ phiếu có lợi nhuận hằng tháng theo thời gian, nhìn chung tăng từ một số lượng nhỏ vào đầu những năm 2000 lên vài trăm trong những năm gần đây."
 
 
 stock_counts = (prices_monthly
@@ -146,9 +146,9 @@ plot_stock_counts = (
 plot_stock_counts
 ```
 
-### Loading Factor Data
+### Nạp dữ liệu nhân tố
 
-We also load the Fama-French factor returns for risk-adjusted performance evaluation. These factors were constructed in previous chapters.
+Chúng ta cũng nạp lợi nhuận các nhân tố Fama-French để đánh giá hiệu quả điều chỉnh theo rủi ro. Các nhân tố này đã được xây dựng ở các chương trước.
 
 ```{python}
 factors_ff3_monthly = pd.read_sql_query(
@@ -162,13 +162,13 @@ print(f"Date range: {factors_ff3_monthly['date'].min().date()} "
       f"to {factors_ff3_monthly['date'].max().date()}")
 ```
 
-### Data Quality Filters
+### Bộ lọc chất lượng dữ liệu
 
-Momentum strategies require continuous return histories for the formation period. We apply several filters to ensure data quality:
+Các chiến lược động lượng đòi hỏi lịch sử lợi nhuận liên tục trong thời kỳ hình thành. Chúng ta áp dụng một số bộ lọc để bảo đảm chất lượng dữ liệu:
 
-1.  **Minimum price filter**: We exclude penny stocks with prices below 1,000 VND, which are subject to extreme microstructure noise.
-2.  **Return availability**: We require non-missing returns for the entire formation period.
-3.  **Market capitalization**: We require positive lagged market capitalization for portfolio weighting.
+1.  **Bộ lọc giá tối thiểu**: Chúng ta loại các cổ phiếu penny có giá dưới 1.000 VND, vốn chịu nhiễu vi cấu trúc cực đoan.
+2.  **Có sẵn lợi nhuận**: Chúng ta yêu cầu lợi nhuận không bị thiếu trong toàn bộ thời kỳ hình thành.
+3.  **Vốn hóa thị trường**: Chúng ta yêu cầu vốn hóa thị trường kỳ trước (có độ trễ) phải dương để đặt trọng số danh mục.
 
 ```{python}
 # Filter for stocks with positive market cap and non-missing returns
@@ -183,13 +183,13 @@ print(f"Observations after filtering: {len(prices_clean):,}")
 print(f"Stocks after filtering: {prices_clean['symbol'].nunique():,}")
 ```
 
-## Momentum Portfolio Construction
+## Xây dựng danh mục động lượng
 
-### Computing Formation Period Returns
+### Tính lợi nhuận thời kỳ hình thành
 
-The first step in constructing momentum portfolios is to compute cumulative returns over the formation period. For a formation period of $J$ months, we compute the cumulative return for each stock $i$ at the end of month $t$ as specified in @eq-cumret.
+Bước đầu tiên trong việc xây dựng các danh mục động lượng là tính lợi nhuận tích lũy trong thời kỳ hình thành. Với thời kỳ hình thành $J$ tháng, chúng ta tính lợi nhuận tích lũy của mỗi cổ phiếu $i$ tại cuối tháng $t$ như quy định trong @eq-cumret.
 
-We implement this using a rolling product of gross returns. A key detail is that we require non-missing returns for all $J$ months in the formation window. If any monthly return is missing, the cumulative return is set to missing, and the stock is excluded from portfolio formation in that month.
+Chúng ta triển khai bằng một tích trượt (rolling product) của các lợi nhuận gộp. Một chi tiết quan trọng là chúng ta yêu cầu lợi nhuận không bị thiếu trong cả $J$ tháng của cửa sổ hình thành. Nếu thiếu bất kỳ lợi nhuận hằng tháng nào, lợi nhuận tích lũy được đặt là thiếu, và cổ phiếu bị loại khỏi việc hình thành danh mục trong tháng đó.
 
 ```{python}
 def compute_formation_returns(data, J):
@@ -227,7 +227,7 @@ def compute_formation_returns(data, J):
     return df
 ```
 
-Let us apply this function for our baseline case with $J = 6$ months:
+Hãy áp dụng hàm này cho trường hợp cơ sở với $J = 6$ tháng:
 
 ```{python}
 J = 6  # Formation period: 6 months
@@ -241,9 +241,9 @@ print(f"\nCumulative return distribution:")
 print(prices_with_cumret["cum_return"].describe().round(4))
 ```
 
-### Assigning Momentum Decile Portfolios
+### Gán các danh mục thập phân vị động lượng
 
-Each month, we sort all stocks with valid cumulative returns into decile portfolios based on their past $J$-month performance. Portfolio 1 contains the bottom decile (losers) and portfolio 10 contains the top decile (winners).
+Mỗi tháng, chúng ta phân loại tất cả cổ phiếu có lợi nhuận tích lũy hợp lệ vào các danh mục thập phân vị dựa trên kết quả $J$ tháng gần nhất. Danh mục 1 chứa thập phân vị thấp nhất (cổ phiếu thua) và danh mục 10 chứa thập phân vị cao nhất (cổ phiếu thắng).
 
 ```{python}
 def assign_momentum_portfolios(data, n_portfolios=10):
@@ -331,9 +331,9 @@ print(f"\nPortfolio distribution (should be approximately equal):")
 print(portfolios.groupby("momr")["symbol"].count().to_frame("count"))
 ```
 
-### Defining Holding Period Dates
+### Xác định các ngày của thời kỳ nắm giữ
 
-After forming portfolios at the end of month $t$, we hold them from the beginning of month $t+1$ through the end of month $t+K$. This one-month gap between the formation period and the start of the holding period is standard in the literature and avoids the well-documented short-term reversal effect at the one-month horizon [@jegadeesh1990evidence].
+Sau khi hình thành danh mục vào cuối tháng $t$, chúng ta nắm giữ chúng từ đầu tháng $t+1$ đến cuối tháng $t+K$. Khoảng cách một tháng giữa thời kỳ hình thành và thời điểm bắt đầu thời kỳ nắm giữ là chuẩn trong tài liệu và tránh hiệu ứng đảo chiều ngắn hạn đã được ghi nhận rõ ở chân trời một tháng [@jegadeesh1990evidence].
 
 ```{python}
 K = 6  # Holding period: 6 months
@@ -356,9 +356,9 @@ print(portfolios_with_dates[
 ].head(10))
 ```
 
-### Computing Portfolio Holding Period Returns
+### Tính lợi nhuận danh mục trong thời kỳ nắm giữ
 
-We now compute the returns of each portfolio during its holding period. For each stock-formation date combination, we merge in the actual returns realized during the holding window. This produces a panel of stock returns indexed by formation date, holding date, and momentum portfolio rank.
+Bây giờ chúng ta tính lợi nhuận của từng danh mục trong thời kỳ nắm giữ. Với mỗi tổ hợp cổ phiếu-ngày hình thành, chúng ta ghép vào các lợi nhuận thực tế đạt được trong cửa sổ nắm giữ. Điều này tạo ra một bảng dữ liệu (panel) lợi nhuận cổ phiếu được đánh chỉ mục theo ngày hình thành, ngày nắm giữ và thứ hạng danh mục động lượng.
 
 ```{python}
 # Merge: for each portfolio assignment, get all returns during holding period
@@ -378,9 +378,9 @@ portfolio_returns = portfolio_returns.query(
 print(f"Portfolio-holding period observations: {len(portfolio_returns):,}")
 ```
 
-### Computing Equally Weighted Portfolio Returns
+### Tính lợi nhuận danh mục trọng số bằng nhau
 
-The @jegadeesh1993returns methodology uses equally weighted portfolios. For each holding month, each momentum decile has $K$ active cohorts (one formed in each of the past $K$ months). We first compute the equally weighted return within each cohort, then average across cohorts to get the final monthly portfolio return.
+Phương pháp của @jegadeesh1993returns dùng các danh mục trọng số bằng nhau. Với mỗi tháng nắm giữ, mỗi thập phân vị động lượng có $K$ nhóm đang hoạt động (mỗi nhóm hình thành vào một trong $K$ tháng gần nhất). Trước tiên chúng ta tính lợi nhuận trọng số bằng nhau trong mỗi nhóm, sau đó lấy trung bình giữa các nhóm để có lợi nhuận danh mục hằng tháng cuối cùng.
 
 ```{python}
 # Step 1: Average return within each cohort (form_date × momr × hdate)
@@ -406,12 +406,12 @@ print(f"Monthly portfolio return observations: {len(ewret):,}")
 print(f"Date range: {ewret['date'].min().date()} to {ewret['date'].max().date()}")
 ```
 
-We should verify that we have the expected number of active cohorts per month. Once the strategy has been running for at least $K$ months, each momentum decile should have exactly $K$ active cohorts.
+Chúng ta nên kiểm tra rằng mỗi tháng có số nhóm đang hoạt động đúng như kỳ vọng. Khi chiến lược đã chạy ít nhất $K$ tháng, mỗi thập phân vị động lượng phải có đúng $K$ nhóm đang hoạt động.
 
 ```{python}
 #| label: fig-cohort-count
-#| fig-cap: "Number of active cohorts per momentum portfolio over time. After an initial ramp-up period of K months, each portfolio should have exactly K active cohorts contributing to its monthly return."
-#| fig-alt: "A line chart showing the number of active cohorts per momentum portfolio over time, ramping up from 1 to K during the initial months and then remaining stable at K."
+#| fig-cap: "Số nhóm đang hoạt động của mỗi danh mục động lượng theo thời gian. Sau giai đoạn khởi động ban đầu K tháng, mỗi danh mục phải có đúng K nhóm đang hoạt động đóng góp vào lợi nhuận hằng tháng."
+#| fig-alt: "Biểu đồ đường thể hiện số nhóm đang hoạt động của mỗi danh mục động lượng theo thời gian, tăng dần từ 1 đến K trong những tháng đầu rồi duy trì ổn định ở mức K."
 
 cohort_check = (ewret
     .groupby("date")["n_cohorts"]
@@ -434,15 +434,15 @@ plot_cohorts = (
 plot_cohorts
 ```
 
-## Baseline Results: J=6, K=6 Strategy
+## Kết quả cơ sở: Chiến lược J=6, K=6
 
-### Summary Statistics by Momentum Decile
+### Thống kê mô tả theo thập phân vị động lượng
 
-We now examine the average monthly returns for each momentum decile portfolio. @tbl-momentum-deciles presents the mean, $t$-statistic, and $p$-value for each of the ten portfolios.
+Bây giờ chúng ta xem xét lợi nhuận hằng tháng trung bình của từng danh mục thập phân vị động lượng. @tbl-momentum-deciles trình bày giá trị trung bình, thống kê $t$ và giá trị $p$ cho mỗi danh mục trong mười danh mục.
 
 ```{python}
 #| label: tbl-momentum-deciles
-#| tbl-cap: "Average monthly returns of momentum decile portfolios for the J=6, K=6 strategy. Portfolio 1 contains past losers and portfolio 10 contains past winners. The table reports the number of months, mean monthly return, t-statistic, and p-value for each decile."
+#| tbl-cap: "Lợi nhuận hằng tháng trung bình của các danh mục thập phân vị động lượng cho chiến lược J=6, K=6. Danh mục 1 chứa các cổ phiếu thua trong quá khứ và danh mục 10 chứa các cổ phiếu thắng trong quá khứ. Bảng báo cáo số tháng, lợi nhuận hằng tháng trung bình, thống kê t và giá trị p của mỗi thập phân vị."
 
 def compute_portfolio_stats(group):
     """Compute mean, t-stat, and p-value for a return series."""
@@ -469,9 +469,9 @@ momentum_stats = (ewret
 momentum_stats
 ```
 
-### The Long-Short Momentum Portfolio
+### Danh mục động lượng mua–bán khống
 
-The key test of the momentum effect is whether the spread between winners and losers—the long-short momentum portfolio—generates statistically significant positive returns. We construct this spread portfolio by going long the top decile (portfolio 10) and short the bottom decile (portfolio 1).
+Phép kiểm tra then chốt của hiệu ứng động lượng là liệu chênh lệch giữa cổ phiếu thắng và cổ phiếu thua, tức danh mục động lượng mua–bán khống (long–short), có tạo ra lợi nhuận dương có ý nghĩa thống kê hay không. Chúng ta xây dựng danh mục chênh lệch này bằng cách mua thập phân vị cao nhất (danh mục 10) và bán khống thập phân vị thấp nhất (danh mục 1).
 
 ```{python}
 # Pivot to wide format
@@ -489,7 +489,7 @@ ewret_wide["long_short"] = ewret_wide["winners"] - ewret_wide["losers"]
 
 ```{python}
 #| label: tbl-long-short
-#| tbl-cap: "Performance of the momentum long-short strategy (J=6, K=6). Winners is the top decile, Losers is the bottom decile, and Long-Short is Winners minus Losers. The table reports the number of months, mean monthly return, t-statistic, and p-value."
+#| tbl-cap: "Hiệu quả của chiến lược động lượng mua–bán khống (J=6, K=6). Winners là thập phân vị cao nhất, Losers là thập phân vị thấp nhất, và Long-Short là Winners trừ Losers. Bảng báo cáo số tháng, lợi nhuận hằng tháng trung bình, thống kê t và giá trị p."
 
 ls_stats = pd.DataFrame()
 for col in ["winners", "losers", "long_short"]:
@@ -507,9 +507,9 @@ ls_stats = ls_stats.round(4)
 ls_stats
 ```
 
-### Cumulative Returns
+### Lợi nhuận tích lũy
 
-The time-series evolution of cumulative returns provides visual evidence of the momentum strategy's performance. @fig-cumret-winners-losers shows the cumulative returns of the winner and loser portfolios, while @fig-cumret-long-short shows the cumulative return of the long-short momentum strategy.
+Diễn biến theo chuỗi thời gian của lợi nhuận tích lũy cung cấp bằng chứng trực quan về hiệu quả của chiến lược động lượng. @fig-cumret-winners-losers cho thấy lợi nhuận tích lũy của các danh mục thắng và thua, trong khi @fig-cumret-long-short cho thấy lợi nhuận tích lũy của chiến lược động lượng mua–bán khống.
 
 ```{python}
 # Compute cumulative returns
@@ -521,8 +521,8 @@ for col in ["winners", "losers", "long_short"]:
 
 ```{python}
 #| label: fig-cumret-winners-losers
-#| fig-cap: "Cumulative returns of momentum winner and loser portfolios. The winner portfolio (blue) contains stocks in the top decile of past 6-month returns, and the loser portfolio (red) contains stocks in the bottom decile. The spread between the two lines reflects the cumulative momentum premium."
-#| fig-alt: "A line chart showing cumulative returns of the winner and loser momentum portfolios over time. The winner portfolio generally accumulates higher returns than the loser portfolio, though both exhibit substantial variation."
+#| fig-cap: "Lợi nhuận tích lũy của các danh mục động lượng thắng và thua. Danh mục thắng (màu xanh dương) chứa các cổ phiếu thuộc thập phân vị cao nhất về lợi nhuận 6 tháng gần nhất, và danh mục thua (màu đỏ) chứa các cổ phiếu thuộc thập phân vị thấp nhất. Khoảng cách giữa hai đường phản ánh phần bù động lượng tích lũy."
+#| fig-alt: "Biểu đồ đường thể hiện lợi nhuận tích lũy của các danh mục động lượng thắng và thua theo thời gian. Danh mục thắng nhìn chung tích lũy lợi nhuận cao hơn danh mục thua, dù cả hai đều biến động đáng kể."
 
 
 cumret_plot_data = (ewret_wide
@@ -556,8 +556,8 @@ plot_cumret
 
 ```{python}
 #| label: fig-cumret-long-short
-#| fig-cap: "Cumulative return of the momentum long-short strategy (Winners minus Losers). Upward-sloping periods indicate momentum profits; sharp drawdowns often coincide with market reversals or crisis episodes."
-#| fig-alt: "A line chart showing the cumulative return of the long-short momentum strategy over time, exhibiting periods of accumulation interspersed with sharp drawdowns."
+#| fig-cap: "Lợi nhuận tích lũy của chiến lược động lượng mua–bán khống (Winners trừ Losers). Các giai đoạn đi lên cho thấy lợi nhuận động lượng; các đợt sụt giảm mạnh thường trùng với đảo chiều thị trường hoặc các giai đoạn khủng hoảng."
+#| fig-alt: "Biểu đồ đường thể hiện lợi nhuận tích lũy của chiến lược động lượng mua–bán khống theo thời gian, với các giai đoạn tích lũy xen kẽ những đợt sụt giảm mạnh."
 
 
 plot_ls = (
@@ -575,14 +575,14 @@ plot_ls = (
 plot_ls
 ```
 
-### Monthly Return Distribution
+### Phân phối lợi nhuận hằng tháng
 
-Beyond the mean, the full distribution of monthly long-short returns provides insight into the risk profile of the momentum strategy. @fig-return-distribution shows the histogram of monthly returns.
+Ngoài giá trị trung bình, toàn bộ phân phối của lợi nhuận mua–bán khống hằng tháng cho thấy hồ sơ rủi ro của chiến lược động lượng. @fig-return-distribution thể hiện biểu đồ tần suất của lợi nhuận hằng tháng.
 
 ```{python}
 #| label: fig-return-distribution
-#| fig-cap: "Distribution of monthly long-short momentum returns. The histogram shows the frequency distribution of monthly Winners-minus-Losers returns. The vertical dashed line indicates the mean monthly return."
-#| fig-alt: "A histogram of monthly long-short momentum returns, approximately centered near zero or slightly positive, with tails extending in both directions."
+#| fig-cap: "Phân phối lợi nhuận động lượng mua–bán khống hằng tháng. Biểu đồ tần suất thể hiện phân phối tần suất của lợi nhuận Winners trừ Losers hằng tháng. Đường nét đứt thẳng đứng chỉ lợi nhuận hằng tháng trung bình."
+#| fig-alt: "Biểu đồ tần suất của lợi nhuận động lượng mua–bán khống hằng tháng, tập trung xấp xỉ quanh mức không hoặc hơi dương, với các đuôi kéo dài về cả hai phía."
 
 
 mean_ls = ewret_wide["long_short"].mean()
@@ -603,13 +603,13 @@ plot_dist = (
 plot_dist
 ```
 
-## Extending to Multiple Formation and Holding Periods
+## Mở rộng sang nhiều thời kỳ hình thành và nắm giữ
 
-### The J × K Grid
+### Lưới J × K
 
-@jegadeesh1993returns evaluate momentum strategies across a comprehensive grid of formation periods $J \in \{3, 6, 9, 12\}$ and holding periods $K \in \{3, 6, 9, 12\}$. This produces 16 different strategy specifications, allowing us to assess the robustness of the momentum effect across different horizons.
+@jegadeesh1993returns đánh giá các chiến lược động lượng trên một lưới toàn diện gồm các thời kỳ hình thành $J \in \{3, 6, 9, 12\}$ và các thời kỳ nắm giữ $K \in \{3, 6, 9, 12\}$. Điều này tạo ra 16 đặc tả chiến lược khác nhau, cho phép chúng ta đánh giá độ vững của hiệu ứng động lượng qua các chân trời khác nhau.
 
-We now implement a function that computes the full momentum strategy for any given $(J, K)$ pair, wrapping the steps developed above into a single reusable pipeline.
+Bây giờ chúng ta triển khai một hàm tính toàn bộ chiến lược động lượng cho bất kỳ cặp $(J, K)$ nào, gói các bước đã phát triển ở trên thành một quy trình duy nhất có thể tái sử dụng.
 
 
 ```{python}
@@ -719,11 +719,11 @@ def momentum_strategy(data, J, K, n_portfolios=10):
     return monthly_ret, wide
 ```
 
-### Running the Full Grid
+### Chạy toàn bộ lưới
 
-We now run the momentum strategy for all 16 $(J, K)$ combinations. This is computationally intensive, so we store the key summary statistics for each specification.
+Bây giờ chúng ta chạy chiến lược động lượng cho cả 16 tổ hợp $(J, K)$. Việc này tốn nhiều tính toán, nên chúng ta lưu các thống kê tóm tắt chính của mỗi đặc tả.
 
-#### Sequential Calculation
+#### Tính toán tuần tự
 
 ```{python}
 #| eval: false
@@ -767,7 +767,7 @@ for J_val, K_val in product(J_values, K_values):
 results_df = pd.DataFrame(results_grid)
 ```
 
-#### Parallel Calculation
+#### Tính toán song song
 
 ```{python}
 def compute_single_strategy(data, J, K):
@@ -840,13 +840,13 @@ print(results_df.groupby("J").agg({
 ```
 
 
-### Winners Portfolio Returns
+### Lợi nhuận danh mục cổ phiếu thắng
 
-@tbl-winners-grid presents the average monthly returns of the winner portfolio (portfolio 10) across all $(J, K)$ combinations.
+@tbl-winners-grid trình bày lợi nhuận hằng tháng trung bình của danh mục cổ phiếu thắng (danh mục 10) qua tất cả các tổ hợp $(J, K)$.
 
 ```{python}
 #| label: tbl-winners-grid
-#| tbl-cap: "Average monthly returns (%) of the winner portfolio across formation periods (J) and holding periods (K). t-statistics are reported in parentheses."
+#| tbl-cap: "Lợi nhuận hằng tháng trung bình (%) của danh mục cổ phiếu thắng qua các thời kỳ hình thành (J) và thời kỳ nắm giữ (K). Thống kê t được báo cáo trong ngoặc đơn."
 
 winners_grid = (results_df
     .query("portfolio == 'winners'")
@@ -863,13 +863,13 @@ winners_grid.index = [f"J={j}" for j in winners_grid.index]
 winners_grid
 ```
 
-### Losers Portfolio Returns
+### Lợi nhuận danh mục cổ phiếu thua
 
-@tbl-losers-grid presents the corresponding results for the loser portfolio.
+@tbl-losers-grid trình bày kết quả tương ứng cho danh mục cổ phiếu thua.
 
 ```{python}
 #| label: tbl-losers-grid
-#| tbl-cap: "Average monthly returns (%) of the loser portfolio across formation periods (J) and holding periods (K). t-statistics are reported in parentheses."
+#| tbl-cap: "Lợi nhuận hằng tháng trung bình (%) của danh mục cổ phiếu thua qua các thời kỳ hình thành (J) và thời kỳ nắm giữ (K). Thống kê t được báo cáo trong ngoặc đơn."
 
 losers_grid = (results_df
     .query("portfolio == 'losers'")
@@ -886,13 +886,13 @@ losers_grid.index = [f"J={j}" for j in losers_grid.index]
 losers_grid
 ```
 
-### Long-Short Momentum Returns
+### Lợi nhuận động lượng mua–bán khống
 
-@tbl-ls-grid presents the most important results: the average monthly returns of the long-short momentum portfolio across all specifications.
+@tbl-ls-grid trình bày kết quả quan trọng nhất: lợi nhuận hằng tháng trung bình của danh mục động lượng mua–bán khống qua tất cả các đặc tả.
 
 ```{python}
 #| label: tbl-ls-grid
-#| tbl-cap: "Average monthly returns (%) of the momentum long-short portfolio (Winners minus Losers) across formation periods (J) and holding periods (K). t-statistics are reported in parentheses. This table replicates the format of Table 1 in Jegadeesh and Titman (1993)."
+#| tbl-cap: "Lợi nhuận hằng tháng trung bình (%) của danh mục động lượng mua–bán khống (Winners trừ Losers) qua các thời kỳ hình thành (J) và thời kỳ nắm giữ (K). Thống kê t được báo cáo trong ngoặc đơn. Bảng này lặp lại định dạng của Bảng 1 trong Jegadeesh và Titman (1993)."
 
 ls_grid = (results_df
     .query("portfolio == 'long_short'")
@@ -909,14 +909,14 @@ ls_grid.index = [f"J={j}" for j in ls_grid.index]
 ls_grid
 ```
 
-### Visualizing the Momentum Premium Across Specifications
+### Trực quan hóa phần bù động lượng qua các đặc tả
 
-@fig-momentum-heatmap provides a visual summary of the long-short momentum premium across all $(J, K)$ combinations.
+@fig-momentum-heatmap cung cấp bản tóm tắt trực quan về phần bù động lượng mua–bán khống qua tất cả các tổ hợp $(J, K)$.
 
 ```{python}
 #| label: fig-momentum-heatmap
-#| fig-cap: "Heatmap of average monthly long-short momentum returns (%) across formation periods (J) and holding periods (K). Darker shades indicate higher momentum profits. Asterisks denote statistical significance at the 5% level."
-#| fig-alt: "A heatmap with formation period J on the y-axis and holding period K on the x-axis, with cell colors indicating the magnitude of the momentum premium."
+#| fig-cap: "Bản đồ nhiệt của lợi nhuận động lượng mua–bán khống hằng tháng trung bình (%) qua các thời kỳ hình thành (J) và thời kỳ nắm giữ (K). Màu càng đậm cho thấy lợi nhuận động lượng càng cao. Dấu sao biểu thị ý nghĩa thống kê ở mức 5%."
+#| fig-alt: "Bản đồ nhiệt với thời kỳ hình thành J trên trục tung và thời kỳ nắm giữ K trên trục hoành, màu của các ô cho biết độ lớn của phần bù động lượng."
 
 
 ls_heatmap_data = (results_df
@@ -951,11 +951,11 @@ plot_heatmap = (
 plot_heatmap
 ```
 
-## Risk-Adjusted Performance
+## Hiệu quả điều chỉnh theo rủi ro
 
-### CAPM Alpha
+### Alpha CAPM
 
-A natural question is whether the momentum premium is explained by exposure to the market factor. We estimate the CAPM alpha of the long-short momentum portfolio by regressing its returns on the market excess return:
+Một câu hỏi tự nhiên là liệu phần bù động lượng có được giải thích bởi mức độ phơi nhiễm với nhân tố thị trường hay không. Chúng ta ước lượng alpha CAPM của danh mục động lượng mua–bán khống bằng cách hồi quy lợi nhuận của nó theo lợi nhuận vượt mức của thị trường:
 
 $$
 r_{\text{WML},t} = \alpha + \beta \cdot r_{\text{MKT},t} + \epsilon_t
@@ -987,9 +987,9 @@ print(f"R-squared:        {capm_model.rsquared:.4f}")
 print(f"N observations:   {capm_model.nobs:.0f}")
 ```
 
-### Fama-French Three-Factor Alpha
+### Alpha mô hình ba nhân tố Fama-French
 
-We extend the risk adjustment to the Fama-French three-factor model, which includes the size (SMB) and value (HML) factors in addition to the market factor:
+Chúng ta mở rộng việc điều chỉnh rủi ro sang mô hình ba nhân tố Fama-French, gồm các nhân tố quy mô (SMB) và giá trị (HML) bên cạnh nhân tố thị trường:
 
 $$
 r_{\text{WML},t} = \alpha + \beta_1 \cdot r_{\text{MKT},t} + \beta_2 \cdot \text{SMB}_t + \beta_3 \cdot \text{HML}_t + \epsilon_t
@@ -997,7 +997,7 @@ $$ {#eq-ff3-alpha}
 
 ```{python}
 #| label: tbl-ff3-regression
-#| tbl-cap: "Fama-French three-factor regression for the momentum long-short portfolio. The dependent variable is the monthly return of the Winners-minus-Losers portfolio. Alpha is the intercept, representing the risk-adjusted abnormal return. HAC standard errors with 6 lags are used."
+#| tbl-cap: "Hồi quy ba nhân tố Fama-French cho danh mục động lượng mua–bán khống. Biến phụ thuộc là lợi nhuận hằng tháng của danh mục Winners trừ Losers. Alpha là hệ số chặn, biểu thị lợi nhuận bất thường đã điều chỉnh rủi ro. Sai số chuẩn HAC với 6 độ trễ được sử dụng."
 
 X_ff3 = sm.add_constant(
     ewret_factors[["mkt_excess", "smb", "hml"]]
@@ -1024,23 +1024,23 @@ print(f"Adjusted R-squared: {ff3_model.rsquared_adj:.4f}")
 print(f"Alpha (annualized): {ff3_model.params['const'] * 12 * 100:.2f}%")
 ```
 
-### Interpretation of Risk Exposures
+### Diễn giải mức độ phơi nhiễm rủi ro
 
-The factor loadings from the three-factor regression reveal the risk characteristics of the momentum strategy in the Vietnamese market. Several patterns are commonly observed:
+Các hệ số tải nhân tố từ hồi quy ba nhân tố cho thấy đặc điểm rủi ro của chiến lược động lượng trên thị trường Việt Nam. Một số mô thức thường được quan sát:
 
-1.  **Market beta**: Momentum portfolios typically have moderate market exposure. In the U.S., @grundy2001understanding document that the market beta of the long-short portfolio is close to zero on average but highly time-varying, spiking during market reversals.
+1.  **Beta thị trường**: Các danh mục động lượng thường có mức phơi nhiễm thị trường vừa phải. Ở Hoa Kỳ, @grundy2001understanding ghi nhận rằng beta thị trường của danh mục mua–bán khống nhìn chung gần bằng không nhưng biến thiên mạnh theo thời gian, tăng vọt khi thị trường đảo chiều.
 
-2.  **Size exposure (SMB)**: Momentum strategies often load positively on the size factor, reflecting the tendency for smaller stocks to exhibit stronger momentum patterns.
+2.  **Phơi nhiễm quy mô (SMB)**: Các chiến lược động lượng thường có hệ số tải dương trên nhân tố quy mô, phản ánh xu hướng các cổ phiếu nhỏ hơn thể hiện mô thức động lượng mạnh hơn.
 
-3.  **Value exposure (HML)**: The long-short momentum portfolio typically loads negatively on HML, indicating that winners tend to be growth stocks while losers tend to be value stocks. This creates a natural tension between momentum and value strategies.
+3.  **Phơi nhiễm giá trị (HML)**: Danh mục động lượng mua–bán khống thường có hệ số tải âm trên HML, cho thấy cổ phiếu thắng có xu hướng là cổ phiếu tăng trưởng còn cổ phiếu thua có xu hướng là cổ phiếu giá trị. Điều này tạo ra sự đối nghịch tự nhiên giữa các chiến lược động lượng và giá trị.
 
-## Momentum and Market States
+## Động lượng và các trạng thái thị trường
 
-### Conditional Performance
+### Hiệu quả có điều kiện
 
-An important finding in the momentum literature is that momentum profits vary with market conditions. @cooper2004market document that momentum strategies perform well following market gains (UP markets) but experience severe losses following market declines (DOWN markets). This asymmetry is particularly relevant for emerging markets, which experience more extreme market states.
+Một phát hiện quan trọng trong tài liệu về động lượng là lợi nhuận động lượng thay đổi theo điều kiện thị trường. @cooper2004market ghi nhận rằng các chiến lược động lượng hoạt động tốt sau khi thị trường tăng (thị trường UP) nhưng chịu thua lỗ nặng sau khi thị trường giảm (thị trường DOWN). Sự bất đối xứng này đặc biệt liên quan đến các thị trường mới nổi, vốn trải qua các trạng thái thị trường cực đoan hơn.
 
-We define market states based on the cumulative market return over the prior 12 months:
+Chúng ta định nghĩa các trạng thái thị trường dựa trên lợi nhuận thị trường tích lũy trong 12 tháng trước đó:
 
 $$
 \text{Market State}_t = \begin{cases} \text{UP} & \text{if } \prod_{s=t-12}^{t-1}(1 + r_{m,s}) - 1 > 0 \\ \text{DOWN} & \text{otherwise} \end{cases}
@@ -1068,7 +1068,7 @@ ewret_states = ewret_wide[["date", "long_short"]].merge(
 
 ```{python}
 #| label: tbl-market-states
-#| tbl-cap: "Momentum long-short returns conditional on market states. UP markets are defined as periods where the cumulative market return over the prior 12 months is positive; DOWN markets are periods with negative prior 12-month returns."
+#| tbl-cap: "Lợi nhuận động lượng mua–bán khống có điều kiện theo trạng thái thị trường. Thị trường UP được định nghĩa là các giai đoạn lợi nhuận thị trường tích lũy trong 12 tháng trước đó dương; thị trường DOWN là các giai đoạn có lợi nhuận 12 tháng trước đó âm."
 
 state_stats = []
 for state in ["UP", "DOWN"]:
@@ -1093,8 +1093,8 @@ state_stats_df
 
 ```{python}
 #| label: fig-momentum-states
-#| fig-cap: "Distribution of monthly momentum returns by market state. The box plots show the distribution of long-short momentum returns separately for UP and DOWN market states, defined by the sign of the prior 12-month cumulative market return."
-#| fig-alt: "Side-by-side box plots comparing the distribution of momentum returns in UP versus DOWN market states."
+#| fig-cap: "Phân phối lợi nhuận động lượng hằng tháng theo trạng thái thị trường. Biểu đồ hộp thể hiện phân phối lợi nhuận động lượng mua–bán khống riêng cho trạng thái thị trường UP và DOWN, được xác định bằng dấu của lợi nhuận thị trường tích lũy 12 tháng trước đó."
+#| fig-alt: "Các biểu đồ hộp đặt cạnh nhau so sánh phân phối lợi nhuận động lượng ở trạng thái thị trường UP so với DOWN."
 
 plot_states = (
     ggplot(ewret_states, aes(x="market_state", y="long_short", 
@@ -1117,17 +1117,17 @@ plot_states = (
 plot_states
 ```
 
-## Momentum Crashes
+## Sụp đổ động lượng
 
-### Understanding Momentum Drawdowns
+### Hiểu các đợt sụt giảm của động lượng
 
-One of the most important risk characteristics of momentum strategies is their susceptibility to sudden, severe losses—known as momentum crashes. @daniel2016momentum document that momentum strategies experience infrequent but extreme losses, typically during market rebounds following bear markets. These crashes occur because the loser portfolio, which has been short, is heavily loaded with high-beta stocks that surge when markets reverse.
+Một trong những đặc điểm rủi ro quan trọng nhất của các chiến lược động lượng là tính dễ bị thua lỗ đột ngột, nghiêm trọng, được gọi là sụp đổ động lượng. @daniel2016momentum ghi nhận rằng các chiến lược động lượng chịu những khoản thua lỗ hiếm gặp nhưng cực đoan, thường xảy ra trong các đợt thị trường hồi phục sau thị trường giá xuống. Các đợt sụp đổ này xảy ra vì danh mục cổ phiếu thua, vốn là vị thế bán khống, chứa nhiều cổ phiếu beta cao, những cổ phiếu tăng vọt khi thị trường đảo chiều.
 
-We identify the worst drawdowns of the momentum strategy and examine their market context.
+Chúng ta xác định các đợt sụt giảm tồi tệ nhất của chiến lược động lượng và xem xét bối cảnh thị trường của chúng.
 
 ```{python}
 #| label: tbl-worst-months
-#| tbl-cap: "Ten worst months for the momentum long-short strategy. The table reports the date, long-short return, winner return, loser return, and concurrent market return for the ten months with the largest momentum losses."
+#| tbl-cap: "Mười tháng tồi tệ nhất của chiến lược động lượng mua–bán khống. Bảng báo cáo ngày, lợi nhuận mua–bán khống, lợi nhuận cổ phiếu thắng, lợi nhuận cổ phiếu thua và lợi nhuận thị trường cùng kỳ của mười tháng có khoản thua lỗ động lượng lớn nhất."
 
 worst_months = (ewret_wide
     [["date", "long_short", "winners", "losers"]]
@@ -1152,9 +1152,9 @@ worst_months = (ewret_wide
 worst_months
 ```
 
-### Maximum Drawdown Analysis
+### Phân tích sụt giảm tối đa
 
-The maximum drawdown provides a measure of the worst peak-to-trough decline experienced by the strategy. This metric is particularly relevant for practitioners evaluating the risk of momentum strategies.
+Mức sụt giảm tối đa đo mức giảm từ đỉnh xuống đáy tồi tệ nhất mà chiến lược đã trải qua. Chỉ số này đặc biệt hữu ích đối với những người thực hành khi đánh giá rủi ro của các chiến lược động lượng.
 
 ```{python}
 # Compute running maximum and drawdown
@@ -1173,8 +1173,8 @@ print(f"Date of maximum drawdown: {max_dd_date.date()}")
 
 ```{python}
 #| label: fig-drawdown
-#| fig-cap: "Drawdown of the momentum long-short strategy over time. The chart shows the percentage decline from the previous peak in cumulative wealth. Deeper drawdowns represent more severe momentum crashes."
-#| fig-alt: "A time series chart showing the drawdown of the momentum strategy, with several deep troughs corresponding to momentum crash episodes."
+#| fig-cap: "Mức sụt giảm của chiến lược động lượng mua–bán khống theo thời gian. Biểu đồ thể hiện phần trăm giảm so với đỉnh trước đó của giá trị tài sản tích lũy. Mức sụt giảm càng sâu thể hiện các đợt sụp đổ động lượng càng nghiêm trọng."
+#| fig-alt: "Biểu đồ chuỗi thời gian thể hiện mức sụt giảm của chiến lược động lượng, với nhiều đáy sâu tương ứng với các giai đoạn sụp đổ động lượng."
 
 plot_dd = (
     ggplot(ewret_wide, aes(x="date", y="drawdown")) +
@@ -1191,9 +1191,9 @@ plot_dd = (
 plot_dd
 ```
 
-## Value-Weighted Momentum Portfolios
+## Danh mục động lượng trọng số theo vốn hóa
 
-The baseline @jegadeesh1993returns implementation uses equally weighted portfolios. However, equally weighted returns can be dominated by small, illiquid stocks that may be difficult to trade in practice. Value-weighted portfolios, where each stock's contribution is proportional to its market capitalization, provide a more investable benchmark and are more representative of the returns that large investors could actually achieve.
+Cách triển khai cơ sở của @jegadeesh1993returns dùng các danh mục trọng số bằng nhau. Tuy nhiên, lợi nhuận trọng số bằng nhau có thể bị chi phối bởi các cổ phiếu nhỏ, kém thanh khoản, vốn khó giao dịch trong thực tế. Các danh mục trọng số theo vốn hóa, trong đó đóng góp của mỗi cổ phiếu tỷ lệ với vốn hóa thị trường, cung cấp một chuẩn so sánh có thể đầu tư hơn và đại diện tốt hơn cho lợi nhuận mà các nhà đầu tư lớn thực sự có thể đạt được.
 
 ```{python}
 def momentum_strategy_vw(data, J, K, n_portfolios=10):
@@ -1326,7 +1326,7 @@ print(vw_results[["winners", "losers", "long_short"]].describe().round(4))
 
 ```{python}
 #| label: tbl-ew-vs-vw
-#| tbl-cap: "Comparison of equally weighted (EW) and value-weighted (VW) momentum strategies for J=6, K=6. The table reports mean monthly returns, t-statistics, and p-values for winners, losers, and long-short portfolios under both weighting schemes."
+#| tbl-cap: "So sánh các chiến lược động lượng trọng số bằng nhau (EW) và trọng số theo vốn hóa (VW) cho J=6, K=6. Bảng báo cáo lợi nhuận hằng tháng trung bình, thống kê t và giá trị p của các danh mục thắng, thua và mua–bán khống theo cả hai cách đặt trọng số."
 
 comparison = []
 for scheme, df in [("EW", ewret_wide), ("VW", vw_results)]:
@@ -1351,8 +1351,8 @@ pd.DataFrame(comparison)
 
 ```{python}
 #| label: fig-ew-vs-vw
-#| fig-cap: "Cumulative returns of equally weighted (EW) versus value-weighted (VW) long-short momentum strategies. Differences between the two lines reflect the impact of firm size on momentum profitability."
-#| fig-alt: "A line chart comparing the cumulative returns of EW and VW momentum long-short strategies over time."
+#| fig-cap: "Lợi nhuận tích lũy của các chiến lược động lượng mua–bán khống trọng số bằng nhau (EW) so với trọng số theo vốn hóa (VW). Sự khác biệt giữa hai đường phản ánh tác động của quy mô doanh nghiệp lên khả năng sinh lời của động lượng."
+#| fig-alt: "Biểu đồ đường so sánh lợi nhuận tích lũy của các chiến lược động lượng mua–bán khống EW và VW theo thời gian."
 
 vw_results = vw_results.sort_values("date")
 vw_results["cumret_ls_vw"] = (1 + vw_results["long_short"]).cumprod() - 1
@@ -1390,11 +1390,11 @@ plot_ew_vw
 ```
 
 
-## Daily Momentum Analysis
+## Phân tích động lượng theo ngày
 
-While momentum strategies are typically evaluated at the monthly frequency following @jegadeesh1993returns, analyzing daily return patterns provides additional insights into the dynamics of momentum profits. Daily data allows us to examine how momentum profits accrue within the holding period, measure intra-month volatility of the strategy, and compute more precise risk measures.
+Trong khi các chiến lược động lượng thường được đánh giá ở tần suất hằng tháng theo @jegadeesh1993returns, việc phân tích các mô thức lợi nhuận hằng ngày cung cấp thêm hiểu biết về động lực của lợi nhuận động lượng. Dữ liệu hằng ngày cho phép chúng ta xem lợi nhuận động lượng tích lũy ra sao trong thời kỳ nắm giữ, đo độ biến động trong tháng của chiến lược và tính các thước đo rủi ro chính xác hơn.
 
-### Loading Daily Data
+### Nạp dữ liệu hằng ngày
 
 ```{python}
 prices_daily = pd.read_sql_query(
@@ -1410,9 +1410,9 @@ print(f"Date range: {prices_daily['date'].min().date()} "
       f"to {prices_daily['date'].max().date()}")
 ```
 
-### Daily Returns of Monthly Momentum Portfolios
+### Lợi nhuận hằng ngày của các danh mục động lượng hằng tháng
 
-Rather than forming momentum portfolios at the daily frequency (which would require daily rebalancing and is impractical), we use the monthly portfolio assignments and track their daily returns. This gives us the daily return series of the monthly momentum strategy.
+Thay vì hình thành các danh mục động lượng ở tần suất hằng ngày (đòi hỏi tái cân bằng hằng ngày và không khả thi), chúng ta dùng việc gán danh mục hằng tháng và theo dõi lợi nhuận hằng ngày của chúng. Điều này cho ta chuỗi lợi nhuận hằng ngày của chiến lược động lượng hằng tháng.
 
 ```{python}
 # # # Use the monthly portfolio assignments from the J=6 baseline
@@ -1467,12 +1467,12 @@ daily_wide["long_short"] = daily_wide["winners"] - daily_wide["losers"]
 print(f"Daily long-short return observations: {len(daily_wide):,}")
 ```
 
-### Daily Cumulative Returns
+### Lợi nhuận tích lũy hằng ngày
 
 ```{python}
 #| label: fig-daily-cumret
-#| fig-cap: "Cumulative daily returns of the momentum long-short strategy. This figure shows the same strategy as the monthly analysis but tracked at daily frequency, revealing intra-month dynamics and the precise timing of momentum gains and losses."
-#| fig-alt: "A line chart showing the cumulative daily returns of the momentum long-short strategy, with finer granularity than the monthly version."
+#| fig-cap: "Lợi nhuận tích lũy hằng ngày của chiến lược động lượng mua–bán khống. Hình này thể hiện cùng chiến lược như phân tích hằng tháng nhưng được theo dõi ở tần suất hằng ngày, cho thấy động lực trong tháng và thời điểm chính xác của các khoản lãi và lỗ động lượng."
+#| fig-alt: "Biểu đồ đường thể hiện lợi nhuận tích lũy hằng ngày của chiến lược động lượng mua–bán khống, với độ chi tiết mịn hơn so với phiên bản hằng tháng."
 
 daily_wide = daily_wide.sort_values("date")
 daily_wide["cumret_ls"] = (1 + daily_wide["long_short"]).cumprod() - 1
@@ -1492,13 +1492,13 @@ plot_daily_cumret = (
 plot_daily_cumret
 ```
 
-### Annualized Risk Metrics from Daily Data
+### Các thước đo rủi ro quy năm từ dữ liệu hằng ngày
 
-Daily data enables more precise estimation of risk metrics through higher-frequency sampling.
+Dữ liệu hằng ngày cho phép ước lượng chính xác hơn các thước đo rủi ro nhờ lấy mẫu ở tần suất cao hơn.
 
 ```{python}
 #| label: tbl-daily-risk
-#| tbl-cap: "Annualized risk metrics for the momentum long-short strategy computed from daily returns. Volatility is annualized using the square root of 252 rule. The Sharpe ratio, maximum drawdown, skewness, and kurtosis provide a comprehensive risk profile."
+#| tbl-cap: "Các thước đo rủi ro quy năm của chiến lược động lượng mua–bán khống tính từ lợi nhuận hằng ngày. Biến động được quy năm bằng quy tắc căn bậc hai của 252. Tỷ số Sharpe, sụt giảm tối đa, độ lệch và độ nhọn cung cấp hồ sơ rủi ro toàn diện."
 
 daily_ls = daily_wide["long_short"].dropna()
 
@@ -1545,14 +1545,14 @@ risk_metrics = pd.DataFrame({
 risk_metrics
 ```
 
-### Realized Volatility of Momentum Returns
+### Biến động thực hiện của lợi nhuận động lượng
 
-Using daily returns, we can compute the monthly realized volatility of the momentum strategy and examine how it varies over time.
+Dùng lợi nhuận hằng ngày, chúng ta có thể tính biến động thực hiện hằng tháng của chiến lược động lượng và xem xét nó thay đổi ra sao theo thời gian.
 
 ```{python}
 #| label: fig-realized-vol
-#| fig-cap: "Monthly realized volatility of the momentum long-short strategy, computed from daily returns within each month. Higher values indicate periods of greater uncertainty in momentum profits, often coinciding with market stress."
-#| fig-alt: "A time series chart of monthly realized volatility, showing spikes during periods of market stress."
+#| fig-cap: "Biến động thực hiện hằng tháng của chiến lược động lượng mua–bán khống, tính từ lợi nhuận hằng ngày trong mỗi tháng. Giá trị cao hơn cho thấy các giai đoạn bất định lớn hơn của lợi nhuận động lượng, thường trùng với căng thẳng thị trường."
+#| fig-alt: "Biểu đồ chuỗi thời gian của biến động thực hiện hằng tháng, cho thấy các đỉnh nhọn trong các giai đoạn căng thẳng thị trường."
 
 daily_wide["year_month"] = daily_wide["date"].dt.to_period("M")
 
@@ -1579,9 +1579,9 @@ plot_rvol = (
 plot_rvol
 ```
 
-## Saving Results to the Database
+## Lưu kết quả vào cơ sở dữ liệu
 
-We save the momentum portfolio returns to our database for use in subsequent chapters, including factor model construction and portfolio optimization.
+Chúng ta lưu lợi nhuận danh mục động lượng vào cơ sở dữ liệu để dùng trong các chương sau, gồm xây dựng mô hình nhân tố và tối ưu hóa danh mục.
 
 ```{python}
 # Save monthly equally weighted momentum portfolio returns
@@ -1619,50 +1619,50 @@ daily_momentum_factor.to_sql(
 print(f"Saved {len(daily_momentum_factor):,} daily WML factor observations.")
 ```
 
-## Practical Considerations
+## Những cân nhắc thực tiễn
 
-### Transaction Costs
+### Chi phí giao dịch
 
-Momentum strategies involve substantial portfolio turnover, as stocks enter and exit the extreme decile portfolios each month. @korajczyk2004momentum examine whether momentum profits survive transaction costs and find that profitability declines significantly for large institutional investors, though smaller portfolios can still capture meaningful returns.
+Các chiến lược động lượng kéo theo tỷ lệ vòng quay danh mục đáng kể, vì cổ phiếu ra vào các danh mục thập phân vị cực đoan mỗi tháng. @korajczyk2004momentum xem xét liệu lợi nhuận động lượng có còn sau chi phí giao dịch hay không và thấy rằng khả năng sinh lời giảm đáng kể đối với các nhà đầu tư tổ chức lớn, dù các danh mục nhỏ hơn vẫn có thể thu được lợi nhuận đáng kể.
 
-In the Vietnamese market, transaction costs include:
+Trên thị trường Việt Nam, chi phí giao dịch gồm:
 
--   **Brokerage commissions**: Typically 0.15%–0.25% of transaction value for institutional investors.
--   **Exchange fees**: Approximately 0.03% per trade.
--   **Market impact**: Particularly relevant for smaller, less liquid stocks that dominate the extreme momentum portfolios. Vietnam's lower liquidity compared to developed markets may amplify this cost.
--   **Trading band limits**: The $\pm 7\%$ daily price limit on HOSE can prevent immediate execution of trades, introducing tracking error relative to the theoretical portfolio.
+-   **Phí môi giới**: Thường là 0,15%–0,25% giá trị giao dịch đối với nhà đầu tư tổ chức.
+-   **Phí sàn giao dịch**: Khoảng 0,03% mỗi giao dịch.
+-   **Tác động thị trường**: Đặc biệt liên quan đến các cổ phiếu nhỏ hơn, kém thanh khoản hơn vốn chiếm đa số trong các danh mục động lượng cực đoan. Thanh khoản thấp hơn của Việt Nam so với các thị trường phát triển có thể khuếch đại chi phí này.
+-   **Giới hạn biên độ giao dịch**: Biên độ giá hằng ngày $\pm 7\%$ trên HOSE có thể ngăn việc thực hiện giao dịch ngay lập tức, gây ra sai số bám sát (tracking error) so với danh mục lý thuyết.
 
-### Implementation Lag
+### Độ trễ triển khai
 
-Our baseline implementation assumes that portfolios can be formed and rebalanced instantaneously at the end of each month. In practice, there is a lag between observing the formation period returns and executing the portfolio trades. The one-month gap between the formation period and the start of the holding period (@jegadeesh1990evidence) partially addresses this concern, but practitioners should consider additional implementation delays.
+Cách triển khai cơ sở của chúng ta giả định rằng các danh mục có thể được hình thành và tái cân bằng tức thời vào cuối mỗi tháng. Trên thực tế, có một độ trễ giữa việc quan sát lợi nhuận của thời kỳ hình thành và việc thực hiện các giao dịch danh mục. Khoảng cách một tháng giữa thời kỳ hình thành và thời điểm bắt đầu thời kỳ nắm giữ (@jegadeesh1990evidence) phần nào giải quyết mối lo này, nhưng người thực hành nên cân nhắc thêm các độ trễ triển khai khác.
 
-### Survivorship Bias
+### Thiên kiến sống sót
 
-Our dataset from DataCore includes both active and delisted stocks, which mitigates survivorship bias. However, the treatment of delisted stocks can affect momentum results. Stocks that are delisted during the holding period may generate extreme returns (both positive for acquisitions and negative for failures). We retain delisted returns as reported in the database, which is consistent with the treatment in @jegadeesh1993returns.
+Bộ dữ liệu của chúng ta từ DataCore gồm cả cổ phiếu đang giao dịch lẫn cổ phiếu đã hủy niêm yết, giúp giảm thiên kiến sống sót. Tuy nhiên, cách xử lý các cổ phiếu hủy niêm yết có thể ảnh hưởng đến kết quả động lượng. Các cổ phiếu bị hủy niêm yết trong thời kỳ nắm giữ có thể tạo ra lợi nhuận cực đoan (dương khi bị thâu tóm và âm khi thất bại). Chúng ta giữ lại lợi nhuận của cổ phiếu hủy niêm yết như được báo cáo trong cơ sở dữ liệu, nhất quán với cách xử lý trong @jegadeesh1993returns.
 
-### Small Sample Considerations
+### Cân nhắc về mẫu nhỏ
 
-The Vietnamese stock market has a relatively short history compared to the U.S. market studied in @jegadeesh1993returns. Our sample spans approximately two decades, compared to the nearly three decades in the original study. This shorter sample period implies wider confidence intervals and greater sensitivity to specific episodes (such as the 2007–2009 financial crisis, which had a severe impact on Vietnamese equities). Results should be interpreted with this caveat in mind.
+Thị trường chứng khoán Việt Nam có lịch sử tương đối ngắn so với thị trường Hoa Kỳ được nghiên cứu trong @jegadeesh1993returns. Mẫu của chúng ta kéo dài khoảng hai thập kỷ, so với gần ba thập kỷ trong nghiên cứu gốc. Giai đoạn mẫu ngắn hơn này kéo theo khoảng tin cậy rộng hơn và độ nhạy lớn hơn với các giai đoạn cụ thể (như cuộc khủng hoảng tài chính 2007–2009, vốn tác động nặng nề đến cổ phiếu Việt Nam). Cần diễn giải kết quả với lưu ý này.
 
-## Key Takeaways
+## Những điểm chính
 
-This chapter has provided an implementation and analysis of momentum strategies in the Vietnamese equity market, following the methodology of @jegadeesh1993returns. The main findings and methodological contributions are:
+Chương này đã trình bày cách triển khai và phân tích các chiến lược động lượng trên thị trường cổ phiếu Việt Nam, theo phương pháp của @jegadeesh1993returns. Các phát hiện chính và đóng góp về phương pháp là:
 
-1.  **Methodology**: We implemented the full @jegadeesh1993returns overlapping portfolio methodology, including the two-stage averaging procedure (within-cohort, then across-cohort) that handles the $K$ active portfolios in each month.
+1.  **Phương pháp**: Chúng ta đã triển khai đầy đủ phương pháp danh mục chồng lấn của @jegadeesh1993returns, gồm quy trình lấy trung bình hai giai đoạn (trong nhóm, rồi giữa các nhóm) để xử lý $K$ danh mục đang hoạt động trong mỗi tháng.
 
-2.  **Baseline results**: The $J=6$, $K=6$ strategy provides a natural benchmark. The spread between winner and loser portfolios reveals whether cross-sectional momentum exists in Vietnamese equities.
+2.  **Kết quả cơ sở**: Chiến lược $J=6$, $K=6$ cung cấp một chuẩn so sánh tự nhiên. Chênh lệch giữa danh mục thắng và thua cho thấy động lượng chéo có tồn tại trên cổ phiếu Việt Nam hay không.
 
-3.  **Robustness across horizons**: By computing the full $J \times K$ grid with $J, K \in \{3, 6, 9, 12\}$, we assessed whether the momentum premium is robust to the choice of formation and holding periods, following the approach in @jegadeesh1993returns Table 1.
+3.  **Độ vững qua các chân trời**: Bằng việc tính toàn bộ lưới $J \times K$ với $J, K \in \{3, 6, 9, 12\}$, chúng ta đã đánh giá liệu phần bù động lượng có vững trước lựa chọn thời kỳ hình thành và nắm giữ hay không, theo cách tiếp cận trong Bảng 1 của @jegadeesh1993returns.
 
-4.  **Risk adjustment**: CAPM and Fama-French three-factor alphas measure whether the momentum premium is explained by standard risk factors, building on the analysis in @fama1996multifactor who show that their three-factor model fails to explain momentum.
+4.  **Điều chỉnh rủi ro**: Alpha CAPM và alpha ba nhân tố Fama-French đo xem phần bù động lượng có được giải thích bởi các nhân tố rủi ro chuẩn hay không, dựa trên phân tích của @fama1996multifactor, trong đó các tác giả cho thấy mô hình ba nhân tố của họ không giải thích được động lượng.
 
-5.  **Market state dependence**: Following @cooper2004market, we examined whether momentum profits vary with market conditions, which is particularly relevant in emerging markets with pronounced boom-bust cycles.
+5.  **Sự phụ thuộc vào trạng thái thị trường**: Theo @cooper2004market, chúng ta đã xem xét liệu lợi nhuận động lượng có thay đổi theo điều kiện thị trường hay không, điều đặc biệt liên quan ở các thị trường mới nổi có chu kỳ bùng nổ–suy thoái rõ rệt.
 
-6.  **Value weighting**: The comparison of equally weighted and value-weighted strategies addresses practical implementability and isolates the role of firm size in driving momentum profits.
+6.  **Trọng số theo vốn hóa**: Việc so sánh các chiến lược trọng số bằng nhau và trọng số theo vốn hóa giải quyết khả năng triển khai thực tế và tách riêng vai trò của quy mô doanh nghiệp trong việc tạo ra lợi nhuận động lượng.
 
-7.  **Daily analysis**: By tracking momentum portfolios at the daily frequency, we computed precise risk metrics including realized volatility, maximum drawdown, VaR, and CVaR, providing a complete risk profile of the strategy.
+7.  **Phân tích theo ngày**: Bằng việc theo dõi các danh mục động lượng ở tần suất hằng ngày, chúng ta đã tính các thước đo rủi ro chính xác gồm biến động thực hiện, sụt giảm tối đa, VaR và CVaR, cung cấp hồ sơ rủi ro đầy đủ của chiến lược.
 
-8.  **Emerging market context**: Throughout the analysis, we have highlighted features specific to the Vietnamese market—trading band limits, foreign ownership restrictions, shorter sample history, and higher transaction costs—that affect the interpretation and practical viability of momentum strategies.
+8.  **Bối cảnh thị trường mới nổi**: Xuyên suốt phân tích, chúng ta đã nhấn mạnh các đặc điểm riêng của thị trường Việt Nam—giới hạn biên độ giao dịch, hạn chế sở hữu nước ngoài, lịch sử mẫu ngắn hơn và chi phí giao dịch cao hơn—ảnh hưởng đến cách diễn giải và tính khả thi thực tế của các chiến lược động lượng.
 
 ```{=html}
 <!-- ## Exercises

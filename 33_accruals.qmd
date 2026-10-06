@@ -1,4 +1,4 @@
-# Accruals, Earnings Persistence, and Market Efficiency
+# Các khoản dồn tích, tính bền vững của lợi nhuận và hiệu quả thị trường
 
 ```{python}
 #| label: setup
@@ -23,38 +23,38 @@ plt.rcParams.update({
 })
 ```
 
-Accrual accounting is the foundation of modern financial reporting. Under accrual principles, revenues are recognized when earned and expenses when incurred, regardless of when cash changes hands. This timing wedge between economic events and cash realization generates **accruals** (i.e., the non-cash component of reported earnings). Formally, we define total accruals as:
+Kế toán dồn tích là nền tảng của việc lập báo cáo tài chính hiện đại. Theo nguyên tắc dồn tích, doanh thu được ghi nhận khi đã thực hiện và chi phí được ghi nhận khi phát sinh, bất kể thời điểm tiền thực sự được thu hay chi. Độ lệch thời gian giữa các sự kiện kinh tế và việc thực hiện bằng tiền này tạo ra **các khoản dồn tích** (tức là phần phi tiền mặt của lợi nhuận được báo cáo). Về mặt hình thức, chúng ta định nghĩa tổng các khoản dồn tích như sau:
 
 $$
 \text{Accruals}_t = \text{Earnings}_t - \text{Cash Flow from Operations}_t
 $$ {#eq-accruals-def}
 
-The distinction between accruals and cash flows matters because these two components of earnings exhibit markedly different statistical properties. Cash flows from operations tend to be more persistent and harder for managers to manipulate, while accruals are inherently more transient and subject to managerial discretion through estimates, assumptions, and timing choices [@dechow2010understanding].
+Sự phân biệt giữa các khoản dồn tích và dòng tiền quan trọng vì hai thành phần này của lợi nhuận có các tính chất thống kê khác biệt rõ rệt. Dòng tiền từ hoạt động kinh doanh có xu hướng bền vững hơn và khó bị nhà quản lý thao túng hơn, trong khi các khoản dồn tích vốn mang tính nhất thời hơn và chịu sự điều chỉnh tùy ý của nhà quản lý thông qua các ước tính, giả định và lựa chọn thời điểm [@dechow2010understanding].
 
-@sloan1996stock demonstrated two important empirical regularities in U.S. data:
+@sloan1996stock đã chứng minh hai quy luật thực nghiệm quan trọng trên dữ liệu Mỹ:
 
-1.  The accrual component of earnings is *less persistent* than the cash flow component in predicting future earnings, and
-2.  Equity prices behave as if investors fail to distinguish between these components, treating accruals as having the same persistence as cash flows. This second finding implies a predictable pattern in stock returns (i.e., firms with high accruals earn lower subsequent returns, and vice versa—known as the **accrual anomaly**).
+1.  Thành phần dồn tích của lợi nhuận *kém bền vững hơn* thành phần dòng tiền trong việc dự báo lợi nhuận tương lai, và
+2.  Giá cổ phiếu vận động như thể nhà đầu tư không phân biệt được các thành phần này, coi các khoản dồn tích có cùng mức bền vững như dòng tiền. Phát hiện thứ hai này hàm ý một mô thức có thể dự báo được trong lợi nhuận cổ phiếu (tức là các doanh nghiệp có dồn tích cao thu được lợi nhuận thấp hơn ở kỳ sau, và ngược lại, được gọi là **hiện tượng bất thường về dồn tích**).
 
-### Why Vietnam?
+### Vì sao là Việt Nam?
 
-Vietnam's equity markets provide a compelling laboratory for studying accrual dynamics for several reasons:
+Thị trường chứng khoán Việt Nam là một phòng thí nghiệm hấp dẫn để nghiên cứu động thái của các khoản dồn tích, vì một số lý do sau:
 
-1.  **Accounting standards in transition.** Vietnam operates under Vietnamese Accounting Standards (VAS), which are broadly based on older International Accounting Standards but have not yet fully converged with IFRS. VAS retains certain rules-based provisions that may generate different accrual patterns compared to the principles-based frameworks in developed markets.
+1.  **Chuẩn mực kế toán đang chuyển đổi.** Việt Nam áp dụng Chuẩn mực Kế toán Việt Nam (VAS), phần lớn dựa trên các Chuẩn mực Kế toán Quốc tế cũ hơn nhưng chưa hội tụ hoàn toàn với IFRS. VAS vẫn giữ một số quy định mang tính quy tắc cứng, có thể tạo ra các mô thức dồn tích khác với các khung dựa trên nguyên tắc ở các thị trường phát triển.
 
-2.  **State-owned enterprise (SOE) influence.** A significant fraction of listed firms on HOSE and HNX are former SOEs or remain partially state-owned. These firms may face different incentives regarding accrual management (political rather than purely economic), introducing heterogeneity absent in the original U.S. studies.
+2.  **Ảnh hưởng của doanh nghiệp nhà nước (DNNN).** Một tỷ lệ đáng kể các doanh nghiệp niêm yết trên HOSE và HNX là các DNNN cũ hoặc vẫn còn sở hữu nhà nước một phần. Các doanh nghiệp này có thể đối mặt với những động cơ khác trong việc quản lý các khoản dồn tích (mang tính chính trị thay vì thuần túy kinh tế), tạo ra tính không đồng nhất vốn không có trong các nghiên cứu gốc trên thị trường Mỹ.
 
-3.  **Market maturity and investor sophistication.** Vietnam's stock market, with HOSE established in 2000 and HNX in 2005, is still developing. Retail investors dominate trading volume, and institutional infrastructure (analyst coverage, short-selling constraints, information intermediaries) is less developed than in the U.S. This environment may amplify or attenuate the mispricing patterns documented in developed markets.
+3.  **Mức độ trưởng thành của thị trường và sự thành thạo của nhà đầu tư.** Thị trường chứng khoán Việt Nam, với HOSE thành lập năm 2000 và HNX năm 2005, vẫn đang phát triển. Nhà đầu tư cá nhân chi phối khối lượng giao dịch, và hạ tầng thể chế (mức bao phủ của nhà phân tích, hạn chế bán khống, các trung gian thông tin) kém phát triển hơn so với Mỹ. Môi trường này có thể khuếch đại hoặc làm suy yếu các mô thức định giá sai được ghi nhận ở các thị trường phát triển.
 
-4.  **Daily price limits.** Both HOSE ($\pm$ 7%) and HNX ($\pm$ 10%) impose daily price limits, which can impede price discovery and create path dependencies in return measurement that have no analogue in the U.S. context.
+4.  **Biên độ giá hằng ngày.** Cả HOSE ($\pm$ 7%) và HNX ($\pm$ 10%) đều áp dụng biên độ giá hằng ngày, có thể cản trở khám phá giá và tạo ra sự phụ thuộc đường đi trong việc đo lường lợi nhuận mà bối cảnh Mỹ không có.
 
-5.  **Emerging market growth dynamics.** High-growth economies generate different accrual profiles—rapid revenue growth mechanically produces large working capital accruals even absent any managerial manipulation [@fairfield2003accrued].
+5.  **Động thái tăng trưởng của thị trường mới nổi.** Các nền kinh tế tăng trưởng cao tạo ra các hồ sơ dồn tích khác biệt: tăng trưởng doanh thu nhanh về mặt cơ học tạo ra các khoản dồn tích vốn lưu động lớn ngay cả khi không có bất kỳ sự thao túng nào của nhà quản lý [@fairfield2003accrued].
 
-## Measuring Accruals {#sec-accruals-measuring}
+## Đo lường các khoản dồn tích {#sec-accruals-measuring}
 
-### The Balance Sheet Approach
+### Cách tiếp cận bảng cân đối kế toán
 
-The traditional approach to measuring accruals, used in much of the early literature, constructs total accruals from successive balance sheet snapshots. Define the following balance sheet items for firm $i$ in period $t$ (@tbl-accruals-bs-items).
+Cách tiếp cận truyền thống để đo lường các khoản dồn tích, được dùng trong phần lớn các nghiên cứu ban đầu, xây dựng tổng các khoản dồn tích từ các ảnh chụp bảng cân đối kế toán liên tiếp. Định nghĩa các khoản mục bảng cân đối sau cho doanh nghiệp $i$ trong kỳ $t$ (@tbl-accruals-bs-items).
 
 | Symbol | Description | VAS Equivalent |
 |-------------------|-------------------------|----------------------------|
@@ -65,9 +65,9 @@ The traditional approach to measuring accruals, used in much of the early litera
 | $\Delta TP_{i,t}$ | Change in taxes payable | Thay đổi thuế phải nộp |
 | $Dep_{i,t}$ | Depreciation and amortization | Khấu hao TSCĐ |
 
-: Key balance sheet items for accrual measurement {#tbl-accruals-bs-items}
+: Các khoản mục chính của bảng cân đối kế toán dùng để đo lường các khoản dồn tích {#tbl-accruals-bs-items}
 
-Total accruals under the balance sheet approach are:
+Tổng các khoản dồn tích theo cách tiếp cận bảng cân đối kế toán là:
 
 $$
 ACC^{BS}_{i,t} = (\Delta CA_{i,t} - \Delta Cash_{i,t})
@@ -75,49 +75,49 @@ ACC^{BS}_{i,t} = (\Delta CA_{i,t} - \Delta Cash_{i,t})
   - Dep_{i,t}
 $$ {#eq-bs-accruals}
 
-The intuition behind @eq-bs-accruals is straightforward. Changes in non-cash current assets (such as accounts receivable and inventory) represent revenues recognized or expenses deferred without corresponding cash flows. Changes in operating current liabilities (excluding debt) capture expenses recognized without cash outflows. Short-term debt and taxes payable are excluded because they relate to financing and tax timing rather than operating accruals. Depreciation is subtracted as a non-cash charge against earnings.
+Trực giác đằng sau @eq-bs-accruals khá đơn giản. Thay đổi của tài sản ngắn hạn phi tiền mặt (như các khoản phải thu và hàng tồn kho) thể hiện doanh thu được ghi nhận hoặc chi phí được hoãn lại mà không có dòng tiền tương ứng. Thay đổi của nợ ngắn hạn hoạt động (không bao gồm nợ vay) phản ánh các chi phí được ghi nhận mà không có dòng tiền chi ra. Nợ vay ngắn hạn và thuế phải nộp bị loại ra vì chúng liên quan đến tài trợ và thời điểm nộp thuế chứ không phải các khoản dồn tích hoạt động. Khấu hao được trừ đi như một khoản chi phí phi tiền mặt trong lợi nhuận.
 
-All variables are typically scaled by average total assets to control for firm size:
+Tất cả các biến thường được chia cho tổng tài sản bình quân để kiểm soát quy mô doanh nghiệp:
 
 $$
 acc_{i,t} = \frac{ACC^{BS}_{i,t}}{(\text{Assets}_{i,t} + \text{Assets}_{i,t-1})/2}
 $$ {#eq-scaled-accruals}
 
-### The Cash Flow Statement Approach
+### Cách tiếp cận báo cáo lưu chuyển tiền tệ
 
-@hribar2002errors demonstrated that the balance sheet approach introduces measurement error because non-operating events, such as mergers, acquisitions, divestitures, and foreign currency translations, affect current asset and liability balances without corresponding earnings impacts. They advocate a simpler and more accurate approach:
+@hribar2002errors đã chứng minh rằng cách tiếp cận bảng cân đối kế toán gây ra sai số đo lường vì các sự kiện phi hoạt động, như sáp nhập, mua lại, thoái vốn và chuyển đổi ngoại tệ, ảnh hưởng đến số dư tài sản và nợ ngắn hạn mà không có tác động tương ứng lên lợi nhuận. Họ ủng hộ một cách tiếp cận đơn giản và chính xác hơn:
 
 $$
 ACC^{CF}_{i,t} = \text{Earnings}_{i,t} - \text{CFO}_{i,t}
 $$ {#eq-cf-accruals}
 
-where $\text{CFO}_{i,t}$ is cash flow from operations reported directly on the cash flow statement.
+trong đó $\text{CFO}_{i,t}$ là dòng tiền từ hoạt động kinh doanh được báo cáo trực tiếp trên báo cáo lưu chuyển tiền tệ.
 
-### Vietnamese Context
+### Bối cảnh Việt Nam
 
-For Vietnamese listed firms, the cash flow statement approach is generally preferable, but practitioners should be aware of several data considerations:
+Với các doanh nghiệp niêm yết Việt Nam, cách tiếp cận báo cáo lưu chuyển tiền tệ nhìn chung được ưu tiên hơn, nhưng người thực hành nên lưu ý một số vấn đề về dữ liệu:
 
--   **Circular 200/2014/TT-BTC** standardizes the chart of accounts and financial statement templates. Cash flow from operations is reported using the *indirect method* by most firms (starting from net income and adjusting for non-cash items), though some use the direct method.
+-   **Thông tư 200/2014/TT-BTC** chuẩn hóa hệ thống tài khoản và các mẫu báo cáo tài chính. Dòng tiền từ hoạt động kinh doanh được hầu hết doanh nghiệp báo cáo theo *phương pháp gián tiếp* (bắt đầu từ lợi nhuận ròng và điều chỉnh các khoản phi tiền mặt), dù một số doanh nghiệp dùng phương pháp trực tiếp.
 
--   **VAS 24** (Cash Flow Statements) governs disclosure. Unlike IFRS, VAS treatment of interest paid and dividends received in the operating section is less flexible, potentially affecting comparability.
+-   **VAS 24** (Báo cáo lưu chuyển tiền tệ) điều chỉnh việc trình bày thông tin. Khác với IFRS, cách xử lý lãi vay đã trả và cổ tức nhận được trong phần hoạt động kinh doanh theo VAS kém linh hoạt hơn, có thể ảnh hưởng đến tính so sánh được.
 
-For the remainder of this chapter, we use the balance sheet approach, where demonstrated on simulated data (for pedagogical transparency) and the cash flow statement approach on actual firm data where available.
+Trong phần còn lại của chương này, chúng ta dùng cách tiếp cận bảng cân đối kế toán khi minh họa trên dữ liệu mô phỏng (để minh bạch về mặt sư phạm) và cách tiếp cận báo cáo lưu chuyển tiền tệ trên dữ liệu doanh nghiệp thực tế khi có sẵn.
 
-## Simulation Analysis {#sec-accruals-simulation}
+## Phân tích mô phỏng {#sec-accruals-simulation}
 
-Before turning to Vietnamese market data, we construct a simulation to build economic intuition for *why* accrual persistence differs from cash flow persistence, and what role estimation error in accrual accounting plays in generating this difference.
+Trước khi chuyển sang dữ liệu thị trường Việt Nam, chúng ta xây dựng một mô phỏng để hình thành trực giác kinh tế về việc *vì sao* tính bền vững của các khoản dồn tích khác với tính bền vững của dòng tiền, và sai số ước tính trong kế toán dồn tích đóng vai trò gì trong việc tạo ra sự khác biệt này.
 
-### The Model
+### Mô hình
 
-Consider a simplified firm that:
+Xét một doanh nghiệp được đơn giản hóa như sau:
 
--   Sells goods on credit at a constant gross margin $\mu$
--   Follows an AR(1) sales process: $S_t = \bar{S} + \rho(S_{t-1} - \bar{S}) + \varepsilon_t$, where $\varepsilon_t \sim N(0, \sigma^2_S)$
--   Collects receivables in the following period, with a true default rate $\delta$
--   Records an allowance for doubtful debts as a fraction $\alpha$ of current sales
--   Pays dividends equal to 100% of net income
+-   Bán hàng chịu với biên lợi nhuận gộp không đổi $\mu$
+-   Tuân theo quá trình doanh thu AR(1): $S_t = \bar{S} + \rho(S_{t-1} - \bar{S}) + \varepsilon_t$, trong đó $\varepsilon_t \sim N(0, \sigma^2_S)$
+-   Thu hồi các khoản phải thu ở kỳ kế tiếp, với tỷ lệ vỡ nợ thực $\delta$
+-   Ghi nhận dự phòng nợ phải thu khó đòi bằng một tỷ lệ $\alpha$ của doanh thu hiện tại
+-   Trả cổ tức bằng 100% lợi nhuận ròng
 
-The key parameter of interest is $\alpha$, the managerial estimate of bad debts. When $\alpha = \delta$ (the true default rate), the accounting system is unbiased. When $\alpha \neq \delta$, accruals contain estimation error that affects persistence.
+Tham số trọng tâm là $\alpha$, ước tính của nhà quản lý về nợ xấu. Khi $\alpha = \delta$ (tỷ lệ vỡ nợ thực), hệ thống kế toán không chệch. Khi $\alpha \neq \delta$, các khoản dồn tích chứa sai số ước tính ảnh hưởng đến tính bền vững.
 
 ```{python}
 #| label: sim-function
@@ -220,13 +220,13 @@ def simulate_firm(
     })
 ```
 
-### Generating a Single Firm
+### Tạo một doanh nghiệp đơn lẻ
 
-We first generate 1,000 years of data for a single firm with $\alpha = \delta = 0.03$ (unbiased accounting) to visualize the sales process.
+Trước hết, chúng ta tạo 1.000 năm dữ liệu cho một doanh nghiệp đơn lẻ với $\alpha = \delta = 0.03$ (kế toán không chệch) để trực quan hóa quá trình doanh thu.
 
 ```{python}
 #| label: fig-sales-sim
-#| fig-cap: "Simulated sales for a single firm over 20 years. The blue dashed line shows mean sales. The AR(1) structure creates smooth, persistent fluctuations."
+#| fig-cap: "Doanh thu mô phỏng của một doanh nghiệp đơn lẻ trong 20 năm. Đường đứt nét màu xanh thể hiện doanh thu trung bình. Cấu trúc AR(1) tạo ra các dao động mượt và bền vững."
 
 rng = np.random.default_rng(2024)
 df_long = simulate_firm(alpha=0.03, n_years=1000, rng=rng)
@@ -245,11 +245,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Cross-Sectional Simulation: Persistence and Estimation Error
+### Mô phỏng chéo: tính bền vững và sai số ước tính
 
-The central economic insight is that when the managerial estimate $\alpha$ departs from the true rate $\delta$, accruals contain a systematic estimation error that *reduces* the persistence of earnings. To demonstrate this, we simulate 5,000 firms, each with a randomly drawn $\alpha \in [0.01, 0.05]$ while keeping the true default rate fixed at $\delta = 0.03$.
+Hiểu biết kinh tế trung tâm là khi ước tính $\alpha$ của nhà quản lý lệch khỏi tỷ lệ thực $\delta$, các khoản dồn tích chứa một sai số ước tính mang tính hệ thống làm *giảm* tính bền vững của lợi nhuận. Để minh họa, chúng ta mô phỏng 5.000 doanh nghiệp, mỗi doanh nghiệp có $\alpha \in [0.01, 0.05]$ được rút ngẫu nhiên trong khi giữ tỷ lệ vỡ nợ thực cố định ở $\delta = 0.03$.
 
-For each firm, we estimate earnings persistence as the slope coefficient $\hat{\beta}_1$ from an AR(1) regression of net income:
+Với mỗi doanh nghiệp, chúng ta ước lượng tính bền vững của lợi nhuận bằng hệ số góc $\hat{\beta}_1$ từ hồi quy AR(1) của lợi nhuận ròng:
 
 $$
 NI_{i,t} = \beta_0 + \beta_1 NI_{i,t-1} + u_{i,t}
@@ -285,7 +285,7 @@ sim_results = pd.DataFrame(results)
 
 ```{python}
 #| label: fig-persistence-alpha
-#| fig-cap: "Earnings persistence vs. allowance parameter ($\\alpha$). Persistence peaks near $\\alpha = 0.03$, the true default rate, and declines symmetrically as the accounting estimate deviates from economic reality in either direction."
+#| fig-cap: "Tính bền vững của lợi nhuận so với tham số dự phòng ($\\alpha$). Tính bền vững đạt đỉnh gần $\\alpha = 0.03$, tỷ lệ vỡ nợ thực, và giảm đối xứng khi ước tính kế toán lệch khỏi thực tế kinh tế theo cả hai hướng."
 
 fig, ax = plt.subplots()
 ax.scatter(
@@ -300,9 +300,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Decomposing Persistence by Earnings Component
+### Phân rã tính bền vững theo thành phần lợi nhuận
 
-The simulation allows us to verify the core theoretical prediction: cash flow persistence exceeds accrual persistence. We compute operating cash flows and accruals for each simulated firm and estimate component-specific persistence.
+Mô phỏng cho phép chúng ta kiểm chứng dự báo lý thuyết cốt lõi: tính bền vững của dòng tiền vượt tính bền vững của các khoản dồn tích. Chúng ta tính dòng tiền hoạt động và các khoản dồn tích cho từng doanh nghiệp mô phỏng và ước lượng tính bền vững riêng cho từng thành phần.
 
 ```{python}
 #| label: sim-component-persistence
@@ -341,7 +341,7 @@ comp_df = pd.DataFrame(component_results)
 
 ```{python}
 #| label: tbl-sim-persistence
-#| tbl-cap: "Mean earnings component persistence by allowance parameter. Cash flow persistence is stable across $\\alpha$ values, while accrual and overall earnings persistence peak when accounting estimates match the true default rate ($\\delta = 0.03$)."
+#| tbl-cap: "Tính bền vững trung bình của các thành phần lợi nhuận theo tham số dự phòng. Tính bền vững của dòng tiền ổn định qua các giá trị $\\alpha$, trong khi tính bền vững của các khoản dồn tích và của lợi nhuận tổng thể đạt đỉnh khi ước tính kế toán khớp với tỷ lệ vỡ nợ thực ($\\delta = 0.03$)."
 
 summary = (
     comp_df
@@ -358,25 +358,25 @@ summary.index.name = "α"
 summary
 ```
 
-The simulation confirms a key insight: cash flow persistence is largely invariant to the quality of accrual estimation, whereas accrual persistence, and consequently total earnings persistence, degrades when managerial estimates deviate from economic truth. This provides a structural explanation for the empirical regularity documented in @sloan1996stock: accruals are less persistent *because* they embed estimation error that mean-reverts as the accounting system self-corrects over time.
+Mô phỏng xác nhận một hiểu biết then chốt: tính bền vững của dòng tiền gần như không thay đổi theo chất lượng ước tính các khoản dồn tích, trong khi tính bền vững của các khoản dồn tích, và do đó của tổng lợi nhuận, suy giảm khi ước tính của nhà quản lý lệch khỏi thực tế kinh tế. Điều này cung cấp lời giải thích cấu trúc cho quy luật thực nghiệm được ghi nhận trong @sloan1996stock: các khoản dồn tích kém bền vững hơn *vì* chúng chứa sai số ước tính vốn hồi quy về trung bình khi hệ thống kế toán tự hiệu chỉnh theo thời gian.
 
 ::: callout-note
-## Vietnamese Interpretation
+## Diễn giải cho Việt Nam
 
-In the Vietnamese context, this mechanism is amplified by several institutional factors. VAS provisions for doubtful debts (Circular 228/2009/TT-BTC, updated by Circular 48/2019/TT-BTC) prescribe specific aging-based percentages rather than allowing full managerial discretion. While this rules-based approach reduces some forms of manipulation, it can *increase* estimation error when the prescribed rates diverge from firm-specific default experiences, particularly relevant for firms in rapidly changing sectors like real estate development or export manufacturing.
+Trong bối cảnh Việt Nam, cơ chế này được khuếch đại bởi một số yếu tố thể chế. Các quy định của VAS về dự phòng nợ phải thu khó đòi (Thông tư 228/2009/TT-BTC, được cập nhật bởi Thông tư 48/2019/TT-BTC) quy định các tỷ lệ cụ thể theo thời gian quá hạn thay vì cho phép nhà quản lý toàn quyền quyết định. Dù cách tiếp cận dựa trên quy tắc này làm giảm một số hình thức thao túng, nó có thể *làm tăng* sai số ước tính khi các tỷ lệ quy định lệch khỏi kinh nghiệm vỡ nợ riêng của doanh nghiệp, đặc biệt liên quan đến các doanh nghiệp trong những ngành thay đổi nhanh như phát triển bất động sản hoặc sản xuất xuất khẩu.
 :::
 
-## Earnings Persistence in Vietnamese Data {#sec-accruals-persistence}
+## Tính bền vững của lợi nhuận trong dữ liệu Việt Nam {#sec-accruals-persistence}
 
-We now turn to empirical analysis using Vietnamese listed firm data. The data requirements are:
+Bây giờ chúng ta chuyển sang phân tích thực nghiệm dùng dữ liệu các doanh nghiệp niêm yết Việt Nam. Các yêu cầu về dữ liệu là:
 
--   **Annual financial statements** for firms listed on HOSE and HNX
--   **Stock return data**: Monthly adjusted closing prices for return computation
--   **Industry classifications**: VSIC (Vietnam Standard Industrial Classification) codes
+-   **Báo cáo tài chính năm** của các doanh nghiệp niêm yết trên HOSE và HNX
+-   **Dữ liệu lợi nhuận cổ phiếu**: Giá đóng cửa điều chỉnh hằng tháng để tính lợi nhuận
+-   **Phân loại ngành**: mã VSIC (Hệ thống ngành kinh tế Việt Nam)
 
-### Data Preparation
+### Chuẩn bị dữ liệu
 
-The following code constructs the accrual measures from Vietnamese firm financial statements. We demonstrate the workflow assuming data is loaded from a local database or CSV files. Adapt the data loading step to match your source.
+Đoạn mã sau xây dựng các thước đo dồn tích từ báo cáo tài chính của doanh nghiệp Việt Nam. Chúng ta minh họa quy trình với giả định dữ liệu được nạp từ cơ sở dữ liệu cục bộ hoặc các tệp CSV. Hãy điều chỉnh bước nạp dữ liệu cho phù hợp với nguồn của bạn.
 
 ```{python}
 #| label: data-prep
@@ -451,9 +451,9 @@ def construct_accruals(funda: pd.DataFrame) -> pd.DataFrame:
     return df
 ```
 
-### Simulated Vietnamese-Style Data for Demonstration
+### Dữ liệu mô phỏng kiểu Việt Nam để minh họa
 
-Since we cannot distribute proprietary data in this chapter, we generate synthetic data that mimics the cross-sectional properties of Vietnamese listed firms. The parameters are calibrated to approximate values observed in the Vietnamese market.
+Vì không thể phân phối dữ liệu độc quyền trong chương này, chúng ta tạo dữ liệu tổng hợp mô phỏng các tính chất chéo của các doanh nghiệp niêm yết Việt Nam. Các tham số được hiệu chỉnh để xấp xỉ các giá trị quan sát được trên thị trường Việt Nam.
 
 ```{python}
 #| label: gen-demo-data
@@ -546,13 +546,13 @@ print(f"Panel: {panel.shape[0]:,} firm-years, "
       f"{panel['year'].nunique()} years")
 ```
 
-### Descriptive Statistics by Accrual Decile
+### Thống kê mô tả theo thập phân vị dồn tích
 
-@tbl-desc-decile reports mean values of earnings, accruals, and cash flows by accrual decile. The pattern should mirror the mechanical decomposition: $\text{earn} = \text{acc} + \text{cfo}$.
+@tbl-desc-decile báo cáo giá trị trung bình của lợi nhuận, các khoản dồn tích và dòng tiền theo thập phân vị dồn tích. Mô thức này phải phản ánh phép phân rã cơ học: $\text{earn} = \text{acc} + \text{cfo}$.
 
 ```{python}
 #| label: tbl-desc-decile
-#| tbl-cap: "Mean earnings, accruals, and cash flows by accrual decile. Firms in the lowest accrual decile have the highest cash flows, while high-accrual firms show compressed or negative cash flows—a pattern consistent with the accounting identity."
+#| tbl-cap: "Lợi nhuận, các khoản dồn tích và dòng tiền trung bình theo thập phân vị dồn tích. Các doanh nghiệp ở thập phân vị dồn tích thấp nhất có dòng tiền cao nhất, trong khi các doanh nghiệp dồn tích cao có dòng tiền bị nén hoặc âm, một mô thức phù hợp với đồng nhất thức kế toán."
 
 desc = (
     panel
@@ -565,26 +565,26 @@ desc.columns = ["Accruals", "Earnings", "Cash Flows"]
 desc
 ```
 
-### Persistence Regressions
+### Hồi quy tính bền vững
 
-We estimate the pooled persistence regression analogous to Table 2 of @sloan1996stock. The baseline specification is:
+Chúng ta ước lượng hồi quy tính bền vững gộp tương tự Bảng 2 của @sloan1996stock. Đặc tả cơ sở là:
 
 $$
 \text{Earnings}_{i,t+1} = \gamma_0 + \gamma_1 \text{Earnings}_{i,t} + \epsilon_{i,t}
 $$ {#eq-persist-baseline}
 
-followed by the decomposition:
+tiếp theo là phép phân rã:
 
 $$
 \text{Earnings}_{i,t+1} = \gamma_0 + \gamma_a \text{Accruals}_{i,t}
   + \gamma_c \text{CFO}_{i,t} + \epsilon_{i,t}
 $$ {#eq-persist-decomp}
 
-The hypothesis of differential persistence is $H_0: \gamma_a = \gamma_c$, which we test with a standard $F$-test.
+Giả thuyết về tính bền vững khác biệt là $H_0: \gamma_a = \gamma_c$, được kiểm định bằng kiểm định $F$ chuẩn.
 
 ```{python}
 #| label: tbl-persistence
-#| tbl-cap: "Earnings persistence regressions. Column (1) estimates aggregate persistence. Column (2) decomposes earnings into accrual and cash flow components. The coefficient on accruals is significantly lower than on cash flows, confirming differential persistence."
+#| tbl-cap: "Hồi quy tính bền vững của lợi nhuận. Cột (1) ước lượng tính bền vững tổng hợp. Cột (2) phân rã lợi nhuận thành thành phần dồn tích và thành phần dòng tiền. Hệ số của các khoản dồn tích thấp hơn một cách có ý nghĩa thống kê so với của dòng tiền, xác nhận tính bền vững khác biệt."
 
 # Column (1): Aggregate persistence
 mod1 = smf.ols("lead_earn ~ earn", data=panel).fit()
@@ -620,13 +620,13 @@ results_table = pd.DataFrame({
 results_table
 ```
 
-### Industry-Level Persistence
+### Tính bền vững ở cấp độ ngành
 
-Market-wide regressions may mask heterogeneity across industries. Vietnamese industry structure is concentrated in manufacturing, real estate, banking, and retail (i.e., sectors with very different accrual profiles). We estimate persistence separately by two-digit VSIC code.
+Các hồi quy toàn thị trường có thể che giấu tính không đồng nhất giữa các ngành. Cơ cấu ngành của Việt Nam tập trung vào sản xuất, bất động sản, ngân hàng và bán lẻ (tức là các lĩnh vực có hồ sơ dồn tích rất khác nhau). Chúng ta ước lượng tính bền vững riêng theo mã VSIC hai chữ số.
 
 ```{python}
 #| label: tbl-industry-persistence
-#| tbl-cap: "Distribution of industry-level persistence coefficients. Each row reports statistics for the distribution of estimated coefficients across 2-digit VSIC industries."
+#| tbl-cap: "Phân phối các hệ số bền vững ở cấp độ ngành. Mỗi hàng báo cáo các thống kê về phân phối của các hệ số ước lượng trên các ngành VSIC 2 chữ số."
 
 def industry_persistence(df: pd.DataFrame) -> pd.DataFrame:
     """Estimate persistence regressions by VSIC 2-digit code."""
@@ -656,13 +656,13 @@ ind_summary.columns = ["Intercept", "Accruals (γ_a)", "Cash Flows (γ_c)"]
 ind_summary
 ```
 
-### Persistence Visualization
+### Trực quan hóa tính bền vững
 
-@fig-persistence-bars compares the accrual and cash flow persistence coefficients across industries, providing a visual test of the differential persistence hypothesis.
+@fig-persistence-bars so sánh hệ số bền vững của các khoản dồn tích và của dòng tiền giữa các ngành, cung cấp một phép kiểm tra trực quan cho giả thuyết tính bền vững khác biệt.
 
 ```{python}
 #| label: fig-persistence-bars
-#| fig-cap: "Accrual vs. cash flow persistence coefficients by VSIC industry. In nearly all industries, cash flow persistence exceeds accrual persistence, consistent with the differential persistence hypothesis."
+#| fig-cap: "Hệ số bền vững của các khoản dồn tích so với dòng tiền theo ngành VSIC. Ở hầu hết mọi ngành, tính bền vững của dòng tiền vượt tính bền vững của các khoản dồn tích, phù hợp với giả thuyết tính bền vững khác biệt."
 
 if len(ind_coefs) > 2:
     ind_plot = ind_coefs.sort_values("cfo").reset_index(drop=True)
@@ -680,39 +680,39 @@ if len(ind_coefs) > 2:
     plt.show()
 ```
 
-## Market Pricing of Earnings Components {#sec-accruals-mispricing}
+## Định giá thị trường đối với các thành phần lợi nhuận {#sec-accruals-mispricing}
 
-The persistence analysis establishes that accruals are less persistent than cash flows. The market efficiency question is whether stock prices *reflect* this difference. If investors naïvely treat both components as equally persistent, what @sloan1996stock termed "earnings fixation," then a predictable component of future returns should be related to the accrual composition of current earnings.
+Phân tích tính bền vững cho thấy các khoản dồn tích kém bền vững hơn dòng tiền. Câu hỏi về hiệu quả thị trường là liệu giá cổ phiếu có *phản ánh* sự khác biệt này hay không. Nếu nhà đầu tư ngây thơ coi cả hai thành phần là bền vững như nhau, điều mà @sloan1996stock gọi là "sự neo chặt vào lợi nhuận" (earnings fixation), thì một phần có thể dự báo của lợi nhuận tương lai phải liên quan đến cơ cấu dồn tích của lợi nhuận hiện tại.
 
-### Theoretical Framework
+### Khung lý thuyết
 
-Suppose the market prices earnings using:
+Giả sử thị trường định giá lợi nhuận bằng:
 
 $$
 P_t = \frac{1}{r} \left[ \hat{\gamma}^* \cdot E_t \right]
 $$ {#eq-naive-pricing}
 
-where $\hat{\gamma}^*$ is the market's *perceived* persistence of aggregate earnings. Rational pricing requires:
+trong đó $\hat{\gamma}^*$ là mức bền vững *được thị trường nhận thức* của lợi nhuận tổng hợp. Định giá hợp lý đòi hỏi:
 
 $$
 P_t = \frac{1}{r} \left[ \hat{\gamma}_a \cdot ACC_t + \hat{\gamma}_c \cdot CFO_t \right]
 $$ {#eq-rational-pricing}
 
-with $\hat{\gamma}_a < \hat{\gamma}_c$. If the market uses @eq-naive-pricing instead of @eq-rational-pricing, then high-accrual firms are *overpriced* (because the market overestimates the persistence of their accrual-heavy earnings) and low-accrual firms are *underpriced*.
+với $\hat{\gamma}_a < \hat{\gamma}_c$. Nếu thị trường dùng @eq-naive-pricing thay vì @eq-rational-pricing, thì các doanh nghiệp dồn tích cao bị *định giá quá cao* (vì thị trường đánh giá quá cao tính bền vững của phần lợi nhuận nặng về dồn tích) và các doanh nghiệp dồn tích thấp bị *định giá quá thấp*.
 
-### The Abel–Mishkin Test
+### Kiểm định Abel–Mishkin
 
-Testing whether market pricing coefficients match rational forecasting coefficients can be done via the approach of @abel1983optimal, which avoids the complexity of the full @abel1983integrated, @mishkin1983market and @mishkin2007rational nonlinear system. The intuition is simple: if lagged earnings components are mispriced, this should be detectable in a regression of *future abnormal returns* on those components:
+Việc kiểm định xem các hệ số định giá của thị trường có khớp với các hệ số dự báo hợp lý hay không có thể thực hiện theo cách tiếp cận của @abel1983optimal, tránh được sự phức tạp của hệ phi tuyến đầy đủ của @abel1983integrated, @mishkin1983market và @mishkin2007rational. Trực giác rất đơn giản: nếu các thành phần lợi nhuận trễ bị định giá sai, điều này phải phát hiện được trong hồi quy của *lợi nhuận bất thường tương lai* theo các thành phần đó:
 
 $$
 AR_{i,t+1} = \alpha + \beta_a \cdot ACC_{i,t} + \beta_c \cdot CFO_{i,t} + \eta_{i,t}
 $$ {#eq-abel-mishkin}
 
-Under efficient pricing, $\beta_a = \beta_c = 0$: lagged public information should have no predictive power for abnormal returns. A finding of $\beta_a < 0$ implies that the market overprices accruals and subsequently corrects.
+Dưới định giá hiệu quả, $\beta_a = \beta_c = 0$: thông tin công khai trễ không có sức dự báo đối với lợi nhuận bất thường. Phát hiện $\beta_a < 0$ hàm ý thị trường định giá quá cao các khoản dồn tích và sau đó điều chỉnh.
 
 ```{python}
 #| label: tbl-mispricing
-#| tbl-cap: "Abnormal return regressions. Column (1) regresses size-adjusted returns on lagged accruals and cash flows. Column (2) uses decile ranks. A negative coefficient on accruals indicates that the market overprices the accrual component and corrects in the subsequent period."
+#| tbl-cap: "Hồi quy lợi nhuận bất thường. Cột (1) hồi quy lợi nhuận điều chỉnh theo quy mô theo các khoản dồn tích và dòng tiền trễ. Cột (2) dùng xếp hạng thập phân vị. Hệ số âm của các khoản dồn tích cho thấy thị trường định giá quá cao thành phần dồn tích và điều chỉnh ở kỳ tiếp theo."
 
 # Abel-Mishkin style test
 mod_am1 = smf.ols("size_adj_ret ~ acc + cfo", data=panel).fit()
@@ -737,19 +737,19 @@ am_table = pd.DataFrame({
 am_table
 ```
 
-### Interpretation for Vietnam
+### Diễn giải cho Việt Nam
 
-The limited attention hypothesis of @hirshleifer2003limited provides a particularly appealing explanation for Vietnamese markets. When retail investors dominate trading, as in Vietnam, where retail participation exceeds 80% of daily turnover, information processing capacity is limited. Investors may anchor on headline earnings without decomposing into accrual and cash flow components. The absence of short-selling mechanisms (Vietnam did not introduce covered short selling until 2024) further impedes the correction of overpricing, potentially allowing the accrual anomaly to persist longer than in developed markets.
+Giả thuyết chú ý hạn chế của @hirshleifer2003limited cung cấp một lời giải thích đặc biệt hấp dẫn cho thị trường Việt Nam. Khi nhà đầu tư cá nhân chi phối giao dịch, như ở Việt Nam, nơi sự tham gia của nhà đầu tư cá nhân vượt 80% giá trị giao dịch hằng ngày, năng lực xử lý thông tin bị hạn chế. Nhà đầu tư có thể neo vào con số lợi nhuận công bố mà không phân rã thành thành phần dồn tích và dòng tiền. Việc thiếu cơ chế bán khống (Việt Nam chưa đưa ra bán khống có bảo đảm cho đến năm 2024) càng cản trở việc hiệu chỉnh định giá quá cao, có thể khiến hiện tượng bất thường về dồn tích kéo dài hơn so với các thị trường phát triển.
 
-## The Accrual Anomaly {#sec-accruals-anomaly}
+## Hiện tượng bất thường về dồn tích {#sec-accruals-anomaly}
 
-### Portfolio Returns by Accrual Decile
+### Lợi nhuận danh mục theo thập phân vị dồn tích
 
-Following the portfolio approach of @sloan1996stock, we compute mean size-adjusted returns for each accrual decile. If the market misprices accruals, we expect a monotonically decreasing pattern: low-accrual firms (decile 1) earn positive abnormal returns, while high-accrual firms (decile 10) earn negative abnormal returns.
+Theo cách tiếp cận danh mục của @sloan1996stock, chúng ta tính lợi nhuận trung bình điều chỉnh theo quy mô cho từng thập phân vị dồn tích. Nếu thị trường định giá sai các khoản dồn tích, chúng ta kỳ vọng một mô thức giảm đơn điệu: các doanh nghiệp dồn tích thấp (thập phân vị 1) thu được lợi nhuận bất thường dương, trong khi các doanh nghiệp dồn tích cao (thập phân vị 10) thu được lợi nhuận bất thường âm.
 
 ```{python}
 #| label: tbl-anomaly-deciles
-#| tbl-cap: "Mean size-adjusted returns by accrual decile. The hedge portfolio (long decile 1, short decile 10) return and its t-statistic are reported at the bottom."
+#| tbl-cap: "Lợi nhuận trung bình điều chỉnh theo quy mô theo thập phân vị dồn tích. Lợi nhuận của danh mục mua–bán khống (mua thập phân vị 1, bán khống thập phân vị 10) và thống kê t của nó được báo cáo ở cuối bảng."
 
 # Compute annual portfolio returns (equal-weighted within decile-year)
 port_rets = (
@@ -792,11 +792,11 @@ print()
 decile_means
 ```
 
-### Visualizing the Anomaly
+### Trực quan hóa hiện tượng bất thường
 
 ```{python}
 #| label: fig-anomaly-bar
-#| fig-cap: "Mean size-adjusted returns by accrual decile. The downward slope from low-accrual to high-accrual deciles is consistent with market overpricing of the accrual component of earnings."
+#| fig-cap: "Lợi nhuận trung bình điều chỉnh theo quy mô theo thập phân vị dồn tích. Độ dốc đi xuống từ các thập phân vị dồn tích thấp đến cao phù hợp với việc thị trường định giá quá cao thành phần dồn tích của lợi nhuận."
 
 decile_plot = port_rets.groupby("acc_decile")["size_adj_ret"].mean()
 
@@ -812,13 +812,13 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Time-Series Stability
+### Tính ổn định theo chuỗi thời gian
 
-A critical question for any anomaly is whether it persists over time or is concentrated in specific sub-periods. @fig-anomaly-ts plots the hedge portfolio return by year.
+Một câu hỏi quan trọng đối với mọi hiện tượng bất thường là nó có tồn tại theo thời gian hay chỉ tập trung ở một số giai đoạn con. @fig-anomaly-ts vẽ lợi nhuận danh mục mua–bán khống theo năm.
 
 ```{python}
 #| label: fig-anomaly-ts
-#| fig-cap: "Annual hedge portfolio returns (decile 1 minus decile 10) over time. Positive values indicate that low-accrual firms outperformed high-accrual firms. Year-to-year variation is substantial, reflecting the noisy nature of annual return measurement."
+#| fig-cap: "Lợi nhuận danh mục mua–bán khống hằng năm (thập phân vị 1 trừ thập phân vị 10) theo thời gian. Giá trị dương cho thấy các doanh nghiệp dồn tích thấp vượt trội hơn các doanh nghiệp dồn tích cao. Biến thiên giữa các năm là đáng kể, phản ánh bản chất nhiễu của việc đo lợi nhuận theo năm."
 
 fig, ax = plt.subplots()
 ax.bar(hedge_series.index, hedge_series.values,
@@ -835,68 +835,68 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Discussion and Contemporary Perspectives {#sec-accruals-discussion}
+## Thảo luận và các góc nhìn đương đại {#sec-accruals-discussion}
 
-### Alternative Explanations
+### Các giải thích thay thế
 
-The accrual anomaly has generated an extensive debate in the accounting and finance literature. Several alternative explanations merit consideration in the Vietnamese context:
+Hiện tượng bất thường về dồn tích đã tạo ra một cuộc tranh luận sôi nổi trong tài liệu kế toán và tài chính. Một số giải thích thay thế đáng xem xét trong bối cảnh Việt Nam:
 
-**Risk-based explanations.** @khan2008accruals argues that high-accrual firms may earn lower returns because they are *less risky*, not because they are mispriced. If the CAPM or multi-factor models fail to capture the true risk structure, what appears as an anomaly may simply be compensation for omitted risk factors. This explanation is harder to evaluate in Vietnam given the limited history of factor models calibrated to local data.
+**Giải thích dựa trên rủi ro.** @khan2008accruals lập luận rằng các doanh nghiệp dồn tích cao có thể thu được lợi nhuận thấp hơn vì chúng *ít rủi ro hơn*, chứ không phải vì bị định giá sai. Nếu CAPM hoặc các mô hình đa nhân tố không nắm bắt được cấu trúc rủi ro thực, điều có vẻ là hiện tượng bất thường có thể chỉ là phần bù cho các nhân tố rủi ro bị bỏ sót. Giải thích này khó đánh giá hơn ở Việt Nam do lịch sử hạn chế của các mô hình nhân tố được hiệu chỉnh theo dữ liệu trong nước.
 
-**Growth and investment.** @fairfield2003accrued show that the low persistence of accruals extends to long-term accruals (capital expenditures), suggesting that the phenomenon reflects diminishing marginal returns to investment rather than earnings manipulation. In Vietnam's high-growth environment, this channel may be particularly important as firms invest aggressively during credit booms.
+**Tăng trưởng và đầu tư.** @fairfield2003accrued chỉ ra rằng tính bền vững thấp của các khoản dồn tích mở rộng sang các khoản dồn tích dài hạn (chi tiêu vốn), gợi ý rằng hiện tượng này phản ánh lợi suất biên giảm dần của đầu tư chứ không phải thao túng lợi nhuận. Trong môi trường tăng trưởng cao của Việt Nam, kênh này có thể đặc biệt quan trọng vì các doanh nghiệp đầu tư mạnh tay trong các giai đoạn bùng nổ tín dụng.
 
-**Data artifacts.** @kraft2006analysis identify sensitivity to outliers and look-ahead bias in the original evidence. Vietnamese financial data, with its shorter history and higher incidence of reporting errors, warrants extra vigilance on these points.
+**Sai lệch do dữ liệu.** @kraft2006analysis nhận diện độ nhạy với giá trị ngoại lai và thiên lệch nhìn trước trong bằng chứng gốc. Dữ liệu tài chính Việt Nam, với lịch sử ngắn hơn và tần suất sai sót báo cáo cao hơn, đòi hỏi sự cảnh giác bổ sung ở những điểm này.
 
-**Institutional constraints.** Short-selling restrictions, prevalent in Vietnam until recently, prevent arbitrageurs from correcting overpricing. Combined with high transaction costs and limited institutional investor participation, this creates an environment where mispricing can be sustained even if sophisticated investors identify it.
+**Ràng buộc thể chế.** Các hạn chế bán khống, phổ biến ở Việt Nam cho đến gần đây, ngăn các nhà kinh doanh chênh lệch giá hiệu chỉnh việc định giá quá cao. Kết hợp với chi phí giao dịch cao và sự tham gia hạn chế của nhà đầu tư tổ chức, điều này tạo ra một môi trường trong đó định giá sai có thể kéo dài ngay cả khi các nhà đầu tư thành thạo nhận ra nó.
 
-### State-Owned Enterprises and Accrual Quality
+### Doanh nghiệp nhà nước và chất lượng các khoản dồn tích
 
-A distinctive feature of Vietnamese markets is the prevalence of SOEs and former SOEs. Several testable hypotheses arise:
+Một đặc điểm riêng của thị trường Việt Nam là sự phổ biến của các DNNN và DNNN cũ. Một số giả thuyết có thể kiểm định nảy sinh:
 
-1.  **Political smoothing:** SOE managers may smooth earnings to meet government targets, generating accruals that differ in nature from those of private firms.
+1.  **Làm mượt vì mục tiêu chính trị:** Nhà quản lý DNNN có thể làm mượt lợi nhuận để đạt các mục tiêu của chính phủ, tạo ra các khoản dồn tích khác về bản chất so với của các doanh nghiệp tư nhân.
 
-2.  **Audit quality:** @khanh2018audit find that audit quality varies systematically with ownership structure in Vietnam. Lower audit quality may allow greater accrual manipulation.
+2.  **Chất lượng kiểm toán:** @khanh2018audit thấy rằng chất lượng kiểm toán thay đổi một cách hệ thống theo cơ cấu sở hữu ở Việt Nam. Chất lượng kiểm toán thấp hơn có thể cho phép thao túng các khoản dồn tích nhiều hơn.
 
-3.  **Information environment:** SOEs may have weaker voluntary disclosure, increasing the information asymmetry between accruals and cash flows.
+3.  **Môi trường thông tin:** Các DNNN có thể công bố thông tin tự nguyện yếu hơn, làm tăng bất cân xứng thông tin giữa các khoản dồn tích và dòng tiền.
 
-These hypotheses suggest that the accrual anomaly may exhibit cross-sectional variation along ownership dimensions unique to Vietnam.
+Các giả thuyết này gợi ý rằng hiện tượng bất thường về dồn tích có thể biến thiên chéo giữa các doanh nghiệp theo các khía cạnh sở hữu riêng có của Việt Nam.
 
-### Methodological Considerations
+### Các lưu ý về phương pháp luận
 
-When implementing this analysis with actual Vietnamese data, several practical issues require attention:
+Khi triển khai phân tích này với dữ liệu Việt Nam thực tế, một số vấn đề thực hành cần được chú ý:
 
-**Standard errors.** Pooled OLS standard errors assume independence across firm-years. In practice, both cross-sectional correlation (common shocks within a year) and time-series correlation (firm-level persistence) are present. Clustering standard errors by firm and year (two-way clustering) or using the Fama-MacBeth procedure [@fama1973risk] with Newey-West corrections is recommended.
+**Sai số chuẩn.** Sai số chuẩn OLS gộp giả định độc lập giữa các quan sát doanh nghiệp–năm. Trên thực tế, tồn tại cả tương quan chéo (các cú sốc chung trong cùng một năm) lẫn tương quan chuỗi thời gian (tính bền vững ở cấp doanh nghiệp). Nên gom cụm sai số chuẩn theo doanh nghiệp và năm (gom cụm hai chiều) hoặc dùng quy trình Fama-MacBeth [@fama1973risk] với hiệu chỉnh Newey-West.
 
 **VAS-specific items.** Vietnamese financial statements include items without direct equivalents in Compustat, such as *chi phí trả trước* (prepaid expenses reported separately from current assets in some VAS templates). Researchers must map these carefully.
 
-**Price limits.** Daily price limits on HOSE ($\pm$ 7%) and HNX ($\pm$ 10%) can truncate return distributions and create serial correlation in measured returns. For return measurement over 12-month windows, this is less problematic but should be documented.
+**Biên độ giá.** Biên độ giá hằng ngày trên HOSE ($\pm$ 7%) và HNX ($\pm$ 10%) có thể cắt cụt phân phối lợi nhuận và tạo ra tương quan chuỗi trong lợi nhuận đo được. Với việc đo lợi nhuận trên cửa sổ 12 tháng, điều này ít gây vấn đề hơn nhưng vẫn nên được ghi lại.
 
-**Exchange effects.** HOSE-listed firms tend to be larger and more liquid than HNX-listed firms. Separate analysis by exchange, or inclusion of exchange fixed effects, can help ensure results are not driven by liquidity differences.
-
-
-## Summary
-
-This chapter examined accrual accounting and its implications for earnings persistence and market efficiency in the Vietnamese context. The key findings are:
-
--   Accruals are the portion of earnings not backed by contemporaneous cash flows. They arise naturally from accrual accounting but also embed estimation errors and managerial discretion.
--   Simulation analysis demonstrates that when accounting estimates deviate from economic truth, accrual persistence falls below cash flow persistence—providing a structural explanation for the empirical regularity.
--   Persistence regressions confirm that the accrual component of earnings is less persistent than the cash flow component, a finding that holds across industries.
--   Market pricing tests suggest that stock prices in Vietnamese markets may not fully incorporate the differential persistence of earnings components, giving rise to the accrual anomaly.
-
-The Vietnamese institutional environment provides rich variation for future research on the interplay between accounting quality, investor sophistication, and market efficiency.
+**Hiệu ứng sàn giao dịch.** Các doanh nghiệp niêm yết trên HOSE có xu hướng lớn hơn và thanh khoản hơn các doanh nghiệp niêm yết trên HNX. Phân tích riêng theo sàn, hoặc đưa vào hiệu ứng cố định theo sàn, có thể giúp bảo đảm kết quả không bị chi phối bởi khác biệt về thanh khoản.
 
 
-<!-- ## Exercises
+## Tóm tắt
 
-1.  **Verify the accounting identity.** Using the simulated data from @sec-simulation, verify that $\text{Earnings} = \text{Accruals} + \text{CFO}$ holds exactly. Compute the maximum absolute deviation across all firm-years.
+Chương này xem xét kế toán dồn tích và các hàm ý của nó đối với tính bền vững của lợi nhuận và hiệu quả thị trường trong bối cảnh Việt Nam. Các phát hiện chính là:
 
-2.  **Sensitivity to parameters.** Modify the simulation function to allow $\rho = 0$ (i.i.d. sales). How does this change the persistence of earnings and its components? What does this tell you about the role of the underlying economic process vs. accounting measurement?
+-   Các khoản dồn tích là phần lợi nhuận không được hỗ trợ bởi dòng tiền đồng thời. Chúng phát sinh tự nhiên từ kế toán dồn tích nhưng cũng chứa các sai số ước tính và sự tùy ý của nhà quản lý.
+-   Phân tích mô phỏng chứng minh rằng khi các ước tính kế toán lệch khỏi thực tế kinh tế, tính bền vững của các khoản dồn tích giảm xuống dưới tính bền vững của dòng tiền, cung cấp lời giải thích cấu trúc cho quy luật thực nghiệm.
+-   Các hồi quy tính bền vững xác nhận rằng thành phần dồn tích của lợi nhuận kém bền vững hơn thành phần dòng tiền, một phát hiện đúng qua các ngành.
+-   Các kiểm định định giá thị trường gợi ý rằng giá cổ phiếu trên thị trường Việt Nam có thể chưa phản ánh đầy đủ tính bền vững khác biệt của các thành phần lợi nhuận, làm nảy sinh hiện tượng bất thường về dồn tích.
 
-3.  **SOE subsample analysis.** Using the synthetic panel, estimate persistence regressions separately for SOE and non-SOE firms. Is there evidence of differential accrual quality by ownership type?
+Môi trường thể chế Việt Nam cung cấp sự biến thiên phong phú cho nghiên cứu tương lai về mối tương tác giữa chất lượng kế toán, mức độ thành thạo của nhà đầu tư và hiệu quả thị trường.
 
-4.  **Fama-MacBeth standard errors.** Re-estimate the persistence regressions using the Fama-MacBeth approach: run cross-sectional regressions year-by-year, then compute time-series means and standard errors of the coefficient estimates. Compare these standard errors to the pooled OLS standard errors.
 
-5.  **Jones model decomposition.** Implement the @jones1991earnings model to separate accruals into "normal" and "abnormal" components. The model specification is: 
+<!-- ## Bài tập
+
+1.  **Kiểm chứng đồng nhất thức kế toán.** Dùng dữ liệu mô phỏng từ @sec-simulation, kiểm chứng rằng $\text{Earnings} = \text{Accruals} + \text{CFO}$ đúng chính xác. Tính độ lệch tuyệt đối lớn nhất trên tất cả các quan sát doanh nghiệp–năm.
+
+2.  **Độ nhạy với tham số.** Sửa hàm mô phỏng để cho phép $\rho = 0$ (doanh thu i.i.d.). Điều này thay đổi tính bền vững của lợi nhuận và các thành phần của nó như thế nào? Điều này cho bạn biết gì về vai trò của quá trình kinh tế nền tảng so với việc đo lường kế toán?
+
+3.  **Phân tích mẫu con DNNN.** Dùng bảng dữ liệu tổng hợp, ước lượng các hồi quy tính bền vững riêng cho các DNNN và doanh nghiệp ngoài nhà nước. Có bằng chứng nào về chất lượng các khoản dồn tích khác biệt theo loại hình sở hữu không?
+
+4.  **Sai số chuẩn Fama-MacBeth.** Ước lượng lại các hồi quy tính bền vững bằng cách tiếp cận Fama-MacBeth: chạy các hồi quy chéo theo từng năm, sau đó tính trung bình chuỗi thời gian và sai số chuẩn của các ước lượng hệ số. So sánh các sai số chuẩn này với sai số chuẩn OLS gộp.
+
+5.  **Phân rã theo mô hình Jones.** Triển khai mô hình @jones1991earnings để tách các khoản dồn tích thành thành phần "bình thường" và "bất thường". Đặc tả mô hình là:
 
 $$
 \frac{ACC_{i,t}}{A_{i,t-1}} = \alpha_1 \frac{1}{A_{i,t-1}}
@@ -904,8 +904,8 @@ $$
       + \alpha_3 \frac{PPE_{i,t}}{A_{i,t-1}} + \varepsilon_{i,t}
 $$ 
 
-Estimate this cross-sectionally by year and industry. Do abnormal accruals (the residual $\hat{\varepsilon}$) predict returns better than total accruals?
+Ước lượng chéo theo năm và ngành. Các khoản dồn tích bất thường (phần dư $\hat{\varepsilon}$) có dự báo lợi nhuận tốt hơn tổng các khoản dồn tích không?
 
-6.  **VAS vs. IFRS measurement.** Research three specific areas where VAS differs from IFRS in ways that affect accrual measurement (e.g., revenue recognition, lease accounting, financial instrument classification). For each, explain the direction and likely magnitude of the impact on measured accruals.
+6.  **Đo lường theo VAS so với IFRS.** Nghiên cứu ba lĩnh vực cụ thể mà VAS khác IFRS theo cách ảnh hưởng đến đo lường các khoản dồn tích (ví dụ: ghi nhận doanh thu, kế toán thuê tài sản, phân loại công cụ tài chính). Với mỗi lĩnh vực, giải thích chiều hướng và mức độ tác động có thể có lên các khoản dồn tích đo được.
 
-7.  **Short-selling constraints.** Vietnam introduced limited short-selling in 2024. Design a difference-in-differences framework to test whether the introduction of short selling affects the magnitude of the accrual anomaly. What are the key identification assumptions? -->
+7.  **Ràng buộc bán khống.** Việt Nam đưa ra bán khống có giới hạn vào năm 2024. Thiết kế một khung sai khác trong sai khác (difference-in-differences) để kiểm định xem việc đưa vào bán khống có ảnh hưởng đến độ lớn của hiện tượng bất thường về dồn tích hay không. Các giả định nhận diện then chốt là gì? -->

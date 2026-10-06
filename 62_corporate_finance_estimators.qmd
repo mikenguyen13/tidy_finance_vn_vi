@@ -1,10 +1,10 @@
-# Corporate Finance Estimators and Identification
+# Các công cụ ước lượng và nhận dạng trong tài chính doanh nghiệp
 
-Corporate finance is the study of how firms make investment, financing, and payout decisions under real-world frictions (e.g., taxes, asymmetric information, agency conflicts, transaction costs, and financial constraints). Unlike asset pricing, where the primary objects of interest are expected returns and risk premia estimated from market data, corporate finance estimators are tied to firm-level accounting and governance data, and their economic interpretation depends critically on the institutional environment in which the firm operates.
+Tài chính doanh nghiệp nghiên cứu cách các doanh nghiệp đưa ra quyết định đầu tư, tài trợ và chi trả trong điều kiện có các ma sát thực tế (chẳng hạn thuế, bất cân xứng thông tin, xung đột đại diện, chi phí giao dịch và ràng buộc tài chính). Khác với định giá tài sản, nơi đối tượng quan tâm chính là lợi nhuận kỳ vọng và các phần bù rủi ro được ước lượng từ dữ liệu thị trường, các công cụ ước lượng trong tài chính doanh nghiệp gắn với dữ liệu kế toán và quản trị ở cấp doanh nghiệp, và cách diễn giải kinh tế của chúng phụ thuộc rất nhiều vào môi trường thể chế mà doanh nghiệp hoạt động.
 
-This chapter develops the core econometric toolkit for empirical corporate finance and applies it to Vietnamese listed firms. The estimators we cover (including investment-$Q$ regressions, cash flow sensitivity tests, capital structure determinants, payout smoothing models, and agency cost proxies) form the backbone of the modern corporate finance literature. Each estimator embeds specific theoretical assumptions, and each has been the subject of substantial methodological debate. We pay careful attention to identification challenges: the conditions under which a regression coefficient admits a causal or structural interpretation versus merely a descriptive association.
+Chương này xây dựng bộ công cụ kinh tế lượng cốt lõi cho tài chính doanh nghiệp thực nghiệm và áp dụng vào các doanh nghiệp niêm yết Việt Nam. Các công cụ ước lượng mà chúng ta xem xét (gồm hồi quy đầu tư-$Q$, kiểm định độ nhạy dòng tiền, các yếu tố quyết định cấu trúc vốn, mô hình làm mượt chi trả và các biến đại diện cho chi phí đại diện) là xương sống của tài liệu tài chính doanh nghiệp hiện đại. Mỗi công cụ ước lượng hàm chứa những giả định lý thuyết cụ thể, và mỗi công cụ đều từng là đối tượng của các tranh luận phương pháp luận đáng kể. Chúng ta đặc biệt chú ý đến các thách thức về nhận dạng: những điều kiện để một hệ số hồi quy có thể được diễn giải theo nghĩa nhân quả hoặc cấu trúc, thay vì chỉ là một mối liên hệ mô tả.
 
-Vietnamese firms present distinctive features that interact with these estimators in economically meaningful ways. State ownership remains pervasive and creates agency problems qualitatively different from the dispersed-ownership setting of the Anglo-American literature. Concentrated family ownership, pyramidal structures, and cross-holdings generate tunneling incentives documented by @johnson2000tunneling and @claessens2002disentangling. The banking system is dominated by state-owned commercial banks whose lending decisions may reflect political rather than purely economic criteria, complicating the interpretation of financing constraint measures. And dividend policy is shaped by regulatory requirements, including minimum payout ratios for state-owned enterprises, that have no parallel in more developed markets.
+Các doanh nghiệp Việt Nam có những đặc điểm riêng tương tác với các công cụ ước lượng này theo những cách có ý nghĩa kinh tế. Sở hữu nhà nước vẫn còn phổ biến và tạo ra các vấn đề đại diện khác về bản chất so với bối cảnh sở hữu phân tán trong tài liệu Anh-Mỹ. Sở hữu gia đình tập trung, cấu trúc kim tự tháp và sở hữu chéo tạo ra các động cơ tunneling (rút ruột tài sản) được ghi nhận bởi @johnson2000tunneling và @claessens2002disentangling. Hệ thống ngân hàng bị chi phối bởi các ngân hàng thương mại nhà nước, những ngân hàng có thể ra quyết định cho vay theo tiêu chí chính trị chứ không hoàn toàn theo tiêu chí kinh tế, khiến việc diễn giải các thước đo ràng buộc tài chính trở nên phức tạp. Và chính sách cổ tức chịu sự định hình của các yêu cầu quy định, bao gồm tỷ lệ chi trả tối thiểu đối với doanh nghiệp nhà nước, điều không có tương đương ở các thị trường phát triển hơn.
 
 ```{python}
 #| label: setup
@@ -62,49 +62,49 @@ print(f"Unique firms: {firm_annual['ticker'].nunique()}")
 print(f"Year range: {firm_annual['year'].min()}–{firm_annual['year'].max()}")
 ```
 
-## Investment-$Q$ Regressions
+## Hồi quy đầu tư-$Q$
 
-### Tobin's $Q$: Intuition and Theory
+### $Q$ của Tobin: trực giác và lý thuyết
 
-The investment-$Q$ framework is the canonical structural model of corporate investment. The core insight, formalized by @hayashi1982tobin, is elegant: under perfect capital markets and constant returns to scale in the production and adjustment cost technologies, a firm's investment rate should be a sufficient statistic of a single observable (i.e., the ratio of the market value of installed capital to its replacement cost).
+Khung đầu tư-$Q$ là mô hình cấu trúc chuẩn mực về đầu tư của doanh nghiệp. Ý tưởng cốt lõi, được @hayashi1982tobin hình thức hóa, rất thanh nhã: trong điều kiện thị trường vốn hoàn hảo và hiệu suất không đổi theo quy mô đối với công nghệ sản xuất và chi phí điều chỉnh, tỷ lệ đầu tư của doanh nghiệp phải là một thống kê đủ của một đại lượng quan sát được duy nhất (tức là tỷ số giữa giá trị thị trường của vốn đã lắp đặt và chi phí thay thế của nó).
 
-Let $V_t$ denote the market value of the firm's assets at time $t$ and $K_t$ the replacement cost of its capital stock. Tobin's $Q$ is:
+Gọi $V_t$ là giá trị thị trường của tài sản doanh nghiệp tại thời điểm $t$ và $K_t$ là chi phí thay thế của trữ lượng vốn. $Q$ của Tobin là:
 
 $$
 Q_t = \frac{V_t}{K_t}
 $$ {#eq-tobins-q}
 
-When $Q > 1$, the market values a unit of installed capital above its replacement cost, signaling that the firm should invest. When $Q < 1$, the firm should disinvest. In the frictionless @hayashi1982tobin environment, the marginal $Q$ (the shadow value of an additional unit of capital) equals the average $Q$ (the ratio of total market value to total replacement cost), and the optimal investment policy is:
+Khi $Q > 1$, thị trường định giá một đơn vị vốn đã lắp đặt cao hơn chi phí thay thế của nó, báo hiệu rằng doanh nghiệp nên đầu tư. Khi $Q < 1$, doanh nghiệp nên thoái vốn. Trong môi trường không ma sát của @hayashi1982tobin, $Q$ biên (giá trị bóng của một đơn vị vốn bổ sung) bằng $Q$ bình quân (tỷ số giữa tổng giá trị thị trường và tổng chi phí thay thế), và chính sách đầu tư tối ưu là:
 
 $$
 \frac{I_{i,t}}{K_{i,t-1}} = \frac{1}{\alpha}\left(Q_{i,t} - 1\right)
 $$ {#eq-investment-q-theory}
 
-where $\alpha$ governs the convexity of adjustment costs. The empirical counterpart is the regression:
+trong đó $\alpha$ chi phối độ lồi của chi phí điều chỉnh. Dạng thực nghiệm tương ứng là hồi quy:
 
 $$
 \frac{I_{i,t}}{K_{i,t-1}} = \beta_0 + \beta_1 Q_{i,t} + \varepsilon_{i,t}
 $$ {#eq-investment-q-regression}
 
-Under the structural interpretation, $\beta_1 = 1/\alpha > 0$ and $Q$ is the sole explanatory variable. Any additional variable that enters significantly implies a violation of the underlying assumptions (e.g., financial frictions, agency problems, measurement error in $Q$, or departures from constant returns to scale).
+Theo cách diễn giải cấu trúc, $\beta_1 = 1/\alpha > 0$ và $Q$ là biến giải thích duy nhất. Bất kỳ biến bổ sung nào xuất hiện với ý nghĩa thống kê đều hàm ý rằng các giả định nền tảng bị vi phạm (chẳng hạn ma sát tài chính, vấn đề đại diện, sai số đo lường trong $Q$, hoặc sự lệch khỏi hiệu suất không đổi theo quy mô).
 
-### Measurement Issues
+### Các vấn đề đo lường
 
-The theoretical object is marginal $Q$ (i.e., the value of the next dollar of investment) which is unobservable. The empirical proxy is average $Q$, typically constructed as:
+Đối tượng lý thuyết là $Q$ biên (tức là giá trị của đồng đầu tư kế tiếp), vốn không quan sát được. Biến đại diện thực nghiệm là $Q$ bình quân, thường được xây dựng như sau:
 
 $$
 Q_{i,t}^{\text{avg}} = \frac{\text{Market Value of Equity} + \text{Book Value of Debt}}{\text{Book Value of Total Assets}}
 $$ {#eq-average-q}
 
-This proxy introduces several problems that are well-documented in the literature.
+Biến đại diện này làm phát sinh một số vấn đề đã được ghi nhận đầy đủ trong tài liệu.
 
-**Problem 1: Marginal** $\neq$ Average. The equality $q^{\text{marginal}} = Q^{\text{average}}$ requires constant returns to scale in both production and adjustment costs [@hayashi1982tobin]. With decreasing returns to scale (empirically relevant for most firms), average $Q$ overstates marginal $Q$ for high-$Q$ firms and understates it for low-$Q$ firms. @abel1994unified derive the wedge analytically.
+**Vấn đề 1: Biên** $\neq$ **bình quân.** Đẳng thức $q^{\text{marginal}} = Q^{\text{average}}$ đòi hỏi hiệu suất không đổi theo quy mô ở cả sản xuất lẫn chi phí điều chỉnh [@hayashi1982tobin]. Với hiệu suất giảm dần theo quy mô (phù hợp về mặt thực nghiệm với hầu hết doanh nghiệp), $Q$ bình quân phóng đại $Q$ biên đối với các doanh nghiệp có $Q$ cao và đánh giá thấp nó đối với các doanh nghiệp có $Q$ thấp. @abel1994unified suy ra chênh lệch này bằng phương pháp giải tích.
 
-**Problem 2: Measurement error in numerator.** The market value of equity reflects market sentiment, bubbles, and noise-trader demand in addition to fundamentals. @bond2012real provide a comprehensive treatment. In Vietnamese markets, where retail investors dominate and price limits constrain daily adjustment, market prices may deviate persistently from fundamental value.
+**Vấn đề 2: Sai số đo lường ở tử số.** Giá trị thị trường của vốn chủ sở hữu phản ánh tâm lý thị trường, bong bóng và nhu cầu của nhà đầu tư nhiễu (noise trader) bên cạnh các yếu tố nền tảng. @bond2012real trình bày một phân tích toàn diện. Tại thị trường Việt Nam, nơi nhà đầu tư cá nhân chiếm ưu thế và biên độ giá hạn chế mức điều chỉnh hằng ngày, giá thị trường có thể lệch kéo dài khỏi giá trị cơ bản.
 
-**Problem 3: Measurement error in denominator.** Book values of assets reflect historical cost, depreciation schedules, and accounting conventions that may poorly approximate replacement cost. This is especially problematic in Vietnam, where revaluation of fixed assets is infrequent and inflation has historically been volatile, creating wedges between historical and replacement cost.
+**Vấn đề 3: Sai số đo lường ở mẫu số.** Giá trị sổ sách của tài sản phản ánh nguyên giá lịch sử, lịch khấu hao và các quy ước kế toán, có thể xấp xỉ kém chi phí thay thế. Điều này đặc biệt có vấn đề ở Việt Nam, nơi việc đánh giá lại tài sản cố định diễn ra không thường xuyên và lạm phát trong lịch sử từng biến động mạnh, tạo ra chênh lệch giữa nguyên giá lịch sử và chi phí thay thế.
 
-**Problem 4: Errors-in-variables bias.** Because the empirical $Q$ is a noisy proxy for the true $Q$, OLS estimates of $\beta_1$ in @eq-investment-q-regression suffer from classical attenuation bias (i.e., $hat{\beta}_1$ is biased toward zero). @erickson2012treating develop a higher-order cumulant estimator that corrects for this bias without requiring external instruments.
+**Vấn đề 4: Thiên lệch sai số trong biến số.** Do $Q$ thực nghiệm là biến đại diện có nhiễu của $Q$ thực, các ước lượng OLS của $\beta_1$ trong @eq-investment-q-regression chịu thiên lệch suy giảm cổ điển (tức là $\hat{\beta}_1$ bị lệch về phía không). @erickson2012treating phát triển một công cụ ước lượng cumulant bậc cao hiệu chỉnh thiên lệch này mà không cần biến công cụ bên ngoài.
 
 ```{python}
 #| label: construct-q
@@ -154,7 +154,7 @@ print(f"Clean panel: {len(panel_clean)} firm-years, "
 ```{python}
 #| label: tbl-investment-summary
 #| eval: false
-#| tbl-cap: "Summary Statistics: Investment and Q Variables"
+#| tbl-cap: "Thống kê mô tả: các biến đầu tư và Q"
 
 summary_vars = ["inv_rate", "tobins_q", "cf_assets", "sales_growth"]
 summary = panel_clean[summary_vars].describe(
@@ -206,7 +206,7 @@ panel_clean = panel_clean.reset_index()
 ```{python}
 #| label: tbl-q-regression
 #| eval: false
-#| tbl-cap: "Investment-Q Regressions with Firm and Year Fixed Effects"
+#| tbl-cap: "Hồi quy đầu tư-Q với hiệu ứng cố định theo doanh nghiệp và năm"
 
 results_table = pd.DataFrame({
     "Q Only": {
@@ -244,30 +244,30 @@ results_table = pd.DataFrame({
 results_table
 ```
 
-### Interpretation Under Market Frictions
+### Diễn giải trong điều kiện có ma sát thị trường
 
-The coefficient on $Q$ in @tbl-q-regression admits multiple interpretations depending on the maintained assumptions:
+Hệ số của $Q$ trong @tbl-q-regression có thể được diễn giải theo nhiều cách tùy thuộc vào các giả định được duy trì:
 
-**Structural interpretation.** If the Hayashi conditions hold, $\hat{\beta}_1$ estimates the inverse of the adjustment cost parameter: $\hat{\beta}_1 = 1/\hat{\alpha}$. A larger coefficient implies lower adjustment costs. However, measurement error in $Q$ biases $\hat{\beta}_1$ downward, so the raw OLS estimate provides a lower bound on $1/\alpha$.
+**Diễn giải cấu trúc.** Nếu các điều kiện Hayashi thỏa mãn, $\hat{\beta}_1$ ước lượng nghịch đảo của tham số chi phí điều chỉnh: $\hat{\beta}_1 = 1/\hat{\alpha}$. Hệ số càng lớn hàm ý chi phí điều chỉnh càng thấp. Tuy nhiên, sai số đo lường trong $Q$ làm $\hat{\beta}_1$ chệch xuống, nên ước lượng OLS thô chỉ cho một cận dưới của $1/\alpha$.
 
-**Reduced-form interpretation.** Without the Hayashi conditions, $\hat{\beta}_1$ captures the association between market valuation and investment intensity. This association reflects a mixture of genuine investment opportunities (the $Q$-theory channel), market mispricing that managers exploit (the market timing channel of @baker2003does), and reverse causality (investment announcements that move market values).
+**Diễn giải dạng rút gọn.** Khi không có các điều kiện Hayashi, $\hat{\beta}_1$ nắm bắt mối liên hệ giữa định giá thị trường và cường độ đầu tư. Mối liên hệ này phản ánh sự pha trộn của các cơ hội đầu tư thực sự (kênh lý thuyết $Q$), việc định giá sai của thị trường mà các nhà quản lý khai thác (kênh định thời điểm thị trường của @baker2003does), và quan hệ nhân quả ngược (các thông báo đầu tư làm thay đổi giá trị thị trường).
 
-**The cash flow coefficient puzzle.** The significance of $\hat{\beta}_2$ on cash flow has been the subject of a 35-year debate. @fazzari1987financing interpret it as evidence that firms face financing constraints: controlling for investment opportunities ($Q$), cash flow should be irrelevant in a frictionless world, so its significance implies that internal funds relax binding constraints. @kaplan1997investment counter that cash flow proxies for investment opportunities not captured by the noisy $Q$ measure, making the cash flow coefficient an artifact of measurement error rather than evidence of constraints. @erickson2012treating show that correcting for measurement error in $Q$ substantially reduces (but does not eliminate) the cash flow coefficient, supporting a middle ground.
+**Câu đố về hệ số dòng tiền.** Ý nghĩa thống kê của $\hat{\beta}_2$ đối với dòng tiền đã là chủ đề của một cuộc tranh luận kéo dài 35 năm. @fazzari1987financing diễn giải nó là bằng chứng cho thấy doanh nghiệp đối mặt với ràng buộc tài chính: khi đã kiểm soát các cơ hội đầu tư ($Q$), dòng tiền lẽ ra không liên quan trong một thế giới không ma sát, nên ý nghĩa thống kê của nó hàm ý rằng nguồn vốn nội bộ nới lỏng các ràng buộc đang có hiệu lực. @kaplan1997investment phản biện rằng dòng tiền đại diện cho các cơ hội đầu tư không được thước đo $Q$ nhiễu nắm bắt, khiến hệ số dòng tiền chỉ là sản phẩm phụ của sai số đo lường chứ không phải bằng chứng về ràng buộc. @erickson2012treating cho thấy việc hiệu chỉnh sai số đo lường trong $Q$ làm giảm đáng kể (nhưng không triệt tiêu) hệ số dòng tiền, ủng hộ một quan điểm trung dung.
 
-### Limitations in Emerging Markets
+### Hạn chế ở các thị trường mới nổi
 
-The investment-$Q$ framework faces amplified challenges in Vietnamese markets.
+Khung đầu tư-$Q$ đối mặt với những thách thức được khuếch đại tại thị trường Việt Nam.
 
-**Thin trading and price limits.** Market prices adjust slowly to information, so $Q$ measured at fiscal year-end may not reflect the firm's current investment opportunity set. Price limits of $\pm 7\%$ (HOSE) and $\pm 10\%$ (HNX) mechanically compress the numerator of $Q$, attenuating the investment-$Q$ relationship.
+**Giao dịch mỏng và biên độ giá.** Giá thị trường điều chỉnh chậm theo thông tin, nên $Q$ đo tại cuối năm tài chính có thể không phản ánh tập cơ hội đầu tư hiện tại của doanh nghiệp. Biên độ giá $\pm 7\%$ (HOSE) và $\pm 10\%$ (HNX) nén tử số của $Q$ một cách cơ học, làm suy giảm mối quan hệ đầu tư-$Q$.
 
-**State ownership.** For state-owned enterprises (SOEs), investment decisions may be driven by policy directives rather than $Q$-theoretic optimality. Including SOEs in the regression without interactions confounds the structural relationship.
+**Sở hữu nhà nước.** Đối với doanh nghiệp nhà nước (SOE), các quyết định đầu tư có thể bị chi phối bởi chỉ đạo chính sách thay vì sự tối ưu theo lý thuyết $Q$. Việc đưa SOE vào hồi quy mà không có các số hạng tương tác làm nhiễu mối quan hệ cấu trúc.
 
-**Related-party transactions.** Tunneling through related-party transactions means that measured investment may include capital expenditures that benefit controlling shareholders rather than maximizing firm value. The investment-$Q$ coefficient in tunneling firms reflects the relationship between market valuation and expropriation, not efficient capital allocation.
+**Giao dịch với các bên liên quan.** Tunneling thông qua các giao dịch với bên liên quan có nghĩa là đầu tư đo được có thể bao gồm chi tiêu vốn mang lại lợi ích cho cổ đông kiểm soát thay vì tối đa hóa giá trị doanh nghiệp. Hệ số đầu tư-$Q$ ở các doanh nghiệp có tunneling phản ánh mối quan hệ giữa định giá thị trường và hành vi chiếm đoạt, chứ không phải phân bổ vốn hiệu quả.
 
 ```{python}
 #| label: fig-investment-q-scatter
 #| eval: false
-#| fig-cap: "Investment Rate vs. Tobin's Q: Binned Scatter Plot"
+#| fig-cap: "Tỷ lệ đầu tư và Q của Tobin: biểu đồ phân tán theo nhóm"
 
 # Create Q-decile bins for clean visualization
 plot_data = panel_clean.copy()
@@ -346,7 +346,7 @@ panel_soe = panel_soe.reset_index()
 ```{python}
 #| label: tbl-soe-interaction
 #| eval: false
-#| tbl-cap: "Investment-Q Regression with State Ownership Interactions"
+#| tbl-cap: "Hồi quy đầu tư-Q với các tương tác sở hữu nhà nước"
 
 soe_results = pd.DataFrame({
     "Coefficient": model_soe.params.round(4),
@@ -358,19 +358,19 @@ soe_results = pd.DataFrame({
 soe_results
 ```
 
-A negative coefficient on $Q \times \text{SOE}$ indicates that the investment-$Q$ sensitivity is attenuated for state-owned enterprises, consistent with SOE investment being driven by non-market factors. The interaction of cash flow with SOE status reveals whether state firms face tighter or looser financing constraints. This is a question with direct policy implications for SOE reform.
+Hệ số âm của $Q \times \text{SOE}$ cho thấy độ nhạy đầu tư-$Q$ bị suy giảm ở doanh nghiệp nhà nước, phù hợp với việc đầu tư của SOE bị chi phối bởi các nhân tố phi thị trường. Tương tác giữa dòng tiền và tình trạng SOE cho thấy các doanh nghiệp nhà nước đối mặt với ràng buộc tài chính chặt hơn hay lỏng hơn. Đây là câu hỏi có hàm ý chính sách trực tiếp đối với cải cách SOE.
 
-### The Erickson-Whited Measurement Error Correction
+### Hiệu chỉnh sai số đo lường của Erickson-Whited
 
-@erickson2012treating develop a GMM estimator that uses higher-order moments of the data to identify the investment-$Q$ slope in the presence of measurement error, without requiring external instruments. The key insight is that if the measurement error $\eta$ in $Q$ is independent of the true $Q^*$ and the structural error $\varepsilon$, then the third-order cumulants identify the signal-to-noise ratio.
+@erickson2012treating phát triển một công cụ ước lượng GMM sử dụng các moment bậc cao của dữ liệu để nhận dạng độ dốc đầu tư-$Q$ khi có sai số đo lường, mà không cần biến công cụ bên ngoài. Ý tưởng then chốt là nếu sai số đo lường $\eta$ trong $Q$ độc lập với $Q^*$ thực và sai số cấu trúc $\varepsilon$, thì các cumulant bậc ba nhận dạng được tỷ số tín hiệu trên nhiễu.
 
-The model is:
+Mô hình là:
 
 $$
 \frac{I_{i,t}}{K_{i,t-1}} = \beta_0 + \beta_1 Q_{i,t}^* + \gamma X_{i,t} + \varepsilon_{i,t}, \qquad Q_{i,t} = Q_{i,t}^* + \eta_{i,t}
 $$ {#eq-erickson-whited}
 
-where $Q_{i,t}^*$ is unobserved true $Q$ and $\eta_{i,t}$ is measurement error. The OLS estimator $\hat{\beta}_1^{\text{OLS}}$ converges to $\beta_1 \cdot \lambda$ where $\lambda = \text{Var}(Q^*) / (\text{Var}(Q^*) + \text{Var}(\eta)) < 1$ is the signal-to-noise ratio. The Erickson-Whited estimator recovers $\beta_1$ and $\lambda$ simultaneously.
+trong đó $Q_{i,t}^*$ là $Q$ thực không quan sát được và $\eta_{i,t}$ là sai số đo lường. Công cụ ước lượng OLS $\hat{\beta}_1^{\text{OLS}}$ hội tụ về $\beta_1 \cdot \lambda$ với $\lambda = \text{Var}(Q^*) / (\text{Var}(Q^*) + \text{Var}(\eta)) < 1$ là tỷ số tín hiệu trên nhiễu. Công cụ ước lượng Erickson-Whited khôi phục đồng thời $\beta_1$ và $\lambda$.
 
 ```{python}
 #| label: erickson-whited
@@ -458,55 +458,304 @@ for k, v in ew_result.items():
         print(f"  {k}: {v}")
 ```
 
-## Cash Flow Sensitivity of Investment
+### $q$ biên từ giá trị thị trường {#sec-cf-marginal-q}
 
-### The Financing Constraints Hypothesis
+Cách hiệu chỉnh của Erickson-Whited coi $Q$ của Tobin là thước đo có nhiễu của đúng đối tượng. @gala2026marginal lập luận rằng nó còn là thước đo của sai đối tượng. Lý thuyết $Q$ nói rằng đầu tư phản ứng với $q$ *biên*, tức giá trị bóng của một đơn vị vốn bổ sung, $q = \partial V / \partial K$. $Q = V/K$ (bình quân) chỉ bằng $q$ biên dưới các điều kiện thuần nhất rất hẹp của @hayashi1982tobin, và không cách hiệu chỉnh nào đối với sai số đo lường cổ điển có thể thu hẹp khoảng cách đến từ việc đặc tả sai mô hình. Điểm then chốt của họ là hàm giá trị không phải là không quan sát được như vẻ ngoài. Giá trị thị trường của doanh nghiệp *chính là* hàm giá trị, được quan sát có nhiễu, và các đối số của nó (trữ lượng vốn và năng suất của doanh nghiệp) đo lường được. Do đó có thể thu được $q$ biên bằng cách ước lượng hàm giá trị rồi lấy đạo hàm của nó.
 
-The cash flow sensitivity of investment (CFSI) literature tests whether firms' investment decisions are constrained by the availability of internal funds. In a Modigliani-Miller world, internal and external funds are perfect substitutes, so cash flow should be irrelevant for investment after controlling for investment opportunities. The CFSI approach, pioneered by @fazzari1987financing, classifies firms as financially constrained or unconstrained using observable characteristics and tests whether constrained firms exhibit higher sensitivity of investment to cash flow.
+Công cụ ước lượng gồm hai bước. Thứ nhất, hồi quy logarit của giá trị thị trường trên mỗi đơn vị vốn theo một đa thức của logarit vốn, $k_{i,t} = \ln K_{i,t}$, và logarit năng suất, $a_{i,t} = \ln A_{i,t}$, với hiệu ứng cố định theo doanh nghiệp và năm:
 
-The augmented investment regression is:
+$$
+v_{i,t} \equiv \ln Q_{i,t} = \sum_{j_k=0}^{n_k} \sum_{j_a=0}^{n_a} c_{j_k, j_a}\, k_{i,t}^{j_k} a_{i,t}^{j_a} + \alpha_i + \tau_t + \varepsilon_{i,t}.
+$$ {#eq-cf-value-projection}
+
+Các hiệu ứng năm hấp thụ các biến trạng thái toàn nền kinh tế, chẳng hạn tỷ lệ chiết khấu, mà không cần phải đo chúng, còn các hiệu ứng doanh nghiệp hấp thụ tính không đồng nhất bất biến theo thời gian trong giá đầu vào và khấu hao. Các tác giả nhận thấy rằng một đa thức bậc hai đầy đủ (các số hạng tuyến tính, bình phương và tương tác) nắm bắt được biến thiên của giá trị thị trường, và các số hạng bậc cao hơn được chọn bằng Lasso thích nghi thay đổi không đáng kể. Thứ hai, lấy đạo hàm của hàm giá trị đã khớp. Vì $V = QK$,
+
+$$
+q_{i,t} = \frac{\partial V_{i,t}}{\partial K_{i,t}} = \widehat{Q}_{i,t}\left(1 + \frac{\partial \hat{v}_{i,t}}{\partial k_{i,t}}\right),
+\qquad
+\frac{\partial \hat{v}_{i,t}}{\partial k_{i,t}} = \hat{c}_{1,0} + 2\hat{c}_{2,0}\, k_{i,t} + \hat{c}_{1,1}\, a_{i,t},
+$$ {#eq-cf-marginal-q}
+
+trong đó $\widehat{Q}_{i,t} = \exp(\hat{v}_{i,t})$ là giá trị khớp của @eq-cf-value-projection, mà các tác giả gọi là **Fitted $Q$**. $Q$ khớp là $Q$ bình quân đã được loại bỏ mọi biến thiên không liên quan đến các biến trạng thái cơ bản, nên nó là một hiệu chỉnh trực tiếp, ở cấp quan sát, đối với sai số đo lường cổ điển, kể cả sai số đến từ việc định giá sai trên thị trường chứng khoán. $q$ biên đi xa hơn và hiệu chỉnh cả việc đặc tả sai mô hình. Sự tương đương $q = Q$ của Hayashi đúng chính xác khi $\partial v / \partial k = 0$, tức là khi mọi hệ số của các số hạng có chứa $k$ đều bằng không, do đó @eq-cf-value-projection cũng cung cấp một kiểm định Wald cho giả định mà tài liệu đầu tư-$Q$ đã duy trì suốt bốn thập kỷ. Các tác giả bác bỏ nó một cách dứt khoát.
+
+Các phát hiện từ các doanh nghiệp sản xuất trong Compustat giai đoạn 1973–2019, trong phiên bản bài nghiên cứu chưa xuất bản, cho thấy các khác biệt rất lớn.
+
+-   **Mức độ.** $q$ biên bình quân là 0,81, so với 1,33 của $Q$ khớp và 2,87 của $Q$ Tobin, và nó ít biến động hơn nhiều. $q$ biên luôn nằm dưới $Q$ khớp, đúng như tính lõm của hàm giá trị đòi hỏi.
+-   **Chi phí điều chỉnh.** Vì đầu tư tối ưu tối đa hóa $qI - \Phi(I, K)$, đại lượng này phải không âm, nên $q$ biên là cận trên của tổng chi phí điều chỉnh (gồm cả giá mua) trên mỗi đơn vị đầu tư. $q$ biên giới hạn chúng ở mức 81% trung bình; nếu coi $Q$ Tobin là $q$ biên thì sẽ cho phép tới 287%. Các tham số chi phí điều chỉnh bậc hai ước lượng giảm từ khoảng 4,5 với $Q$ Tobin xuống khoảng 1,3 với $q$ biên.
+-   **Hồi quy đầu tư.** Trong hồi quy của đầu tư theo $Q$ với hiệu ứng doanh nghiệp và năm, hệ số góc của $Q$ Tobin là 0,007 và $R^2$ within khoảng 0,03; với $q$ biên thì hệ số góc là 0,38 và $R^2$ within khoảng 0,49. Hệ số dòng tiền, trọng tâm của cuộc tranh luận về ràng buộc tài chính được thảo luận bên dưới, co về không khi dùng $q$ biên.
+-   **Khoảng cách ngày càng nới rộng.** Trong phiên bản đã xuất bản, các tác giả cho thấy khoảng cách giữa $q$ biên và $Q$ Tobin đã nới rộng theo thời gian, chủ yếu do sức mạnh thị trường và vốn vô hình, hai lực làm tăng giá trị doanh nghiệp mà không làm tăng giá trị của một đơn vị vốn vật chất bổ sung [@peters2017intangible].
+
+Quy trình này không cần giả định nào về dạng của chi phí điều chỉnh, nhân tố chiết khấu ngẫu nhiên hay công nghệ sản xuất ngoài tính khả vi, đó là lý do các tác giả mô tả $q$ thu được là gần như không phụ thuộc mô hình (quasi-model-free). Nó đòi hỏi một điều dễ bị làm sai. Đạo hàm trong @eq-cf-marginal-q giữ *năng suất* cố định, nên $a_{i,t}$ phải đo trạng thái ngoại sinh, chứ không phải một kết quả biến động cơ học theo $K$. Các tác giả ước lượng nó bằng các phương pháp hàm sản xuất [@olley1996dynamics; @ackerberg2015identification]. Tỷ số doanh thu trên vốn là một thay thế kém: giữ $\ln(Y/K)$ cố định trong khi thay đổi $K$ ngầm giả định hiệu suất không đổi theo quy mô, đúng là giả định mà phương pháp này được thiết kế để tránh.
+
+Công cụ ước lượng chỉ cần vài dòng mã. Hàm dưới đây cài đặt phiên bản bậc hai của @eq-cf-value-projection và @eq-cf-marginal-q, trả về $Q$ khớp và $q$ biên cho mọi cặp doanh nghiệp-năm, và báo cáo kiểm định Wald của giả thuyết $q = Q$.
+
+```{python}
+#| label: marginal-q-estimator
+#| code-summary: "Two-step projection estimator of marginal q"
+
+def estimate_marginal_q(df, v="ln_q", k="ln_k", a="ln_a",
+                        entity="ticker", time="year"):
+    """
+    Projection estimator of marginal q (Gala, Gomes, and Liu).
+
+    Step 1: regress v = ln(V/K) on a complete second-order polynomial in
+            k = ln K and a = ln A with firm and year fixed effects.
+    Step 2: differentiate the fitted value function with respect to k,
+            q = Fitted Q * (1 + dv/dk).
+    """
+    d = df.dropna(subset=[v, k, a]).copy()
+    d["k_sq"] = d[k] ** 2
+    d["a_sq"] = d[a] ** 2
+    d["k_x_a"] = d[k] * d[a]
+    d = d.set_index([entity, time])
+
+    terms = [k, a, "k_sq", "a_sq", "k_x_a"]
+    fit = PanelOLS(
+        d[v], d[terms], entity_effects=True, time_effects=True,
+        check_rank=False
+    ).fit(cov_type="clustered", cluster_entity=True)
+
+    c = fit.params
+    # Fitted value function includes the estimated firm and year effects
+    v_hat = fit.fitted_values.iloc[:, 0] + fit.estimated_effects.iloc[:, 0]
+    dv_dk = c[k] + 2 * c["k_sq"] * d[k] + c["k_x_a"] * d[a]
+
+    d["fitted_q"] = np.exp(v_hat)
+    d["dv_dk"] = dv_dk
+    d["marginal_q"] = d["fitted_q"] * (1 + dv_dk)
+
+    # Wald test of Hayashi's q = Q: all coefficients on terms in k are zero
+    R = np.zeros((3, len(terms)))
+    for row, term in enumerate([k, "k_sq", "k_x_a"]):
+        R[row, terms.index(term)] = 1.0
+    qq_test = fit.wald_test(R, np.zeros(3))
+
+    return d.reset_index(), fit, qq_test
+```
+
+Trước khi áp dụng, cần kiểm tra rằng công cụ ước lượng khôi phục được $q$ biên khi biết trước giá trị thực. Phép mô phỏng dưới đây xây dựng một bảng dữ liệu của 600 doanh nghiệp trong 15 năm với hàm giá trị lõm, cho đầu tư phản ứng với $q$ biên *thực* với tham số chi phí điều chỉnh bậc hai bằng 2,5, và làm nhiễu $Q$ quan sát bằng sai số đo lường có phân phối log-chuẩn. Không có gì trong đó được hiệu chuẩn theo Việt Nam; mục đích duy nhất của nó là cho thấy mỗi thước đo $Q$ tác động thế nào đến hồi quy đầu tư khi đã biết quá trình sinh dữ liệu.
+
+```{python}
+#| label: marginal-q-simulation
+#| code-summary: "Simulate a panel with a known marginal q"
+
+rng_q = np.random.default_rng(20260819)
+n_firms, n_years = 600, 15
+firm_id = np.repeat(np.arange(n_firms), n_years)
+year_id = np.tile(np.arange(n_years), n_firms)
+
+# State variables: log capital and persistent log productivity
+ln_k = (np.repeat(rng_q.normal(4.5, 1.5, n_firms), n_years)
+        + rng_q.normal(0, 0.4, n_firms * n_years))
+a_mean = rng_q.normal(0.0, 0.3, n_firms)
+ln_a = np.empty(n_firms * n_years)
+for i in range(n_firms):
+    path = np.empty(n_years)
+    shocks = rng_q.normal(0, 0.25, n_years)
+    path[0] = a_mean[i] + shocks[0]
+    for t in range(1, n_years):
+        path[t] = a_mean[i] + 0.7 * (path[t - 1] - a_mean[i]) + shocks[t]
+    ln_a[i * n_years:(i + 1) * n_years] = path
+
+# True concave value function v = ln(V/K) and the implied marginal q
+c_true = {"k": -0.50, "a": 0.55, "k_sq": 0.025, "a_sq": 0.30, "k_x_a": -0.05}
+v_true = (1.5
+          + np.repeat(rng_q.normal(0, 0.3, n_firms), n_years)
+          + np.tile(rng_q.normal(0, 0.15, n_years), n_firms)
+          + c_true["k"] * ln_k + c_true["a"] * ln_a
+          + c_true["k_sq"] * ln_k**2 + c_true["a_sq"] * ln_a**2
+          + c_true["k_x_a"] * ln_k * ln_a)
+dv_dk_true = c_true["k"] + 2 * c_true["k_sq"] * ln_k + c_true["k_x_a"] * ln_a
+q_true = np.exp(v_true) * (1 + dv_dk_true)
+
+# Investment responds to true marginal q; observed Q is measured with error
+gamma_true = 2.5
+sim_q = pd.DataFrame({
+    "ticker": firm_id, "year": year_id, "ln_k": ln_k, "ln_a": ln_a,
+    "ln_q": v_true + rng_q.normal(0, 0.5, n_firms * n_years),
+    "inv_rate": (q_true - 0.4) / gamma_true
+                + rng_q.normal(0, 0.03, n_firms * n_years),
+    "q_true": q_true,
+})
+sim_q["tobins_q"] = np.exp(sim_q["ln_q"])
+
+sim_est, sim_fit, sim_qq = estimate_marginal_q(sim_q)
+print(f"Wald test of q = Q: chi2 = {sim_qq.stat:.1f}, p = {sim_qq.pval:.4f}")
+print(f"Correlation of estimated with true marginal q: "
+      f"{sim_est['marginal_q'].corr(sim_est['q_true']):.3f}")
+```
+
+```{python}
+#| label: tbl-marginal-q-simulation
+#| tbl-cap: "Hồi quy đầu tư theo các thước đo Q thay thế (bảng dữ liệu mô phỏng, tham số chi phí điều chỉnh thực bằng 2,5)"
+
+def fe_slope(data, y, x):
+    d = data.set_index(["ticker", "year"])
+    res = PanelOLS(d[y], d[[x]], entity_effects=True, time_effects=True,
+                   check_rank=False).fit(cov_type="clustered",
+                                         cluster_entity=True)
+    return res.params[x], res.std_errors[x], res.rsquared_within
+
+rows = []
+for label, col in [("Tobin's Q (observed)", "tobins_q"),
+                   ("Fitted Q", "fitted_q"),
+                   ("Marginal q (estimated)", "marginal_q"),
+                   ("Marginal q (true)", "q_true")]:
+    slope, se, r2 = fe_slope(sim_est, "inv_rate", col)
+    rows.append({"Q measure": label,
+                 "Mean": sim_est[col].mean(),
+                 "Slope of I/K": slope,
+                 "Std. error": se,
+                 "Within R²": r2,
+                 "Implied adjustment cost (1/slope)": 1 / slope})
+
+pd.DataFrame(rows).set_index("Q measure").round(3)
+```
+
+Phép mô phỏng tái tạo thứ hạng trong bài báo. $Q$ Tobin quan sát được có giá trị trung bình cao nhất và liên hệ yếu nhất với đầu tư: hệ số góc của nó hàm ý một tham số chi phí điều chỉnh gấp hơn mười lần giá trị thực, chính là các chi phí điều chỉnh lớn đến mức phi lý quen thuộc của tài liệu đầu tư-$Q$. $Q$ khớp loại bỏ sai số đo lường và phần lớn thiên lệch, nhưng vì nó vẫn là $Q$ *bình quân* nên nó phóng đại $q$ biên, và hệ số góc của nó chỉ bằng khoảng một nửa giá trị thực. $q$ biên ước lượng khôi phục được cả mức và hệ số góc của chuỗi thực. Phần chênh lệch còn lại phản ánh sai số ước lượng ở bước đầu, đó là lý do suy luận về các hệ số ở bước hai nên bootstrap toàn bộ quy trình theo doanh nghiệp thay vì coi $\hat{q}$ như dữ liệu.
+
+Áp dụng công cụ ước lượng này cho các doanh nghiệp niêm yết Việt Nam theo cùng các bước, với vốn được đo bằng PPE ròng đầu năm, $V$ bằng giá trị thị trường của vốn chủ sở hữu cộng nợ sổ sách, và năng suất bằng phần dư hàm sản xuất doanh thu được ước lượng theo từng ngành.
+
+```{python}
+#| label: marginal-q-vietnam
+#| eval: false
+#| code-summary: "Marginal q for Vietnamese listed firms"
+
+mq = panel.copy()
+
+# Capital stock: beginning-of-year net PPE (gross PPE if available)
+mq["K"] = mq["lag_ppe"]
+mq = mq[(mq["K"] > 0) & (mq["revenue"] > 0)].copy()
+
+# Average Q on capital and investment rate on capital
+mq["tobins_q_k"] = (mq["market_cap"] + mq["total_debt"]) / mq["K"]
+mq = mq[mq["tobins_q_k"] > 0].copy()
+mq["ln_q"] = np.log(mq["tobins_q_k"])
+mq["ln_k"] = np.log(mq["K"])
+mq["inv_rate_k"] = mq["capex"] / mq["K"]
+mq["cf_k"] = mq["operating_cf"] / mq["K"]
+
+# Productivity: residual of a within-firm revenue production function,
+# estimated separately by industry. A control-function estimator
+# (Olley-Pakes, Levinsohn-Petrin, Ackerberg-Caves-Frazer) is preferable
+# when labor and materials data are available.
+mq["ln_y"] = np.log(mq["revenue"])
+theta = {}
+for ind, g in mq.groupby("industry"):
+    g = g.set_index(["ticker", "year"])
+    if g.index.get_level_values(0).nunique() < 10:
+        continue
+    pf = PanelOLS(g["ln_y"], g[["ln_k"]], entity_effects=True,
+                  time_effects=True, check_rank=False).fit()
+    theta[ind] = pf.params["ln_k"]
+mq["theta"] = mq["industry"].map(theta)
+mq["ln_a"] = mq["ln_y"] - mq["theta"] * mq["ln_k"]
+
+# Trim the tails of the regression variables at 0.5% and 99.5%
+for col in ["ln_q", "ln_k", "ln_a", "inv_rate_k", "cf_k"]:
+    lo, hi = mq[col].quantile([0.005, 0.995])
+    mq = mq[mq[col].between(lo, hi)]
+
+# Keep firms with at least two observations
+mq = mq[mq.groupby("ticker")["year"].transform("count") >= 2]
+
+vn_est, vn_fit, vn_qq = estimate_marginal_q(mq)
+print(vn_fit.summary)
+print(f"Wald test of q = Q: chi2 = {vn_qq.stat:.1f}, p = {vn_qq.pval:.4f}")
+print(f"Share of firm-years with negative marginal q: "
+      f"{(vn_est['marginal_q'] < 0).mean():.3f}")
+```
+
+```{python}
+#| label: tbl-marginal-q-vietnam
+#| eval: false
+#| tbl-cap: "Đầu tư theo Q của Tobin, Q khớp và q biên: các doanh nghiệp niêm yết Việt Nam"
+
+vn_rows = []
+for label, col in [("Tobin's Q", "tobins_q_k"),
+                   ("Fitted Q", "fitted_q"),
+                   ("Marginal q", "marginal_q")]:
+    d = vn_est.set_index(["ticker", "year"])
+    for with_cf in [False, True]:
+        regressors = [col, "cf_k"] if with_cf else [col]
+        res = PanelOLS(d["inv_rate_k"], d[regressors], entity_effects=True,
+                       time_effects=True, check_rank=False).fit(
+            cov_type="clustered", cluster_entity=True)
+        vn_rows.append({
+            "Q measure": label,
+            "Cash flow": "Yes" if with_cf else "No",
+            "Slope on Q": f"{res.params[col]:.3f} ({res.std_errors[col]:.3f})",
+            "Slope on CF/K": (f"{res.params['cf_k']:.3f} "
+                              f"({res.std_errors['cf_k']:.3f})")
+                             if with_cf else "",
+            "Within R²": round(res.rsquared_within, 3),
+            "N": int(res.nobs),
+        })
+
+pd.DataFrame(vn_rows)
+```
+
+Một số đặc điểm của bối cảnh Việt Nam ảnh hưởng đến việc triển khai và diễn giải.
+
+**$Q$ khớp là câu trả lời tự nhiên cho giá nhiễu.** Các vấn đề đo lường đã liệt kê ở phần trước của mục này (định giá sai do nhà đầu tư cá nhân, biên độ giá nén tử số, giao dịch mỏng) đều là những dạng biến thiên của giá trị thị trường không liên quan đến trạng thái cơ bản của doanh nghiệp. Phép chiếu ở bước đầu loại bỏ đúng phần biến thiên đó, nên ở Việt Nam mức lợi từ $Q$ khớp so với $Q$ quan sát có thể lớn hơn so với dữ liệu Mỹ.
+
+**Trữ lượng vốn cần được định nghĩa một cách có chủ đích.** PPE sổ sách xấp xỉ kém chi phí thay thế khi tài sản cố định hiếm khi được đánh giá lại, và quyền sử dụng đất, vốn về kinh tế là một phần vốn của các doanh nghiệp bất động sản, khu công nghiệp và nhiều doanh nghiệp sản xuất, lại được ghi nhận là tài sản vô hình theo chuẩn mực kế toán Việt Nam. Hãy báo cáo kết quả khi có và không có quyền sử dụng đất trong $K$. Hiệu ứng cố định theo doanh nghiệp hấp thụ phần lớn sai số tỷ lệ bất biến theo thời gian trong vốn đo được, nhưng không hấp thụ được một lần đánh giá lại xảy ra giữa mẫu, chẳng hạn khi cổ phần hóa.
+
+**Dữ liệu năng suất là ràng buộc then chốt.** Các công cụ ước lượng hàm kiểm soát cần dữ liệu lao động hoặc đầu vào trung gian. Số lượng nhân viên xuất hiện trong nhiều báo cáo thường niên nhưng không nhất quán trong các cơ sở dữ liệu, nên phần dư doanh thu dùng ở trên là phương án dự phòng. Điểm yếu chính của nó, tương quan giữa vốn và cú sốc năng suất đồng thời, làm $\theta$ chệch lên và dịch chuyển năng suất đo được tương ứng.
+
+**Các biến trạng thái bổ sung có thể đưa vào hàm giá trị.** Sở hữu nhà nước, room ngoại và việc thuộc tập đoàn kinh doanh đều có thể ảnh hưởng đến giá trị doanh nghiệp. Phép chiếu cho phép đưa chúng vào như các biến trạng thái bổ sung, nhưng chỉ khi chúng ngoại sinh đối với các quyết định hiện tại của doanh nghiệp, vì $q$ biên được nhận dạng từ các trạng thái ngoại sinh (chú thích của các tác giả về nhận dạng nói rất rõ điều này).
+
+**Xem lại các kết quả trước đó với $q$ biên.** Tương tác sở hữu nhà nước trong @tbl-soe-interaction và các kiểm định độ nhạy dòng tiền bên dưới được chạy với $Q$ bình quân. Nếu, như trong dữ liệu Mỹ, $q$ biên loại bỏ dòng tiền, thì phần lớn những gì có vẻ là ràng buộc tài chính trong các hồi quy đầu tư của Việt Nam thực chất là các cơ hội đầu tư bị đo sai. Nếu dòng tiền vẫn còn ý nghĩa, đặc biệt ở các doanh nghiệp ngoài nhà nước có khả năng tiếp cận ngân hàng hạn chế, đó là bằng chứng về ràng buộc mạnh hơn bất kỳ kết quả nào thu được với $Q$ bình quân.
+
+## Độ nhạy dòng tiền của đầu tư
+
+### Giả thuyết ràng buộc tài chính
+
+Tài liệu về độ nhạy dòng tiền của đầu tư (CFSI) kiểm định xem các quyết định đầu tư của doanh nghiệp có bị ràng buộc bởi mức sẵn có của nguồn vốn nội bộ hay không. Trong thế giới Modigliani-Miller, vốn nội bộ và vốn bên ngoài có thể thay thế hoàn hảo cho nhau, nên dòng tiền lẽ ra không liên quan đến đầu tư sau khi kiểm soát các cơ hội đầu tư. Cách tiếp cận CFSI, do @fazzari1987financing tiên phong, phân loại doanh nghiệp là bị ràng buộc hay không bị ràng buộc tài chính dựa trên các đặc điểm quan sát được và kiểm định xem các doanh nghiệp bị ràng buộc có độ nhạy của đầu tư đối với dòng tiền cao hơn hay không.
+
+Hồi quy đầu tư mở rộng là:
 
 $$
 \frac{I_{i,t}}{K_{i,t-1}} = \beta_0 + \beta_1 Q_{i,t} + \beta_2 \frac{CF_{i,t}}{K_{i,t-1}} + \varepsilon_{i,t}
 $$ {#eq-cfsi-base}
 
-The CFSI hypothesis predicts $\beta_2^{\text{constrained}} > \beta_2^{\text{unconstrained}} > 0$: constrained firms rely more heavily on internal cash flow to fund investment because external finance is costly or unavailable.
+Giả thuyết CFSI dự đoán $\beta_2^{\text{constrained}} > \beta_2^{\text{unconstrained}} > 0$: các doanh nghiệp bị ràng buộc dựa nhiều hơn vào dòng tiền nội bộ để tài trợ đầu tư vì tài chính bên ngoài đắt đỏ hoặc không có sẵn.
 
-### The FHP-KZ Debate
+### Tranh luận FHP-KZ
 
-@fazzari1987financing (FHP) classify firms by dividend payout ratios and find that low-payout firms (presumed constrained) exhibit significantly higher cash flow sensitivity. @kaplan1997investment (KZ) challenge this interpretation on two grounds:
+@fazzari1987financing (FHP) phân loại doanh nghiệp theo tỷ lệ chi trả cổ tức và nhận thấy các doanh nghiệp chi trả thấp (được cho là bị ràng buộc) có độ nhạy dòng tiền cao hơn đáng kể. @kaplan1997investment (KZ) thách thức cách diễn giải này trên hai căn cứ:
 
-**Critique 1:** $Q$ measurement error. If $Q$ is a noisy proxy for true investment opportunities, and cash flow is correlated with the measurement error (because both respond to demand shocks), then the cash flow coefficient captures omitted investment opportunities, not financing constraints.
+**Phê phán 1:** sai số đo lường của $Q$. Nếu $Q$ là biến đại diện có nhiễu cho các cơ hội đầu tư thực, và dòng tiền tương quan với sai số đo lường (vì cả hai cùng phản ứng với các cú sốc cầu), thì hệ số dòng tiền nắm bắt các cơ hội đầu tư bị bỏ sót, chứ không phải ràng buộc tài chính.
 
-**Critique 2: Monotonicity failure.** KZ show that the firms FHP classify as "most constrained" (low-payout firms) are often rapidly growing firms that choose to retain earnings for investment, not firms that are denied external financing. Using qualitative information from annual reports, KZ reclassify firms and find that the CFSI ranking reverses: firms judged to be truly constrained by their own disclosures exhibit lower CFSI than unconstrained firms.
+**Phê phán 2: Vi phạm tính đơn điệu.** KZ cho thấy các doanh nghiệp mà FHP phân loại là "bị ràng buộc nhiều nhất" (doanh nghiệp chi trả thấp) thường là các doanh nghiệp tăng trưởng nhanh chọn giữ lại lợi nhuận để đầu tư, chứ không phải các doanh nghiệp bị từ chối tài trợ bên ngoài. Sử dụng thông tin định tính từ các báo cáo thường niên, KZ phân loại lại doanh nghiệp và nhận thấy thứ hạng CFSI đảo ngược: các doanh nghiệp được đánh giá là thực sự bị ràng buộc theo chính công bố của họ có CFSI thấp hơn các doanh nghiệp không bị ràng buộc.
 
-The resolution, as argued by @farre2016measures, is that no single proxy reliably identifies financially constrained firms. Each proxy (size, age, payout ratio, bond rating, KZ index, WW index, SA index) captures a different dimension of the financing environment, and the CFSI test is not a clean test of any single theory.
+Cách giải quyết, như @farre2016measures lập luận, là không có biến đại diện đơn lẻ nào xác định đáng tin cậy các doanh nghiệp bị ràng buộc tài chính. Mỗi biến đại diện (quy mô, tuổi, tỷ lệ chi trả, xếp hạng trái phiếu, chỉ số KZ, chỉ số WW, chỉ số SA) nắm bắt một khía cạnh khác nhau của môi trường tài chính, và kiểm định CFSI không phải là phép kiểm định sạch cho bất kỳ lý thuyết đơn lẻ nào.
 
-### Constraint Indices
+### Các chỉ số ràng buộc
 
-We implement the three most widely used composite constraint measures.
+Chúng ta cài đặt ba thước đo ràng buộc tổng hợp được sử dụng rộng rãi nhất.
 
-**KZ Index** [@kaplan1997investment; @lamont2001financial]:
+**Chỉ số KZ** [@kaplan1997investment; @lamont2001financial]:
 
 $$
 \text{KZ}_{i,t} = -1.002 \cdot \frac{CF_{i,t}}{K_{i,t-1}} + 0.283 \cdot Q_{i,t} + 3.139 \cdot \frac{D_{i,t}}{A_{i,t}} - 39.368 \cdot \frac{\text{Div}_{i,t}}{K_{i,t-1}} - 1.315 \cdot \frac{C_{i,t}}{K_{i,t-1}}
 $$ {#eq-kz-index}
 
-**WW Index** [@whited2006financial]:
+**Chỉ số WW** [@whited2006financial]:
 
 $$
 \text{WW}_{i,t} = -0.091 \cdot \frac{CF_{i,t}}{A_{i,t}} - 0.062 \cdot \mathbb{1}(\text{Div} > 0) + 0.021 \cdot \frac{D_{i,t}}{A_{i,t}} - 0.044 \cdot \ln(A_{i,t}) + 0.102 \cdot \text{ISG}_{i,t} - 0.035 \cdot \text{SG}_{i,t}
 $$ {#eq-ww-index}
 
-where ISG is industry sales growth and SG is firm sales growth.
+trong đó ISG là tăng trưởng doanh thu ngành và SG là tăng trưởng doanh thu của doanh nghiệp.
 
-**SA Index** [@hadlock2010new]:
+**Chỉ số SA** [@hadlock2010new]:
 
 $$
 \text{SA}_{i,t} = -0.737 \cdot \text{Size}_{i,t} + 0.043 \cdot \text{Size}_{i,t}^2 - 0.040 \cdot \text{Age}_{i,t}
 $$ {#eq-sa-index}
 
-where Size $= \ln(\text{Total Assets})$ and Age is years since listing. @hadlock2010new argue that the SA index is preferable because it uses only exogenous firm characteristics (size and age), avoiding the endogeneity inherent in cash flow and leverage-based indices.
+trong đó Size $= \ln(\text{Total Assets})$ và Age là số năm kể từ khi niêm yết. @hadlock2010new lập luận rằng chỉ số SA được ưu tiên hơn vì nó chỉ dùng các đặc điểm ngoại sinh của doanh nghiệp (quy mô và tuổi), tránh được tính nội sinh vốn có trong các chỉ số dựa trên dòng tiền và đòn bẩy.
 
 ```{python}
 #| label: constraint-indices
@@ -559,7 +808,7 @@ panel_fc["ww_index"] = (
 ```{python}
 #| label: tbl-constraint-summary
 #| eval: false
-#| tbl-cap: "Distribution of Financial Constraint Indices"
+#| tbl-cap: "Phân phối của các chỉ số ràng buộc tài chính"
 
 constraint_vars = ["kz_index", "sa_index", "ww_index"]
 constraint_summary = (
@@ -570,9 +819,9 @@ constraint_summary = (
 constraint_summary
 ```
 
-### Split-Sample CFSI Tests
+### Kiểm định CFSI chia mẫu
 
-We classify firms into constrained and unconstrained groups using each index and compare the cash flow sensitivity of investment across groups.
+Chúng ta phân loại doanh nghiệp thành nhóm bị ràng buộc và không bị ràng buộc theo từng chỉ số và so sánh độ nhạy dòng tiền của đầu tư giữa các nhóm.
 
 ```{python}
 #| label: cfsi-split-sample
@@ -641,7 +890,7 @@ cfsi_ww = cfsi_by_group(panel_fc, "ww_index", "median")
 ```{python}
 #| label: tbl-cfsi-comparison
 #| eval: false
-#| tbl-cap: "Cash Flow Sensitivity by Financial Constraint Classification"
+#| tbl-cap: "Độ nhạy dòng tiền theo phân loại ràng buộc tài chính"
 
 # Combine results
 cfsi_all = pd.concat({
@@ -654,19 +903,19 @@ cfsi_display = cfsi_all[["beta_CF", "se_CF", "beta_Q", "se_Q", "N"]].round(4)
 cfsi_display
 ```
 
-### Alternative Specifications
+### Các đặc tả thay thế
 
-The baseline CFSI test has been augmented in several directions:
+Kiểm định CFSI cơ sở đã được mở rộng theo nhiều hướng:
 
-**Dynamic investment models.** @bond2003financial argue that the static regression @eq-cfsi-base omits the autoregressive component of investment. The Euler equation approach, which derives directly from the firm's dynamic optimization problem, yields:
+**Mô hình đầu tư động.** @bond2003financial lập luận rằng hồi quy tĩnh @eq-cfsi-base bỏ sót thành phần tự hồi quy của đầu tư. Cách tiếp cận phương trình Euler, suy ra trực tiếp từ bài toán tối ưu động của doanh nghiệp, cho ra:
 
 $$
 \frac{I_{i,t}}{K_{i,t-1}} = \gamma_1 \frac{I_{i,t-1}}{K_{i,t-2}} + \gamma_2 \left(\frac{Y_{i,t}}{K_{i,t-1}}\right) + \gamma_3 \frac{CF_{i,t}}{K_{i,t-1}} + \varepsilon_{i,t}
 $$ {#eq-euler-investment}
 
-This specification avoids the need for $Q$ entirely, sidestepping the measurement error problem.
+Đặc tả này tránh hoàn toàn việc cần đến $Q$, qua đó né được vấn đề sai số đo lường.
 
-**External finance dependence.** @rajan1998financial propose using the industry-level technological demand for external finance as an instrument for financing constraints. Industries that technologically require more external funding should be disproportionately affected by financial development and firm-level constraints.
+**Phụ thuộc vào tài chính bên ngoài.** @rajan1998financial đề xuất dùng nhu cầu kỹ thuật về tài chính bên ngoài ở cấp ngành làm công cụ cho ràng buộc tài chính. Các ngành đòi hỏi về mặt công nghệ nhiều vốn bên ngoài hơn sẽ chịu ảnh hưởng không cân xứng từ phát triển tài chính và các ràng buộc ở cấp doanh nghiệp.
 
 ```{python}
 #| label: euler-equation
@@ -696,7 +945,7 @@ euler_data = euler_data.reset_index()
 ```{python}
 #| label: tbl-euler
 #| eval: false
-#| tbl-cap: "Euler Equation Investment Model"
+#| tbl-cap: "Mô hình đầu tư phương trình Euler"
 
 euler_results = pd.DataFrame({
     "Coefficient": model_euler.params.round(4),
@@ -707,32 +956,32 @@ euler_results = pd.DataFrame({
 euler_results
 ```
 
-## Financing Choice Models
+## Các mô hình lựa chọn tài trợ
 
-### Capital Structure Determinants
+### Các yếu tố quyết định cấu trúc vốn
 
-The two dominant theories of capital structure (i.e., trade-off theory and pecking order theory) generate distinct predictions about the determinants of leverage. @frank2009capital provide the most comprehensive empirical synthesis, identifying six "core" variables that reliably predict leverage across samples and specifications.
+Hai lý thuyết chi phối về cấu trúc vốn (tức là lý thuyết đánh đổi và lý thuyết trật tự phân hạng) đưa ra các dự đoán khác nhau về các yếu tố quyết định đòn bẩy. @frank2009capital cung cấp bản tổng hợp thực nghiệm toàn diện nhất, xác định sáu biến "cốt lõi" dự đoán đòn bẩy một cách đáng tin cậy trên nhiều mẫu và đặc tả.
 
-The baseline capital structure regression is:
+Hồi quy cấu trúc vốn cơ sở là:
 
 $$
 \text{Lev}_{i,t} = \beta_0 + \boldsymbol{\beta}' \mathbf{X}_{i,t} + \alpha_i + \delta_t + \varepsilon_{i,t}
 $$ {#eq-leverage-regression}
 
-where $\text{Lev}_{i,t}$ is either book leverage ($D / A$) or market leverage ($D / (D + E^{\text{mkt}})$), and $\mathbf{X}_{i,t}$ includes the core determinants.
+trong đó $\text{Lev}_{i,t}$ là đòn bẩy sổ sách ($D / A$) hoặc đòn bẩy thị trường ($D / (D + E^{\text{mkt}})$), và $\mathbf{X}_{i,t}$ gồm các yếu tố quyết định cốt lõi.
 
-@tbl-cs-predictions summarizes the theoretical predictions.
+@tbl-cs-predictions tóm tắt các dự đoán lý thuyết.
 
-| Determinant | Trade-Off | Pecking Order | Measurement |
+| Yếu tố quyết định | Đánh đổi | Trật tự phân hạng | Cách đo |
 |------------------|------------------|-------------------|------------------|
-| Profitability | \+ (tax shield) | − (less need for external) | EBITDA / Assets |
-| Size | \+ (lower distress costs) | \+ (less information asymmetry) | ln(Total Assets) |
-| Tangibility | \+ (collateral value) | \+ (less adverse selection) | PPE / Assets |
-| Growth (MTB) | − (underinvestment) | \+ (financing needs) | Market-to-Book |
-| Industry median leverage | \+ (target) | ambiguous | Industry median |
-| Profitability volatility | − (distress risk) | ambiguous | Rolling σ(EBITDA/A) |
+| Khả năng sinh lời | \+ (lá chắn thuế) | − (ít cần tài trợ bên ngoài) | EBITDA / Tài sản |
+| Quy mô | \+ (chi phí kiệt quệ thấp hơn) | \+ (ít bất cân xứng thông tin hơn) | ln(Tổng tài sản) |
+| Tính hữu hình | \+ (giá trị tài sản đảm bảo) | \+ (ít lựa chọn bất lợi hơn) | PPE / Tài sản |
+| Tăng trưởng (MTB) | − (đầu tư dưới mức) | \+ (nhu cầu tài trợ) | Giá thị trường / Giá sổ sách |
+| Đòn bẩy trung vị ngành | \+ (mục tiêu) | không rõ | Trung vị ngành |
+| Biến động khả năng sinh lời | − (rủi ro kiệt quệ) | không rõ | σ(EBITDA/A) trượt |
 
-: Capital Structure Predictions by Theory {#tbl-cs-predictions}
+: Dự đoán cấu trúc vốn theo từng lý thuyết {#tbl-cs-predictions}
 
 ```{python}
 #| label: capital-structure-data
@@ -818,7 +1067,7 @@ cs_panel = cs_panel.reset_index()
 ```{python}
 #| label: tbl-capital-structure
 #| eval: false
-#| tbl-cap: "Capital Structure Determinants: Book and Market Leverage"
+#| tbl-cap: "Các yếu tố quyết định cấu trúc vốn: đòn bẩy sổ sách và thị trường"
 
 cs_table = pd.DataFrame({
     "Book Leverage": [
@@ -834,15 +1083,15 @@ cs_table = pd.DataFrame({
 cs_table
 ```
 
-### Pecking Order Tests
+### Kiểm định trật tự phân hạng
 
-The pecking order theory [@myers1984capital] predicts that firms prefer internal finance, then debt, then equity. @shyam1999testing propose a direct test: if the pecking order holds strictly, the financing deficit (investment minus internal funds) should be financed dollar-for-dollar by debt:
+Lý thuyết trật tự phân hạng [@myers1984capital] dự đoán rằng doanh nghiệp ưu tiên tài chính nội bộ, rồi đến nợ, rồi đến vốn cổ phần. @shyam1999testing đề xuất một kiểm định trực tiếp: nếu trật tự phân hạng đúng một cách nghiêm ngặt, thâm hụt tài chính (đầu tư trừ nguồn vốn nội bộ) phải được tài trợ từng đồng một bằng nợ:
 
 $$
 \Delta D_{i,t} = \alpha + \beta_{\text{PO}} \cdot \text{DEF}_{i,t} + \varepsilon_{i,t}
 $$ {#eq-pecking-order}
 
-where $\text{DEF}_{i,t} = \text{Div}_{i,t} + \text{Capex}_{i,t} + \Delta W_{i,t} - CF_{i,t}$ is the financing deficit and $\Delta D_{i,t}$ is net debt issuance. A strict pecking order implies $\hat{\alpha} = 0$ and $\hat{\beta}_{\text{PO}} = 1$. @frank2003testing show that the coefficient is typically well below 1, especially for large firms and equity issuers.
+trong đó $\text{DEF}_{i,t} = \text{Div}_{i,t} + \text{Capex}_{i,t} + \Delta W_{i,t} - CF_{i,t}$ là thâm hụt tài chính và $\Delta D_{i,t}$ là phát hành nợ ròng. Một trật tự phân hạng nghiêm ngặt hàm ý $\hat{\alpha} = 0$ và $\hat{\beta}_{\text{PO}} = 1$. @frank2003testing cho thấy hệ số này thường thấp hơn nhiều so với 1, đặc biệt đối với các doanh nghiệp lớn và các doanh nghiệp phát hành cổ phiếu.
 
 ```{python}
 #| label: pecking-order
@@ -894,15 +1143,15 @@ print(f"  H0: β = 1, t = "
       f"{(model_po.params['fin_deficit'] - 1) / model_po.std_errors['fin_deficit']:.3f}")
 ```
 
-### Market Timing Measures
+### Các thước đo định thời điểm thị trường
 
-@baker2002market argue that capital structure is largely the cumulative outcome of market timing (i.e., firms issue equity when valuations are high and repurchase when valuations are low). Their key variable is the external-finance-weighted average market-to-book ratio:
+@baker2002market lập luận rằng cấu trúc vốn phần lớn là kết quả tích lũy của việc định thời điểm thị trường (tức là doanh nghiệp phát hành cổ phiếu khi định giá cao và mua lại khi định giá thấp). Biến then chốt của họ là tỷ số giá thị trường trên giá sổ sách bình quân gia quyền theo tài chính bên ngoài:
 
 $$
 \left(\frac{M}{B}\right)_{i,t}^{efwa} = \sum_{s=\text{IPO}}^{t-1} \frac{e_s + d_s}{\sum_{r=\text{IPO}}^{t-1}(e_r + d_r)} \cdot \left(\frac{M}{B}\right)_{i,s}
 $$ {#eq-efwa-mtb}
 
-where $e_s$ and $d_s$ are net equity and net debt issuance in year $s$. This variable captures the historical valuations at which the firm raised capital. The market timing hypothesis predicts that higher $\left(M/B\right)^{efwa}$ is associated with lower current leverage (i.e., firms that historically issued equity at high valuations have persistently lower leverage).
+trong đó $e_s$ và $d_s$ là phát hành vốn cổ phần ròng và phát hành nợ ròng trong năm $s$. Biến này nắm bắt các mức định giá lịch sử tại đó doanh nghiệp đã huy động vốn. Giả thuyết định thời điểm thị trường dự đoán rằng $\left(M/B\right)^{efwa}$ cao hơn gắn với đòn bẩy hiện tại thấp hơn (tức là các doanh nghiệp từng phát hành cổ phiếu ở mức định giá cao có đòn bẩy thấp một cách dai dẳng).
 
 ```{python}
 #| label: market-timing
@@ -966,7 +1215,7 @@ mt_panel = mt_panel.reset_index()
 ```{python}
 #| label: tbl-market-timing
 #| eval: false
-#| tbl-cap: "Market Timing and Capital Structure"
+#| tbl-cap: "Định thời điểm thị trường và cấu trúc vốn"
 
 mt_results = pd.DataFrame({
     "Coefficient": model_mt.params.round(4),
@@ -977,25 +1226,25 @@ mt_results = pd.DataFrame({
 mt_results
 ```
 
-A negative coefficient on $\text{EFWA}_{M/B}$ after controlling for the current $M/B$ (which captures current investment opportunities) supports the market timing hypothesis: firms that historically raised capital at high valuations maintain persistently lower leverage.
+Hệ số âm của $\text{EFWA}_{M/B}$ sau khi kiểm soát $M/B$ hiện tại (đại diện cho các cơ hội đầu tư hiện tại) ủng hộ giả thuyết định thời điểm thị trường: các doanh nghiệp từng huy động vốn ở mức định giá cao duy trì đòn bẩy thấp một cách dai dẳng.
 
-## Payout Policy Estimators
+## Các công cụ ước lượng chính sách chi trả
 
-### Dividend Smoothing
+### Làm mượt cổ tức
 
-@lintner1956distribution established the foundational model of dividend behavior: firms target a payout ratio and partially adjust dividends toward the target each year. The partial adjustment model is:
+@lintner1956distribution đã xác lập mô hình nền tảng về hành vi cổ tức: doanh nghiệp nhắm tới một tỷ lệ chi trả mục tiêu và điều chỉnh cổ tức từng phần về phía mục tiêu mỗi năm. Mô hình điều chỉnh từng phần là:
 
 $$
 \Delta D_{i,t} = \alpha_i + \lambda(\tau \cdot E_{i,t} - D_{i,t-1}) + \varepsilon_{i,t}
 $$ {#eq-lintner}
 
-where $D_{i,t}$ is the dividend per share, $E_{i,t}$ is earnings per share, $\tau$ is the target payout ratio, and $\lambda \in (0, 1)$ is the speed of adjustment. Low $\lambda$ implies strong smoothing (i.e., firms adjust dividends slowly toward the target). Rearranging:
+trong đó $D_{i,t}$ là cổ tức trên mỗi cổ phiếu, $E_{i,t}$ là thu nhập trên mỗi cổ phiếu, $\tau$ là tỷ lệ chi trả mục tiêu, và $\lambda \in (0, 1)$ là tốc độ điều chỉnh. $\lambda$ thấp hàm ý làm mượt mạnh (tức là doanh nghiệp điều chỉnh cổ tức chậm về phía mục tiêu). Sắp xếp lại:
 
 $$
 D_{i,t} = \alpha_i + (1 - \lambda) D_{i,t-1} + \lambda \tau \cdot E_{i,t} + \varepsilon_{i,t}
 $$ {#eq-lintner-regression}
 
-The coefficient on lagged dividends, $(1 - \lambda)$, measures the degree of smoothing. Values close to 1 indicate near-complete smoothing; values close to 0 indicate no smoothing (full adjustment).
+Hệ số của cổ tức trễ, $(1 - \lambda)$, đo mức độ làm mượt. Giá trị gần 1 cho thấy làm mượt gần như hoàn toàn; giá trị gần 0 cho thấy không làm mượt (điều chỉnh đầy đủ).
 
 ```{python}
 #| label: lintner-model
@@ -1038,7 +1287,7 @@ print(f"  Smoothing coefficient (1-λ): {model_lintner.params['lag_dps']:.4f}")
 ```{python}
 #| label: tbl-lintner
 #| eval: false
-#| tbl-cap: "Lintner Partial Adjustment Model"
+#| tbl-cap: "Mô hình điều chỉnh từng phần của Lintner"
 
 lintner_table = pd.DataFrame({
     "Coefficient": model_lintner.params.round(4),
@@ -1052,7 +1301,7 @@ lintner_table
 ```{python}
 #| label: fig-payout-ratio
 #| eval: false
-#| fig-cap: "Cross-Sectional Distribution of Dividend Payout Ratios Over Time"
+#| fig-cap: "Phân phối theo mặt cắt ngang của tỷ lệ chi trả cổ tức theo thời gian"
 
 payout = panel_fc.copy()
 payout["payout_ratio"] = payout["dividends"] / payout["net_income"]
@@ -1097,9 +1346,9 @@ payout_ts = (
 )
 ```
 
-### Smoothing Heterogeneity: SOEs vs. Private Firms
+### Tính không đồng nhất của việc làm mượt: SOE so với doanh nghiệp tư nhân
 
-Dividend policy in Vietnam is shaped by regulatory mandates. The State Capital Investment Corporation (SCIC) and line ministries have historically required SOEs to distribute minimum dividend amounts, sometimes at the expense of reinvestment. This creates a fundamental asymmetry: SOE dividends are partially policy-determined rather than the outcome of the Lintner optimization.
+Chính sách cổ tức ở Việt Nam chịu sự định hình của các yêu cầu quy định. Tổng công ty Đầu tư và Kinh doanh vốn nhà nước (SCIC) và các bộ chủ quản trong lịch sử đã yêu cầu các SOE phân phối mức cổ tức tối thiểu, đôi khi với cái giá là giảm tái đầu tư. Điều này tạo ra một sự bất đối xứng căn bản: cổ tức của SOE một phần do chính sách quyết định chứ không phải kết quả của bài toán tối ưu Lintner.
 
 ```{python}
 #| label: lintner-soe-split
@@ -1142,9 +1391,9 @@ for label, soe_val in [("Private", 0), ("SOE", 1)]:
 pd.DataFrame(lintner_results).T
 ```
 
-### Share Repurchases
+### Mua lại cổ phiếu
 
-Share repurchases are a relatively new phenomenon in Vietnamese markets, gradually gaining traction as regulations have evolved. Unlike dividends, repurchases are more flexible and do not create expectations of future payments. The decision to repurchase can be modeled as:
+Mua lại cổ phiếu là một hiện tượng tương đối mới ở thị trường Việt Nam, dần có sức hút khi các quy định phát triển. Khác với cổ tức, việc mua lại linh hoạt hơn và không tạo ra kỳ vọng về các khoản chi trả trong tương lai. Quyết định mua lại có thể được mô hình hóa như sau:
 
 $$
 \text{Repurchase}_{i,t} = \mathbb{1}\left(\beta_0 + \beta_1 \frac{CF_{i,t}}{A_{i,t}} + \beta_2 Q_{i,t} + \beta_3 \text{Lev}_{i,t} + \beta_4 \frac{\text{Cash}_{i,t}}{A_{i,t}} + \boldsymbol{\gamma}' \mathbf{Z}_{i,t} + \varepsilon_{i,t} > 0\right)
@@ -1178,7 +1427,7 @@ probit_model = smf.probit(
 ```{python}
 #| label: tbl-repurchase-probit
 #| eval: false
-#| tbl-cap: "Probit Model: Determinants of Share Repurchase Decision"
+#| tbl-cap: "Mô hình Probit: các yếu tố quyết định việc mua lại cổ phiếu"
 
 # Extract non-year-dummy coefficients
 main_vars = ["cf_assets", "tobins_q", "book_leverage",
@@ -1196,13 +1445,13 @@ probit_results = pd.DataFrame({
 probit_results
 ```
 
-### Agency and Signaling Interpretations
+### Các cách diễn giải theo đại diện và tín hiệu
 
-Payout policy is interpreted through two competing lenses:
+Chính sách chi trả được diễn giải qua hai lăng kính cạnh tranh:
 
-**Agency view** [@jensen1986agency; @la2000agency]: Dividends are a mechanism for disgorging free cash flow that managers would otherwise waste on empire-building or perquisite consumption. In this view, firms with weaker governance should face greater pressure to pay dividends as a bonding device. @la2000agency distinguish the "outcome" model (dividends are the result of effective minority shareholder pressure) from the "substitute" model (firms with weak governance pay high dividends to build reputation for fair treatment).
+**Quan điểm đại diện** [@jensen1986agency; @la2000agency]: Cổ tức là cơ chế buộc doanh nghiệp nhả ra dòng tiền tự do mà các nhà quản lý nếu không sẽ lãng phí vào việc xây dựng đế chế hoặc hưởng đặc quyền. Theo quan điểm này, các doanh nghiệp có quản trị yếu hơn phải chịu áp lực chi trả cổ tức lớn hơn như một công cụ cam kết. @la2000agency phân biệt mô hình "kết quả" (cổ tức là kết quả của áp lực hiệu quả từ cổ đông thiểu số) với mô hình "thay thế" (các doanh nghiệp quản trị yếu chi trả cổ tức cao để xây dựng uy tín đối xử công bằng).
 
-**Signaling view** [@bhattacharya1979imperfect; @miller1985dividend]: Dividends convey private information about future earnings. Because dividends are costly to fake (they require actual cash), they serve as a credible signal. The signaling interpretation predicts that dividend changes should predict future earnings changes.
+**Quan điểm tín hiệu** [@bhattacharya1979imperfect; @miller1985dividend]: Cổ tức truyền tải thông tin riêng về lợi nhuận kế toán tương lai. Vì cổ tức tốn kém để làm giả (chúng đòi hỏi tiền mặt thực), chúng đóng vai trò là tín hiệu đáng tin cậy. Cách diễn giải theo tín hiệu dự đoán rằng các thay đổi cổ tức phải dự báo được các thay đổi lợi nhuận kế toán trong tương lai.
 
 ```{python}
 #| label: dividend-signaling
@@ -1247,13 +1496,13 @@ for var in ["div_increase", "div_decrease", "delta_earnings_curr"]:
           f"(t = {signal_model.tvalues[var]:.3f})")
 ```
 
-## Agency Cost Proxies
+## Các biến đại diện cho chi phí đại diện
 
-### Ownership Concentration and Agency Problems
+### Tập trung sở hữu và các vấn đề đại diện
 
-The agency framework of @jensen2019theory identifies the separation of ownership and control as the fundamental source of corporate agency costs. In concentrated-ownership economies like Vietnam, the dominant agency conflict is not between dispersed shareholders and professional managers (Berle-Means agency problem) but between controlling and minority shareholders (principal-principal agency problem, @young2008corporate).
+Khung đại diện của @jensen2019theory xác định sự tách biệt giữa sở hữu và kiểm soát là nguồn gốc căn bản của chi phí đại diện trong doanh nghiệp. Ở các nền kinh tế sở hữu tập trung như Việt Nam, xung đột đại diện chủ đạo không phải giữa các cổ đông phân tán và nhà quản lý chuyên nghiệp (vấn đề đại diện Berle-Means) mà là giữa cổ đông kiểm soát và cổ đông thiểu số (vấn đề đại diện giữa các chủ sở hữu, principal-principal, @young2008corporate).
 
-The key mechanisms through which controlling shareholders extract private benefits include: tunneling via related-party transactions [@johnson2000tunneling], diversion of corporate opportunities, excessive compensation, and dilutive equity issuances. The extent of these costs depends on the ownership structure, legal protections for minorities, and monitoring intensity.
+Các cơ chế chính mà qua đó cổ đông kiểm soát chiếm đoạt lợi ích riêng gồm: tunneling thông qua các giao dịch với bên liên quan [@johnson2000tunneling], chuyển hướng các cơ hội của doanh nghiệp, thù lao quá mức và các đợt phát hành cổ phiếu gây pha loãng. Mức độ của các chi phí này phụ thuộc vào cấu trúc sở hữu, sự bảo vệ pháp lý đối với cổ đông thiểu số và cường độ giám sát.
 
 ```{python}
 #| label: ownership-structure
@@ -1282,15 +1531,15 @@ agency["control_wedge"] = (
 )
 ```
 
-### Free Cash Flow Measures
+### Các thước đo dòng tiền tự do
 
-@jensen1986agency argues that the agency cost of free cash flow is the central problem in firms that generate cash in excess of positive-NPV investment opportunities. The standard measure is:
+@jensen1986agency lập luận rằng chi phí đại diện của dòng tiền tự do là vấn đề trung tâm ở các doanh nghiệp tạo ra tiền vượt quá các cơ hội đầu tư có NPV dương. Thước đo chuẩn là:
 
 $$
 \text{FCF}_{i,t} = \frac{\text{Operating CF}_{i,t} - \text{Depreciation}_{i,t} - \text{Required Capex}_{i,t}}{\text{Total Assets}_{i,t}}
 $$ {#eq-fcf}
 
-In practice, "required capex" is unobservable, so researchers use operating cash flow minus capital expenditures as a proxy, or add the interaction of cash flow with low $Q$ (which identifies firms with cash flow but without investment opportunities):
+Trong thực tế, "capex bắt buộc" không quan sát được, nên các nhà nghiên cứu dùng dòng tiền hoạt động trừ chi tiêu vốn làm biến đại diện, hoặc thêm tương tác của dòng tiền với $Q$ thấp (xác định các doanh nghiệp có dòng tiền nhưng không có cơ hội đầu tư):
 
 $$
 \text{FCF Overinvestment} = \frac{CF_{i,t}}{A_{i,t}} \times \mathbb{1}(Q_{i,t} < 1)
@@ -1313,9 +1562,9 @@ agency["asset_turnover"] = agency["revenue"] / agency["total_assets"]
 agency["sga_ratio"] = agency["sga_expenses"] / agency["revenue"]
 ```
 
-### Monitoring Mechanisms and Governance Variables
+### Các cơ chế giám sát và biến quản trị
 
-We construct a governance quality composite based on observable monitoring mechanisms:
+Chúng ta xây dựng một chỉ số tổng hợp về chất lượng quản trị dựa trên các cơ chế giám sát quan sát được:
 
 ```{python}
 #| label: governance-variables
@@ -1337,7 +1586,7 @@ agency["no_duality"] = (1 - agency["ceo_duality"]).astype(int)
 ```{python}
 #| label: tbl-agency-proxies
 #| eval: false
-#| tbl-cap: "Summary Statistics: Agency Cost Proxies and Governance Variables"
+#| tbl-cap: "Thống kê mô tả: các biến đại diện chi phí đại diện và biến quản trị"
 
 agency_vars = [
     "largest_shareholder_pct", "state_ownership_pct",
@@ -1353,15 +1602,15 @@ agency_summary = (
 agency_summary
 ```
 
-### Agency Costs and Firm Value
+### Chi phí đại diện và giá trị doanh nghiệp
 
-We test whether agency cost proxies are associated with firm value (Tobin's $Q$) and operating performance (ROA), controlling for standard determinants:
+Chúng ta kiểm định xem các biến đại diện chi phí đại diện có liên hệ với giá trị doanh nghiệp ($Q$ của Tobin) và hiệu quả hoạt động (ROA) hay không, khi kiểm soát các yếu tố quyết định chuẩn:
 
 $$
 Q_{i,t} = \beta_0 + \beta_1 \text{Own}_{i,t} + \beta_2 \text{Own}_{i,t}^2 + \boldsymbol{\gamma}'\mathbf{X}_{i,t} + \alpha_i + \delta_t + \varepsilon_{i,t}
 $$ {#eq-agency-valuation}
 
-The quadratic in ownership captures the @morck1988management nonlinearity: at low levels, managerial ownership aligns incentives (positive effect on $Q$); at high levels, entrenchment dominates (negative effect).
+Số hạng bậc hai của sở hữu nắm bắt tính phi tuyến của @morck1988management: ở mức thấp, sở hữu của nhà quản lý gắn kết động cơ (tác động dương lên $Q$); ở mức cao, sự cố thủ chiếm ưu thế (tác động âm).
 
 ```{python}
 #| label: agency-valuation
@@ -1392,7 +1641,7 @@ val_panel = val_panel.reset_index()
 
 ```{python}
 #| label: tbl-agency-valuation
-#| tbl-cap: "Agency Proxies and Firm Value (Tobin's Q)"
+#| tbl-cap: "Các biến đại diện chi phí đại diện và giá trị doanh nghiệp (Q của Tobin)"
 #| eval: false
 
 val_results = pd.DataFrame({
@@ -1407,7 +1656,7 @@ val_results
 ```{python}
 #| label: fig-ownership-q
 #| eval: false
-#| fig-cap: "Nonlinear Relationship Between Ownership Concentration and Firm Value"
+#| fig-cap: "Quan hệ phi tuyến giữa tập trung sở hữu và giá trị doanh nghiệp"
 
 # Binned scatter: largest shareholder vs Q
 own_bins = val_data.copy()
@@ -1443,23 +1692,23 @@ own_binned = (
 )
 ```
 
-The inverted-U pattern, if present, would be consistent with the Morck-Shleifer-Vishny incentive-alignment/entrenchment tradeoff. In Vietnamese markets, the pattern may differ because the dominant controlling shareholder is often the state, whose objective function includes non-value-maximizing goals (employment, regional development, strategic sector control).
+Dạng quan hệ hình chữ U ngược, nếu có, sẽ phù hợp với sự đánh đổi giữa gắn kết động cơ và cố thủ của Morck-Shleifer-Vishny. Tại thị trường Việt Nam, dạng quan hệ này có thể khác vì cổ đông kiểm soát chủ đạo thường là Nhà nước, với hàm mục tiêu bao gồm các mục tiêu không nhằm tối đa hóa giá trị (việc làm, phát triển vùng, kiểm soát các ngành chiến lược).
 
-## Linking Corporate Decisions to Returns
+## Liên kết các quyết định doanh nghiệp với lợi nhuận
 
-### Investment-Based Anomalies
+### Các hiện tượng bất thường dựa trên đầu tư
 
-The asset pricing literature has documented that corporate investment decisions predict cross-sectional return differences (i.e., the "investment anomalies"). The theoretical foundation is the $q$-theory of investment applied to asset pricing [@cochrane1991production; @liu2009investment]: firms invest more when the discount rate on their projects is lower. High investment therefore signals low expected returns.
+Tài liệu định giá tài sản đã ghi nhận rằng các quyết định đầu tư của doanh nghiệp dự báo sự khác biệt lợi nhuận trong mặt cắt ngang (tức là các "hiện tượng bất thường về đầu tư"). Nền tảng lý thuyết là lý thuyết $q$ của đầu tư áp dụng vào định giá tài sản [@cochrane1991production; @liu2009investment]: doanh nghiệp đầu tư nhiều hơn khi tỷ lệ chiết khấu của các dự án thấp hơn. Do đó, đầu tư cao báo hiệu lợi nhuận kỳ vọng thấp.
 
-**The investment effect.** @titman2004capital and @cooper2008asset document that firms with high asset growth earn lower subsequent returns. The asset growth variable is:
+**Hiệu ứng đầu tư.** @titman2004capital và @cooper2008asset ghi nhận rằng các doanh nghiệp có tăng trưởng tài sản cao đạt lợi nhuận thấp hơn sau đó. Biến tăng trưởng tài sản là:
 
 $$
 \text{AG}_{i,t} = \frac{A_{i,t} - A_{i,t-1}}{A_{i,t-1}}
 $$ {#eq-asset-growth}
 
-**The investment-to-assets effect.** @fama2006profitability and @hou2015digesting show that capital expenditure scaled by assets negatively predicts returns.
+**Hiệu ứng đầu tư trên tài sản.** @fama2006profitability và @hou2015digesting cho thấy chi tiêu vốn chia cho tài sản dự báo lợi nhuận theo chiều âm.
 
-**The profitability effect.** @novy2013other shows that gross profitability (revenue minus COGS, scaled by assets) positively predicts returns. This is consistent with $q$-theory: controlling for investment, more profitable firms must have higher discount rates (otherwise they would invest more).
+**Hiệu ứng khả năng sinh lời.** @novy2013other cho thấy lợi nhuận gộp (doanh thu trừ giá vốn hàng bán, chia cho tài sản) dự báo lợi nhuận theo chiều dương. Điều này phù hợp với lý thuyết $q$: khi kiểm soát đầu tư, các doanh nghiệp sinh lời hơn phải có tỷ lệ chiết khấu cao hơn (nếu không họ sẽ đầu tư nhiều hơn).
 
 ```{python}
 #| label: investment-anomalies
@@ -1537,7 +1786,7 @@ ag_wide["L-S"] = ag_wide[1] - ag_wide[5]
 ```{python}
 #| label: tbl-investment-anomaly
 #| eval: false
-#| tbl-cap: "Asset Growth Quintile Portfolio Returns"
+#| tbl-cap: "Lợi nhuận danh mục theo nhóm ngũ phân vị tăng trưởng tài sản"
 
 quintile_summary = ag_wide.describe().T[["mean", "std"]].copy()
 quintile_summary["mean_ann"] = quintile_summary["mean"] * 12
@@ -1564,7 +1813,7 @@ quintile_summary
 ```{python}
 #| label: fig-ag-cumulative
 #| eval: false
-#| fig-cap: "Cumulative Returns: Low vs. High Asset Growth Quintiles"
+#| fig-cap: "Lợi nhuận tích lũy: nhóm ngũ phân vị tăng trưởng tài sản thấp so với cao"
 
 cumret = ag_wide[["L-S"]].copy()
 cumret.columns = ["Long-Short"]
@@ -1586,17 +1835,17 @@ cumret = cumret.reset_index()
 )
 ```
 
-### Financing Anomalies
+### Các hiện tượng bất thường về tài trợ
 
-Firms' financing decisions also predict returns. @pontiff2008share document that net stock issuance negatively predicts returns: firms that issue equity earn lower future returns, while firms that repurchase shares earn higher returns. This is consistent with both managerial market timing and an issuance-based risk factor.
+Các quyết định tài trợ của doanh nghiệp cũng dự báo lợi nhuận. @pontiff2008share ghi nhận rằng phát hành cổ phiếu ròng dự báo lợi nhuận theo chiều âm: các doanh nghiệp phát hành cổ phiếu đạt lợi nhuận tương lai thấp hơn, trong khi các doanh nghiệp mua lại cổ phiếu đạt lợi nhuận cao hơn. Điều này phù hợp với cả việc nhà quản lý định thời điểm thị trường lẫn một nhân tố rủi ro dựa trên phát hành.
 
-The net stock issuance variable is typically measured as:
+Biến phát hành cổ phiếu ròng thường được đo như sau:
 
 $$
 \text{NSI}_{i,t} = \ln\left(\frac{\text{Split-Adjusted Shares}_{i,t}}{\text{Split-Adjusted Shares}_{i,t-1}}\right)
 $$ {#eq-nsi}
 
-Positive NSI indicates net equity issuance; negative NSI indicates net repurchases.
+NSI dương cho biết phát hành cổ phiếu ròng; NSI âm cho biết mua lại ròng.
 
 ```{python}
 #| label: financing-anomaly
@@ -1648,7 +1897,7 @@ nsi_wide["L-S"] = nsi_wide[1] - nsi_wide[5]
 ```{python}
 #| label: tbl-nsi-anomaly
 #| eval: false
-#| tbl-cap: "Net Stock Issuance Quintile Portfolio Returns"
+#| tbl-cap: "Lợi nhuận danh mục theo nhóm ngũ phân vị phát hành cổ phiếu ròng"
 
 nsi_summary = nsi_wide.describe().T[["mean", "std"]].copy()
 nsi_summary["mean_ann"] = nsi_summary["mean"] * 12
@@ -1668,15 +1917,15 @@ nsi_summary.columns = ["Ann. Return", "Sharpe", "t-stat"]
 nsi_summary
 ```
 
-### Valuation Implications: Fama-French Factor Regressions
+### Hàm ý định giá: hồi quy nhân tố Fama-French
 
-We evaluate whether the investment and financing anomalies represent compensation for systematic risk by regressing the long-short portfolios on standard factor models:
+Chúng ta đánh giá xem các hiện tượng bất thường về đầu tư và tài trợ có đại diện cho phần bù đắp rủi ro hệ thống hay không bằng cách hồi quy các danh mục mua–bán khống (long–short) theo các mô hình nhân tố chuẩn:
 
 $$
 R_{p,t} - R_{f,t} = \alpha + \beta_{\text{MKT}} \text{MKT}_t + \beta_{\text{SMB}} \text{SMB}_t + \beta_{\text{HML}} \text{HML}_t + \varepsilon_t
 $$ {#eq-factor-regression}
 
-Significant positive $\alpha$ after controlling for known risk factors would indicate that the anomaly is not explained by size and value exposures.
+$\alpha$ dương có ý nghĩa sau khi kiểm soát các nhân tố rủi ro đã biết sẽ cho thấy hiện tượng bất thường không được giải thích bởi mức phơi nhiễm quy mô và giá trị.
 
 ```{python}
 #| label: factor-regressions
@@ -1707,7 +1956,7 @@ model_nsi_ff3 = sm.OLS(
 ```{python}
 #| label: tbl-factor-alphas
 #| eval: false
-#| tbl-cap: "Fama-French Three-Factor Alphas for Corporate Decision Anomalies"
+#| tbl-cap: "Alpha ba nhân tố Fama-French cho các hiện tượng bất thường về quyết định doanh nghiệp"
 
 alpha_table = pd.DataFrame({
     "Asset Growth L-S": {
@@ -1733,7 +1982,7 @@ alpha_table
 ```{python}
 #| label: fig-anomaly-comparison
 #| eval: false
-#| fig-cap: "Corporate Decision Anomalies: Cumulative Long-Short Returns"
+#| fig-cap: "Các hiện tượng bất thường về quyết định doanh nghiệp: lợi nhuận mua–bán khống tích lũy"
 
 # Combine asset growth and NSI long-short for comparison
 combined = pd.DataFrame({
@@ -1765,24 +2014,24 @@ combined_long = combined_cum.melt(
 )
 ```
 
-<!-- ## Exercises
+<!-- ## Bài tập
 
-1.  **Measurement Error Quantification.** Implement the full @erickson2012treating fifth-order cumulant estimator (using both third and fifth moments) for the investment-$Q$ regression. Compare the corrected $\beta_1$ with the OLS estimate. What fraction of the OLS attenuation is attributable to measurement error in $Q$? Does the correction change the significance of the cash flow coefficient?
+1.  **Định lượng sai số đo lường.** Cài đặt đầy đủ công cụ ước lượng cumulant bậc năm của @erickson2012treating (sử dụng cả moment bậc ba và bậc năm) cho hồi quy đầu tư-$Q$. So sánh $\beta_1$ đã hiệu chỉnh với ước lượng OLS. Bao nhiêu phần của sự suy giảm OLS là do sai số đo lường trong $Q$? Việc hiệu chỉnh có làm thay đổi ý nghĩa thống kê của hệ số dòng tiền không?
 
-2.  **Financial Constraints and Investment Efficiency.** Construct the @hadlock2010new SA index for all Vietnamese firms. Sort firms into SA quintiles and estimate separate investment-$Q$ regressions for each quintile. Plot the $Q$ coefficient across quintiles. Is the investment-$Q$ sensitivity monotonically increasing in the SA index (as the constraint hypothesis predicts), or does the Kaplan-Zingales monotonicity failure replicate?
+2.  **Ràng buộc tài chính và hiệu quả đầu tư.** Xây dựng chỉ số SA của @hadlock2010new cho tất cả doanh nghiệp Việt Nam. Phân loại doanh nghiệp theo ngũ phân vị SA và ước lượng các hồi quy đầu tư-$Q$ riêng cho từng nhóm. Vẽ hệ số $Q$ qua các nhóm. Độ nhạy đầu tư-$Q$ có tăng đơn điệu theo chỉ số SA (như giả thuyết ràng buộc dự đoán) hay vi phạm tính đơn điệu Kaplan-Zingales được tái lập?
 
-3.  **Speed of Leverage Adjustment.** Estimate the target adjustment model: $\text{Lev}_{i,t} - \text{Lev}_{i,t-1} = \lambda(\text{Lev}_{i,t}^* - \text{Lev}_{i,t-1}) + \varepsilon_{i,t}$, where $\text{Lev}^*$ is the target leverage predicted by the Frank-Goyal determinants. Estimate $\lambda$ for the full sample and separately for SOEs versus private firms. Does state ownership accelerate or retard adjustment to target leverage? Use a system GMM estimator to address the Nickell bias from the lagged dependent variable in short panels.
+3.  **Tốc độ điều chỉnh đòn bẩy.** Ước lượng mô hình điều chỉnh về mục tiêu: $\text{Lev}_{i,t} - \text{Lev}_{i,t-1} = \lambda(\text{Lev}_{i,t}^* - \text{Lev}_{i,t-1}) + \varepsilon_{i,t}$, trong đó $\text{Lev}^*$ là đòn bẩy mục tiêu được dự báo bởi các yếu tố quyết định Frank-Goyal. Ước lượng $\lambda$ cho toàn mẫu và riêng cho SOE so với doanh nghiệp tư nhân. Sở hữu nhà nước đẩy nhanh hay làm chậm việc điều chỉnh về đòn bẩy mục tiêu? Dùng công cụ ước lượng GMM hệ thống để xử lý thiên lệch Nickell do biến phụ thuộc trễ trong các bảng dữ liệu ngắn.
 
-4.  **Tunneling and Related-Party Transactions.** If DataCore.vn provides related-party transaction (RPT) data, estimate the effect of RPT intensity on firm value (Tobin's $Q$) and operating performance (ROA), controlling for ownership concentration, governance variables, and firm fundamentals. Use the @jiang2010tunneling methodology to distinguish potentially expropriative RPTs from benign ones. Does the RPT-value relationship depend on the identity of the controlling shareholder (state vs. family vs. foreign)?
+4.  **Tunneling và giao dịch với bên liên quan.** Nếu DataCore.vn cung cấp dữ liệu giao dịch với bên liên quan (RPT), hãy ước lượng tác động của cường độ RPT lên giá trị doanh nghiệp ($Q$ của Tobin) và hiệu quả hoạt động (ROA), kiểm soát tập trung sở hữu, các biến quản trị và các yếu tố cơ bản của doanh nghiệp. Dùng phương pháp của @jiang2010tunneling để phân biệt các RPT có khả năng chiếm đoạt với các RPT vô hại. Quan hệ RPT-giá trị có phụ thuộc vào danh tính của cổ đông kiểm soát (nhà nước, gia đình hay nước ngoài) không?
 
-5.  **Dividend Tax Clientele.** Vietnam implemented a 5% dividend tax in 2014. Using a difference-in-differences design around this regulatory change, test whether the tax altered payout composition (dividends vs. share repurchases vs. retained earnings). Control for firm characteristics and use a matched sample of high- vs. low-dividend firms to estimate the treatment effect on total payout and payout mix.
+5.  **Hiệu ứng nhóm nhà đầu tư theo thuế cổ tức.** Việt Nam đã áp dụng thuế cổ tức 5% vào năm 2014. Dùng thiết kế khác biệt trong khác biệt (difference-in-differences) quanh thay đổi quy định này, kiểm định xem thuế có làm thay đổi cơ cấu chi trả (cổ tức, mua lại cổ phiếu, lợi nhuận giữ lại) hay không. Kiểm soát các đặc điểm doanh nghiệp và dùng mẫu ghép cặp gồm các doanh nghiệp cổ tức cao so với thấp để ước lượng hiệu ứng can thiệp lên tổng chi trả và cơ cấu chi trả.
 
-6.  **Investment Factor Construction.** Construct a Vietnamese investment factor (CMA, "Conservative Minus Aggressive") following the @FamaFrench2015 methodology. Sort firms into 2×3 portfolios on size and asset growth, compute value-weighted returns, and form the long-short factor. Test whether the factor is priced in the cross-section using Fama-MacBeth regressions and whether it subsumes the asset growth anomaly documented in this chapter. Compare the factor's performance with the profitability factor (RMW). -->
+6.  **Xây dựng nhân tố đầu tư.** Xây dựng một nhân tố đầu tư cho Việt Nam (CMA, "Conservative Minus Aggressive") theo phương pháp của @FamaFrench2015. Phân loại doanh nghiệp vào các danh mục 2×3 theo quy mô và tăng trưởng tài sản, tính lợi nhuận trọng số theo vốn hóa và lập nhân tố mua–bán khống. Kiểm định xem nhân tố này có được định giá trong mặt cắt ngang hay không bằng hồi quy Fama-MacBeth và liệu nó có bao hàm hiện tượng bất thường về tăng trưởng tài sản được ghi nhận trong chương này hay không. So sánh hiệu quả của nhân tố với nhân tố khả năng sinh lời (RMW). -->
 
-## Summary
+## Tóm tắt
 
-This chapter implemented the core econometric toolkit of empirical corporate finance for Vietnamese listed firms. The estimators span four interconnected domains: investment decisions (investment-$Q$ regressions and their measurement-error-corrected variants), financing decisions (capital structure determinants, pecking order tests, and market timing measures), payout policy (Lintner smoothing, repurchase models, and dividend signaling tests), and agency costs (ownership-value relationships, free cash flow measures, and governance variables).
+Chương này đã cài đặt bộ công cụ kinh tế lượng cốt lõi của tài chính doanh nghiệp thực nghiệm cho các doanh nghiệp niêm yết Việt Nam. Các công cụ ước lượng trải trên bốn lĩnh vực liên kết với nhau: quyết định đầu tư (hồi quy đầu tư-$Q$ và các biến thể đã hiệu chỉnh sai số đo lường), quyết định tài trợ (các yếu tố quyết định cấu trúc vốn, kiểm định trật tự phân hạng và các thước đo định thời điểm thị trường), chính sách chi trả (làm mượt Lintner, mô hình mua lại cổ phiếu và kiểm định tín hiệu cổ tức), và chi phí đại diện (quan hệ sở hữu-giá trị, các thước đo dòng tiền tự do và các biến quản trị).
 
-Several findings deserve emphasis. The investment-$Q$ relationship in Vietnam is attenuated relative to developed-market benchmarks, reflecting both the severity of measurement error in $Q$ (thin trading, price limits, volatile inflation) and the prevalence of non-market-driven investment by SOEs. Cash flow remains a significant predictor of investment across constraint classifications, though the FHP-KZ debate about interpretation applies with full force. Capital structure is strongly predicted by profitability (negatively, consistent with the pecking order) and tangibility (positively, consistent with trade-off theory). Dividend smoothing is pronounced, but the smoothing parameter differs systematically between SOEs and private firms, reflecting the distinct institutional forces governing each group's payout policy.
+Một số phát hiện đáng nhấn mạnh. Mối quan hệ đầu tư-$Q$ ở Việt Nam bị suy giảm so với các chuẩn mực của thị trường phát triển, phản ánh cả mức độ nghiêm trọng của sai số đo lường trong $Q$ (giao dịch mỏng, biên độ giá, lạm phát biến động) lẫn sự phổ biến của đầu tư không theo thị trường của các SOE. Dòng tiền vẫn là một biến dự báo đầu tư có ý nghĩa qua các phân loại ràng buộc, mặc dù tranh luận FHP-KZ về cách diễn giải vẫn áp dụng đầy đủ. Cấu trúc vốn được dự báo mạnh bởi khả năng sinh lời (theo chiều âm, phù hợp với trật tự phân hạng) và tính hữu hình (theo chiều dương, phù hợp với lý thuyết đánh đổi). Việc làm mượt cổ tức rất rõ rệt, nhưng tham số làm mượt khác nhau một cách hệ thống giữa SOE và doanh nghiệp tư nhân, phản ánh các lực lượng thể chế riêng chi phối chính sách chi trả của từng nhóm.
 
-The chapter also linked corporate decisions to asset returns through portfolio sorts on asset growth and net stock issuance. Whether these anomalies survive risk adjustment and persist out of sample in Vietnamese markets is an important open question for future research.
+Chương này cũng liên kết các quyết định doanh nghiệp với lợi nhuận tài sản thông qua việc phân loại danh mục theo tăng trưởng tài sản và phát hành cổ phiếu ròng. Liệu các hiện tượng bất thường này có tồn tại sau khi điều chỉnh rủi ro và duy trì ngoài mẫu tại thị trường Việt Nam hay không là một câu hỏi mở quan trọng cho nghiên cứu tương lai.

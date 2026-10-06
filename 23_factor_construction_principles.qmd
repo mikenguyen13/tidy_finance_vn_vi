@@ -1,30 +1,30 @@
-# Factor Construction Principles
+# Nguyên tắc xây dựng nhân tố
 
 ::: callout-note
-In this chapter, we develop a general-purpose factor construction engine for the Vietnamese equity market. We cover every methodological decision in the pipeline, including universe definition, breakpoint computation, portfolio formation, weighting, rebalancing, and factor return calculation, and demonstrate how each choice affects the resulting factor.
+Trong chương này, chúng ta xây dựng một "động cơ" tạo nhân tố đa dụng cho thị trường cổ phiếu Việt Nam. Chúng ta xem xét mọi quyết định phương pháp luận trong quy trình, bao gồm xác định tập hợp cổ phiếu, tính các điểm cắt, hình thành danh mục, đặt trọng số, tái cân bằng và tính lợi nhuận nhân tố, đồng thời chỉ ra mỗi lựa chọn ảnh hưởng thế nào đến nhân tố thu được.
 :::
 
-The previous chapters introduced specific asset pricing models, including the CAPM, the Fama-French three-factor model, and momentum. Each of those chapters presented its factor as given. This chapter steps behind the curtain and addresses the engineering question: *how exactly do you build a factor?* The question matters because seemingly minor methodological decisions, such as where to set breakpoints, whether to value-weight or equal-weight, how to handle missing accounting data, which stocks to exclude, can alter the magnitude, statistical significance, and even the sign of a factor premium.
+Các chương trước đã giới thiệu những mô hình định giá tài sản cụ thể, gồm CAPM, mô hình ba nhân tố Fama-French và động lượng. Mỗi chương đó coi nhân tố của mình là đã cho sẵn. Chương này đi vào "hậu trường" và trả lời câu hỏi kỹ thuật: *chính xác thì xây dựng một nhân tố như thế nào?* Câu hỏi này quan trọng vì những quyết định phương pháp luận tưởng như nhỏ, chẳng hạn đặt các điểm cắt ở đâu, dùng trọng số theo vốn hóa hay trọng số bằng nhau, xử lý dữ liệu kế toán bị thiếu ra sao, loại bỏ những cổ phiếu nào, có thể làm thay đổi độ lớn, ý nghĩa thống kê và thậm chí cả dấu của phần bù nhân tố.
 
-In the U.S. context, @fama1993common established a canonical procedure: sort stocks independently on size and a characteristic, form six value-weighted portfolios from 2×3 intersections, and define the factor as the average return of the two high-characteristic portfolios minus the average return of the two low-characteristic portfolios. This procedure has been replicated thousands of times. But it was designed for the U.S. market circa 1990, with its deep liquidity, broad cross-section, and CRSP/Compustat data infrastructure. Applying it mechanically to Vietnam, a market with 700 listed stocks, extreme illiquidity in the bottom tercile, high concentration in the top decile, and accounting data that arrives with variable lags, requires careful adaptation.
+Trong bối cảnh Hoa Kỳ, @fama1993common đã thiết lập một quy trình chuẩn: phân loại độc lập các cổ phiếu theo quy mô và một đặc điểm, hình thành sáu danh mục trọng số theo vốn hóa từ các giao điểm 2×3, và định nghĩa nhân tố là lợi nhuận trung bình của hai danh mục có đặc điểm cao trừ đi lợi nhuận trung bình của hai danh mục có đặc điểm thấp. Quy trình này đã được lặp lại hàng nghìn lần. Nhưng nó được thiết kế cho thị trường Hoa Kỳ khoảng năm 1990, với thanh khoản sâu, mặt cắt ngang rộng và hạ tầng dữ liệu CRSP/Compustat. Áp dụng máy móc quy trình này cho Việt Nam, một thị trường có khoảng 700 cổ phiếu niêm yết, phi thanh khoản cực đoan ở nhóm tam phân vị dưới cùng, mức tập trung cao ở nhóm thập phân vị trên cùng và dữ liệu kế toán được công bố với độ trễ không cố định, đòi hỏi phải có sự điều chỉnh cẩn thận.
 
-@hou2020replicating replicated 452 anomalies from the U.S. literature and found that over half fail to replicate even in U.S. data with minor methodological variations. The replication crisis in empirical asset pricing makes it essential that researchers understand and document every construction choice. This chapter provides the tools to do so transparently.
+@hou2020replicating đã lặp lại 452 hiện tượng bất thường từ tài liệu nghiên cứu của Hoa Kỳ và thấy rằng hơn một nửa không thể lặp lại, ngay cả với dữ liệu Hoa Kỳ khi thay đổi nhỏ về phương pháp. Cuộc khủng hoảng lặp lại kết quả trong định giá tài sản thực nghiệm khiến các nhà nghiên cứu nhất thiết phải hiểu và ghi chép mọi lựa chọn xây dựng nhân tố. Chương này cung cấp các công cụ để làm điều đó một cách minh bạch.
 
-## The Factor Construction Pipeline {#sec-factor-con-pipeline}
+## Quy trình xây dựng nhân tố {#sec-factor-con-pipeline}
 
-Every tradeable factor follows the same logical pipeline:
+Mọi nhân tố có thể giao dịch đều theo cùng một quy trình logic:
 
-1. Define the universe: Select the eligible securities (e.g., common stocks with liquidity and size filters).
-2. Compute the signal: Calculate the characteristic of interest (e.g., value, momentum, profitability).
-3. Set breakpoints: Determine how stocks will be sorted (e.g., median, quintiles, deciles).
-4. Assign portfolios: Group stocks into high and low (or multiple) portfolios based on the signal.
-5. Compute returns: Calculate portfolio returns (equal- or value-weighted).
-6. Construct the factor: Take Long (high) - Short (low).
-7. Validate: Test performance, significance, and robustness.
+1. Xác định tập hợp cổ phiếu: Chọn các chứng khoán đủ điều kiện (ví dụ: cổ phiếu phổ thông có bộ lọc về thanh khoản và quy mô).
+2. Tính tín hiệu: Tính đặc điểm quan tâm (ví dụ: giá trị, động lượng, khả năng sinh lời).
+3. Đặt các điểm cắt: Xác định cách phân loại cổ phiếu (ví dụ: trung vị, ngũ phân vị, thập phân vị).
+4. Gán danh mục: Nhóm các cổ phiếu vào danh mục cao và thấp (hoặc nhiều danh mục) dựa trên tín hiệu.
+5. Tính lợi nhuận: Tính lợi nhuận danh mục (trọng số bằng nhau hoặc theo vốn hóa).
+6. Xây dựng nhân tố: Lấy Mua (cao) - Bán khống (thấp).
+7. Kiểm định: Kiểm tra hiệu quả, ý nghĩa thống kê và độ vững.
 
-Each step involves choices that interact with each other. A breakpoint that works well for a liquid universe may be inappropriate for the full cross-section. A weighting scheme that reduces noise in the U.S. may amplify it in Vietnam. We address each step systematically.
+Mỗi bước đều có những lựa chọn tương tác với nhau. Một điểm cắt hoạt động tốt với tập hợp cổ phiếu có thanh khoản cao có thể không phù hợp với toàn bộ mặt cắt ngang. Một cách đặt trọng số làm giảm nhiễu ở Hoa Kỳ có thể làm nhiễu tăng lên ở Việt Nam. Chúng ta xem xét từng bước một cách có hệ thống.
 
-## Data Construction {#sec-factor-con-data}
+## Xây dựng dữ liệu {#sec-factor-con-data}
 
 ```{python}
 #| label: setup
@@ -103,13 +103,13 @@ print(f"Accounting: {len(accounting):,} firm-years")
 print(f"Unique tickers: {monthly['ticker'].nunique()}")
 ```
 
-## Step 1: Universe Definition {#sec-factor-con-universe}
+## Bước 1: Xác định tập hợp cổ phiếu {#sec-factor-con-universe}
 
-The first and most consequential choice is which stocks enter the factor construction universe. The universe definition determines what population the factor premium describes and whether it is implementable.
+Lựa chọn đầu tiên và có hệ quả lớn nhất là những cổ phiếu nào được đưa vào tập hợp xây dựng nhân tố. Cách xác định tập hợp này quyết định phần bù nhân tố mô tả tổng thể nào và liệu nó có thể thực hiện được hay không.
 
-### The Universe Problem in Vietnam
+### Vấn đề tập hợp cổ phiếu ở Việt Nam
 
-Vietnam presents a specific challenge: the cross-section is small (600-800 stocks on HOSE and HNX combined), and the size distribution is extremely skewed. The top 10 stocks by market capitalization account for roughly 50% of the total market cap on HOSE. The bottom tercile consists of micro-cap stocks that often trade fewer than 5 days per month. Including these stocks inflates apparent factor premia because their prices are noisy and stale, but excluding them shrinks the already small cross-section.
+Việt Nam đặt ra một thách thức đặc thù: mặt cắt ngang nhỏ (600-800 cổ phiếu trên HOSE và HNX cộng lại), và phân phối quy mô cực kỳ lệch. 10 cổ phiếu có vốn hóa lớn nhất chiếm khoảng 50% tổng vốn hóa trên HOSE. Nhóm tam phân vị dưới cùng gồm các cổ phiếu vốn hóa siêu nhỏ, thường giao dịch chưa đến 5 ngày mỗi tháng. Việc đưa các cổ phiếu này vào làm tăng phần bù nhân tố biểu kiến vì giá của chúng nhiễu và không được cập nhật kịp thời, nhưng loại bỏ chúng lại làm thu hẹp mặt cắt ngang vốn đã nhỏ.
 
 ```{python}
 #| label: universe-filters
@@ -193,7 +193,7 @@ print(filter_df.round(1).to_string())
 ```{python}
 #| label: fig-universe-size
 #| eval: false
-#| fig-cap: "Number of stocks in the investable universe under different filter definitions. The 'strict' filter reduces the cross-section by roughly 30-40% but retains over 90% of total market capitalization. The trade-off is between cross-sectional breadth (more breakpoint precision) and data quality (less noise from illiquid micro-caps)."
+#| fig-cap: "Số lượng cổ phiếu trong tập hợp có thể đầu tư theo các định nghĩa bộ lọc khác nhau. Bộ lọc 'strict' (nghiêm ngặt) làm giảm mặt cắt ngang khoảng 30-40% nhưng vẫn giữ lại hơn 90% tổng vốn hóa thị trường. Sự đánh đổi nằm giữa độ rộng của mặt cắt ngang (điểm cắt chính xác hơn) và chất lượng dữ liệu (ít nhiễu hơn từ các cổ phiếu vốn hóa siêu nhỏ kém thanh khoản)."
 #| code-summary: "Plot universe size under different filters over time"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -238,11 +238,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Step 2: Signal Construction {#sec-factor-con-signals}
+## Bước 2: Xây dựng tín hiệu {#sec-factor-con-signals}
 
-### Point-in-Time Accounting Data
+### Dữ liệu kế toán theo thời điểm công bố
 
-As discussed in the missing data chapter, accounting signals must be aligned with their public availability date to avoid look-ahead bias. We implement a general-purpose point-in-time merge:
+Như đã thảo luận trong chương về dữ liệu thiếu, các tín hiệu kế toán phải được căn chỉnh theo ngày thông tin được công bố công khai để tránh thiên lệch nhìn trước. Chúng ta triển khai một phép ghép đa dụng theo thời điểm công bố (point-in-time):
 
 ```{python}
 #| label: pit-merge
@@ -339,9 +339,9 @@ for sig in ['bm', 'gp_at', 'op', 'investment', 'leverage']:
     print(f"  {sig:<15}: {pct:.1%}")
 ```
 
-### Momentum and Volatility Signals
+### Tín hiệu động lượng và biến động
 
-Price-based signals require return history, not accounting data, so they have different timing requirements.
+Các tín hiệu dựa trên giá cần lịch sử lợi nhuận chứ không cần dữ liệu kế toán, do đó có yêu cầu về thời điểm khác nhau.
 
 ```{python}
 #| label: price-signals
@@ -385,16 +385,16 @@ for sig in ['ret_12_2', 'ret_1', 'ivol']:
     print(f"  {sig:<15}: {pct:.1%}")
 ```
 
-## Step 3: Breakpoint Computation {#sec-factor-con-breakpoints}
+## Bước 3: Tính các điểm cắt {#sec-factor-con-breakpoints}
 
-### The Breakpoint Decision
+### Quyết định về điểm cắt
 
-Breakpoints determine which stocks are "high" versus "low" on a given characteristic. The two key choices are:
+Các điểm cắt xác định cổ phiếu nào là "cao" so với "thấp" theo một đặc điểm cho trước. Hai lựa chọn then chốt là:
 
-1.  **Breakpoint universe:** Should breakpoints be computed from all stocks or from a subset (e.g., HOSE only)?
-2.  **Number of groups:** 2×3 (Fama-French standard), 5×5 (for finer sorts), or independent terciles/quintiles?
+1.  **Tập hợp tính điểm cắt:** Nên tính các điểm cắt từ tất cả cổ phiếu hay từ một tập con (ví dụ: chỉ HOSE)?
+2.  **Số nhóm:** 2×3 (chuẩn Fama-French), 5×5 (cho các phân loại mịn hơn), hay tam phân vị/ngũ phân vị độc lập?
 
-@fama1993common use NYSE breakpoints for U.S. sorts because this prevents the large number of small Nasdaq/AMEX stocks from dominating the breakpoint distribution. The analog in Vietnam is to use HOSE breakpoints, since HOSE lists the larger, more liquid firms and HNX lists smaller firms. Using all-stock breakpoints would place most HOSE stocks in the upper size groups and most HNX stocks in the lower groups, producing mechanically different results.
+@fama1993common dùng các điểm cắt của NYSE cho các phân loại ở Hoa Kỳ vì điều này ngăn số lượng lớn cổ phiếu nhỏ của Nasdaq/AMEX chi phối phân phối của các điểm cắt. Tương tự ở Việt Nam là dùng các điểm cắt của HOSE, vì HOSE niêm yết các doanh nghiệp lớn hơn, thanh khoản tốt hơn còn HNX niêm yết các doanh nghiệp nhỏ hơn. Nếu dùng điểm cắt tính từ tất cả cổ phiếu, hầu hết cổ phiếu HOSE sẽ rơi vào các nhóm quy mô cao và hầu hết cổ phiếu HNX rơi vào các nhóm thấp, tạo ra kết quả khác biệt một cách cơ học.
 
 ```{python}
 #| label: breakpoints
@@ -446,7 +446,7 @@ print(f"\n  Difference: HOSE breakpoints are "
 ```{python}
 #| label: fig-breakpoints
 #| eval: false
-#| fig-cap: "Effect of breakpoint universe on portfolio composition. Panel A shows the time series of the median BM breakpoint under HOSE-only versus all-stock computation. Panel B shows the resulting number of stocks in each tercile. Using HOSE breakpoints places more HNX stocks in the growth (low BM) group, reflecting the size-value correlation."
+#| fig-cap: "Ảnh hưởng của tập hợp tính điểm cắt đến thành phần danh mục. Panel A thể hiện chuỗi thời gian của điểm cắt BM trung vị khi chỉ tính từ HOSE so với tính từ tất cả cổ phiếu. Panel B thể hiện số cổ phiếu thu được trong mỗi tam phân vị. Việc dùng điểm cắt của HOSE đưa nhiều cổ phiếu HNX hơn vào nhóm tăng trưởng (BM thấp), phản ánh tương quan giữa quy mô và giá trị."
 #| code-summary: "Visualize breakpoint effects over time"
 # Compute breakpoints for every month
 bp_comparison = []
@@ -492,11 +492,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Step 4: Portfolio Formation {#sec-factor-con-formation}
+## Bước 4: Hình thành danh mục {#sec-factor-con-formation}
 
-### The Generic Factor Engine
+### Động cơ nhân tố tổng quát
 
-We implement a general-purpose factor construction function that takes any signal column and produces a long-short factor return series. The function encapsulates all methodological choices as parameters, making it easy to test sensitivity.
+Chúng ta triển khai một hàm xây dựng nhân tố đa dụng, nhận một cột tín hiệu bất kỳ và tạo ra chuỗi lợi nhuận nhân tố mua–bán khống (long–short). Hàm này gói gọn mọi lựa chọn phương pháp luận thành các tham số, giúp dễ dàng kiểm tra độ nhạy.
 
 ```{python}
 #| label: factor-engine
@@ -681,9 +681,9 @@ def construct_factor(
     }
 ```
 
-### Building the Core Factors
+### Xây dựng các nhân tố cốt lõi
 
-We now use the engine to construct the standard Fama-French factors for Vietnam:
+Bây giờ chúng ta dùng động cơ này để xây dựng các nhân tố Fama-French chuẩn cho Việt Nam:
 
 ```{python}
 #| label: core-factors
@@ -749,7 +749,7 @@ for name, result in [('SMB', smb_result), ('HML', hml_result),
 ```{python}
 #| label: fig-factor-cumulative
 #| eval: false
-#| fig-cap: "Cumulative returns of the five Vietnamese factors (SMB, HML, RMW, CMA, WML) constructed using the Fama-French 2×3 methodology with HOSE breakpoints and value weighting. Factor behavior reflects Vietnamese market characteristics: the strong HML premium reflects the value tilt of the market, while momentum (WML) shows the characteristic crash-and-recovery pattern."
+#| fig-cap: "Lợi nhuận tích lũy của năm nhân tố Việt Nam (SMB, HML, RMW, CMA, WML) được xây dựng theo phương pháp 2×3 của Fama-French với các điểm cắt của HOSE và trọng số theo vốn hóa. Hành vi của các nhân tố phản ánh đặc điểm thị trường Việt Nam: phần bù HML mạnh phản ánh thiên hướng giá trị của thị trường, trong khi động lượng (WML) cho thấy mô thức sụp đổ rồi phục hồi đặc trưng."
 #| code-summary: "Plot cumulative factor returns"
 fig, ax = plt.subplots(figsize=(14, 6))
 
@@ -778,11 +778,13 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Step 5: Sensitivity to Construction Choices {#sec-factor-con-sensitivity}
+## Bước 5: Độ nhạy với các lựa chọn xây dựng {#sec-factor-con-sensitivity}
 
-The most important lesson in factor construction is that the resulting factor premium is *not* uniquely determined by the economic hypothesis; it depends substantially on implementation choices. We systematically vary each choice and examine how the factor changes.
+Bài học quan trọng nhất trong xây dựng nhân tố là phần bù nhân tố thu được *không* được xác định duy nhất bởi giả thuyết kinh tế; nó phụ thuộc đáng kể vào các lựa chọn triển khai. Chúng ta thay đổi có hệ thống từng lựa chọn và xem xét nhân tố thay đổi ra sao.
 
-### Weighting: Value-Weighted vs. Equal-Weighted
+Các lựa chọn được thay đổi dưới đây là những lựa chọn mà các nhà nghiên cứu thường coi là lựa chọn: cách đặt trọng số, các điểm cắt, số nhóm, tần suất tái cân bằng. Chuẩn so sánh được trừ đi để tạo lợi nhuận vượt mức hiếm khi nằm trong danh sách đó, nhưng @binsbergen2026factor cho thấy nó thuộc về danh sách này. Việc thay lãi suất ngắn hạn bằng một danh mục trái phiếu chính phủ có thời gian đáo hạn bình quân (duration) tương ứng làm thay đổi dấu hoặc ý nghĩa thống kê của một thiểu số đáng kể các hiện tượng bất thường đã công bố ở Hoa Kỳ mà không hề động đến biến phân loại. Chúng tôi không triển khai điều chỉnh đó ở đây, nhưng cần lưu ý rằng bảng độ nhạy ở cuối mục này đánh giá thấp toàn bộ đa vũ trụ (multiverse) các đặc tả có cơ sở hợp lý.
+
+### Cách đặt trọng số: theo vốn hóa so với bằng nhau
 
 ```{python}
 #| label: vw-vs-ew
@@ -812,7 +814,7 @@ print("VW vs EW Factor Returns:")
 print(sens_df.round(3).to_string())
 ```
 
-### Breakpoint Universe: HOSE vs. All Stocks
+### Tập hợp tính điểm cắt: HOSE so với tất cả cổ phiếu
 
 ```{python}
 #| label: bp-sensitivity
@@ -842,7 +844,7 @@ print("\nBreakpoint Universe Sensitivity:")
 print(bp_sens.round(3).to_string())
 ```
 
-### Number of Groups: 2×3 vs. 5×5 vs. Deciles
+### Số nhóm: 2×3 so với 5×5 so với thập phân vị
 
 ```{python}
 #| label: group-sensitivity
@@ -875,7 +877,7 @@ print("HML: Sorting Granularity Sensitivity:")
 print(pd.DataFrame(group_results).T.round(3).to_string())
 ```
 
-### Rebalancing Frequency
+### Tần suất tái cân bằng
 
 ```{python}
 #| label: rebalance-sensitivity
@@ -899,12 +901,12 @@ print("HML: Rebalancing Frequency Sensitivity:")
 print(pd.DataFrame(rebal_results).T.round(4).to_string())
 ```
 
-### Comprehensive Sensitivity Summary
+### Tóm tắt toàn diện về độ nhạy
 
 ```{python}
 #| label: fig-sensitivity-heatmap
 #| eval: false
-#| fig-cap: "Sensitivity of factor premia to construction choices. Each cell shows the annualized long-short return under a specific combination of weighting (VW vs EW), breakpoint universe (HOSE vs all), and number of groups. Cells are shaded by t-statistic magnitude: darker = more statistically significant. Results that are robust across all cells are more credible."
+#| fig-cap: "Độ nhạy của các phần bù nhân tố với các lựa chọn xây dựng. Mỗi ô thể hiện lợi nhuận mua–bán khống quy năm theo một tổ hợp cụ thể của cách đặt trọng số (VW so với EW), tập hợp tính điểm cắt (HOSE so với tất cả) và số nhóm. Các ô được tô đậm theo độ lớn của thống kê t: càng đậm = càng có ý nghĩa thống kê. Các kết quả vững trên tất cả các ô đáng tin cậy hơn."
 #| code-summary: "Heatmap of factor premium sensitivity"
 # Systematic grid search for HML
 configs = list(product(
@@ -950,12 +952,12 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Factor Correlation Structure {#sec-factor-con-correlation}
+## Cấu trúc tương quan giữa các nhân tố {#sec-factor-con-correlation}
 
 ```{python}
 #| label: fig-factor-correlations
 #| eval: false
-#| fig-cap: "Correlation matrix of Vietnamese factor returns. SMB and HML are near-zero correlated (by construction in the 2×3 methodology, which controls for size within each signal sort). WML shows low correlation with accounting-based factors. The correlation structure reveals the degree of independent information in each factor."
+#| fig-cap: "Ma trận tương quan của lợi nhuận các nhân tố Việt Nam. SMB và HML có tương quan gần bằng không (theo cách xây dựng trong phương pháp 2×3, vốn kiểm soát quy mô trong mỗi phân loại tín hiệu). WML có tương quan thấp với các nhân tố dựa trên kế toán. Cấu trúc tương quan cho thấy mức độ thông tin độc lập trong mỗi nhân tố."
 #| code-summary: "Compute and plot factor return correlation matrix"
 # Merge all factor return series
 factor_panel = pd.DataFrame()
@@ -983,11 +985,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Factor Validation {#sec-factor-con-validation}
+## Kiểm định nhân tố {#sec-factor-con-validation}
 
-A well-constructed factor should pass several diagnostic tests before being used in asset pricing research.
+Một nhân tố được xây dựng tốt cần vượt qua một số kiểm tra chẩn đoán trước khi được dùng trong nghiên cứu định giá tài sản.
 
-### Diagnostic Checklist
+### Danh sách kiểm tra chẩn đoán
 
 ```{python}
 #| label: validation
@@ -1057,14 +1059,14 @@ for name, result in [('SMB', smb_result), ('HML', hml_result),
             print(f"  {test:<30}: {value}")
 ```
 
-### Monotonicity Test
+### Kiểm định tính đơn điệu
 
-A factor built from a characteristic sort should produce monotonically increasing (or decreasing) average returns across quantiles. Violations of monotonicity suggest the signal-return relationship is nonlinear or absent.
+Một nhân tố được xây dựng từ phân loại theo đặc điểm cần cho lợi nhuận trung bình tăng đơn điệu (hoặc giảm đơn điệu) qua các phân vị. Vi phạm tính đơn điệu cho thấy mối quan hệ giữa tín hiệu và lợi nhuận là phi tuyến hoặc không tồn tại.
 
 ```{python}
 #| label: fig-monotonicity
 #| eval: false
-#| fig-cap: "Decile portfolio returns sorted on each signal (independent of size). Monotonicity—a steady increase from the low-signal to the high-signal decile—validates the signal-return relationship. Violations (e.g., a U-shaped pattern) suggest nonlinearity or construction artifacts."
+#| fig-cap: "Lợi nhuận các danh mục thập phân vị được phân loại theo từng tín hiệu (độc lập với quy mô). Tính đơn điệu—mức tăng đều đặn từ thập phân vị tín hiệu thấp đến cao—xác nhận mối quan hệ giữa tín hiệu và lợi nhuận. Các vi phạm (ví dụ: dạng chữ U) cho thấy tính phi tuyến hoặc các sai lệch do cách xây dựng."
 #| code-summary: "Test monotonicity of returns across signal deciles"
 fig, axes = plt.subplots(2, 3, figsize=(16, 10))
 axes = axes.flatten()
@@ -1109,9 +1111,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Spanning Tests
+### Kiểm định bao phủ (spanning)
 
-Does a new factor add information beyond existing factors? We test this by regressing each factor on all other factors and examining the intercept (alpha). A significant alpha means the factor captures return variation not spanned by the others:
+Một nhân tố mới có bổ sung thông tin ngoài các nhân tố hiện có không? Chúng ta kiểm tra điều này bằng cách hồi quy từng nhân tố theo tất cả các nhân tố còn lại và xem xét hệ số chặn (alpha). Alpha có ý nghĩa thống kê nghĩa là nhân tố nắm bắt biến thiên lợi nhuận mà các nhân tố khác không bao phủ được:
 
 ```{python}
 #| label: spanning
@@ -1137,11 +1139,11 @@ for target in factor_names:
     print(f"{target:<8} {alpha_ann:>12.4f} {alpha_t:>8.2f} {r2:>6.3f}")
 ```
 
-## Vietnamese-Specific Considerations {#sec-factor-con-vietnam}
+## Những cân nhắc riêng của Việt Nam {#sec-factor-con-vietnam}
 
-### State-Owned Enterprise Classification
+### Phân loại doanh nghiệp nhà nước
 
-A unique feature of Vietnamese equities is the high proportion of state-owned enterprises (SOEs). The state retains majority or significant minority stakes in many listed firms, which affects governance, information environment, and trading dynamics. Factors may behave differently within SOE and non-SOE subsamples:
+Một đặc điểm độc đáo của cổ phiếu Việt Nam là tỷ lệ cao các doanh nghiệp nhà nước (SOE). Nhà nước nắm giữ phần vốn chi phối hoặc phần vốn thiểu số đáng kể ở nhiều doanh nghiệp niêm yết, điều này ảnh hưởng đến quản trị công ty, môi trường thông tin và động lực giao dịch. Các nhân tố có thể hành xử khác nhau trong các mẫu con SOE và phi SOE:
 
 ```{python}
 #| label: soe-split
@@ -1168,9 +1170,9 @@ for label, subset in [('SOE', panel_soe[panel_soe['is_soe'] == True]),
               f"t = {d['t_stat']:.2f}, N = {d['avg_stocks_per_portfolio']:.0f}")
 ```
 
-### Foreign Ownership Limits
+### Giới hạn sở hữu nước ngoài
 
-Foreign ownership caps (49% for most sectors, 30% for banking) affect the investable universe for international investors. Factors constructed from the full universe may not be achievable by foreign investors if the long leg concentrates in stocks at the foreign ownership limit:
+Trần sở hữu nước ngoài (49% với hầu hết các ngành, 30% với ngân hàng) ảnh hưởng đến tập hợp cổ phiếu có thể đầu tư của các nhà đầu tư quốc tế. Các nhân tố được xây dựng từ toàn bộ tập hợp cổ phiếu có thể không thực hiện được đối với nhà đầu tư nước ngoài nếu vị thế mua tập trung vào các cổ phiếu đã chạm giới hạn sở hữu nước ngoài (hết room ngoại):
 
 ```{python}
 #| label: foreign-ownership
@@ -1201,51 +1203,51 @@ if hml_result:
     print(fol_by_group.round(3))
 ```
 
-## Recommended Factor Specifications for Vietnam {#sec-factor-con-recommendations}
+## Các đặc tả nhân tố khuyến nghị cho Việt Nam {#sec-factor-con-recommendations}
 
-Based on the sensitivity analysis, we recommend the following baseline specifications (@tbl-factor-con-recommendations).
+Dựa trên phân tích độ nhạy, chúng tôi khuyến nghị các đặc tả cơ sở sau (@tbl-factor-con-recommendations).
 
-| Choice | Recommendation | Rationale |
+| Lựa chọn | Khuyến nghị | Lý do |
 |------------------------|------------------------|------------------------|
-| Universe | Standard filter (listing age ≥ 6m, volume \> 0) | Excludes shell firms without losing too much breadth |
-| Breakpoints | HOSE stocks only | Prevents HNX micro-caps from dominating breakpoints |
-| Size groups | 2 (median split) | Sufficient control with limited cross-section |
-| Signal groups | 3 (terciles) for factor construction; 5 or 10 for portfolio analysis | 2×3 = adequate diversification per portfolio |
-| Weighting | Value-weighted | Investable; less noisy than EW |
-| Rebalancing | Annual (June) for accounting signals; monthly for momentum | Standard; consistent with Fama-French |
-| Accounting lag | 4 months (available by April for Dec FY) | Conservative PIT alignment |
-| Minimum stocks | ≥ 5 per portfolio per month | Below this, single-stock idiosyncratic risk dominates |
+| Tập hợp cổ phiếu | Bộ lọc chuẩn (thời gian niêm yết ≥ 6 tháng, khối lượng \> 0) | Loại bỏ các doanh nghiệp vỏ mà không mất quá nhiều độ rộng |
+| Điểm cắt | Chỉ cổ phiếu HOSE | Ngăn các cổ phiếu vốn hóa siêu nhỏ của HNX chi phối điểm cắt |
+| Nhóm quy mô | 2 (chia theo trung vị) | Đủ kiểm soát với mặt cắt ngang hạn chế |
+| Nhóm tín hiệu | 3 (tam phân vị) để xây dựng nhân tố; 5 hoặc 10 để phân tích danh mục | 2×3 = đa dạng hóa đủ cho mỗi danh mục |
+| Trọng số | Theo vốn hóa | Có thể đầu tư; ít nhiễu hơn EW |
+| Tái cân bằng | Hằng năm (tháng 6) với tín hiệu kế toán; hằng tháng với động lượng | Chuẩn; nhất quán với Fama-French |
+| Độ trễ kế toán | 4 tháng (có sẵn vào tháng 4 với năm tài chính kết thúc tháng 12) | Căn chỉnh PIT thận trọng |
+| Số cổ phiếu tối thiểu | ≥ 5 cho mỗi danh mục mỗi tháng | Dưới mức này, rủi ro riêng của từng cổ phiếu chi phối |
 
-: Recommended factor construction parameters for Vietnamese equities. {#tbl-factor-con-recommendations}
+: Các tham số xây dựng nhân tố được khuyến nghị cho cổ phiếu Việt Nam. {#tbl-factor-con-recommendations}
 
-Always report results under the baseline and at least one alternative specification (e.g., EW, all-stock breakpoints) to demonstrate robustness.
+Luôn báo cáo kết quả theo đặc tả cơ sở và ít nhất một đặc tả thay thế (ví dụ: EW, điểm cắt tính từ tất cả cổ phiếu) để chứng minh độ vững.
 
-## Summary {#sec-factor-con-summary}
+## Tóm tắt {#sec-factor-con-summary}
 
-This chapter has developed a modular, transparent factor construction framework for Vietnamese equities. The key insights are:
+Chương này đã phát triển một khung xây dựng nhân tố mô-đun, minh bạch cho cổ phiếu Việt Nam. Những hiểu biết chính là:
 
--   The @fama1993common 2×3 methodology translates well to Vietnam with one critical adaptation: breakpoints should be computed from HOSE stocks only. Using all-stock breakpoints allows HNX micro-caps to dominate the small-stock groups, inflating apparent premia with economically untradeable returns.
+-   Phương pháp 2×3 của @fama1993common chuyển sang Việt Nam khá tốt với một điều chỉnh then chốt: các điểm cắt nên được tính chỉ từ cổ phiếu HOSE. Dùng điểm cắt tính từ tất cả cổ phiếu khiến các cổ phiếu vốn hóa siêu nhỏ của HNX chi phối các nhóm cổ phiếu nhỏ, làm tăng phần bù biểu kiến bằng những khoản lợi nhuận không thể giao dịch về mặt kinh tế.
 
--   Value weighting produces more conservative (and more implementable) factor premia than equal weighting. The difference is particularly large for signals correlated with size (BM, investment), where EW overweights the smallest stocks that contribute most to the premium but least to investable returns.
+-   Trọng số theo vốn hóa cho ra phần bù nhân tố thận trọng hơn (và khả thi hơn) so với trọng số bằng nhau. Chênh lệch đặc biệt lớn với các tín hiệu tương quan với quy mô (BM, đầu tư), khi EW đặt trọng số quá lớn vào các cổ phiếu nhỏ nhất, vốn đóng góp nhiều nhất cho phần bù nhưng ít nhất cho lợi nhuận có thể đầu tư.
 
--   No single construction choice determines whether a factor "exists." A factor premium that appears only under one specific combination of breakpoints, weighting, and rebalancing frequency is fragile and should be treated with skepticism. Robust factors survive a grid of specifications. The sensitivity analysis framework developed here (e.g., varying weighting, breakpoints, sort granularity, and rebalancing simultaneously) should be standard practice.
+-   Không có lựa chọn xây dựng đơn lẻ nào quyết định một nhân tố có "tồn tại" hay không. Một phần bù nhân tố chỉ xuất hiện dưới một tổ hợp cụ thể của các điểm cắt, cách đặt trọng số và tần suất tái cân bằng là mong manh và cần được xem xét với thái độ hoài nghi. Các nhân tố vững sống sót qua một lưới các đặc tả. Khung phân tích độ nhạy được phát triển ở đây (ví dụ: thay đổi đồng thời cách đặt trọng số, các điểm cắt, độ mịn của phân loại và tái cân bằng) nên trở thành thông lệ chuẩn.
 
-The `construct_factor()` function developed in this chapter is designed for reuse throughout the book. Any anomaly variable can be fed through the same pipeline, producing a tradeable factor with full diagnostics. This ensures methodological consistency across chapters and makes it easy to compare premia on an apples-to-apples basis.
+Hàm `construct_factor()` được phát triển trong chương này được thiết kế để tái sử dụng xuyên suốt cuốn sách. Mọi biến đo lường hiện tượng bất thường đều có thể đưa qua cùng quy trình này, tạo ra một nhân tố có thể giao dịch cùng đầy đủ các chẩn đoán. Điều này bảo đảm sự nhất quán về phương pháp giữa các chương và giúp dễ dàng so sánh các phần bù một cách tương đương.
 
-<!-- ## Exercises {#sec-factor-con-exercises}
+<!-- ## Bài tập {#sec-factor-con-exercises}
 
-1.  **Conditional sorts.** Implement conditional (sequential) double sorts as an alternative to the independent sorts used by @fama1993common. First sort on size, then within each size group sort on BM. Compare the resulting HML to the independent-sort HML. When do conditional sorts produce meaningfully different results?
+1.  **Phân loại có điều kiện.** Triển khai phân loại kép có điều kiện (tuần tự) như một phương án thay thế cho các phân loại độc lập được dùng bởi @fama1993common. Trước tiên phân loại theo quy mô, sau đó trong mỗi nhóm quy mô phân loại theo BM. So sánh HML thu được với HML từ phân loại độc lập. Khi nào các phân loại có điều kiện cho kết quả khác biệt đáng kể?
 
-2.  **Winsorization sensitivity.** Construct HML with and without winsorizing the book-to-market ratio at the 1st and 99th percentiles each month. How sensitive is the factor premium to extreme BM values? Investigate whether the extreme BM firms are concentrated in specific industries.
+2.  **Độ nhạy với winsorization.** Xây dựng HML có và không winsorize (cắt đuôi giá trị cực đoan) tỷ số giá trị sổ sách trên giá trị thị trường ở phân vị 1 và 99 mỗi tháng. Phần bù nhân tố nhạy đến mức nào với các giá trị BM cực đoan? Hãy khảo sát xem các doanh nghiệp có BM cực đoan có tập trung ở một số ngành cụ thể hay không.
 
-3.  **Lagged accounting data.** Reconstruct all five factors using a 6-month accounting lag instead of 4 months. How much does the additional lag reduce the premium? This tests how much of the apparent premium comes from stale data that was not yet publicly available.
+3.  **Dữ liệu kế toán có độ trễ.** Xây dựng lại cả năm nhân tố với độ trễ kế toán 6 tháng thay vì 4 tháng. Độ trễ bổ sung làm giảm phần bù bao nhiêu? Bài tập này kiểm tra bao nhiêu phần của phần bù biểu kiến đến từ dữ liệu lỗi thời mà lúc đó chưa được công bố công khai.
 
-4.  **Industry-neutral factors.** Construct an industry-neutral HML by sorting on BM within each ICB sector (rather than across the entire market). Does the within-industry value premium differ from the cross-industry premium? Which component is larger in Vietnam?
+4.  **Nhân tố trung lập theo ngành.** Xây dựng HML trung lập theo ngành bằng cách phân loại theo BM trong từng ngành ICB (thay vì trên toàn thị trường). Phần bù giá trị trong nội bộ ngành có khác với phần bù giữa các ngành không? Thành phần nào lớn hơn ở Việt Nam?
 
-5.  **Liquidity-controlled factors.** Add a third independent sort on Amihud illiquidity (2×3×3 = 18 portfolios). Does the HML premium survive after controlling for liquidity? This tests whether the apparent value premium is actually a liquidity premium in disguise.
+5.  **Nhân tố kiểm soát thanh khoản.** Thêm phân loại độc lập thứ ba theo độ phi thanh khoản Amihud (2×3×3 = 18 danh mục). Phần bù HML có còn tồn tại sau khi kiểm soát thanh khoản không? Bài tập này kiểm tra xem phần bù giá trị biểu kiến có thực chất là phần bù thanh khoản trá hình hay không.
 
-6.  **Small-sample bootstrap.** The Vietnamese cross-section is small enough that portfolio sorts may produce noisy estimates. Implement a bootstrap procedure: resample the cross-section with replacement 1,000 times at each formation date, reconstruct the factor each time, and report the 90% confidence interval for the annualized premium. How wide is the interval?
+6.  **Bootstrap mẫu nhỏ.** Mặt cắt ngang Việt Nam đủ nhỏ để các phân loại danh mục có thể cho ước lượng nhiễu. Triển khai một thủ tục bootstrap: lấy mẫu lại mặt cắt ngang có hoàn lại 1.000 lần tại mỗi ngày hình thành, xây dựng lại nhân tố mỗi lần, và báo cáo khoảng tin cậy 90% cho phần bù quy năm. Khoảng này rộng bao nhiêu?
 
-7.  **Factor timing.** Test whether factor premia are predictable using lagged aggregate variables (market volatility, credit spread, aggregate turnover, SBV policy rate). Estimate a predictive regression of next-month factor returns on these variables. Can you build a factor timing strategy that improves on the unconditional buy-and-hold factor?
+7.  **Định thời điểm nhân tố.** Kiểm tra xem các phần bù nhân tố có dự báo được bằng các biến tổng hợp có độ trễ (biến động thị trường, chênh lệch tín dụng, tỷ lệ vòng quay tổng hợp, lãi suất điều hành của NHNN) hay không. Ước lượng hồi quy dự báo lợi nhuận nhân tố tháng sau theo các biến này. Bạn có thể xây dựng chiến lược định thời điểm nhân tố cải thiện so với nhân tố mua và nắm giữ vô điều kiện không?
 
-8.  **Replication of @hou2020replicating for Vietnam.** Select 10 well-known anomalies from the international literature (e.g., gross profitability, asset growth, accruals, share issuance, ROE, beta, idiosyncratic volatility, earnings momentum, investment-to-assets, net share issues). Construct each as a long-short factor using the engine from this chapter. How many survive with t \> 2.0? How does this replication rate compare to the \~50% rate reported by @hou2020replicating for U.S. data? -->
+8.  **Lặp lại @hou2020replicating cho Việt Nam.** Chọn 10 hiện tượng bất thường nổi tiếng từ tài liệu quốc tế (ví dụ: lợi nhuận gộp trên tài sản, tăng trưởng tài sản, các khoản dồn tích, phát hành cổ phiếu, ROE, beta, biến động đặc thù, động lượng lợi nhuận kế toán, đầu tư trên tài sản, phát hành cổ phiếu ròng). Xây dựng từng hiện tượng thành một nhân tố mua–bán khống bằng động cơ của chương này. Có bao nhiêu hiện tượng sống sót với t \> 2.0? Tỷ lệ lặp lại này so với tỷ lệ \~50% do @hou2020replicating báo cáo cho dữ liệu Hoa Kỳ như thế nào? -->

@@ -1,85 +1,85 @@
-# Exchange Rate Dynamics
+# Động lực của tỷ giá hối đoái
 
 ::: callout-note
-In this chapter, we construct a comprehensive exchange rate database for the Vietnamese Dong (VND) against major currencies, analyze the statistical properties of VND returns, test covered and uncovered interest rate parity, estimate the currency exposure of Vietnamese listed firms, model volatility regimes using GARCH, and evaluate hedging strategies for international investors.
+Trong chương này, chúng ta xây dựng một cơ sở dữ liệu tỷ giá hối đoái toàn diện cho đồng Việt Nam (VND) so với các đồng tiền chính, phân tích các tính chất thống kê của lợi nhuận VND, kiểm định ngang giá lãi suất có phòng ngừa và không phòng ngừa, ước lượng mức độ phơi nhiễm tiền tệ của các doanh nghiệp niêm yết Việt Nam, mô hình hóa các chế độ biến động bằng GARCH, và đánh giá các chiến lược phòng ngừa rủi ro cho nhà đầu tư quốc tế.
 :::
 
-Exchange rates sit at the intersection of macroeconomics and finance. For international investors considering Vietnamese equities, the VND/USD exchange rate is not a secondary concern; it is a first-order determinant of dollar-denominated returns. A Vietnamese stock portfolio that earns 15% in VND terms but coincides with a 5% VND depreciation delivers only about 10% in USD terms. Conversely, periods of VND stability or appreciation amplify returns for foreign investors. Understanding exchange rate dynamics is therefore essential for anyone working with Vietnamese financial data in an international context.
+Tỷ giá hối đoái nằm ở giao điểm của kinh tế vĩ mô và tài chính. Đối với các nhà đầu tư quốc tế đang cân nhắc cổ phiếu Việt Nam, tỷ giá VND/USD không phải là mối quan tâm thứ yếu; nó là yếu tố quyết định bậc nhất đối với lợi nhuận tính bằng đô la. Một danh mục cổ phiếu Việt Nam sinh lời 15% tính theo VND nhưng trùng với mức mất giá 5% của VND chỉ mang lại khoảng 10% tính theo USD. Ngược lại, các giai đoạn VND ổn định hoặc lên giá làm tăng lợi nhuận cho nhà đầu tư nước ngoài. Do đó, hiểu động lực của tỷ giá hối đoái là điều thiết yếu đối với bất kỳ ai làm việc với dữ liệu tài chính Việt Nam trong bối cảnh quốc tế.
 
-Vietnam presents a distinctive exchange rate regime. Unlike freely floating currencies such as the USD/EUR or USD/JPY, the VND operates under a managed float. The State Bank of Vietnam (SBV) sets a daily reference rate and allows trading within a band (currently $\pm$ 3% on the interbank market and $\pm$ 5% against the official rate for commercial banks). This regime creates specific patterns in VND returns that differ fundamentally from those observed in freely floating pairs: clustered movements near band boundaries, discrete adjustments when the SBV shifts the reference rate, and periods of near-zero volatility punctuated by sharp moves during policy changes.
+Việt Nam có một chế độ tỷ giá đặc thù. Không giống các đồng tiền thả nổi tự do như USD/EUR hoặc USD/JPY, VND vận hành theo cơ chế thả nổi có quản lý. Ngân hàng Nhà nước Việt Nam (NHNN) công bố tỷ giá tham chiếu hằng ngày và cho phép giao dịch trong một biên độ (hiện là $\pm$ 3% trên thị trường liên ngân hàng và $\pm$ 5% so với tỷ giá chính thức đối với các ngân hàng thương mại). Chế độ này tạo ra những mô thức đặc thù trong lợi nhuận VND, khác biệt căn bản với những gì quan sát được ở các cặp tiền thả nổi tự do: các biến động tập trung gần các mép của biên độ, các điều chỉnh rời rạc khi NHNN dịch chuyển tỷ giá tham chiếu, và các giai đoạn biến động gần như bằng không bị ngắt quãng bởi những cú dịch chuyển mạnh khi chính sách thay đổi.
 
-This chapter develops tools for working with these dynamics. We progress from data construction through statistical characterization to economic applications: interest rate parity tests, firm-level exposure estimation, GARCH volatility modeling, and hedging strategy evaluation.
+Chương này phát triển các công cụ để làm việc với những động lực đó. Chúng ta đi từ xây dựng dữ liệu, qua mô tả đặc điểm thống kê, đến các ứng dụng kinh tế: kiểm định ngang giá lãi suất, ước lượng mức độ phơi nhiễm cấp doanh nghiệp, mô hình hóa biến động GARCH và đánh giá chiến lược phòng ngừa rủi ro.
 
-## Theoretical Foundations {#sec-fx-theory}
+## Nền tảng lý thuyết {#sec-fx-theory}
 
-### Exchange Rate Determination
+### Xác định tỷ giá hối đoái
 
-The modern theory of exchange rate determination rests on several building blocks. @dornbusch1976expectations provides the canonical "overshooting" model: because goods prices are sticky while asset prices adjust instantly, a monetary shock causes the exchange rate to overshoot its long-run equilibrium. @frankel1979mark extends this to a real interest differential model where the exchange rate depends on relative money supplies, income levels, and interest rates across countries.
+Lý thuyết hiện đại về xác định tỷ giá hối đoái dựa trên một số khối nền tảng. @dornbusch1976expectations đưa ra mô hình "vọt lố" (overshooting) kinh điển: vì giá hàng hóa cứng nhắc trong khi giá tài sản điều chỉnh tức thời, một cú sốc tiền tệ khiến tỷ giá vọt quá mức cân bằng dài hạn của nó. @frankel1979mark mở rộng điều này thành mô hình chênh lệch lãi suất thực, trong đó tỷ giá phụ thuộc vào cung tiền tương đối, mức thu nhập và lãi suất giữa các quốc gia.
 
-Despite elegant theory, @meese1983empirical delivered a devastating empirical result: no structural model of exchange rates consistently outperforms a random walk in out-of-sample forecasting. This finding, confirmed repeatedly over four decades and surveyed by @rossi2013exchange, means that exchange rate changes are, to a first approximation, unpredictable. For practical purposes, the best forecast of tomorrow's VND/USD rate is today's rate.
+Bất chấp lý thuyết thanh lịch, @meese1983empirical đưa ra một kết quả thực nghiệm gây thất vọng nặng nề: không mô hình cấu trúc nào của tỷ giá hối đoái liên tục vượt trội bước ngẫu nhiên trong dự báo ngoài mẫu. Phát hiện này, được xác nhận lặp đi lặp lại suốt bốn thập kỷ và được @rossi2013exchange tổng quan, có nghĩa là các thay đổi của tỷ giá hối đoái, xét theo xấp xỉ bậc nhất, là không thể dự báo. Về mặt thực tiễn, dự báo tốt nhất cho tỷ giá VND/USD ngày mai là tỷ giá hôm nay.
 
-### Interest Rate Parity
+### Ngang giá lãi suất
 
-Two parity conditions link exchange rates to interest rates:
+Hai điều kiện ngang giá liên kết tỷ giá hối đoái với lãi suất:
 
-**Covered Interest Rate Parity (CIP):** Arbitrage between spot and forward markets should equalize the forward premium with the interest rate differential:
+**Ngang giá lãi suất có phòng ngừa (CIP):** Hoạt động chênh lệch giá (arbitrage) giữa thị trường giao ngay và kỳ hạn phải làm cân bằng phần bù kỳ hạn với chênh lệch lãi suất:
 
 $$
 F_{t,t+k} = S_t \cdot \frac{(1 + r^{VND}_{t,k})}{(1 + r^{USD}_{t,k})}
 $$ {#eq-cip}
 
-where $S_t$ is the spot rate (VND per USD), $F_{t,t+k}$ is the $k$-period forward rate, and $r^{VND}_{t,k}$ and $r^{USD}_{t,k}$ are the domestic and foreign interest rates for maturity $k$. CIP should hold exactly in the absence of transaction costs, credit risk, and capital controls. @du2018deviations document that CIP violations have widened significantly in major currency pairs since 2008, driven by post-crisis bank balance sheet constraints. In Vietnam, capital controls and limited forward market liquidity create additional CIP deviations.
+trong đó $S_t$ là tỷ giá giao ngay (VND trên mỗi USD), $F_{t,t+k}$ là tỷ giá kỳ hạn $k$ kỳ, và $r^{VND}_{t,k}$ và $r^{USD}_{t,k}$ là lãi suất trong nước và nước ngoài cho kỳ hạn $k$. CIP phải đúng chính xác khi không có chi phí giao dịch, rủi ro tín dụng và kiểm soát vốn. @du2018deviations ghi nhận rằng các vi phạm CIP đã nới rộng đáng kể ở các cặp tiền chính kể từ năm 2008, do các ràng buộc bảng cân đối kế toán của ngân hàng sau khủng hoảng. Ở Việt Nam, kiểm soát vốn và thanh khoản hạn chế của thị trường kỳ hạn tạo ra thêm các độ lệch CIP.
 
-**Uncovered Interest Rate Parity (UIP):** The expected depreciation should equal the interest rate differential:
+**Ngang giá lãi suất không phòng ngừa (UIP):** Mức mất giá kỳ vọng phải bằng chênh lệch lãi suất:
 
 $$
 \mathbb{E}_t[\Delta s_{t+k}] = r^{VND}_{t,k} - r^{USD}_{t,k}
 $$ {#eq-uip}
 
-where $\Delta s_{t+k} = \ln(S_{t+k}/S_t)$. UIP is an equilibrium condition, not an arbitrage condition, it requires risk-neutral investors. @fama1984forward famously showed that the forward premium predicts exchange rate changes with the *wrong sign*: high-interest-rate currencies tend to appreciate rather than depreciate, contradicting UIP. This "forward premium anomaly" is the foundation of the carry trade.
+trong đó $\Delta s_{t+k} = \ln(S_{t+k}/S_t)$. UIP là một điều kiện cân bằng, không phải điều kiện chênh lệch giá, vì nó đòi hỏi nhà đầu tư trung lập với rủi ro. @fama1984forward đã chỉ ra một cách nổi tiếng rằng phần bù kỳ hạn dự báo các thay đổi tỷ giá với *dấu sai*: các đồng tiền có lãi suất cao có xu hướng lên giá thay vì mất giá, trái với UIP. "Nghịch lý phần bù kỳ hạn" này là nền tảng của giao dịch carry.
 
-### The Carry Trade
+### Giao dịch carry
 
-The carry trade exploits UIP violations by borrowing in low-interest-rate currencies and investing in high-interest-rate currencies. @lustig2007cross show that a portfolio of carry trade positions earns a significant risk premium, which they link to consumption growth risk. @menkhoff2012carry identify global FX volatility as the key risk factor: carry trades lose money precisely when global volatility spikes, a "crash risk" documented by @brunnermeier2008carry.
+Giao dịch carry khai thác các vi phạm UIP bằng cách vay bằng đồng tiền có lãi suất thấp và đầu tư vào đồng tiền có lãi suất cao. @lustig2007cross cho thấy một danh mục các vị thế giao dịch carry đem lại một phần bù rủi ro đáng kể, mà họ gắn với rủi ro tăng trưởng tiêu dùng. @menkhoff2012carry xác định biến động ngoại hối toàn cầu là nhân tố rủi ro then chốt: giao dịch carry thua lỗ đúng vào lúc biến động toàn cầu tăng vọt, một "rủi ro sụp đổ" được @brunnermeier2008carry ghi nhận.
 
-Vietnam, with interest rates typically 3-8 percentage points above U.S. rates, is a natural candidate for carry trade inflows. The managed exchange rate regime provides an additional attraction: the SBV's implicit defense of the band reduces short-term volatility, increasing the Sharpe ratio of the carry position, until a band adjustment or devaluation erases accumulated gains in a single move.
+Việt Nam, với lãi suất thường cao hơn lãi suất Mỹ 3-8 điểm phần trăm, là ứng viên tự nhiên cho dòng vốn giao dịch carry. Chế độ tỷ giá được quản lý mang lại thêm một sức hấp dẫn: việc NHNN ngầm bảo vệ biên độ làm giảm biến động ngắn hạn, nâng tỷ số Sharpe của vị thế carry, cho đến khi một lần điều chỉnh biên độ hoặc phá giá xóa sạch khoản lãi tích lũy chỉ trong một lần dịch chuyển.
 
-### The Trilemma
+### Bộ ba bất khả thi
 
-@obstfeld2005trilemma formalize the "impossible trinity": a country cannot simultaneously maintain (i) a fixed exchange rate, (ii) an independent monetary policy, and (iii) free capital mobility. Vietnam navigates this trilemma by maintaining partial capital controls alongside its managed float, allowing some degree of monetary policy independence. Understanding where Vietnam sits on the trilemma at any given time is essential for interpreting exchange rate data: periods of tighter capital controls produce artificially low exchange rate volatility that does not reflect true economic uncertainty.
+@obstfeld2005trilemma chính thức hóa "bộ ba bất khả thi": một quốc gia không thể đồng thời duy trì (i) tỷ giá cố định, (ii) chính sách tiền tệ độc lập và (iii) dòng vốn tự do. Việt Nam xử lý bộ ba này bằng cách duy trì kiểm soát vốn một phần song song với cơ chế thả nổi có quản lý, cho phép một mức độ độc lập nhất định của chính sách tiền tệ. Hiểu Việt Nam đang đứng ở đâu trong bộ ba này tại bất kỳ thời điểm nào là điều thiết yếu để diễn giải dữ liệu tỷ giá: các giai đoạn kiểm soát vốn chặt hơn tạo ra biến động tỷ giá thấp một cách giả tạo, không phản ánh sự bất định kinh tế thực sự.
 
-## The VND Exchange Rate Regime {#sec-fx-regime}
+## Chế độ tỷ giá VND {#sec-fx-regime}
 
-### Historical Evolution
+### Diễn tiến lịch sử
 
-The VND/USD exchange rate has evolved through several distinct phases:
+Tỷ giá VND/USD đã trải qua nhiều giai đoạn riêng biệt:
 
-| Period | Regime | Key Features |
+| Giai đoạn | Chế độ | Đặc điểm chính |
 |------------------------|------------------------|------------------------|
-| Pre-1999 | Narrow band | SBV set the rate with minimal flexibility |
-| 1999-2007 | Gradual crawl | Slow, controlled depreciation (\~1-2% per year) |
-| 2008-2011 | Crisis adjustments | Multiple discrete devaluations (2008, 2010, 2011) |
-| 2012-2015 | Stabilization | Tight band, rare adjustments, building reserves |
-| 2016-present | Reference rate mechanism | Daily reference rate based on a basket; $\pm$ 3% band |
+| Trước 1999 | Biên độ hẹp | NHNN ấn định tỷ giá với độ linh hoạt tối thiểu |
+| 1999-2007 | Trượt dần | Mất giá chậm, có kiểm soát (\~1-2% mỗi năm) |
+| 2008-2011 | Điều chỉnh trong khủng hoảng | Nhiều lần phá giá rời rạc (2008, 2010, 2011) |
+| 2012-2015 | Ổn định hóa | Biên độ chặt, hiếm điều chỉnh, tích lũy dự trữ |
+| 2016-nay | Cơ chế tỷ giá tham chiếu | Tỷ giá tham chiếu hằng ngày dựa trên một rổ tiền tệ; biên độ $\pm$ 3% |
 
-: Evolution of the VND/USD exchange rate regime. {#tbl-regime-history}
+: Diễn tiến của chế độ tỷ giá VND/USD. {#tbl-regime-history}
 
-The 2016 reform, shifting from a fixed peg to a daily reference rate influenced by a currency basket, was a significant structural change. The reference rate now incorporates the previous day's closing interbank rate, supply-demand conditions, and movements in currencies of major trading partners (USD, EUR, CNY, JPY, KRW).
+Cải cách năm 2016, chuyển từ neo cố định sang tỷ giá tham chiếu hằng ngày chịu ảnh hưởng của một rổ tiền tệ, là một thay đổi cấu trúc quan trọng. Tỷ giá tham chiếu hiện nay bao gồm tỷ giá liên ngân hàng đóng cửa của ngày hôm trước, điều kiện cung cầu và biến động của các đồng tiền của các đối tác thương mại lớn (USD, EUR, CNY, JPY, KRW).
 
-### Band Mechanics
+### Cơ chế biên độ
 
-The SBV announces a daily reference rate each morning. Commercial banks may quote rates within a band around this reference. The interbank market operates with a narrower $\pm$ 3% band. When the spot rate approaches the band ceiling, the SBV may intervene by selling USD from reserves, widening the band, or adjusting the reference rate.
+NHNN công bố tỷ giá tham chiếu mỗi buổi sáng. Các ngân hàng thương mại có thể niêm yết tỷ giá trong một biên độ quanh mức tham chiếu này. Thị trường liên ngân hàng vận hành với biên độ hẹp hơn là $\pm$ 3%. Khi tỷ giá giao ngay tiến gần trần biên độ, NHNN có thể can thiệp bằng cách bán USD từ dự trữ, nới rộng biên độ hoặc điều chỉnh tỷ giá tham chiếu.
 
-This regime creates distinctive statistical properties:
+Chế độ này tạo ra các tính chất thống kê đặc thù:
 
-1.  **Return clustering near zero:** On most days, the VND/USD rate barely moves, producing a spike at zero in the return distribution.
-2.  **Discrete jumps:** Reference rate adjustments create large single-day moves that appear as outliers.
-3.  **Bounded volatility:** The band constrains daily moves, producing a return distribution with thinner tails than a freely floating currency.
-4.  **Asymmetric adjustment:** Depreciation pressure (VND weakening) is more common than appreciation, reflecting persistent inflation differentials.
+1.  **Lợi nhuận tập trung gần không:** Trong hầu hết các ngày, tỷ giá VND/USD hầu như không dịch chuyển, tạo ra một đỉnh nhọn tại không trong phân phối lợi nhuận.
+2.  **Các cú nhảy rời rạc:** Việc điều chỉnh tỷ giá tham chiếu tạo ra những dịch chuyển lớn trong một ngày, xuất hiện như các giá trị ngoại lai.
+3.  **Biến động bị chặn:** Biên độ giới hạn các dịch chuyển hằng ngày, tạo ra phân phối lợi nhuận có đuôi mỏng hơn so với một đồng tiền thả nổi tự do.
+4.  **Điều chỉnh bất đối xứng:** Áp lực mất giá (VND yếu đi) phổ biến hơn áp lực lên giá, phản ánh chênh lệch lạm phát dai dẳng.
 
-## Data Construction {#sec-fx-data}
+## Xây dựng dữ liệu {#sec-fx-data}
 
-### Loading Libraries
+### Nạp các thư viện
 
 ```{python}
 #| label: setup
@@ -105,9 +105,9 @@ plt.rcParams.update({
 })
 ```
 
-### Retrieving Exchange Rate Data
+### Truy xuất dữ liệu tỷ giá hối đoái
 
-We extract daily spot rates for the VND against all major currencies, along with the SBV reference rate and forward rates where available.
+Chúng ta trích xuất tỷ giá giao ngay hằng ngày của VND so với tất cả các đồng tiền chính, cùng với tỷ giá tham chiếu của NHNN và tỷ giá kỳ hạn khi có sẵn.
 
 ```{python}
 #| label: data-load
@@ -151,9 +151,9 @@ print(f"Forward observations: {fx_forward.shape[0]:,}")
 print(f"Interest rate observations: {interest_rates.shape[0]:,}")
 ```
 
-### Constructing the VND/USD Time Series
+### Xây dựng chuỗi thời gian VND/USD
 
-We focus primarily on the VND/USD pair, the dominant bilateral rate for Vietnam, while using other pairs for cross-rate analysis.
+Chúng ta tập trung chủ yếu vào cặp VND/USD, tỷ giá song phương chi phối của Việt Nam, đồng thời dùng các cặp khác cho phân tích tỷ giá chéo.
 
 ```{python}
 #| label: construct-vnd-usd
@@ -192,9 +192,9 @@ print(f"\nSummary of daily log returns:")
 print(vnd_usd['log_return'].describe().round(6))
 ```
 
-### Multi-Currency Panel
+### Bảng dữ liệu đa tiền tệ
 
-For cross-rate analysis and ASEAN comparisons, we construct a panel of log returns for all currency pairs.
+Cho phân tích tỷ giá chéo và so sánh với ASEAN, chúng ta xây dựng một bảng dữ liệu (panel) gồm lợi nhuận logarit của tất cả các cặp tiền tệ.
 
 ```{python}
 #| label: multi-currency
@@ -223,15 +223,15 @@ print("VND Cross-Rate Return Statistics (Daily):")
 print(fx_summary.round(4))
 ```
 
-## Statistical Properties of VND Returns {#sec-fx-statistics}
+## Tính chất thống kê của lợi nhuận VND {#sec-fx-statistics}
 
-### Return Distribution
+### Phân phối lợi nhuận
 
-The distribution of VND/USD log returns deviates sharply from normality. The managed float regime produces a return distribution that is leptokurtic (fat-tailed) and concentrated near zero, with occasional large discrete jumps from reference rate adjustments.
+Phân phối của lợi nhuận logarit VND/USD lệch rõ rệt khỏi phân phối chuẩn. Chế độ thả nổi có quản lý tạo ra phân phối lợi nhuận có đuôi dày (leptokurtic) và tập trung gần không, kèm theo thỉnh thoảng những cú nhảy rời rạc lớn do điều chỉnh tỷ giá tham chiếu.
 
 ```{python}
 #| label: fig-return-distribution
-#| fig-cap: "Distribution of daily VND/USD log returns compared to a fitted normal distribution. The empirical distribution shows excess kurtosis (fat tails) and a pronounced spike near zero, reflecting the managed float regime where the SBV constrains daily movements."
+#| fig-cap: "Phân phối của lợi nhuận logarit VND/USD hằng ngày so với phân phối chuẩn được khớp. Phân phối thực nghiệm cho thấy độ nhọn vượt mức (đuôi dày) và một đỉnh nhọn rõ rệt gần không, phản ánh chế độ thả nổi có quản lý, trong đó NHNN hạn chế các dịch chuyển hằng ngày."
 #| eval: false
 #| code-summary: "Plot VND/USD return distribution with normal overlay"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
@@ -267,13 +267,13 @@ print(f"Skewness: {returns.skew():.4f}")
 print(f"Excess Kurtosis: {returns.kurtosis():.4f}")
 ```
 
-### Autocorrelation Structure
+### Cấu trúc tự tương quan
 
-Freely floating exchange rate returns are approximately uncorrelated (consistent with the random walk result of @meese1983empirical). Managed exchange rates, however, may exhibit serial correlation because the central bank smooths adjustments over multiple days.
+Lợi nhuận của các tỷ giá thả nổi tự do xấp xỉ không tương quan (phù hợp với kết quả bước ngẫu nhiên của @meese1983empirical). Tuy nhiên, các tỷ giá được quản lý có thể thể hiện tương quan chuỗi vì ngân hàng trung ương làm mượt các điều chỉnh qua nhiều ngày.
 
 ```{python}
 #| label: fig-autocorrelation
-#| fig-cap: "Autocorrelation function of VND/USD daily log returns (top) and squared returns (bottom). Returns show mild positive autocorrelation at short lags, reflecting the SBV's smoothing behavior. Squared returns show strong persistence, confirming the presence of volatility clustering."
+#| fig-cap: "Hàm tự tương quan của lợi nhuận logarit hằng ngày VND/USD (trên) và của lợi nhuận bình phương (dưới). Lợi nhuận cho thấy tự tương quan dương nhẹ ở các độ trễ ngắn, phản ánh hành vi làm mượt của NHNN. Lợi nhuận bình phương cho thấy tính bền vững mạnh, xác nhận sự hiện diện của hiện tượng tập trung biến động."
 #| eval: false
 #| code-summary: "Plot ACF of returns and squared returns"
 from statsmodels.graphics.tsaplots import plot_acf
@@ -307,14 +307,14 @@ print(f"  Statistic: {lb_squared['lb_stat'].iloc[-1]:.2f}, "
       f"p-value: {lb_squared['lb_pvalue'].iloc[-1]:.4f}")
 ```
 
-### Reference Rate Adjustments and Structural Breaks
+### Điều chỉnh tỷ giá tham chiếu và các điểm gãy cấu trúc
 
-The SBV periodically adjusts the reference rate or the trading band width, events that create structural breaks in the exchange rate series. Identifying these breaks is essential for accurate modeling.
+NHNN định kỳ điều chỉnh tỷ giá tham chiếu hoặc độ rộng biên độ giao dịch, những sự kiện tạo ra các điểm gãy cấu trúc trong chuỗi tỷ giá. Việc xác định các điểm gãy này là thiết yếu để mô hình hóa chính xác.
 
 ```{python}
 #| label: fig-structural-breaks
 #| eval: false
-#| fig-cap: "VND/USD spot rate with major SBV reference rate adjustments and band changes marked. These discrete policy events create structural breaks that standard time series models must accommodate."
+#| fig-cap: "Tỷ giá giao ngay VND/USD với các điều chỉnh tỷ giá tham chiếu và thay đổi biên độ quan trọng của NHNN được đánh dấu. Những sự kiện chính sách rời rạc này tạo ra các điểm gãy cấu trúc mà các mô hình chuỗi thời gian chuẩn phải tính đến."
 #| code-summary: "Identify and plot major exchange rate adjustments"
 # Detect large daily moves (proxy for policy adjustments)
 threshold = vnd_usd['log_return'].std() * 3
@@ -368,14 +368,14 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Cross-Currency Correlations
+### Tương quan giữa các đồng tiền
 
-Understanding how VND co-moves with other currencies is important for diversification and for identifying common drivers (e.g., USD strength affects all Asian currencies).
+Hiểu VND đồng biến động thế nào với các đồng tiền khác là điều quan trọng cho đa dạng hóa và cho việc xác định các động lực chung (ví dụ, sức mạnh của USD ảnh hưởng đến tất cả các đồng tiền châu Á).
 
 ```{python}
 #| label: fig-cross-correlations
 #| eval: false
-#| fig-cap: "Correlation matrix of daily VND cross-rate returns. VND movements against the USD are positively correlated with other Asian currency depreciation, reflecting common exposure to USD strength and global risk sentiment."
+#| fig-cap: "Ma trận tương quan của lợi nhuận tỷ giá chéo VND hằng ngày. Các dịch chuyển của VND so với USD có tương quan dương với sự mất giá của các đồng tiền châu Á khác, phản ánh mức phơi nhiễm chung với sức mạnh của USD và tâm lý rủi ro toàn cầu."
 #| code-summary: "Compute and visualize cross-currency return correlations"
 # Correlation matrix of daily returns
 corr_matrix = fx_returns.corr()
@@ -393,17 +393,17 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Interest Rate Parity Tests {#sec-fx-parity}
+## Kiểm định ngang giá lãi suất {#sec-fx-parity}
 
-### Testing Covered Interest Rate Parity
+### Kiểm định ngang giá lãi suất có phòng ngừa
 
-CIP deviations are measured as the gap between the forward premium and the interest rate differential:
+Độ lệch CIP được đo bằng khoảng chênh giữa phần bù kỳ hạn và chênh lệch lãi suất:
 
 $$
 \text{CIP Deviation}_t = f_{t,k} - s_t - (r^{VND}_{t,k} - r^{USD}_{t,k})
 $$ {#eq-cip-deviation}
 
-where $f_{t,k} = \ln F_{t,t+k}$ and $s_t = \ln S_t$ are log forward and spot rates. Under exact CIP, this deviation is zero.
+trong đó $f_{t,k} = \ln F_{t,t+k}$ và $s_t = \ln S_t$ là các tỷ giá kỳ hạn và giao ngay dạng logarit. Khi CIP đúng chính xác, độ lệch này bằng không.
 
 ```{python}
 #| label: cip-test
@@ -458,7 +458,7 @@ print(f"One-sample t-test: t = {t_stat:.2f}, p = {p_val:.4f}")
 ```{python}
 #| label: fig-cip-deviation
 #| eval: false
-#| fig-cap: "CIP deviations for VND/USD over time (annualized, basis points). Persistent positive deviations reflect capital controls and limited arbitrage capital in the Vietnamese forward market. Deviations widened during global stress episodes (2008--2009, 2011, 2020), consistent with the findings of @du2018deviations for major currencies."
+#| fig-cap: "Độ lệch CIP của VND/USD theo thời gian (quy năm, điểm cơ bản). Các độ lệch dương dai dẳng phản ánh kiểm soát vốn và nguồn vốn chênh lệch giá hạn chế trên thị trường kỳ hạn Việt Nam. Các độ lệch nới rộng trong những giai đoạn căng thẳng toàn cầu (2008--2009, 2011, 2020), phù hợp với phát hiện của @du2018deviations đối với các đồng tiền chính."
 #| code-summary: "Plot CIP deviations over time"
 fig, axes = plt.subplots(2, 1, figsize=(14, 8), height_ratios=[2, 1])
 
@@ -492,15 +492,15 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Testing Uncovered Interest Rate Parity
+### Kiểm định ngang giá lãi suất không phòng ngừa
 
-The standard UIP regression is:
+Hồi quy UIP chuẩn là:
 
 $$
 \Delta s_{t+k} = \alpha + \beta (r^{VND}_{t,k} - r^{USD}_{t,k}) + \varepsilon_{t+k}
 $$ {#eq-uip-regression}
 
-Under UIP, $\alpha = 0$ and $\beta = 1$. The @fama1984forward anomaly corresponds to $\beta < 1$ (often $\beta < 0$), implying that high-interest-rate currencies appreciate rather than depreciate.
+Theo UIP, $\alpha = 0$ và $\beta = 1$. Nghịch lý của @fama1984forward tương ứng với $\beta < 1$ (thường là $\beta < 0$), hàm ý rằng các đồng tiền có lãi suất cao lên giá thay vì mất giá.
 
 ```{python}
 #| label: uip-test
@@ -532,20 +532,20 @@ print(f"  Chi2 = {wald_stat:.2f}, p = {1 - stats.chi2.cdf(wald_stat, 1):.4f}")
 ```
 
 ::: callout-note
-## Interpreting UIP Failures in Vietnam
+## Diễn giải các thất bại của UIP ở Việt Nam
 
-A managed exchange rate complicates UIP tests. When the SBV successfully defends the VND within a narrow band, realized exchange rate changes are artificially compressed regardless of interest rate differentials. The resulting beta estimate reflects the credibility of the peg as much as it reflects the risk premium. Periods of active SBV intervention should be treated separately from periods of relative flexibility.
+Một tỷ giá được quản lý làm phức tạp các kiểm định UIP. Khi NHNN bảo vệ thành công VND trong một biên độ hẹp, các thay đổi tỷ giá thực hiện bị nén lại một cách giả tạo bất kể chênh lệch lãi suất. Ước lượng beta thu được phản ánh độ tin cậy của cơ chế neo cũng nhiều như phản ánh phần bù rủi ro. Các giai đoạn NHNN can thiệp mạnh nên được xử lý riêng so với các giai đoạn tương đối linh hoạt.
 :::
 
-### Carry Trade Returns
+### Lợi nhuận giao dịch carry
 
-We construct a simple VND carry trade strategy: borrow USD at the U.S. short rate, convert to VND, invest at the Vietnamese short rate, and convert back at maturity. The excess return is:
+Chúng ta xây dựng một chiến lược giao dịch carry VND đơn giản: vay USD theo lãi suất ngắn hạn của Mỹ, đổi sang VND, đầu tư theo lãi suất ngắn hạn của Việt Nam, rồi đổi ngược lại khi đáo hạn. Lợi nhuận vượt mức là:
 
 $$
 \text{Carry}_{t \to t+k} = (r^{VND}_{t,k} - r^{USD}_{t,k}) - \Delta s_{t+k}
 $$ {#eq-carry}
 
-A positive carry return means the interest rate differential more than compensated for any VND depreciation.
+Lợi nhuận carry dương nghĩa là chênh lệch lãi suất đã bù đắp nhiều hơn mức mất giá của VND.
 
 ```{python}
 #| label: carry-trade
@@ -573,7 +573,7 @@ print(f"Max quarterly gain: {carry['carry_return'].max():.4f}")
 ```{python}
 #| label: fig-carry-cumulative
 #| eval: false
-#| fig-cap: "Cumulative returns of the VND carry trade strategy. The strategy earns steady positive returns during stable periods, punctuated by sharp losses during VND devaluations. This pattern is characteristic of carry trades in managed exchange rate regimes, as documented by @brunnermeier2008carry."
+#| fig-cap: "Lợi nhuận tích lũy của chiến lược giao dịch carry VND. Chiến lược mang lại lợi nhuận dương đều đặn trong các giai đoạn ổn định, bị ngắt quãng bởi những khoản lỗ mạnh khi VND bị phá giá. Mô thức này đặc trưng cho giao dịch carry trong các chế độ tỷ giá được quản lý, như được @brunnermeier2008carry ghi nhận."
 #| code-summary: "Plot cumulative carry trade returns"
 fig, axes = plt.subplots(2, 1, figsize=(14, 8), height_ratios=[2, 1])
 
@@ -602,11 +602,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Volatility Modeling {#sec-fx-volatility}
+## Mô hình hóa biến động {#sec-fx-volatility}
 
-### GARCH Estimation
+### Ước lượng GARCH
 
-The strong autocorrelation in squared VND/USD returns (@fig-autocorrelation) motivates GARCH modeling [@bollerslev1986generalized]. We estimate a GARCH(1,1) model for daily VND/USD log returns:
+Tự tương quan mạnh trong lợi nhuận bình phương VND/USD (@fig-autocorrelation) là động lực để mô hình hóa GARCH [@bollerslev1986generalized]. Chúng ta ước lượng mô hình GARCH(1,1) cho lợi nhuận logarit hằng ngày VND/USD:
 
 $$
 r_t = \mu + \varepsilon_t, \quad \varepsilon_t = \sigma_t z_t, \quad z_t \sim D(0,1)
@@ -616,7 +616,7 @@ $$
 \sigma_t^2 = \omega + \alpha \varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2
 $$ {#eq-garch-var}
 
-where $\alpha$ captures the ARCH effect (impact of yesterday's shock on today's variance) and $\beta$ captures persistence (how slowly volatility reverts to its long-run mean). The unconditional variance is $\bar{\sigma}^2 = \omega / (1 - \alpha - \beta)$.
+trong đó $\alpha$ phản ánh hiệu ứng ARCH (tác động của cú sốc hôm qua lên phương sai hôm nay) và $\beta$ phản ánh tính bền vững (biến động quay về trung bình dài hạn chậm đến mức nào). Phương sai vô điều kiện là $\bar{\sigma}^2 = \omega / (1 - \alpha - \beta)$.
 
 ```{python}
 #| label: garch-estimation
@@ -670,7 +670,7 @@ for name, res in [('GARCH-Normal', res_norm),
 ```{python}
 #| label: fig-garch-volatility
 #| eval: false
-#| fig-cap: "Conditional volatility from the GARCH(1,1) model with Student-t innovations, alongside realized volatility (30-day rolling standard deviation, annualized). The GARCH model captures the clustering of high-volatility episodes around SBV policy adjustments and global stress events."
+#| fig-cap: "Biến động có điều kiện từ mô hình GARCH(1,1) với nhiễu Student-t, cùng với biến động thực hiện (độ lệch chuẩn trượt 30 ngày, quy năm). Mô hình GARCH nắm bắt được sự tập trung của các giai đoạn biến động cao quanh các điều chỉnh chính sách của NHNN và các sự kiện căng thẳng toàn cầu."
 #| code-summary: "Plot GARCH conditional volatility versus realized volatility"
 fig, ax = plt.subplots(figsize=(14, 6))
 
@@ -692,9 +692,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Volatility Regime Identification
+### Nhận diện chế độ biến động
 
-We classify the VND/USD market into volatility regimes using the GARCH conditional volatility:
+Chúng ta phân loại thị trường VND/USD thành các chế độ biến động bằng biến động có điều kiện của GARCH:
 
 ```{python}
 #| label: volatility-regimes
@@ -734,7 +734,7 @@ print(regime_stats)
 ```{python}
 #| label: fig-regime-scatter
 #| eval: false
-#| fig-cap: "Return-volatility scatter plot by volatility regime. High-volatility regimes are associated with larger (and more negative) returns, higher bid-ask spreads, and more negative skewness, consistent with the idea that VND depreciation episodes coincide with market stress."
+#| fig-cap: "Biểu đồ phân tán lợi nhuận-biến động theo chế độ biến động. Các chế độ biến động cao gắn với lợi nhuận lớn hơn (và âm hơn), chênh lệch giá mua–bán cao hơn và độ xiên âm hơn, phù hợp với ý tưởng rằng các giai đoạn VND mất giá trùng với căng thẳng thị trường."
 #| code-summary: "Scatter plot of returns vs conditional volatility by regime"
 fig, ax = plt.subplots(figsize=(10, 6))
 
@@ -756,19 +756,19 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Exchange Rate Exposure of Vietnamese Firms {#sec-fx-exposure}
+## Mức độ phơi nhiễm tỷ giá của các doanh nghiệp Việt Nam {#sec-fx-exposure}
 
-### The Jorion Framework
+### Khung phân tích của Jorion
 
-@jorion1990exchange introduced the standard two-factor model for estimating firm-level exchange rate exposure:
+@jorion1990exchange giới thiệu mô hình hai nhân tố chuẩn để ước lượng mức độ phơi nhiễm tỷ giá hối đoái cấp doanh nghiệp:
 
 $$
 R_{i,t} = \alpha_i + \beta_i^{MKT} R_{m,t} + \gamma_i \Delta s_t + \varepsilon_{i,t}
 $$ {#eq-jorion}
 
-where $R_{i,t}$ is the stock return of firm $i$, $R_{m,t}$ is the market return, and $\Delta s_t$ is the exchange rate change (VND/USD log return, where positive = VND depreciation). The coefficient $\gamma_i$ is the **residual exchange rate exposure**, the sensitivity of firm $i$'s returns to currency movements after controlling for market-wide effects.
+trong đó $R_{i,t}$ là lợi nhuận cổ phiếu của doanh nghiệp $i$, $R_{m,t}$ là lợi nhuận thị trường, và $\Delta s_t$ là thay đổi tỷ giá hối đoái (lợi nhuận logarit VND/USD, với dương = VND mất giá). Hệ số $\gamma_i$ là **mức phơi nhiễm tỷ giá còn lại**, tức độ nhạy của lợi nhuận doanh nghiệp $i$ với các biến động tiền tệ sau khi kiểm soát các hiệu ứng toàn thị trường.
 
-A positive $\gamma_i$ means the firm benefits from VND depreciation (typical for exporters), while a negative $\gamma_i$ means the firm is hurt by depreciation (typical for importers or firms with USD-denominated debt).
+Một $\gamma_i$ dương nghĩa là doanh nghiệp hưởng lợi khi VND mất giá (điển hình với các nhà xuất khẩu), trong khi $\gamma_i$ âm nghĩa là doanh nghiệp bị thiệt hại bởi mất giá (điển hình với các nhà nhập khẩu hoặc doanh nghiệp có nợ bằng USD).
 
 ```{python}
 #| label: exposure-estimation
@@ -847,7 +847,7 @@ print(f"\nSignificant at 5%: "
 ```{python}
 #| label: fig-exposure-distribution
 #| eval: false
-#| fig-cap: "Distribution of firm-level VND/USD exchange rate exposures from the Jorion model. The distribution is centered near zero with substantial cross-sectional dispersion. Approximately 15-25% of firms have statistically significant exposure at the 5% level, consistent with international evidence that many firms hedge or have naturally offsetting currency positions."
+#| fig-cap: "Phân phối mức phơi nhiễm tỷ giá VND/USD cấp doanh nghiệp từ mô hình Jorion. Phân phối tập trung gần không với độ phân tán theo mặt cắt ngang đáng kể. Khoảng 15-25% doanh nghiệp có mức phơi nhiễm có ý nghĩa thống kê ở mức 5%, phù hợp với bằng chứng quốc tế rằng nhiều doanh nghiệp phòng ngừa rủi ro hoặc có các vị thế tiền tệ tự bù trừ."
 #| code-summary: "Plot distribution of exchange rate exposures"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -881,9 +881,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Industry-Level Exposure
+### Mức phơi nhiễm cấp ngành
 
-Exchange rate exposure varies systematically across industries. Export-oriented sectors (textiles, seafood, electronics) should have positive exposure (benefiting from VND weakness), while import-dependent sectors (oil and gas, machinery, consumer goods) should have negative exposure.
+Mức phơi nhiễm tỷ giá hối đoái khác nhau một cách có hệ thống giữa các ngành. Các ngành hướng xuất khẩu (dệt may, thủy sản, điện tử) phải có mức phơi nhiễm dương (hưởng lợi khi VND yếu), trong khi các ngành phụ thuộc nhập khẩu (dầu khí, máy móc, hàng tiêu dùng) phải có mức phơi nhiễm âm.
 
 ```{python}
 #| label: industry-exposure
@@ -920,7 +920,7 @@ print(industry_avg.to_string())
 ```{python}
 #| label: fig-industry-exposure
 #| eval: false
-#| fig-cap: "Average exchange rate exposure by industry sector. Export-oriented sectors (Basic Materials, Industrials) show positive exposure (benefit from VND depreciation), while import-dependent sectors (Energy, Consumer Staples) show negative exposure. The pattern is consistent with trade-channel effects documented by @vo2016exchange."
+#| fig-cap: "Mức phơi nhiễm tỷ giá hối đoái trung bình theo ngành. Các ngành hướng xuất khẩu (Vật liệu cơ bản, Công nghiệp) cho thấy phơi nhiễm dương (hưởng lợi khi VND mất giá), trong khi các ngành phụ thuộc nhập khẩu (Năng lượng, Hàng tiêu dùng thiết yếu) cho thấy phơi nhiễm âm. Mô thức này phù hợp với các hiệu ứng kênh thương mại được @vo2016exchange ghi nhận."
 #| code-summary: "Bar chart of industry-level FX exposure"
 fig, ax = plt.subplots(figsize=(12, 6))
 
@@ -943,9 +943,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Time-Varying Exposure
+### Mức phơi nhiễm biến đổi theo thời gian
 
-Exchange rate exposure is not constant, firms adjust hedging strategies, trade patterns shift, and the exchange rate regime itself evolves. We estimate rolling 36-month exposures:
+Mức phơi nhiễm tỷ giá hối đoái không cố định, vì các doanh nghiệp điều chỉnh chiến lược phòng ngừa rủi ro, cơ cấu thương mại thay đổi và bản thân chế độ tỷ giá cũng tiến triển. Chúng ta ước lượng mức phơi nhiễm trượt 36 tháng:
 
 ```{python}
 #| label: rolling-exposure
@@ -995,7 +995,7 @@ print(f"Rolling exposures computed for {len(rolling_results)} firms")
 ```{python}
 #| label: fig-rolling-exposure
 #| eval: false
-#| fig-cap: "Time-varying exchange rate exposure for selected large-cap Vietnamese firms. Exposures evolve over time as firms adjust hedging strategies, trade patterns shift, and the exchange rate regime changes. The 2016 shift to the reference rate mechanism is associated with exposure changes for several firms."
+#| fig-cap: "Mức phơi nhiễm tỷ giá hối đoái biến đổi theo thời gian của một số doanh nghiệp vốn hóa lớn được chọn của Việt Nam. Mức phơi nhiễm tiến triển theo thời gian khi các doanh nghiệp điều chỉnh chiến lược phòng ngừa rủi ro, cơ cấu thương mại thay đổi và chế độ tỷ giá biến đổi. Việc chuyển sang cơ chế tỷ giá tham chiếu năm 2016 gắn với những thay đổi mức phơi nhiễm ở một số doanh nghiệp."
 #| code-summary: "Plot rolling FX exposures for selected firms"
 fig, ax = plt.subplots(figsize=(14, 6))
 
@@ -1020,25 +1020,25 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Currency Hedging for International Investors {#sec-fx-hedging}
+## Phòng ngừa rủi ro tiền tệ cho nhà đầu tư quốc tế {#sec-fx-hedging}
 
-### The Hedging Decision
+### Quyết định phòng ngừa rủi ro
 
-For a foreign investor holding Vietnamese equities, the unhedged USD-denominated return is:
+Đối với một nhà đầu tư nước ngoài nắm giữ cổ phiếu Việt Nam, lợi nhuận tính bằng USD không phòng ngừa là:
 
 $$
 R^{USD}_{i,t} \approx R^{VND}_{i,t} + \Delta s_t + R^{VND}_{i,t} \cdot \Delta s_t
 $$ {#eq-unhedged-return}
 
-where the cross-product term is usually small. Under a full hedge using forward contracts, the return becomes:
+trong đó số hạng tích chéo thường nhỏ. Khi phòng ngừa toàn phần bằng hợp đồng kỳ hạn, lợi nhuận trở thành:
 
 $$
 R^{USD,\text{hedged}}_{i,t} \approx R^{VND}_{i,t} + (f_t - s_t)
 $$ {#eq-hedged-return}
 
-where $f_t - s_t$ is the forward premium (which, by CIP, approximately equals $r^{USD}_t - r^{VND}_t$). In Vietnam, where VND rates exceed USD rates, the forward premium is negative, hedging costs money because the investor forgoes the interest rate differential.
+trong đó $f_t - s_t$ là phần bù kỳ hạn (mà theo CIP xấp xỉ bằng $r^{USD}_t - r^{VND}_t$). Ở Việt Nam, nơi lãi suất VND cao hơn lãi suất USD, phần bù kỳ hạn là âm, nên phòng ngừa rủi ro tốn tiền vì nhà đầu tư từ bỏ chênh lệch lãi suất.
 
-@campbell2010global show that the optimal hedge ratio depends on the correlation between equity returns and currency returns. When the correlation is positive (VND depreciation coincides with equity losses), hedging reduces overall portfolio variance more effectively.
+@campbell2010global cho thấy tỷ lệ phòng ngừa tối ưu phụ thuộc vào tương quan giữa lợi nhuận cổ phiếu và lợi nhuận tiền tệ. Khi tương quan dương (VND mất giá trùng với khoản lỗ cổ phiếu), phòng ngừa rủi ro làm giảm phương sai tổng thể của danh mục hiệu quả hơn.
 
 ```{python}
 #| label: hedging-analysis
@@ -1109,7 +1109,7 @@ for strategy, col in [('VND (Local)', 'equity_vnd'),
 ```{python}
 #| label: fig-hedging-comparison
 #| eval: false
-#| fig-cap: "Cumulative wealth paths for a foreign investor in Vietnamese equities under different hedging strategies. Full hedging eliminates currency risk but incurs the cost of the negative forward premium. The optimal partial hedge depends on the investor's risk aversion and the equity-currency correlation."
+#| fig-cap: "Đường tăng trưởng tài sản tích lũy của một nhà đầu tư nước ngoài vào cổ phiếu Việt Nam theo các chiến lược phòng ngừa rủi ro khác nhau. Phòng ngừa toàn phần loại bỏ rủi ro tiền tệ nhưng phải chịu chi phí của phần bù kỳ hạn âm. Mức phòng ngừa một phần tối ưu phụ thuộc vào mức ngại rủi ro của nhà đầu tư và tương quan giữa cổ phiếu và tiền tệ."
 #| code-summary: "Plot cumulative returns for different hedging strategies"
 fig, ax = plt.subplots(figsize=(12, 6))
 
@@ -1134,15 +1134,15 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Optimal Hedge Ratio
+### Tỷ lệ phòng ngừa tối ưu
 
-The minimum-variance hedge ratio is:
+Tỷ lệ phòng ngừa phương sai tối thiểu là:
 
 $$
 h^* = \frac{\text{Cov}(R^{VND}_t, \Delta s_t)}{\text{Var}(\Delta s_t)}
 $$ {#eq-optimal-hedge}
 
-This is the OLS slope from regressing local equity returns on exchange rate changes. When the correlation between equity and currency is positive (bad for unhedged investors), $h^* > 0$ and hedging reduces variance.
+Đây là hệ số góc OLS từ hồi quy lợi nhuận cổ phiếu trong nước trên các thay đổi tỷ giá hối đoái. Khi tương quan giữa cổ phiếu và tiền tệ dương (bất lợi cho nhà đầu tư không phòng ngừa), $h^* > 0$ và phòng ngừa rủi ro làm giảm phương sai.
 
 ```{python}
 #| label: optimal-hedge
@@ -1171,14 +1171,14 @@ print(f"\nRolling hedge ratio range: "
       f"{hedge_data['h_star_rolling'].max():.2f}]")
 ```
 
-## ASEAN Currency Comparison {#sec-fx-asean}
+## So sánh tiền tệ ASEAN {#sec-fx-asean}
 
-To put the VND in perspective, we compare its properties with other ASEAN currencies and the Chinese Yuan.
+Để đặt VND vào bối cảnh, chúng ta so sánh các tính chất của nó với các đồng tiền ASEAN khác và đồng Nhân dân tệ.
 
 ```{python}
 #| label: fig-asean-comparison
 #| eval: false
-#| fig-cap: "Annualized volatility and mean depreciation of ASEAN currencies against the USD (2012--2024). The VND stands out for its low volatility (reflecting the managed float) combined with gradual depreciation. Freely floating currencies (THB, SGD) show higher volatility but more variable depreciation patterns."
+#| fig-cap: "Biến động quy năm và mức mất giá trung bình của các đồng tiền ASEAN so với USD (2012--2024). VND nổi bật nhờ biến động thấp (phản ánh cơ chế thả nổi có quản lý) kết hợp với mất giá dần dần. Các đồng tiền thả nổi tự do (THB, SGD) cho thấy biến động cao hơn nhưng mô thức mất giá biến thiên nhiều hơn."
 #| code-summary: "Compare VND with ASEAN and Asian currency pairs"
 # Compute annual statistics for each currency
 comparison = pd.DataFrame()
@@ -1220,14 +1220,14 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Exchange Rate and Equity Market Co-Movement {#sec-fx-comovement}
+## Đồng biến động giữa tỷ giá hối đoái và thị trường cổ phiếu {#sec-fx-comovement}
 
-The relationship between VND/USD movements and the Vietnamese equity market is central to portfolio construction. We examine this at both the aggregate and conditional levels.
+Mối quan hệ giữa các biến động VND/USD và thị trường cổ phiếu Việt Nam là trung tâm của việc xây dựng danh mục đầu tư. Chúng ta xem xét điều này ở cả cấp độ tổng hợp lẫn cấp độ có điều kiện.
 
 ```{python}
 #| label: fig-equity-fx-comovement
 #| eval: false
-#| fig-cap: "Scatter plot of monthly VN-Index returns against VND/USD changes. The relationship is modestly negative (VND depreciation hurts equities), but with substantial noise. The correlation is stronger during crisis episodes when capital outflows simultaneously depress equities and the currency."
+#| fig-cap: "Biểu đồ phân tán giữa lợi nhuận hằng tháng của VN-Index và các thay đổi VND/USD. Mối quan hệ âm ở mức vừa phải (VND mất giá gây hại cho cổ phiếu), nhưng có nhiều nhiễu. Tương quan mạnh hơn trong các giai đoạn khủng hoảng, khi dòng vốn rút ra đồng thời làm suy giảm cả cổ phiếu và đồng tiền."
 #| code-summary: "Analyze equity-FX co-movement at the aggregate level"
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -1278,25 +1278,25 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Summary {#sec-fx-summary}
+## Tóm tắt {#sec-fx-summary}
 
-This chapter has developed a comprehensive toolkit for working with exchange rate data in the Vietnamese context. The key findings and methods are in @tbl-fx-summary.
+Chương này đã phát triển một bộ công cụ toàn diện để làm việc với dữ liệu tỷ giá hối đoái trong bối cảnh Việt Nam. Các phát hiện và phương pháp chính nằm trong @tbl-fx-summary.
 
-| Topic | Finding | Implication |
+| Chủ đề | Phát hiện | Hàm ý |
 |-------------------|------------------------|------------------------|
-| VND regime | Managed float with +/-3% band, daily reference rate | Returns are non-normal; clustered near zero with discrete jumps |
-| Return distribution | Fat tails, excess kurtosis, positive skewness | Standard normal-based risk models underestimate tail risk |
-| CIP | Persistent positive deviations (\~50-200 bps) | Capital controls and limited arbitrage; hedging is expensive |
-| UIP | beta \< 1 in Fama regression | Carry trade is profitable on average; crash risk in devaluations |
-| Carry trade | Positive Sharpe but negative skewness | Steady gains punctuated by sharp losses during devaluations |
-| GARCH | Strong persistence (alpha + beta approx 0.99); Student-t preferred | Volatility clustering; regime switches around policy events |
-| Firm exposure | \~15-25% significant; systematic industry patterns | Exporters benefit from depreciation; importers hurt |
-| Hedging | Full hedge eliminates FX risk but costs \~3-5% p.a. | Optimal partial hedge depends on equity-FX correlation |
-| ASEAN comparison | VND has lowest volatility but steady depreciation | Managed float compresses vol; does not eliminate trend risk |
+| Chế độ VND | Thả nổi có quản lý với biên độ +/-3%, tỷ giá tham chiếu hằng ngày | Lợi nhuận không tuân theo phân phối chuẩn; tập trung gần không với các cú nhảy rời rạc |
+| Phân phối lợi nhuận | Đuôi dày, độ nhọn vượt mức, độ xiên dương | Các mô hình rủi ro dựa trên phân phối chuẩn thông thường đánh giá thấp rủi ro đuôi |
+| CIP | Độ lệch dương dai dẳng (\~50-200 bps) | Kiểm soát vốn và chênh lệch giá hạn chế; phòng ngừa rủi ro tốn kém |
+| UIP | beta \< 1 trong hồi quy Fama | Giao dịch carry có lãi trung bình; rủi ro sụp đổ khi phá giá |
+| Giao dịch carry | Sharpe dương nhưng độ xiên âm | Lãi đều đặn bị ngắt quãng bởi các khoản lỗ mạnh khi phá giá |
+| GARCH | Tính bền vững mạnh (alpha + beta xấp xỉ 0.99); ưu tiên Student-t | Tập trung biến động; chuyển chế độ quanh các sự kiện chính sách |
+| Mức phơi nhiễm doanh nghiệp | \~15-25% có ý nghĩa; mô thức ngành có hệ thống | Nhà xuất khẩu hưởng lợi từ mất giá; nhà nhập khẩu bị thiệt |
+| Phòng ngừa rủi ro | Phòng ngừa toàn phần loại bỏ rủi ro ngoại hối nhưng tốn \~3-5% mỗi năm | Mức phòng ngừa một phần tối ưu phụ thuộc vào tương quan cổ phiếu-ngoại hối |
+| So sánh ASEAN | VND có biến động thấp nhất nhưng mất giá đều đặn | Thả nổi có quản lý nén biến động; không loại bỏ rủi ro xu hướng |
 
-: Summary of findings on VND exchange rate dynamics. {#tbl-fx-summary}
+: Tóm tắt các phát hiện về động lực tỷ giá hối đoái VND. {#tbl-fx-summary}
 
-For researchers using Vietnamese equity data, the exchange rate dimension is not optional. Any study that converts VND returns to USD, uses international factor models, or examines firms with trade exposure must account for the distinctive properties of the VND regime. The tools developed in this chapter, from GARCH volatility modeling to rolling exposure estimation, provide the building blocks for incorporating exchange rate dynamics into broader empirical asset pricing work.
+Đối với các nhà nghiên cứu sử dụng dữ liệu cổ phiếu Việt Nam, khía cạnh tỷ giá hối đoái không phải là tùy chọn. Bất kỳ nghiên cứu nào quy đổi lợi nhuận VND sang USD, dùng các mô hình nhân tố quốc tế, hoặc xem xét các doanh nghiệp có phơi nhiễm thương mại đều phải tính đến các tính chất đặc thù của chế độ VND. Các công cụ phát triển trong chương này, từ mô hình hóa biến động GARCH đến ước lượng mức phơi nhiễm trượt, cung cấp các khối nền tảng để đưa động lực tỷ giá hối đoái vào công việc thực nghiệm định giá tài sản rộng hơn.
 
 ```{=html}
 <!-- ## Exercises {#sec-fx-exercises}

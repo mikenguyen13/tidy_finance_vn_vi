@@ -1,58 +1,58 @@
-# Fama-French Factors
+# Các nhân tố Fama-French
 
-This chapter provides a replication of the Fama-French factor portfolios for the Vietnamese stock market. The Fama-French factor models represent a cornerstone of empirical asset pricing, originating from the seminal work of @Fama1992 and later extended in @FamaFrench2015. These models have transformed how academics and practitioners understand the cross-section of expected stock returns, moving beyond the single-factor Capital Asset Pricing Model to incorporate multiple sources of systematic risk.
+Chương này trình bày việc tái lập các danh mục nhân tố Fama-French cho thị trường chứng khoán Việt Nam. Các mô hình nhân tố Fama-French là nền tảng của định giá tài sản thực nghiệm, bắt nguồn từ công trình kinh điển của @Fama1992 và sau đó được mở rộng trong @FamaFrench2015. Các mô hình này đã thay đổi cách giới học thuật và nhà thực hành hiểu về sự khác biệt theo chiều ngang của lợi nhuận kỳ vọng cổ phiếu, vượt ra ngoài mô hình định giá tài sản vốn một nhân tố để đưa vào nhiều nguồn rủi ro hệ thống.
 
-We construct both the three-factor and five-factor models at monthly and daily frequencies. The monthly factors serve as the foundation for most asset pricing tests and portfolio analyses, while the daily factors enable higher-frequency applications including short-horizon event studies, market microstructure research, and daily beta estimation. By constructing factors at both frequencies, we create a complete toolkit for empirical finance research in the Vietnamese market.
+Chúng ta xây dựng cả mô hình ba nhân tố và năm nhân tố ở tần suất tháng và ngày. Các nhân tố tháng là nền tảng cho hầu hết các kiểm định định giá tài sản và phân tích danh mục, trong khi các nhân tố ngày cho phép các ứng dụng tần suất cao hơn, bao gồm nghiên cứu sự kiện ngắn hạn, nghiên cứu vi cấu trúc thị trường và ước lượng beta ngày. Bằng cách xây dựng nhân tố ở cả hai tần suất, chúng ta tạo ra một bộ công cụ hoàn chỉnh cho nghiên cứu tài chính thực nghiệm trên thị trường Việt Nam.
 
-The chapter proceeds as follows. We first discuss the theoretical motivation for each factor and the economic intuition behind the Fama-French methodology. We then prepare the necessary data, merging stock returns with accounting characteristics. Next, we implement the portfolio sorting procedures that form the basis of factor construction, carefully following the original Fama-French protocols while adapting them for Vietnamese market characteristics. We construct the three-factor model (market, size, and value) before extending to the five-factor model (adding profitability and investment). Finally, we construct daily factors and validate our replicated factors through various diagnostic checks.
+Chương được triển khai như sau. Trước hết, chúng ta bàn về động cơ lý thuyết của từng nhân tố và trực giác kinh tế đằng sau phương pháp Fama-French. Sau đó, chúng ta chuẩn bị dữ liệu cần thiết, hợp nhất lợi nhuận cổ phiếu với các đặc điểm kế toán. Tiếp theo, chúng ta triển khai các quy trình phân loại danh mục làm cơ sở cho việc xây dựng nhân tố, bám sát các quy trình Fama-French gốc đồng thời điều chỉnh cho phù hợp với đặc điểm thị trường Việt Nam. Chúng ta xây dựng mô hình ba nhân tố (thị trường, quy mô và giá trị) trước khi mở rộng sang mô hình năm nhân tố (bổ sung khả năng sinh lời và đầu tư). Cuối cùng, chúng ta xây dựng các nhân tố ngày và kiểm chứng các nhân tố đã tái lập thông qua nhiều kiểm tra chẩn đoán.
 
-## Theoretical Background
+## Cơ sở lý thuyết
 
-### The Evolution from CAPM to Multi-Factor Models
+### Quá trình phát triển từ CAPM đến các mô hình đa nhân tố
 
-The Capital Asset Pricing Model of @Sharpe1964 posits that a single factor—the market portfolio—should explain all cross-sectional variation in expected returns. However, decades of empirical research have documented persistent patterns that CAPM cannot explain. @Fama1992 demonstrated that two firm characteristics—size and book-to-market ratio—capture substantial variation in average returns that the market beta leaves unexplained.
+Mô hình định giá tài sản vốn của @Sharpe1964 cho rằng một nhân tố duy nhất, danh mục thị trường, phải giải thích toàn bộ sự khác biệt theo chiều ngang của lợi nhuận kỳ vọng. Tuy nhiên, nhiều thập kỷ nghiên cứu thực nghiệm đã ghi nhận những quy luật dai dẳng mà CAPM không giải thích được. @Fama1992 đã chứng minh rằng hai đặc điểm của doanh nghiệp, quy mô và tỷ số giá trị sổ sách trên giá trị thị trường, nắm bắt một phần đáng kể biến thiên của lợi nhuận trung bình mà beta thị trường không giải thích được.
 
-Small firms tend to earn higher returns than large firms, a pattern known as the size effect. Similarly, firms with high book-to-market ratios (value stocks) tend to outperform firms with low book-to-market ratios (growth stocks), known as the value premium. The three-factor model formalizes these observations by constructing tradeable factor portfolios:
+Các doanh nghiệp nhỏ có xu hướng kiếm được lợi nhuận cao hơn các doanh nghiệp lớn, một quy luật được gọi là hiệu ứng quy mô. Tương tự, các doanh nghiệp có tỷ số giá trị sổ sách trên giá trị thị trường cao (cổ phiếu giá trị) có xu hướng vượt trội các doanh nghiệp có tỷ số này thấp (cổ phiếu tăng trưởng), được gọi là phần bù giá trị. Mô hình ba nhân tố chính thức hóa các quan sát này bằng cách xây dựng các danh mục nhân tố có thể giao dịch được:
 
 $$
 r_{i,t} - r_{f,t} = \alpha_i + \beta_i^{MKT}(r_{m,t} - r_{f,t}) + \beta_i^{SMB} \cdot SMB_t + \beta_i^{HML} \cdot HML_t + \varepsilon_{i,t}
 $$ {#eq-ff3}
 
-where:
+trong đó:
 
-- $r_{i,t} - r_{f,t}$ is the excess return on asset $i$
-- $r_{m,t} - r_{f,t}$ is the market excess return
-- $SMB_t$ (Small Minus Big) is the size factor
-- $HML_t$ (High Minus Low) is the value factor
+- $r_{i,t} - r_{f,t}$ là lợi nhuận vượt mức của tài sản $i$
+- $r_{m,t} - r_{f,t}$ là lợi nhuận vượt mức của thị trường
+- $SMB_t$ (Small Minus Big) là nhân tố quy mô
+- $HML_t$ (High Minus Low) là nhân tố giá trị
 
-### The Five-Factor Extension
+### Mở rộng sang năm nhân tố
 
-@FamaFrench2015 extended the model to include two additional factors motivated by the dividend discount model. Firms with higher profitability should have higher expected returns (all else equal), and firms with aggressive investment policies should have lower expected returns:
+@FamaFrench2015 mở rộng mô hình để bao gồm hai nhân tố bổ sung, được gợi ý từ mô hình chiết khấu cổ tức. Các doanh nghiệp có khả năng sinh lời cao hơn phải có lợi nhuận kỳ vọng cao hơn (các yếu tố khác không đổi), và các doanh nghiệp có chính sách đầu tư mạnh tay phải có lợi nhuận kỳ vọng thấp hơn:
 
 $$
 r_{i,t} - r_{f,t} = \alpha_i + \beta_i^{MKT}MKT_t + \beta_i^{SMB}SMB_t + \beta_i^{HML}HML_t + \beta_i^{RMW}RMW_t + \beta_i^{CMA}CMA_t + \varepsilon_{i,t}
 $$ {#eq-ff5}
 
-where:
+trong đó:
 
-- $RMW_t$ (Robust Minus Weak) is the profitability factor
-- $CMA_t$ (Conservative Minus Aggressive) is the investment factor
+- $RMW_t$ (Robust Minus Weak) là nhân tố khả năng sinh lời
+- $CMA_t$ (Conservative Minus Aggressive) là nhân tố đầu tư
 
-### Factor Construction Methodology
+### Phương pháp xây dựng nhân tố
 
-The Fama-French methodology constructs factors through double-sorted portfolios:
+Phương pháp Fama-French xây dựng các nhân tố thông qua các danh mục phân loại kép:
 
-1. **Size sorts**: Stocks are divided into Small and Big groups based on median market capitalization.
+1. **Phân loại theo quy mô**: Cổ phiếu được chia thành nhóm Nhỏ và Lớn dựa trên vốn hóa thị trường trung vị.
 
-2. **Characteristic sorts**: Within each size group, stocks are sorted into terciles based on book-to-market (for HML), operating profitability (for RMW), or investment (for CMA).
+2. **Phân loại theo đặc điểm**: Trong mỗi nhóm quy mô, cổ phiếu được phân loại thành ba nhóm theo tam phân vị dựa trên tỷ số giá trị sổ sách trên giá trị thị trường (cho HML), khả năng sinh lời hoạt động (cho RMW) hoặc đầu tư (cho CMA).
 
-3. **Factor returns**: Factors are computed as the difference between average returns of portfolios with high versus low characteristic values, averaging across size groups to neutralize size effects.
+3. **Lợi nhuận nhân tố**: Các nhân tố được tính bằng chênh lệch giữa lợi nhuận trung bình của các danh mục có giá trị đặc điểm cao so với thấp, lấy trung bình qua các nhóm quy mô để loại bỏ hiệu ứng quy mô.
 
-4. **Timing**: Portfolios are formed at the end of June each year using accounting data from the prior fiscal year, ensuring all information was publicly available at formation.
+4. **Thời điểm**: Các danh mục được hình thành vào cuối tháng Sáu mỗi năm, dùng dữ liệu kế toán của năm tài chính trước đó, bảo đảm toàn bộ thông tin đã được công bố công khai tại thời điểm hình thành.
 
-## Setting Up the Environment
+## Thiết lập môi trường
 
-We load the required Python packages for data manipulation, statistical analysis, and visualization.
+Chúng ta nạp các gói Python cần thiết để xử lý dữ liệu, phân tích thống kê và trực quan hóa.
 
 ```{python}
 import pandas as pd
@@ -66,17 +66,17 @@ from plotnine import *
 from mizani.formatters import percent_format, comma_format
 ```
 
-We connect to our SQLite database containing the processed Vietnamese financial data.
+Chúng ta kết nối với cơ sở dữ liệu SQLite chứa dữ liệu tài chính Việt Nam đã xử lý.
 
 ```{python}
 tidy_finance = sqlite3.connect(database="data/tidy_finance_python.sqlite")
 ```
 
-## Data Preparation
+## Chuẩn bị dữ liệu
 
-### Loading Stock Returns
+### Nạp lợi nhuận cổ phiếu
 
-We load the monthly stock returns data, which includes excess returns, market capitalization, and the risk-free rate. These variables are essential for computing value-weighted portfolio returns and factor premiums.
+Chúng ta nạp dữ liệu lợi nhuận cổ phiếu theo tháng, bao gồm lợi nhuận vượt mức, vốn hóa thị trường và lãi suất phi rủi ro. Các biến này là thiết yếu để tính lợi nhuận danh mục theo trọng số vốn hóa và phần bù nhân tố.
 
 ```{python}
 prices_monthly = pd.read_sql_query(
@@ -93,9 +93,9 @@ print(f"Unique stocks: {prices_monthly['symbol'].nunique():,}")
 print(f"Date range: {prices_monthly['date'].min():%Y-%m} to {prices_monthly['date'].max():%Y-%m}")
 ```
 
-### Loading Company Fundamentals
+### Nạp dữ liệu cơ bản của doanh nghiệp
 
-We load the company fundamentals data containing book equity, operating profitability, and investment—the characteristics needed for constructing the Fama-French factors.
+Chúng ta nạp dữ liệu cơ bản của doanh nghiệp gồm vốn chủ sở hữu sổ sách, khả năng sinh lời hoạt động và đầu tư, tức là các đặc điểm cần thiết để xây dựng các nhân tố Fama-French.
 
 ```{python}
 comp_vn = pd.read_sql_query(
@@ -111,15 +111,15 @@ print(f"Fundamentals: {len(comp_vn):,} firm-year observations")
 print(f"Unique firms: {comp_vn['symbol'].nunique():,}")
 ```
 
-### Constructing Sorting Variables
+### Xây dựng các biến phân loại
 
-Following Fama-French conventions, we construct the sorting variables with careful attention to timing. The key principles are:
+Theo quy ước Fama-French, chúng ta xây dựng các biến phân loại với sự chú ý cẩn thận đến thời điểm. Các nguyên tắc chính là:
 
-1. **Size (June Market Cap)**: We use market capitalization at the end of June of year $t$ to sort stocks into size groups. This ensures we capture the firm's size at the moment of portfolio formation.
+1. **Quy mô (vốn hóa tháng Sáu)**: Chúng ta dùng vốn hóa thị trường vào cuối tháng Sáu của năm $t$ để phân loại cổ phiếu vào các nhóm quy mô. Điều này bảo đảm chúng ta nắm bắt quy mô của doanh nghiệp vào đúng thời điểm hình thành danh mục.
 
-2. **Book-to-Market Ratio**: We use book equity from fiscal year $t-1$ divided by market equity at the end of December $t-1$. This creates a six-month gap between the accounting data and portfolio formation, ensuring the information was publicly available.
+2. **Tỷ số giá trị sổ sách trên giá trị thị trường**: Chúng ta dùng vốn chủ sở hữu sổ sách của năm tài chính $t-1$ chia cho vốn hóa thị trường vào cuối tháng Mười Hai $t-1$. Điều này tạo ra độ trễ sáu tháng giữa dữ liệu kế toán và thời điểm hình thành danh mục, bảo đảm thông tin đã được công bố công khai.
 
-3. **Portfolio Formation Date**: Portfolios are formed on July 1st and held for twelve months until the following June.
+3. **Ngày hình thành danh mục**: Các danh mục được hình thành vào ngày 1 tháng Bảy và được nắm giữ mười hai tháng cho đến tháng Sáu năm sau.
 
 ```{python}
 def construct_sorting_variables(prices_monthly, comp_vn):
@@ -202,9 +202,9 @@ print(f"\nFinal sorting variables: {len(sorting_variables):,} stock-years")
 print(f"Sorting date range: {sorting_variables['sorting_date'].min():%Y-%m} to {sorting_variables['sorting_date'].max():%Y-%m}")
 ```
 
-### Validating Sorting Variables
+### Kiểm chứng các biến phân loại
 
-Before proceeding, we validate that our sorting variables have reasonable distributions. The book-to-market ratio should center around 1.0 for a typical market, though emerging markets may differ.
+Trước khi tiếp tục, chúng ta kiểm chứng rằng các biến phân loại có phân phối hợp lý. Tỷ số giá trị sổ sách trên giá trị thị trường nên tập trung quanh 1,0 đối với một thị trường điển hình, mặc dù các thị trường mới nổi có thể khác.
 
 ```{python}
 print("Sorting Variable Summary Statistics:")
@@ -216,9 +216,9 @@ print(f"B/M 1st percentile: {sorting_variables['bm'].quantile(0.01):.4f}")
 print(f"B/M 99th percentile: {sorting_variables['bm'].quantile(0.99):.4f}")
 ```
 
-### Handling Outliers
+### Xử lý các giá trị ngoại lai
 
-Extreme values in sorting characteristics can distort portfolio assignments and factor returns. We apply winsorization to limit the influence of outliers while preserving the general ranking of stocks.
+Các giá trị cực đoan trong đặc điểm dùng để phân loại có thể làm méo việc gán danh mục và lợi nhuận nhân tố. Chúng ta áp dụng winsorization (cắt đuôi giá trị cực đoan) để hạn chế ảnh hưởng của các giá trị ngoại lai trong khi vẫn giữ nguyên thứ hạng chung của các cổ phiếu.
 
 ```{python}
 # Check BEFORE winsorization
@@ -250,11 +250,11 @@ print("\nAFTER Winsorization:")
 print(sorting_variables[["size", "bm", "op", "inv"]].describe().round(4))
 ```
 
-## Portfolio Assignment Functions
+## Các hàm gán danh mục
 
-### The Portfolio Assignment Function
+### Hàm gán danh mục
 
-We create a flexible function for assigning stocks to portfolios based on quantile breakpoints. This function handles both independent sorts (where breakpoints are computed across all stocks) and dependent sorts (where breakpoints are computed within subgroups).
+Chúng ta tạo một hàm linh hoạt để gán cổ phiếu vào các danh mục dựa trên các điểm cắt phân vị. Hàm này xử lý cả phân loại độc lập (các điểm cắt được tính trên tất cả cổ phiếu) và phân loại phụ thuộc (các điểm cắt được tính trong từng nhóm con).
 
 ```{python}
 def assign_portfolio(data, sorting_variable, percentiles):
@@ -314,9 +314,9 @@ print(f"INV 70th percentile: {test_data['inv'].quantile(0.7):.4f}")
 ```
 
 
-### Assigning Portfolios for Three-Factor Model
+### Gán danh mục cho mô hình ba nhân tố
 
-For the three-factor model, we perform independent double sorts on size and book-to-market. Size is split at the median (2 groups), and book-to-market is split at the 30th and 70th percentiles (3 groups), creating 6 portfolios.
+Đối với mô hình ba nhân tố, chúng ta thực hiện phân loại kép độc lập theo quy mô và tỷ số giá trị sổ sách trên giá trị thị trường. Quy mô được chia tại trung vị (2 nhóm), còn tỷ số giá trị sổ sách trên giá trị thị trường được chia tại phân vị thứ 30 và 70 (3 nhóm), tạo ra 6 danh mục.
 
 ```{python}
 def assign_ff3_portfolios(sorting_variables):
@@ -351,9 +351,9 @@ print(portfolios_ff3[["symbol", "sorting_date", "portfolio_size", "portfolio_bm"
 ```
 
 
-### Validating Portfolio Assignments
+### Kiểm chứng việc gán danh mục
 
-We verify that the portfolio assignments create the expected 2×3 grid with reasonable stock counts in each cell.
+Chúng ta kiểm tra rằng việc gán danh mục tạo ra lưới 2×3 như kỳ vọng với số lượng cổ phiếu hợp lý trong mỗi ô.
 
 ```{python}
 # Check portfolio distribution for most recent year
@@ -374,7 +374,7 @@ print("\nBook-to-Market by Portfolio (should be increasing):")
 print(portfolios_ff3.groupby("portfolio_bm", observed=True)["bm"].median().round(4))
 ```
 
-We verify that for a single stock, the portfolio assignment remains constant between July of one year and June of the next.
+Chúng ta kiểm tra rằng, đối với một cổ phiếu, việc gán danh mục không đổi từ tháng Bảy của năm này đến tháng Sáu của năm sau.
 
 ```{python}
 # Trace a single symbol (e.g., 'A32') across a formation window
@@ -387,11 +387,11 @@ print("\nTemporal Persistence Check (Symbol A32):")
 print(persistence_check.head(15))
 ```
 
-## Fama-French Three-Factor Model (Monthly)
+## Mô hình ba nhân tố Fama-French (tháng)
 
-### Merging Portfolios with Returns
+### Hợp nhất danh mục với lợi nhuận
 
-We merge the portfolio assignments with monthly returns. The key insight is that portfolios formed in July of year $t$ are held through June of year $t+1$. We implement this by computing a `sorting_date` for each monthly return observation.
+Chúng ta hợp nhất việc gán danh mục với lợi nhuận tháng. Điểm mấu chốt là các danh mục hình thành vào tháng Bảy của năm $t$ được nắm giữ đến hết tháng Sáu của năm $t+1$. Chúng ta triển khai điều này bằng cách tính một biến `sorting_date` cho mỗi quan sát lợi nhuận tháng.
 
 ```{python}
 def merge_portfolios_with_returns(prices_monthly, portfolio_assignments):
@@ -441,9 +441,9 @@ portfolios_monthly_ff3 = merge_portfolios_with_returns(
 print(f"Merged observations: {len(portfolios_monthly_ff3):,}")
 ```
 
-### Computing Value-Weighted Portfolio Returns
+### Tính lợi nhuận danh mục theo trọng số vốn hóa
 
-We compute value-weighted returns for each of the six portfolios. Value-weighting uses lagged market capitalization to avoid look-ahead bias.
+Chúng ta tính lợi nhuận theo trọng số vốn hóa cho từng danh mục trong sáu danh mục. Trọng số vốn hóa dùng vốn hóa thị trường trễ một kỳ để tránh thiên lệch nhìn trước.
 
 ```{python}
 def compute_portfolio_returns(data, grouping_vars):
@@ -484,13 +484,13 @@ print("Portfolio Returns Summary:")
 print(portfolio_returns_ff3.groupby(["portfolio_size", "portfolio_bm"], observed=True)["ret"].describe().round(4))
 ```
 
-### Constructing SMB and HML Factors
+### Xây dựng các nhân tố SMB và HML
 
-We now construct the SMB and HML factors from the portfolio returns.
+Bây giờ chúng ta xây dựng các nhân tố SMB và HML từ lợi nhuận các danh mục.
 
-**SMB (Small Minus Big)**: Average return of three small portfolios minus average return of three big portfolios.
+**SMB (Small Minus Big)**: Lợi nhuận trung bình của ba danh mục nhỏ trừ lợi nhuận trung bình của ba danh mục lớn.
 
-**HML (High Minus Low)**: Average return of two high B/M portfolios minus average return of two low B/M portfolios.
+**HML (High Minus Low)**: Lợi nhuận trung bình của hai danh mục B/M cao trừ lợi nhuận trung bình của hai danh mục B/M thấp.
 
 ```{python}
 def construct_ff3_factors(portfolio_returns):
@@ -532,9 +532,9 @@ print("SMB and HML Factors:")
 print(factors_smb_hml.head(10))
 ```
 
-### Computing the Market Factor
+### Tính nhân tố thị trường
 
-The market factor is the value-weighted return of all stocks minus the risk-free rate. We compute this independently from the sorted portfolios.
+Nhân tố thị trường là lợi nhuận theo trọng số vốn hóa của tất cả cổ phiếu trừ lãi suất phi rủi ro. Chúng ta tính nhân tố này độc lập với các danh mục đã phân loại.
 
 ```{python}
 def compute_market_factor(prices_monthly):
@@ -568,9 +568,9 @@ print("Market Factor Summary:")
 print(market_factor["mkt_excess"].describe().round(4))
 ```
 
-### Combining Three Factors
+### Kết hợp ba nhân tố
 
-We combine SMB, HML, and the market factor into the complete three-factor dataset.
+Chúng ta kết hợp SMB, HML và nhân tố thị trường thành bộ dữ liệu ba nhân tố hoàn chỉnh.
 
 ```{python}
 factors_ff3_monthly = (factors_smb_hml
@@ -593,7 +593,7 @@ print("\nFactor Summary Statistics:")
 print(factors_ff3_monthly[["mkt_excess", "smb", "hml"]].describe().round(4))
 ```
 
-### Saving Three-Factor Data
+### Lưu dữ liệu ba nhân tố
 
 ```{python}
 factors_ff3_monthly.to_sql(
@@ -606,11 +606,11 @@ factors_ff3_monthly.to_sql(
 print("Three-factor monthly data saved to database.")
 ```
 
-## Fama-French Five-Factor Model (Monthly)
+## Mô hình năm nhân tố Fama-French (tháng)
 
-### Portfolio Assignments with Dependent Sorts
+### Gán danh mục với phân loại phụ thuộc
 
-For the five-factor model, we use dependent sorts: size is sorted independently, but profitability and investment are sorted within size groups. This controls for the correlation between size and these characteristics.
+Đối với mô hình năm nhân tố, chúng ta dùng phân loại phụ thuộc: quy mô được phân loại độc lập, nhưng khả năng sinh lời và đầu tư được phân loại trong từng nhóm quy mô. Cách này kiểm soát tương quan giữa quy mô và các đặc điểm đó.
 
 ```{python}
 def assign_ff5_portfolios(sorting_variables):
@@ -643,7 +643,7 @@ def assign_ff5_portfolios(sorting_variables):
 portfolios_ff5 = assign_ff5_portfolios(sorting_variables)
 ```
 
-### Validating Five-Factor Portfolios
+### Kiểm chứng các danh mục năm nhân tố
 
 ```{python}
 # Check characteristic monotonicity for each dimension
@@ -663,7 +663,7 @@ print(portfolios_ff5.groupby(["portfolio_size", "portfolio_op"], observed=True).
  .nunique())
 ```
 
-### Merging and Computing Portfolio Returns
+### Hợp nhất và tính lợi nhuận danh mục
 
 ```{python}
 # Merge with returns
@@ -676,9 +676,9 @@ portfolios_monthly_ff5 = merge_portfolios_with_returns(
 print(f"Five-factor merged observations: {len(portfolios_monthly_ff5):,}")
 ```
 
-### Constructing All Five Factors
+### Xây dựng cả năm nhân tố
 
-We construct each factor from the appropriate portfolio sorts.
+Chúng ta xây dựng từng nhân tố từ các phép phân loại danh mục tương ứng.
 
 ```{python}
 def construct_ff5_factors(portfolios_monthly):
@@ -787,9 +787,9 @@ print("\nFactor Summary Statistics:")
 print(factors_ff5_monthly[["mkt_excess", "smb", "hml", "rmw", "cma"]].describe().round(4))
 ```
 
-### Factor Correlations
+### Tương quan giữa các nhân tố
 
-We examine correlations between factors, which should generally be low for the factors to capture distinct sources of risk.
+Chúng ta xem xét tương quan giữa các nhân tố; nhìn chung chúng nên thấp để các nhân tố nắm bắt những nguồn rủi ro riêng biệt.
 
 ```{python}
 print("Factor Correlation Matrix:")
@@ -797,7 +797,7 @@ correlation_matrix = factors_ff5_monthly[["mkt_excess", "smb", "hml", "rmw", "cm
 print(correlation_matrix.round(3))
 ```
 
-### Saving Five-Factor Data
+### Lưu dữ liệu năm nhân tố
 
 ```{python}
 factors_ff5_monthly.to_sql(
@@ -810,19 +810,19 @@ factors_ff5_monthly.to_sql(
 print("Five-factor monthly data saved to database.")
 ```
 
-## Daily Fama-French Factors
+## Các nhân tố Fama-French ngày
 
-### Motivation for Daily Factors
+### Động cơ của các nhân tố ngày
 
-Daily factors are essential for several applications:
+Các nhân tố ngày là thiết yếu cho một số ứng dụng:
 
-1. **Daily beta estimation**: CAPM regressions using daily data require daily market excess returns.
-2. **Event studies**: Measuring abnormal returns around corporate events requires daily factor adjustments.
-3. **High-frequency research**: Market microstructure studies need daily or intraday factor data.
+1. **Ước lượng beta ngày**: Các hồi quy CAPM dùng dữ liệu ngày đòi hỏi lợi nhuận vượt mức thị trường theo ngày.
+2. **Nghiên cứu sự kiện**: Đo lợi nhuận bất thường quanh các sự kiện doanh nghiệp đòi hỏi điều chỉnh nhân tố theo ngày.
+3. **Nghiên cứu tần suất cao**: Các nghiên cứu vi cấu trúc thị trường cần dữ liệu nhân tố theo ngày hoặc trong ngày.
 
-The construction methodology mirrors the monthly approach, but we compute portfolio returns at daily frequency while maintaining the same annual portfolio formation dates.
+Phương pháp xây dựng tương tự cách tiếp cận theo tháng, nhưng chúng ta tính lợi nhuận danh mục ở tần suất ngày trong khi vẫn giữ nguyên các ngày hình thành danh mục hằng năm.
 
-### Loading Daily Returns
+### Nạp lợi nhuận ngày
 
 ```{python}
 # Load daily price data
@@ -839,9 +839,9 @@ print(f"Daily returns: {len(prices_daily):,} observations")
 print(f"Date range: {prices_daily['date'].min():%Y-%m-%d} to {prices_daily['date'].max():%Y-%m-%d}")
 ```
 
-### Adding Market Cap for Daily Weighting
+### Bổ sung vốn hóa để tính trọng số theo ngày
 
-For value-weighted daily returns, we need market capitalization. We use the most recent monthly market cap as the weight for daily returns within that month.
+Để tính lợi nhuận ngày theo trọng số vốn hóa, chúng ta cần vốn hóa thị trường. Chúng ta dùng vốn hóa thị trường tháng gần nhất làm trọng số cho lợi nhuận ngày trong tháng đó.
 
 ```{python}
 # Get monthly market cap to use as weights for daily returns
@@ -864,9 +864,9 @@ prices_daily = (prices_daily
 print(f"Daily returns with weights: {len(prices_daily):,} observations")
 ```
 
-### Merging Daily Returns with Portfolios
+### Hợp nhất lợi nhuận ngày với các danh mục
 
-We use the same portfolio assignments (formed annually in July) for daily returns.
+Chúng ta dùng cùng việc gán danh mục (hình thành hằng năm vào tháng Bảy) cho lợi nhuận ngày.
 
 ```{python}
 # Step 1: Ensure portfolios_ff3 has correct format
@@ -921,7 +921,7 @@ print(f"\nSample date: {test_date}")
 print(portfolios_daily_ff3.query("date == @test_date").groupby(["portfolio_size", "portfolio_bm"], observed=True).size().unstack(fill_value=0))
 ```
 
-### Computing Daily Three Factors
+### Tính ba nhân tố ngày
 
 ```{python}
 def compute_daily_ff3_factors(portfolios_daily):
@@ -967,7 +967,7 @@ print(f"Daily factor observations: {len(factors_daily_smb_hml):,}")
 print(factors_daily_smb_hml.head(10))
 ```
 
-### Computing Daily Market Factor
+### Tính nhân tố thị trường ngày
 
 ```{python}
 def compute_daily_market_factor(prices_daily):
@@ -999,7 +999,7 @@ market_factor_daily = compute_daily_market_factor(prices_daily)
 print(f"Daily market factor: {len(market_factor_daily):,} days")
 ```
 
-### Combining Daily Three Factors
+### Kết hợp ba nhân tố ngày
 
 ```{python}
 factors_ff3_daily = (factors_daily_smb_hml
@@ -1016,7 +1016,7 @@ print("\nDaily Factor Summary Statistics:")
 print(factors_ff3_daily[["mkt_excess", "smb", "hml"]].describe().round(6))
 ```
 
-### Computing Daily Five Factors
+### Tính năm nhân tố ngày
 
 ```{python}
 # Step 1: Clean portfolios
@@ -1129,7 +1129,7 @@ print("\nDaily Five-Factor Summary Statistics:")
 print(factors_ff5_daily[["mkt_excess", "smb", "hml", "rmw", "cma"]].describe().round(6))
 ```
 
-### Saving Daily Factors
+### Lưu các nhân tố ngày
 
 ```{python}
 factors_ff3_daily.to_sql(
@@ -1149,7 +1149,7 @@ factors_ff5_daily.to_sql(
 print("Daily factor data saved to database.")
 ```
 
-## Factor Validation and Diagnostics
+## Kiểm chứng và chẩn đoán nhân tố
 
 ```{python}
 # Verify all tables are in database
@@ -1189,16 +1189,16 @@ for factor in ["mkt_excess", "smb", "hml"]:
     print(f"{factor}: Monthly-Daily correlation = {corr:.4f}")
 ```
 
-### Cumulative Factor Returns
+### Lợi nhuận nhân tố tích lũy
 
-We visualize the cumulative performance of each factor to assess whether the factors generate meaningful premiums over time.
+Chúng ta trực quan hóa hiệu quả tích lũy của từng nhân tố để đánh giá xem các nhân tố có tạo ra phần bù có ý nghĩa theo thời gian hay không.
 
 ```{python}
 #| label: fig-cumulative-factors
 #| out-width: "70%"
 #| fig-align: center
-#| fig-cap: "Cumulative returns of Fama-French factors for the Vietnamese market. The figure shows the growth of $1 invested in each factor portfolio."
-#| fig-alt: "Line chart showing cumulative factor returns over time."
+#| fig-cap: "Lợi nhuận tích lũy của các nhân tố Fama-French cho thị trường Việt Nam. Hình thể hiện mức tăng trưởng của $1 đầu tư vào từng danh mục nhân tố."
+#| fig-alt: "Biểu đồ đường thể hiện lợi nhuận nhân tố tích lũy theo thời gian."
 
 # Compute cumulative returns
 factors_cumulative = (factors_ff5_monthly
@@ -1220,9 +1220,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Average Factor Premiums
+### Phần bù nhân tố trung bình
 
-We compute annualized average factor premiums and their statistical significance.
+Chúng ta tính phần bù nhân tố trung bình quy năm và ý nghĩa thống kê của chúng.
 
 ```{python}
 # Annualized average returns (monthly returns * 12)
@@ -1247,9 +1247,9 @@ print("\nT-Statistics:")
 print(factor_tstat.round(2))
 ```
 
-### Comparing Monthly and Daily Factors
+### So sánh các nhân tố tháng và ngày
 
-We verify consistency between monthly and daily factors by computing correlations.
+Chúng ta kiểm tra tính nhất quán giữa các nhân tố tháng và ngày bằng cách tính các tương quan.
 
 ```{python}
 # Aggregate daily factors to monthly for comparison
@@ -1277,20 +1277,20 @@ for factor in ["mkt_excess", "smb", "hml", "rmw", "cma"]:
     print(f"{factor}: Monthly-Daily correlation = {corr:.4f}")
 ```
 
-## Key Takeaways
+## Những điểm chính
 
-1. **Factor Models Explained**: The Fama-French three-factor model adds size (SMB) and value (HML) factors to the CAPM, while the five-factor model further includes profitability (RMW) and investment (CMA) factors.
+1. **Giải thích các mô hình nhân tố**: Mô hình ba nhân tố Fama-French bổ sung các nhân tố quy mô (SMB) và giá trị (HML) vào CAPM, trong khi mô hình năm nhân tố bao gồm thêm các nhân tố khả năng sinh lời (RMW) và đầu tư (CMA).
 
-2. **Construction Methodology**: Factors are constructed through double-sorted portfolios with careful attention to timing. Portfolios are formed in July using accounting data from the prior fiscal year to ensure information was publicly available.
+2. **Phương pháp xây dựng**: Các nhân tố được xây dựng thông qua các danh mục phân loại kép với sự chú ý cẩn thận đến thời điểm. Các danh mục được hình thành vào tháng Bảy, dùng dữ liệu kế toán của năm tài chính trước đó để bảo đảm thông tin đã được công bố công khai.
 
-3. **Independent vs. Dependent Sorts**: The three-factor model uses independent sorts on size and book-to-market, creating a 2×3 grid. The five-factor model uses dependent sorts where characteristics are sorted within size groups.
+3. **Phân loại độc lập và phụ thuộc**: Mô hình ba nhân tố dùng phân loại độc lập theo quy mô và tỷ số giá trị sổ sách trên giá trị thị trường, tạo ra lưới 2×3. Mô hình năm nhân tố dùng phân loại phụ thuộc, trong đó các đặc điểm được phân loại trong từng nhóm quy mô.
 
-4. **Value-Weighted Returns**: Portfolio returns are computed using value-weighting with lagged market capitalization to avoid look-ahead bias.
+4. **Lợi nhuận theo trọng số vốn hóa**: Lợi nhuận danh mục được tính theo trọng số vốn hóa với vốn hóa thị trường trễ một kỳ để tránh thiên lệch nhìn trước.
 
-5. **Daily Factors**: Daily factors use the same annual portfolio assignments but compute returns at daily frequency, enabling higher-frequency applications like daily beta estimation.
+5. **Nhân tố ngày**: Các nhân tố ngày dùng cùng việc gán danh mục hằng năm nhưng tính lợi nhuận ở tần suất ngày, cho phép các ứng dụng tần suất cao hơn như ước lượng beta ngày.
 
-6. **Market Factor**: The market factor is computed independently as the value-weighted return of all stocks minus the risk-free rate.
+6. **Nhân tố thị trường**: Nhân tố thị trường được tính độc lập bằng lợi nhuận theo trọng số vốn hóa của tất cả cổ phiếu trừ lãi suất phi rủi ro.
 
-7. **Validation**: Factor quality can be assessed through characteristic monotonicity, portfolio diversification, cumulative returns, and consistency between daily and monthly frequencies.
+7. **Kiểm chứng**: Chất lượng nhân tố có thể được đánh giá thông qua tính đơn điệu của đặc điểm, mức đa dạng hóa của danh mục, lợi nhuận tích lũy và tính nhất quán giữa tần suất ngày và tháng.
 
-8. **Vietnamese Market Adaptation**: While following the original Fama-French methodology, we adapt for Vietnamese market characteristics including VAS accounting standards, reporting timelines, and currency units.
+8. **Điều chỉnh cho thị trường Việt Nam**: Trong khi bám theo phương pháp Fama-French gốc, chúng ta điều chỉnh cho phù hợp với đặc điểm thị trường Việt Nam, bao gồm chuẩn mực kế toán VAS, thời hạn báo cáo và đơn vị tiền tệ.
