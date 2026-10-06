@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi" xml:lang="vi"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.26">
+<meta name="generator" content="quarto-1.7.33">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 
 <title>References – Tài Chính Ứng Dụng với Python</title>
 <style>
@@ -88,19 +89,18 @@ div.csl-indent {
 <link href="./favicon.ico" rel="icon">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-bc185b5c5bdbcb35c2eb49d8a876ef70.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-72097b8a1e3a3da1d7b8bbfaaf81c3d8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-5ee5e5a16e06a4aa31defda297eed821.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -115,25 +115,51 @@ div.csl-indent {
   ],
   "show-item-context": false,
   "language": {
-    "search-no-results-text": "No results",
-    "search-matching-documents-text": "matching documents",
-    "search-copy-link-title": "Copy link to search",
-    "search-hide-matches-text": "Hide additional matches",
-    "search-more-match-text": "more match in this document",
-    "search-more-matches-text": "more matches in this document",
-    "search-clear-button-title": "Clear",
+    "search-no-results-text": "Không có kết quả",
+    "search-matching-documents-text": "tài liệu phù hợp",
+    "search-copy-link-title": "Sao chép liên kết tìm kiếm",
+    "search-hide-matches-text": "Ẩn các kết quả khớp khác",
+    "search-more-match-text": "kết quả khớp khác trong tài liệu này",
+    "search-more-matches-text": "kết quả khớp khác trong tài liệu này",
+    "search-clear-button-title": "Xóa",
     "search-text-placeholder": "",
-    "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit",
-    "search-label": "Search"
+    "search-detached-cancel-button-title": "Hủy",
+    "search-submit-button-title": "Gửi",
+    "search-label": "Tìm kiếm"
   }
 }</script>
+<!-- =====================================================================
+     SEO: schema.org Book JSON-LD, injected into the <head> of every page
+     via format.html include-in-header. The plain meta description and the
+     og:/twitter: descriptions come from the book `description:` key in
+     _quarto.yml - don't repeat them here (duplicate meta description).
+     ===================================================================== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": "Tài Chính Ứng Dụng với Python",
+  "url": "https://mikenguyen13.github.io/tidy_finance_vn_vi/",
+  "inLanguage": "vi",
+  "bookFormat": "https://schema.org/EBook",
+  "genre": "Empirical Finance",
+  "description": "Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: truy cập và quản lý dữ liệu tài chính, xây dựng danh mục đầu tư, mô hình định giá tài sản, kiểm định chéo, phân tích cơ bản và định giá doanh nghiệp.",
+  "keywords": "tài chính định lượng, thị trường chứng khoán Việt Nam, tài chính thực nghiệm, định giá tài sản, Fama-French, danh mục đầu tư, Python, VN30, HOSE",
+  "author": {
+    "@type": "Person",
+    "name": "Mike Nguyen"
+  },
+  "isAccessibleForFree": true
+}
+</script>
 
 
 <link rel="stylesheet" href="styles.css">
 <meta property="og:title" content="References – Tài Chính Ứng Dụng với Python">
+<meta property="og:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta property="og:site_name" content="Tài Chính Ứng Dụng với Python">
 <meta name="twitter:title" content="References – Tài Chính Ứng Dụng với Python">
+<meta name="twitter:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta name="twitter:card" content="summary">
 </head>
 
@@ -310,8 +336,8 @@ div.csl-indent {
     <span class="navbar-title">Tài Chính Ứng Dụng với Python</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+            <div id="quarto-search" class="" title="Tìm kiếm"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Bật/tắt điều hướng" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -331,18 +357,18 @@ div.csl-indent {
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Mã nguồn" class="quarto-navigation-tool px-1" aria-label="Mã nguồn"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Bật/tắt chế độ tối"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
   <nav class="quarto-secondary-nav">
     <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
         <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./references.html">References</a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
   </nav>
@@ -363,7 +389,7 @@ div.csl-indent {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
  <span class="menu-text">Thị trường tài chính, thể chế và dữ liệu Việt Nam</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -371,7 +397,7 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./00_institutional_background.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Nền tảng thể chế và cấu trúc thị trường của thị trường chứng khoán Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Bối cảnh thể chế và cấu trúc thị trường cổ phiếu Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -389,7 +415,7 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./03_market_microstructure.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Cấu trúc thị trường vi mô tại Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Vi cấu trúc thị trường tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -401,7 +427,7 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05_working_with_stock_returns.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận vốn chủ sở hữu</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận cổ phiếu</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -416,7 +442,7 @@ div.csl-indent {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
  <span class="menu-text">Xây dựng danh mục đầu tư, rủi ro và cơ học thực nghiệm</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -424,7 +450,7 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./10_modern_portfolio_theory.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Lý thuyết danh mục đầu tư hiện đại</span></span></a>
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -436,7 +462,7 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./12_size_sorts.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Size Sorts</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phân loại theo quy mô</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -448,19 +474,19 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./14_portfolio_weighting_and_rebalancing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Portfolio Weighting and Rebalancing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Trọng số danh mục đầu tư và tái cân bằng danh mục</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./15_missing_data_and_survivorship.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Missing Data and Survivorship Bias</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Dữ liệu bị thiếu và thiên kiến sống sót</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./16_liquidity_and_turnover_measures.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Liquidity and Turnover Measures</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Các thước đo Thanh khoản và Vòng quay Giao dịch</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -475,7 +501,7 @@ div.csl-indent {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình định giá tài sản</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -489,19 +515,19 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./21_fama_french.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Các nhân tố Fama-French</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./22_momentum.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Momentum Strategies</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Chiến lược động lượng</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./23_factor_construction_principles.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Factor Construction Principles</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Nguyên tắc xây dựng nhân tố</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -513,13 +539,13 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./25_factor_zoo_and_multiple_testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Factor Zoo and Multiple Testing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Vườn thú nhân tố và kiểm định đa giả thuyết</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./26_time_series_vs_cross_section.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Time-Series vs.&nbsp;Cross-Sectional Factor Tests</span></span></a>
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Kiểm định nhân tố theo chuỗi thời gian và theo mặt cắt ngang</span></span></a>
   </div>
 </li>
       </ul>
@@ -528,7 +554,7 @@ div.csl-indent {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
  <span class="menu-text">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -548,49 +574,49 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./32_info_earnings.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Information Content of Earnings Announcements</span></span></a>
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Hàm lượng thông tin của các thông báo lợi nhuận</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./33_accruals.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Accruals, Earnings Persistence, and Market Efficiency</span></span></a>
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Các khoản dồn tích, tính bền vững của lợi nhuận và hiệu quả thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./34_earning_management.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Earnings Management: Detection and Measurement</span></span></a>
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Quản trị lợi nhuận: Phát hiện và đo lường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./35_pe_ratio.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">P/E Ratio</span></span></a>
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Tỷ số P/E</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./36_valuation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Firm Valuation, Financial Distress, and Company Maturity</span></span></a>
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Định giá doanh nghiệp, kiệt quệ tài chính và mức độ trưởng thành của công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./37_disclosure_quality_and_timing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Disclosure Quality and Timing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Chất lượng và thời điểm công bố thông tin</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./38_sue.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></span></a>
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Bất ngờ lợi nhuận chuẩn hóa (SUE)</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./39_divop.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Measuring Divergence of Investor Opinion</span></span></a>
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Đo lường sự phân kỳ quan điểm của nhà đầu tư</span></span></a>
   </div>
 </li>
       </ul>
@@ -599,7 +625,7 @@ div.csl-indent {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
  <span class="menu-text">Quyền sở hữu, ma sát thị trường và rủi ro quốc tế</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -607,43 +633,43 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./50_institutional_ownership.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Institutional Ownership Analytics in Vietnam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Phân tích sở hữu tổ chức tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./52_institutional_trade_flow.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Institutional Trades, Flows, and Turnover Ratios</span></span></a>
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Giao dịch, dòng vốn và tỷ lệ vòng quay của nhà đầu tư tổ chức</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./53_governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Corporate Governance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Quản trị công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./54_return_gaps.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Return Gap: Measuring Unobserved Actions of Fund Managers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Chênh lệch lợi nhuận (Return Gap): Đo lường các hành động không quan sát được của nhà quản lý quỹ</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./55_price_limits_and_volatility.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Price Limits and Volatility</span></span></a>
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Biên độ giá và biến động</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./56_market_integration_and_segmentation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Market Integration and Segmentation</span></span></a>
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Hội nhập và phân khúc thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./57_exchange_rate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Exchange Rate Dynamics</span></span></a>
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Động lực của tỷ giá hối đoái</span></span></a>
   </div>
 </li>
       </ul>
@@ -652,7 +678,7 @@ div.csl-indent {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình tài chính nâng cao</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -660,25 +686,25 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./60_event_studies.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Event Studies in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Nghiên cứu sự kiện trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./61_tail_risk_extreme_events.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Tail Risk and Extreme Events</span></span></a>
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Rủi ro đuôi và các sự kiện cực đoan</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./62_corporate_finance_estimators.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Corporate Finance Estimators and Identification</span></span></a>
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Các công cụ ước lượng và nhận dạng trong tài chính doanh nghiệp</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./63_structural_models_finance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Structural Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Các mô hình cấu trúc trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -687,7 +713,7 @@ div.csl-indent {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
  <span class="menu-text">Dữ liệu thay thế và Trí tuệ nhân tạo trong tài chính</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -695,25 +721,25 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./70_textual.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Textual Analysis</span></span></a>
+ <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Phân tích văn bản</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./71_image.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Image and Visual Data in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Dữ liệu hình ảnh và dữ liệu thị giác trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./73_networks_graphs.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Networks and Graphs in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Mạng lưới và đồ thị trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./74_multimodel.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Multimodal Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Các mô hình đa phương thức trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -744,7 +770,7 @@ div.csl-indent {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">References</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title">References</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Mã</button></div></div>
 </div>
 
 
@@ -794,6 +820,16 @@ Acharya, Viral V, and Lasse Heje Pedersen. 2005. <span>“Asset Pricing
 with Liquidity Risk.”</span> <em>Journal of Financial Economics</em> 77
 (2): 375–410.
 </div>
+<div id="ref-ackerberg2015identification" class="csl-entry" role="listitem">
+Ackerberg, Daniel A., Kevin Caves, and Garth Frazer. 2015.
+<span>“Identification Properties of Recent Production Function
+Estimators.”</span> <em>Econometrica</em> 83 (6): 2411–51. <a href="https://doi.org/10.3982/ECTA13408">https://doi.org/10.3982/ECTA13408</a>.
+</div>
+<div id="ref-adao2019shift" class="csl-entry" role="listitem">
+Adão, Rodrigo, Michal Kolesár, and Eduardo Morales. 2019.
+<span>“Shift-Share Designs: <span>T</span>heory and Inference.”</span>
+<em>The Quarterly Journal of Economics</em> 134 (4): 1949–2010. <a href="https://doi.org/10.1093/qje/qjz025">https://doi.org/10.1093/qje/qjz025</a>.
+</div>
 <div id="ref-aggarwal2011does" class="csl-entry" role="listitem">
 Aggarwal, Reena, Isil Erel, Miguel Ferreira, and Pedro Matos. 2011.
 <span>“Does Governance Travel Around the World? Evidence from
@@ -804,6 +840,12 @@ Institutional Investors.”</span> <em>Journal of Financial Economics</em>
 Aharony, Joseph, and Itzhak Swary. 1980. <span>“Quarterly Dividend and
 Earnings Announcements and Stockholders’ Returns: An Empirical
 Analysis.”</span> <em>The Journal of Finance</em> 35 (1): 1–12.
+</div>
+<div id="ref-aitsahalia2005often" class="csl-entry" role="listitem">
+Aït-Sahalia, Yacine, Per A. Mykland, and Lan Zhang. 2005. <span>“How
+Often to Sample a Continuous-Time Process in the Presence of Market
+Microstructure Noise.”</span> <em>The Review of Financial Studies</em>
+18 (2): 351–416. <a href="https://doi.org/10.1093/rfs/hhi016">https://doi.org/10.1093/rfs/hhi016</a>.
 </div>
 <div id="ref-alayrac2022flamingo" class="csl-entry" role="listitem">
 Alayrac, Jean-Baptiste, Jeff Donahue, Pauline Luc, Antoine Miech, Iain
@@ -826,6 +868,11 @@ Alexandridis, George, Antonios Antoniou, and Dimitris Petmezas. 2007.
 Allen, Franklin, and Douglas Gale. 2000. <span>“Financial
 Contagion.”</span> <em>Journal of Political Economy</em> 108 (1): 1–33.
 </div>
+<div id="ref-allen2026social" class="csl-entry" role="listitem">
+Allen, Linda, Lin Peng, and Yu Shan. 2026. <span>“Social Networks as
+Information Conduits for Online Credit Supply and Demand.”</span>
+<em>Management Science</em>. <a href="https://doi.org/10.1287/mnsc.2024.06050">https://doi.org/10.1287/mnsc.2024.06050</a>.
+</div>
 <div id="ref-almgren2001optimal" class="csl-entry" role="listitem">
 Almgren, Robert, and Neil Chriss. 2001. <span>“Optimal Execution of
 Portfolio Transactions.”</span> <em>Journal of Risk</em> 3: 5–40.
@@ -843,12 +890,41 @@ Invest in Distressed Debt</em>. Vol. 289. John Wiley &amp; Sons.
 <div id="ref-amihud2002illiquidity" class="csl-entry" role="listitem">
 Amihud, Yakov. 2002. <span>“Illiquidity and Stock Returns: Cross-Section
 and Time-Series Effects.”</span> <em>Journal of Financial Markets</em> 5
-(1): 31–56.
+(1): 31–56. <a href="https://doi.org/10.1016/S1386-4181(01)00024-6">https://doi.org/10.1016/S1386-4181(01)00024-6</a>.
+</div>
+<div id="ref-amihud2015illiquidity" class="csl-entry" role="listitem">
+Amihud, Yakov, Allaudeen Hameed, Wenjin Kang, and Huiping Zhang. 2015.
+<span>“The Illiquidity Premium: International Evidence.”</span>
+<em>Journal of Financial Economics</em> 117 (2): 350–68. <a href="https://doi.org/10.1016/j.jfineco.2015.04.005">https://doi.org/10.1016/j.jfineco.2015.04.005</a>.
 </div>
 <div id="ref-amihud1986asset" class="csl-entry" role="listitem">
 Amihud, Yakov, and Haim Mendelson. 1986. <span>“Asset Pricing and the
 Bid-Ask Spread.”</span> <em>Journal of Financial Economics</em> 17 (2):
 223–49.
+</div>
+<div id="ref-amihud2005liquidity" class="csl-entry" role="listitem">
+Amihud, Yakov, Haim Mendelson, and Lasse Heje Pedersen. 2005.
+<span>“Liquidity and Asset Prices.”</span> <em>Foundations and Trends in
+Finance</em> 1 (4): 269–364. <a href="https://doi.org/10.1561/0500000003">https://doi.org/10.1561/0500000003</a>.
+</div>
+<div id="ref-amihud2021illiquidity" class="csl-entry" role="listitem">
+Amihud, Yakov, and Joonki Noh. 2021. <span>“Illiquidity and Stock
+Returns <span>II</span>: Cross-Section and Time-Series Effects.”</span>
+<em>The Review of Financial Studies</em> 34 (4): 2101–23. <a href="https://doi.org/10.1093/rfs/hhaa080">https://doi.org/10.1093/rfs/hhaa080</a>.
+</div>
+<div id="ref-amornsiripanitch2026age" class="csl-entry" role="listitem">
+Amornsiripanitch, Natee. 2026. <span>“The Age Gap in Mortgage
+Access.”</span> <em>Management Science</em>. <a href="https://doi.org/10.1287/mnsc.2024.08264">https://doi.org/10.1287/mnsc.2024.08264</a>.
+</div>
+<div id="ref-andersen2003modeling" class="csl-entry" role="listitem">
+Andersen, Torben G., Tim Bollerslev, Francis X. Diebold, and Paul Labys.
+2003. <span>“Modeling and Forecasting Realized Volatility.”</span>
+<em>Econometrica</em> 71 (2): 579–625. <a href="https://doi.org/10.1111/1468-0262.00418">https://doi.org/10.1111/1468-0262.00418</a>.
+</div>
+<div id="ref-andersen2012jump" class="csl-entry" role="listitem">
+Andersen, Torben G., Dobrislav Dobrev, and Ernst Schaumburg. 2012.
+<span>“Jump-Robust Volatility Estimation Using Nearest Neighbor
+Truncation.”</span> <em>Journal of Econometrics</em> 169 (1): 75–93. <a href="https://doi.org/10.1016/j.jeconom.2012.01.011">https://doi.org/10.1016/j.jeconom.2012.01.011</a>.
 </div>
 <div id="ref-anderson2005market" class="csl-entry" role="listitem">
 Anderson, Anne-Marie, and Edward A Dyl. 2005. <span>“Market Structure
@@ -889,12 +965,34 @@ Atiase, Rowland Kwame. 1985. <span>“Predisclosure Information, Firm
 Capitalization, and Security Price Behavior Around Earnings
 Announcements.”</span> <em>Journal of Accounting Research</em>, 21–36.
 </div>
+<div id="ref-bach2026mergers" class="csl-entry" role="listitem">
+Bach, Laurent, Ramin P Baghai, Marieke Bos, and Rui C Silva. 2026.
+<span>“How Do Mergers Affect the Mental Health of Employees?”</span>
+<em>Management Science</em> 72 (7): 5561–85. <a href="https://doi.org/10.1287/mnsc.2023.04277">https://doi.org/10.1287/mnsc.2023.04277</a>.
+</div>
+<div id="ref-badertscher2026cheap" class="csl-entry" role="listitem">
+Badertscher, Brad A, Bjørn N Jørgensen, Sharon P Katz, and Jeremy
+Michels. 2026. <span>“Cheap Stock Options: Antecedents and
+Outcomes.”</span> <em>Management Science</em>. <a href="https://doi.org/10.1287/mnsc.2024.06121">https://doi.org/10.1287/mnsc.2024.06121</a>.
+</div>
 <div id="ref-baek2019wrong" class="csl-entry" role="listitem">
 Baek, Jeonghun, Geewook Kim, Junyeop Lee, Sungrae Park, Dongyoon Han,
 Sangdoo Yun, Seong Joon Oh, and Hwalsuk Lee. 2019. <span>“What Is Wrong
 with Scene Text Recognition Model Comparisons? Dataset and Model
 Analysis.”</span> In <em>Proceedings of the IEEE/CVF International
 Conference on Computer Vision</em>, 4715–23.
+</div>
+<div id="ref-bailey2018social" class="csl-entry" role="listitem">
+Bailey, Michael, Rachel Cao, Theresa Kuchler, Johannes Stroebel, and
+Arlene Wong. 2018. <span>“Social Connectedness:
+<span>M</span>easurement, Determinants, and Effects.”</span> <em>Journal
+of Economic Perspectives</em> 32 (3): 259–80. <a href="https://doi.org/10.1257/jep.32.3.259">https://doi.org/10.1257/jep.32.3.259</a>.
+</div>
+<div id="ref-bailey2018economic" class="csl-entry" role="listitem">
+Bailey, Michael, Ruiqing Cao, Theresa Kuchler, and Johannes Stroebel.
+2018. <span>“The Economic Effects of Social Networks:
+<span>E</span>vidence from the Housing Market.”</span> <em>Journal of
+Political Economy</em> 126 (6): 2224–76. <a href="https://doi.org/10.1086/700073">https://doi.org/10.1086/700073</a>.
 </div>
 <div id="ref-baker2003does" class="csl-entry" role="listitem">
 Baker, Malcolm, Jeremy C Stein, and Jeffrey Wurgler. 2003. <span>“When
@@ -924,7 +1022,7 @@ Equity Markets</em>, 27–46. Routledge.
 Ball, Ray, Ashok Robin, and Joanna Shuang Wu. 2003. <span>“Incentives
 Versus Standards: Properties of Accounting Income in Four East Asian
 Countries.”</span> <em>Journal of Accounting and Economics</em> 36
-(1-3): 235–70.
+(1-3): 235–70. <a href="https://doi.org/10.1016/j.jacceco.2003.10.003">https://doi.org/10.1016/j.jacceco.2003.10.003</a>.
 </div>
 <div id="ref-ball2008much" class="csl-entry" role="listitem">
 Ball, Ray, and Lakshmanan Shivakumar. 2008. <span>“How Much New
@@ -942,6 +1040,11 @@ Bamber, Linda Smith, Theodore E Christensen, and Kenneth M Gaver. 2000.
 <span>“Do We Really ‘Know’what We Think We Know? A Case Study of Seminal
 Research and Its Subsequent Overgeneralization.”</span> <em>Accounting,
 Organizations and Society</em> 25 (2): 103–29.
+</div>
+<div id="ref-bandi2008microstructure" class="csl-entry" role="listitem">
+Bandi, Federico M., and Jeffrey R. Russell. 2008. <span>“Microstructure
+Noise, Realized Variance, and Optimal Sampling.”</span> <em>The Review
+of Economic Studies</em> 75 (2): 339–69. <a href="https://doi.org/10.1111/j.1467-937X.2008.00474.x">https://doi.org/10.1111/j.1467-937X.2008.00474.x</a>.
 </div>
 <div id="ref-banerjee1992simple" class="csl-entry" role="listitem">
 Banerjee, Abhijit V. 1992. <span>“A Simple Model of Herd
@@ -973,10 +1076,32 @@ Economics</em> 49 (3): 307–43.
 Barillas, Francisco, and Jay Shanken. 2018. <span>“Comparing Asset
 Pricing Models.”</span> <em>The Journal of Finance</em> 73 (2): 715–54.
 </div>
+<div id="ref-barndorff2008designing" class="csl-entry" role="listitem">
+Barndorff-Nielsen, Ole E., Peter Reinhard Hansen, Asger Lunde, and Neil
+Shephard. 2008. <span>“Designing Realized Kernels to Measure the Ex Post
+Variation of Equity Prices in the Presence of Noise.”</span>
+<em>Econometrica</em> 76 (6): 1481–1536. <a href="https://doi.org/10.3982/ECTA6495">https://doi.org/10.3982/ECTA6495</a>.
+</div>
+<div id="ref-barndorff2002econometric" class="csl-entry" role="listitem">
+Barndorff-Nielsen, Ole E., and Neil Shephard. 2002. <span>“Econometric
+Analysis of Realized Volatility and Its Use in Estimating Stochastic
+Volatility Models.”</span> <em>Journal of the Royal Statistical Society
+Series B: Statistical Methodology</em> 64 (2): 253–80. <a href="https://doi.org/10.1111/1467-9868.00336">https://doi.org/10.1111/1467-9868.00336</a>.
+</div>
+<div id="ref-barndorff2004power" class="csl-entry" role="listitem">
+———. 2004. <span>“Power and Bipower Variation with Stochastic Volatility
+and Jumps.”</span> <em>Journal of Financial Econometrics</em> 2 (1):
+1–37. <a href="https://doi.org/10.1093/jjfinec/nbh001">https://doi.org/10.1093/jjfinec/nbh001</a>.
+</div>
 <div id="ref-barth2008international" class="csl-entry" role="listitem">
 Barth, Mary E, Wayne R Landsman, and Mark H Lang. 2008.
 <span>“International Accounting Standards and Accounting
 Quality.”</span> <em>Journal of Accounting Research</em> 46 (3): 467–98.
+</div>
+<div id="ref-bartov2018can" class="csl-entry" role="listitem">
+Bartov, Eli, Lucile Faurel, and Partha S Mohanram. 2018. <span>“Can
+Twitter Help Predict Firm-Level Earnings and Stock Returns?”</span>
+<em>The Accounting Review</em> 93 (3): 25–57.
 </div>
 <div id="ref-beaver1968information" class="csl-entry" role="listitem">
 Beaver, William H. 1968. <span>“The Information Content of Annual
@@ -1022,7 +1147,7 @@ Moussawi. 2013. <span>“Do Hedge Funds Manipulate Stock Prices?”</span>
 Ben-David, Itzhak, Francesco Franzoni, and Rabih Moussawi. 2012.
 <span>“Hedge Fund Stock Trading in the Financial Crisis of
 2007–2009.”</span> <em>The Review of Financial Studies</em> 25 (1):
-1–54.
+1–54. <a href="https://doi.org/10.1093/rfs/hhr114">https://doi.org/10.1093/rfs/hhr114</a>.
 </div>
 <div id="ref-benjamini1995controlling" class="csl-entry" role="listitem">
 Benjamini, Yoav, and Yosef Hochberg. 1995. <span>“Controlling the False
@@ -1035,6 +1160,17 @@ Benveniste, Lawrence M, and Paul A Spindt. 1989. <span>“How Investment
 Bankers Determine the Offer Price and Allocation of New Issues.”</span>
 <em>Journal of Financial Economics</em> 24 (2): 343–61.
 </div>
+<div id="ref-berger2023selection" class="csl-entry" role="listitem">
+Berger, Elizabeth A. 2023. <span>“Selection Bias in Mutual Fund Fire
+Sales.”</span> <em>Journal of Financial and Quantitative Analysis</em>
+58 (3): 1039–77. <a href="https://doi.org/10.1017/S0022109022001223">https://doi.org/10.1017/S0022109022001223</a>.
+</div>
+<div id="ref-bergstresser2009assessing" class="csl-entry" role="listitem">
+Bergstresser, Daniel, John M R Chalmers, and Peter Tufano. 2009.
+<span>“Assessing the Costs and Benefits of Brokers in the Mutual Fund
+Industry.”</span> <em>The Review of Financial Studies</em> 22 (10):
+4129–56.
+</div>
 <div id="ref-berkman2009sell" class="csl-entry" role="listitem">
 Berkman, Henk, Valentin Dimitrov, Prem C Jain, Paul D Koch, and Sheri
 Tice. 2009. <span>“Sell on the News: Differences of Opinion, Short-Sales
@@ -1044,7 +1180,12 @@ Constraints, and Returns Around Earnings Announcements.”</span>
 <div id="ref-bernard1989post" class="csl-entry" role="listitem">
 Bernard, Victor L, and Jacob K Thomas. 1989.
 <span>“Post-Earnings-Announcement Drift: Delayed Price Response or Risk
-Premium?”</span> <em>Journal of Accounting Research</em> 27: 1–36.
+Premium?”</span> <em>Journal of Accounting Research</em> 27: 1–36. <a href="https://doi.org/10.2307/2491062">https://doi.org/10.2307/2491062</a>.
+</div>
+<div id="ref-bernstein2019asset" class="csl-entry" role="listitem">
+Bernstein, Shai, Emanuele Colonnelli, and Benjamin Iverson. 2019.
+<span>“Asset Allocation in Bankruptcy.”</span> <em>The Journal of
+Finance</em> 74 (1): 5–53. <a href="https://doi.org/10.1111/jofi.12740">https://doi.org/10.1111/jofi.12740</a>.
 </div>
 <div id="ref-berry1995automobile" class="csl-entry" role="listitem">
 Berry, Steven, James Levinsohn, and Ariel Pakes. 1995. <span>“Automobile
@@ -1073,6 +1214,17 @@ Kehr. 2000. <span>“When an Event Is Not an Event: The Curious Case of an
 Emerging Market.”</span> <em>Journal of Financial Economics</em> 55 (1):
 69–101.
 </div>
+<div id="ref-bhattacharya2018superstitious" class="csl-entry" role="listitem">
+Bhattacharya, Utpal, Wei-Yu Kuo, Tse-Chun Lin, and Jing Zhao. 2018.
+<span>“Do Superstitious Traders Lose Money?”</span> <em>Management
+Science</em> 64 (8): 3772–91. <a href="https://doi.org/10.1287/mnsc.2016.2701">https://doi.org/10.1287/mnsc.2016.2701</a>.
+</div>
+<div id="ref-bianchi2026hundreds" class="csl-entry" role="listitem">
+Bianchi, Francesco, Sydney C. Ludvigson, and Sai Ma. 2026. <span>“What
+Hundreds of Economic News Events Say about Belief Overreaction in the
+Stock Market.”</span> <em>The Review of Financial Studies</em> 39 (10):
+3191–3239. <a href="https://doi.org/10.1093/rfs/hhag062">https://doi.org/10.1093/rfs/hhag062</a>.
+</div>
 <div id="ref-biddle2009does" class="csl-entry" role="listitem">
 Biddle, Gary C, Gilles Hilary, and Rodrigo S Verdi. 2009. <span>“How
 Does Financial Reporting Quality Relate to Investment
@@ -1090,11 +1242,22 @@ Binder, John. 1998. <span>“The Event Study Methodology Since
 1969.”</span> <em>Review of Quantitative Finance and Accounting</em> 11
 (2): 111–37.
 </div>
+<div id="ref-binsbergen2026factor" class="csl-entry" role="listitem">
+Binsbergen, Jules H. van, Liang Ma, and Michael Schwert. 2026.
+<span>“The Factor Multiverse: The Role of Interest Rates in Factor
+Return Measurement.”</span> <em>Management Science</em>. <a href="https://doi.org/10.1287/mnsc.2024.08851">https://doi.org/10.1287/mnsc.2024.08851</a>.
+</div>
 <div id="ref-bizjak2008does" class="csl-entry" role="listitem">
 Bizjak, John M, Michael L Lemmon, and Lalitha Naveen. 2008. <span>“Does
 the Use of Peer Groups Contribute to Higher Pay and Less Efficient
 Compensation?”</span> <em>Journal of Financial Economics</em> 90 (2):
 152–68.
+</div>
+<div id="ref-blankespoor2014role" class="csl-entry" role="listitem">
+Blankespoor, Elizabeth, Gregory S Miller, and Hal D White. 2014.
+<span>“The Role of Dissemination in Market Liquidity: Evidence from
+Firms’ Use of Twitter.”</span> <em>The Accounting Review</em> 89 (1):
+79–112.
 </div>
 <div id="ref-blei2003latent" class="csl-entry" role="listitem">
 Blei, David M, Andrew Y Ng, and Michael I Jordan. 2003. <span>“Latent
@@ -1146,6 +1309,11 @@ Rennekamp. 2017. <span>“A Plain English Measure of Financial Reporting
 Readability.”</span> <em>Journal of Accounting and Economics</em> 63
 (2-3): 329–57.
 </div>
+<div id="ref-borusyak2022quasi" class="csl-entry" role="listitem">
+Borusyak, Kirill, Peter Hull, and Xavier Jaravel. 2022.
+<span>“Quasi-Experimental Shift-Share Research Designs.”</span> <em>The
+Review of Economic Studies</em> 89 (1): 181–213. <a href="https://doi.org/10.1093/restud/rdab030">https://doi.org/10.1093/restud/rdab030</a>.
+</div>
 <div id="ref-botosan1997disclosure" class="csl-entry" role="listitem">
 Botosan, Christine A. 1997. <span>“Disclosure Level and the Cost of
 Equity Capital.”</span> <em>Accounting Review</em>, 323–49.
@@ -1155,9 +1323,32 @@ Botosan, Christine A, and Marlene A Plumlee. 2002. <span>“A
 Re-Examination of Disclosure Level and the Expected Cost of Equity
 Capital.”</span> <em>Journal of Accounting Research</em> 40 (1): 21–40.
 </div>
+<div id="ref-brandt2009parametric" class="csl-entry" role="listitem">
+Brandt, Michael W., Pedro Santa-Clara, and Rossen Valkanov. 2009.
+<span>“Parametric Portfolio Policies: <span>E</span>xploiting
+Characteristics in the Cross-Section of Equity Returns.”</span> <em>The
+Review of Financial Studies</em> 22 (9): 3411–47. <a href="https://doi.org/10.1093/rfs/hhp003">https://doi.org/10.1093/rfs/hhp003</a>.
+</div>
 <div id="ref-brennan1986theory" class="csl-entry" role="listitem">
 Brennan, Michael J. 1986. <span>“A Theory of Price Limits in Futures
 Markets.”</span> <em>Journal of Financial Economics</em> 16 (2): 213–33.
+</div>
+<div id="ref-brennan1996market" class="csl-entry" role="listitem">
+Brennan, Michael J., and Avanidhar Subrahmanyam. 1996. <span>“Market
+Microstructure and Asset Pricing: On the Compensation for Illiquidity in
+Stock Returns.”</span> <em>Journal of Financial Economics</em> 41 (3):
+441–64. <a href="https://doi.org/10.1016/0304-405X(95)00870-K">https://doi.org/10.1016/0304-405X(95)00870-K</a>.
+</div>
+<div id="ref-brenner2018asset" class="csl-entry" role="listitem">
+Brenner, Menachem, and Yehuda Izhakian. 2018. <span>“Asset Pricing and
+Ambiguity: <span>E</span>mpirical Evidence.”</span> <em>Journal of
+Financial Economics</em> 130 (3): 503–31. <a href="https://doi.org/10.1016/j.jfineco.2018.07.007">https://doi.org/10.1016/j.jfineco.2018.07.007</a>.
+</div>
+<div id="ref-bris2006costs" class="csl-entry" role="listitem">
+Bris, Arturo, Ivo Welch, and Ning Zhu. 2006. <span>“The Costs of
+Bankruptcy: <span>C</span>hapter 7 Liquidation Versus
+<span>C</span>hapter 11 Reorganization.”</span> <em>The Journal of
+Finance</em> 61 (3): 1253–303. <a href="https://doi.org/10.1111/j.1540-6261.2006.00872.x">https://doi.org/10.1111/j.1540-6261.2006.00872.x</a>.
 </div>
 <div id="ref-brown1980measuring" class="csl-entry" role="listitem">
 Brown, Stephen J, and Jerold B Warner. 1980. <span>“Measuring Security
@@ -1183,6 +1374,11 @@ Brunnermeier, Markus K, and Lasse Heje Pedersen. 2009. <span>“Market
 Liquidity and Funding Liquidity.”</span> <em>The Review of Financial
 Studies</em> 22 (6): 2201–38.
 </div>
+<div id="ref-brunnermeier2014macroeconomic" class="csl-entry" role="listitem">
+Brunnermeier, Markus K., and Yuliy Sannikov. 2014. <span>“A
+Macroeconomic Model with a Financial Sector.”</span> <em>American
+Economic Review</em> 104 (2): 379–421. <a href="https://doi.org/10.1257/aer.104.2.379">https://doi.org/10.1257/aer.104.2.379</a>.
+</div>
 <div id="ref-burgstahler1997earnings" class="csl-entry" role="listitem">
 Burgstahler, David, and Ilia Dichev. 1997. <span>“Earnings Management to
 Avoid Earnings Decreases and Losses.”</span> <em>Journal of Accounting
@@ -1204,6 +1400,12 @@ Cai, Ye, Dan S Dhaliwal, Yongtae Kim, and Carrie Pan. 2014. <span>“Board
 Interlocks and the Diffusion of Disclosure Policy.”</span> <em>Review of
 Accounting Studies</em> 19 (3): 1086–1119.
 </div>
+<div id="ref-calonico2014robust" class="csl-entry" role="listitem">
+Calonico, Sebastian, Matias D. Cattaneo, and Rocío Titiunik. 2014.
+<span>“Robust Nonparametric Confidence Intervals for
+Regression-Discontinuity Designs.”</span> <em>Econometrica</em> 82 (6):
+2295–2326. <a href="https://doi.org/10.3982/ECTA11757">https://doi.org/10.3982/ECTA11757</a>.
+</div>
 <div id="ref-campbell1998econometrics" class="csl-entry" role="listitem">
 Campbell, John Y, Andrew W Lo, A Craig MacKinlay, and Robert F Whitelaw.
 1998. <span>“The Econometrics of Financial Markets.”</span>
@@ -1214,9 +1416,14 @@ Campbell, John Y, Karine Serfaty-De Medeiros, and Luis M Viceira. 2010.
 <span>“Global Currency Hedging.”</span> <em>The Journal of Finance</em>
 65 (1): 87–121.
 </div>
+<div id="ref-cao2026hedge" class="csl-entry" role="listitem">
+Cao, Sean, Zhi Da, Daniel Jiang, and Baozhong Yang. 2026. <span>“Do
+Hedge Funds Strategically Misreport Their Holdings? Evidence from 13F
+Restatements.”</span> <em>Management Science</em>. <a href="https://doi.org/10.1287/mnsc.2024.08833">https://doi.org/10.1287/mnsc.2024.08833</a>.
+</div>
 <div id="ref-carhart1997persistence" class="csl-entry" role="listitem">
 Carhart, Mark M. 1997a. <span>“On Persistence in Mutual Fund
-Performance.”</span> <em>The Journal of Finance</em> 52 (1): 57–82.
+Performance.”</span> <em>The Journal of Finance</em> 52 (1): 57–82. <a href="https://doi.org/10.1111/j.1540-6261.1997.tb03808.x">https://doi.org/10.1111/j.1540-6261.1997.tb03808.x</a>.
 </div>
 <div id="ref-Carhart1997" class="csl-entry" role="listitem">
 Carhart, Mark M. 1997b. <span>“<span class="nocase">On persistence in
@@ -1234,6 +1441,10 @@ Chan, Kalok, Allaudeen Hameed, and Wilson Tong. 2000.
 Markets.”</span> <em>Journal of Financial and Quantitative
 Analysis</em>, 153–72.
 </div>
+<div id="ref-chang2026superstition" class="csl-entry" role="listitem">
+Chang, Jeffery (Jinfan), and Huancheng Du. 2026. <span>“Superstition
+Everywhere.”</span> <em>Management Science</em>. <a href="https://doi.org/10.1287/mnsc.2025.01449">https://doi.org/10.1287/mnsc.2025.01449</a>.
+</div>
 <div id="ref-chatterjee2012takeovers" class="csl-entry" role="listitem">
 Chatterjee, Sris, Kose John, and An Yan. 2012. <span>“Takeovers and
 Divergence of Investor Opinion.”</span> <em>The Review of Financial
@@ -1243,6 +1454,12 @@ Studies</em> 25 (1): 227–77.
 Chen, Andrew, and Tom Zimmermann. 2022. <span>“Open Source
 Cross-Sectional Asset Pricing.”</span> <em>&gt; Critical Finance
 Review</em> 11 (02): 207–64.
+</div>
+<div id="ref-chen2014wisdom" class="csl-entry" role="listitem">
+Chen, Hailiang, Prabuddha De, Yu Jeffrey Hu, and Byoung-Hyoun Hwang.
+2014. <span>“Wisdom of Crowds: The Value of Stock Opinions Transmitted
+Through Social Media.”</span> <em>The Review of Financial Studies</em>
+27 (5): 1367–1403.
 </div>
 <div id="ref-chen2000value" class="csl-entry" role="listitem">
 Chen, Hsiu-Lang, Narasimhan Jegadeesh, and Russ Wermers. 2000.
@@ -1258,7 +1475,12 @@ Economics</em> 61 (3): 345–81.
 </div>
 <div id="ref-chen2002breadth" class="csl-entry" role="listitem">
 ———. 2002. <span>“Breadth of Ownership and Stock Returns.”</span>
-<em>Journal of Financial Economics</em> 66 (2-3): 171–205.
+<em>Journal of Financial Economics</em> 66 (2-3): 171–205. <a href="https://doi.org/10.1016/S0304-405X(02)00223-4">https://doi.org/10.1016/S0304-405X(02)00223-4</a>.
+</div>
+<div id="ref-chen2026immigrants" class="csl-entry" role="listitem">
+Chen, Jun, Shenje Hshieh, Melvyn Teo, and Feng Zhang. 2026.
+<span>“Immigrants in Finance: Evidence from Hedge Funds.”</span>
+<em>Management Science</em>. <a href="https://doi.org/10.1287/mnsc.2024.07615">https://doi.org/10.1287/mnsc.2024.07615</a>.
 </div>
 <div id="ref-cheong2011eps" class="csl-entry" role="listitem">
 Cheong, Foong Soon, and Jacob Thomas. 2011. <span>“Why Do EPS Forecast
@@ -1290,9 +1512,20 @@ Journal of Finance</em> 56 (2): 501–30.
 Choueifaty, Yves. 2008. <span>“Towards Maximum Diversification.”</span>
 <em>Available at SSRN 4063676</em>.
 </div>
+<div id="ref-christie1994nasdaq" class="csl-entry" role="listitem">
+Christie, William G., and Paul H. Schultz. 1994. <span>“Why Do
+<span>NASDAQ</span> Market Makers Avoid Odd-Eighth Quotes?”</span>
+<em>The Journal of Finance</em> 49 (5): 1813–40. <a href="https://doi.org/10.1111/j.1540-6261.1994.tb04782.x">https://doi.org/10.1111/j.1540-6261.1994.tb04782.x</a>.
+</div>
 <div id="ref-christoffersen1998evaluating" class="csl-entry" role="listitem">
 Christoffersen, Peter F. 1998. <span>“Evaluating Interval
 Forecasts.”</span> <em>International Economic Review</em>, 841–62.
+</div>
+<div id="ref-christoffersen2013what" class="csl-entry" role="listitem">
+Christoffersen, Susan E K, Richard Evans, and David K Musto. 2013.
+<span>“What Do Consumers’ Fund Flows Maximize? Evidence from Their
+Brokers’ Incentives.”</span> <em>The Journal of Finance</em> 68 (1):
+201–35.
 </div>
 <div id="ref-chu2019forecasting" class="csl-entry" role="listitem">
 Chu, Xiaojun, and Jianying Qiu. 2019. <span>“Forecasting Volatility with
@@ -1317,7 +1550,7 @@ Markets</em> 17: 94–120.
 Claessens, Stijn, Simeon Djankov, Joseph PH Fan, and Larry HP Lang.
 2002. <span>“Disentangling the Incentive and Entrenchment Effects of
 Large Shareholdings.”</span> <em>The Journal of Finance</em> 57 (6):
-2741–71.
+2741–71. <a href="https://doi.org/10.1111/1540-6261.00511">https://doi.org/10.1111/1540-6261.00511</a>.
 </div>
 <div id="ref-claessens2000separation" class="csl-entry" role="listitem">
 Claessens, Stijn, Simeon Djankov, and Larry HP Lang. 2000. <span>“The
@@ -1398,6 +1631,14 @@ Cremers, KJ Martijn, and Vinay B Nair. 2005. <span>“Governance
 Mechanisms and Equity Prices.”</span> <em>The Journal of Finance</em> 60
 (6): 2859–94.
 </div>
+<div id="ref-crowley2024discretionary" class="csl-entry" role="listitem">
+Crowley, Richard M, Wenli Huang, and Hai Lu. 2024a. <span>“Discretionary
+Dissemination on Twitter.”</span> <em>Contemporary Accounting
+Research</em> 41 (4): 2454–87.
+</div>
+<div id="ref-crowley2024executive" class="csl-entry" role="listitem">
+———. 2024b. <span>“Executive Tweets.”</span> <em>Working Paper</em>. <a href="https://ssrn.com/abstract=3975995">https://ssrn.com/abstract=3975995</a>.
+</div>
 <div id="ref-daniel1998investor" class="csl-entry" role="listitem">
 Daniel, Kent, David Hirshleifer, and Avanidhar Subrahmanyam. 1998.
 <span>“Investor Psychology and Security Market Under-and
@@ -1418,6 +1659,12 @@ Datar, Vinay T, Narayan Y Naik, and Robert Radcliffe. 1998.
 <span>“Liquidity and Stock Returns: An Alternative Test.”</span>
 <em>Journal of Financial Markets</em> 1 (2): 203–19.
 </div>
+<div id="ref-davydenko2008bankruptcy" class="csl-entry" role="listitem">
+Davydenko, Sergei A., and Julian R. Franks. 2008. <span>“Do Bankruptcy
+Codes Matter? <span>A</span> Study of Defaults in <span>F</span>rance,
+<span>G</span>ermany, and the <span>UK</span>.”</span> <em>The Journal
+of Finance</em> 63 (2): 565–608. <a href="https://doi.org/10.1111/j.1540-6261.2008.01325.x">https://doi.org/10.1111/j.1540-6261.2008.01325.x</a>.
+</div>
 <div id="ref-deangelo1986accounting" class="csl-entry" role="listitem">
 DeAngelo, Linda Elizabeth. 1986. <span>“Accounting Numbers as Market
 Valuation Substitutes: A Study of Management Buyouts of Public
@@ -1432,7 +1679,7 @@ Review</em>, 193–225.
 Dechow, Patricia, Weili Ge, and Catherine Schrand. 2010.
 <span>“Understanding Earnings Quality: A Review of the Proxies, Their
 Determinants and Their Consequences.”</span> <em>Journal of Accounting
-and Economics</em> 50 (2-3): 344–401.
+and Economics</em> 50 (2-3): 344–401. <a href="https://doi.org/10.1016/j.jacceco.2010.09.001">https://doi.org/10.1016/j.jacceco.2010.09.001</a>.
 </div>
 <div id="ref-dellavigna2009investor" class="csl-entry" role="listitem">
 DellaVigna, Stefano, and Joshua M Pollet. 2009. <span>“Investor
@@ -1450,6 +1697,16 @@ DeMiguel, Victor, Lorenzo Garlappi, and Raman Uppal. 2009.
 Portfolio Strategy?”</span> <em>The Review of Financial Studies</em> 22
 (5): 1915–53.
 </div>
+<div id="ref-dessaint2019noisy" class="csl-entry" role="listitem">
+Dessaint, Olivier, Thierry Foucault, Laurent Frésard, and Adrien Matray.
+2019. <span>“Noisy Stock Prices and Corporate Investment.”</span>
+<em>The Review of Financial Studies</em> 32 (7): 2625–72. <a href="https://doi.org/10.1093/rfs/hhy115">https://doi.org/10.1093/rfs/hhy115</a>.
+</div>
+<div id="ref-dessaint2017employment" class="csl-entry" role="listitem">
+Dessaint, Olivier, Andrey Golubov, and Paolo Volpin. 2017.
+<span>“Employment Protection and Takeovers.”</span> <em>Journal of
+Financial Economics</em> 125 (2): 369–88.
+</div>
 <div id="ref-devlin2019bert" class="csl-entry" role="listitem">
 Devlin, Jacob, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2019.
 <span>“Bert: Pre-Training of Deep Bidirectional Transformers for
@@ -1457,6 +1714,11 @@ Language Understanding.”</span> In <em>Proceedings of the 2019
 Conference of the North American Chapter of the Association for
 Computational Linguistics: Human Language Technologies, Volume 1 (Long
 and Short Papers)</em>, 4171–86.
+</div>
+<div id="ref-dimaggio2026invisible" class="csl-entry" role="listitem">
+Di Maggio, Marco, and Dimuthu Ratnadiwakara. 2026. <span>“Invisible
+Primes: Fintech Lending with Alternative Data.”</span> <em>Management
+Science</em>. <a href="https://doi.org/10.1287/mnsc.2024.07854">https://doi.org/10.1287/mnsc.2024.07854</a>.
 </div>
 <div id="ref-diamond1985optimal" class="csl-entry" role="listitem">
 Diamond, Douglas W. 1985. <span>“Optimal Release of Information by
@@ -1486,12 +1748,17 @@ Returns.”</span> <em>The Journal of Finance</em> 57 (5): 2113–41.
 <div id="ref-dimson1979risk" class="csl-entry" role="listitem">
 Dimson, Elroy. 1979. <span>“Risk Measurement When Shares Are Subject to
 Infrequent Trading.”</span> <em>Journal of Financial Economics</em> 7
-(2): 197–226.
+(2): 197–226. <a href="https://doi.org/10.1016/0304-405X(79)90013-8">https://doi.org/10.1016/0304-405X(79)90013-8</a>.
 </div>
 <div id="ref-donaldson2018railroads" class="csl-entry" role="listitem">
 Donaldson, Dave. 2018. <span>“Railroads of the Raj: Estimating the
 Impact of Transportation Infrastructure.”</span> <em>American Economic
 Review</em> 108 (4-5): 899–934.
+</div>
+<div id="ref-donaldson2016view" class="csl-entry" role="listitem">
+Donaldson, Dave, and Adam Storeygard. 2016. <span>“The View from Above:
+Applications of Satellite Data in Economics.”</span> <em>Journal of
+Economic Perspectives</em> 30 (4): 171–98.
 </div>
 <div id="ref-dornbusch1976expectations" class="csl-entry" role="listitem">
 Dornbusch, Rudiger. 1976. <span>“Expectations and Exchange Rate
@@ -1502,6 +1769,11 @@ Dosovitskiy, Alexey, Lucas Beyer, Alexander Kolesnikov, Dirk
 Weissenborn, Xiaohua Zhai, Thomas Unterthiner, Mostafa Dehghani, et al.
 2020. <span>“An Image Is Worth 16x16 Words: Transformers for Image
 Recognition at Scale.”</span> <em>arXiv Preprint arXiv:2010.11929</em>.
+</div>
+<div id="ref-dou2021dissecting" class="csl-entry" role="listitem">
+Dou, Winston Wei, Lucian A. Taylor, Wei Wang, and Wenyu Wang. 2021.
+<span>“Dissecting Bankruptcy Frictions.”</span> <em>Journal of Financial
+Economics</em> 142 (3): 975–1000. <a href="https://doi.org/10.1016/j.jfineco.2021.05.040">https://doi.org/10.1016/j.jfineco.2021.05.040</a>.
 </div>
 <div id="ref-doukas2006divergence" class="csl-entry" role="listitem">
 Doukas, John A, Chansog Francis Kim, and Christos Pantzalis. 2006.
@@ -1517,6 +1789,11 @@ Doukas, John A, Chansog Kim, and Christos Pantzalis. 2004.
 Du, Wenxin, Alexander Tepper, and Adrien Verdelhan. 2018.
 <span>“Deviations from Covered Interest Rate Parity.”</span> <em>The
 Journal of Finance</em> 73 (3): 915–57.
+</div>
+<div id="ref-duarte2012trust" class="csl-entry" role="listitem">
+Duarte, Jefferson, Stephan Siegel, and Lance Young. 2012. <span>“Trust
+and Credit: The Role of Appearance in Peer-to-Peer Lending.”</span>
+<em>The Review of Financial Studies</em> 25 (8): 2455–84.
 </div>
 <div id="ref-dumas1995world" class="csl-entry" role="listitem">
 Dumas, Bernard, and Bruno Solnik. 1995. <span>“The World Price of
@@ -1539,6 +1816,16 @@ Easley, David, Nicholas M Kiefer, Maureen O’hara, and Joseph B Paperman.
 1996. <span>“Liquidity, Information, and Infrequently Traded
 Stocks.”</span> <em>The Journal of Finance</em> 51 (4): 1405–36.
 </div>
+<div id="ref-edmans2012real" class="csl-entry" role="listitem">
+Edmans, Alex, Itay Goldstein, and Wei Jiang. 2012. <span>“The Real
+Effects of Financial Markets: <span>T</span>he Impact of Prices on
+Takeovers.”</span> <em>The Journal of Finance</em> 67 (3): 933–71. <a href="https://doi.org/10.1111/j.1540-6261.2012.01738.x">https://doi.org/10.1111/j.1540-6261.2012.01738.x</a>.
+</div>
+<div id="ref-egan2019market" class="csl-entry" role="listitem">
+Egan, Mark, Gregor Matvos, and Amit Seru. 2019. <span>“The Market for
+Financial Adviser Misconduct.”</span> <em>Journal of Political
+Economy</em> 127 (1): 233–95. <a href="https://doi.org/10.1086/700735">https://doi.org/10.1086/700735</a>.
+</div>
 <div id="ref-eisenberg2001systemic" class="csl-entry" role="listitem">
 Eisenberg, Larry, and Thomas H Noe. 2001. <span>“Systemic Risk in
 Financial Systems.”</span> <em>Management Science</em> 47 (2): 236–49.
@@ -1548,6 +1835,11 @@ Elton, Edwin J, Martin J Gruber, and Christopher R Blake. 2011.
 <span>“Holdings Data, Security Returns, and the Selection of Superior
 Mutual Funds.”</span> <em>Journal of Financial and Quantitative
 Analysis</em> 46 (2): 341–67.
+</div>
+<div id="ref-engelberg2016worrying" class="csl-entry" role="listitem">
+Engelberg, Joseph, and Christopher A Parsons. 2016. <span>“Worrying
+about the Stock Market: Evidence from Hospital Admissions.”</span>
+<em>The Journal of Finance</em> 71 (3): 1227–50.
 </div>
 <div id="ref-engle2002dynamic" class="csl-entry" role="listitem">
 Engle, Robert. 2002. <span>“Dynamic Conditional Correlation: A Simple
@@ -1606,8 +1898,8 @@ returns on stocks and bonds</span>.”</span> <em><span>Journal of
 Financial Economics</span></em> 33 (1): 3–56. <a href="https://doi.org/10.1016/0304-405X(93)90023-5">https://doi.org/10.1016/0304-405X(93)90023-5</a>.
 </div>
 <div id="ref-FamaFrench2015" class="csl-entry" role="listitem">
-———. 2015a. <span>“A Five-Factor Asset Pricing Model.”</span>
-<em>Journal of Financial Economics</em> 116 (1): 1–22. <a href="https://doi.org/10.1016/j.jfineco.2014.10.010">https://doi.org/10.1016/j.jfineco.2014.10.010</a>.
+———. 2015. <span>“A Five-Factor Asset Pricing Model.”</span> <em>Journal
+of Financial Economics</em> 116 (1): 1–22. <a href="https://doi.org/10.1016/j.jfineco.2014.10.010">https://doi.org/10.1016/j.jfineco.2014.10.010</a>.
 </div>
 <div id="ref-fama1996multifactor" class="csl-entry" role="listitem">
 Fama, Eugene F, and Kenneth R French. 1996. <span>“Multifactor
@@ -1626,10 +1918,6 @@ Finance</em> 63 (4): 1653–78.
 ———. 2012. <span>“Size, Value, and Momentum in International Stock
 Returns.”</span> <em>Journal of Financial Economics</em> 105 (3):
 457–72.
-</div>
-<div id="ref-fama2015five" class="csl-entry" role="listitem">
-———. 2015b. <span>“A Five-Factor Asset Pricing Model.”</span>
-<em>Journal of Financial Economics</em> 116 (1): 1–22.
 </div>
 <div id="ref-fama2020comparing" class="csl-entry" role="listitem">
 ———. 2020. <span>“Comparing Cross-Section and Time-Series Factor
@@ -1655,6 +1943,16 @@ Review of Financial Studies</em> 29 (2): 271–308.
 Fazzari, Steven, R Glenn Hubbard, and Bruce C Petersen. 1987.
 <span>“Financing Constraints and Corporate Investment.”</span> National
 Bureau of Economic Research Cambridge, Mass., USA.
+</div>
+<div id="ref-feng2020taming" class="csl-entry" role="listitem">
+Feng, Guanhao, Stefano Giglio, and Dacheng Xiu. 2020. <span>“Taming the
+Factor Zoo: A Test of New Factors.”</span> <em>The Journal of
+Finance</em> 75 (3): 1327–70.
+</div>
+<div id="ref-feng2026selecting" class="csl-entry" role="listitem">
+Feng, Guanhao, Wei Lan, Hansheng Wang, and Jun Zhang. 2026.
+<span>“Selecting and Testing Asset-Pricing Models: A Stepwise
+Approach.”</span> <em>Management Science</em>. <a href="https://doi.org/10.1287/mnsc.2024.07804">https://doi.org/10.1287/mnsc.2024.07804</a>.
 </div>
 <div id="ref-flannery2002macroeconomic" class="csl-entry" role="listitem">
 Flannery, Mark J, and Aris A Protopapadakis. 2002. <span>“Macroeconomic
@@ -1695,6 +1993,12 @@ Frankel, Jeffrey A. 1979. <span>“On the Mark: A Theory of Floating
 Exchange Rates Based on Real Interest Differentials.”</span> <em>The
 American Economic Review</em> 69 (4): 610–22.
 </div>
+<div id="ref-frazzini2008dumb" class="csl-entry" role="listitem">
+Frazzini, Andrea, and Owen A. Lamont. 2008. <span>“Dumb Money:
+<span>M</span>utual Fund Flows and the Cross-Section of Stock
+Returns.”</span> <em>Journal of Financial Economics</em> 88 (2):
+299–322. <a href="https://doi.org/10.1016/j.jfineco.2007.07.001">https://doi.org/10.1016/j.jfineco.2007.07.001</a>.
+</div>
 <div id="ref-Frazzini2014" class="csl-entry" role="listitem">
 Frazzini, Andrea, and Lasse Heje Pedersen. 2014. <span>“<span class="nocase">Betting against beta</span>.”</span> <em><span>Journal of
 Financial Economics</span></em> 111 (1): 1–25. <a href="https://doi.org/10.1016/j.jfineco.2013.10.005">https://doi.org/10.1016/j.jfineco.2013.10.005</a>.
@@ -1708,6 +2012,16 @@ Market Fluctuations.”</span> <em>Nature</em> 423 (6937): 267–70.
 Gabaix, Xavier, and Ralph SJ Koijen. 2021. <span>“In Search of the
 Origins of Financial Fluctuations: The Inelastic Markets
 Hypothesis.”</span> National Bureau of Economic Research.
+</div>
+<div id="ref-gaertner2026reexamination" class="csl-entry" role="listitem">
+Gaertner, Fabio B, Brent Glover, and Oliver Levine. 2026. <span>“A
+Re-Examination of Firm Size and Taxes.”</span> <em>Management
+Science</em>. <a href="https://doi.org/10.1287/mnsc.2024.05865">https://doi.org/10.1287/mnsc.2024.05865</a>.
+</div>
+<div id="ref-gala2026marginal" class="csl-entry" role="listitem">
+Gala, Vito D., Joao F. Gomes, and Tong Liu. 2026. <span>“Marginal
+<span>Q</span>.”</span> <em>The Journal of Finance</em> 81 (5): 2853–86.
+<a href="https://doi.org/10.1111/jofi.70074">https://doi.org/10.1111/jofi.70074</a>.
 </div>
 <div id="ref-garfinkel2009measuring" class="csl-entry" role="listitem">
 Garfinkel, Jon A. 2009. <span>“Measuring Investors’ Opinion
@@ -1743,11 +2057,17 @@ Review</em>, 486–508.
 Glosten, Lawrence R, and Paul R Milgrom. 1985. <span>“Bid, Ask and
 Transaction Prices in a Specialist Market with Heterogeneously Informed
 Traders.”</span> <em>Journal of Financial Economics</em> 14 (1): 71–100.
+<a href="https://doi.org/10.1016/0304-405X(85)90044-3">https://doi.org/10.1016/0304-405X(85)90044-3</a>.
+</div>
+<div id="ref-goldsmith2020bartik" class="csl-entry" role="listitem">
+Goldsmith-Pinkham, Paul, Isaac Sorkin, and Henry Swift. 2020.
+<span>“Bartik Instruments: <span>W</span>hat, When, Why, and
+How.”</span> <em>American Economic Review</em> 110 (8): 2586–2624. <a href="https://doi.org/10.1257/aer.20181047">https://doi.org/10.1257/aer.20181047</a>.
 </div>
 <div id="ref-gompers2003corporate" class="csl-entry" role="listitem">
 Gompers, Paul, Joy Ishii, and Andrew Metrick. 2003. <span>“Corporate
 Governance and Equity Prices.”</span> <em>The Quarterly Journal of
-Economics</em> 118 (1): 107–56.
+Economics</em> 118 (1): 107–56. <a href="https://doi.org/10.1162/00335530360535162">https://doi.org/10.1162/00335530360535162</a>.
 </div>
 <div id="ref-goyal2018cross" class="csl-entry" role="listitem">
 Goyal, Amit, and Narasimhan Jegadeesh. 2018. <span>“Cross-Sectional and
@@ -1759,6 +2079,16 @@ Difference?”</span> <em>The Review of Financial Studies</em> 31 (5):
 Goyenko, Ruslan Y, Craig W Holden, and Charles A Trzcinka. 2009.
 <span>“Do Liquidity Measures Measure Liquidity?”</span> <em>Journal of
 Financial Economics</em> 92 (2): 153–81.
+</div>
+<div id="ref-goyenko2009stock" class="csl-entry" role="listitem">
+Goyenko, Ruslan Y, and Andrey D Ukhov. 2009. <span>“Stock and Bond
+Market Liquidity: A Long-Run Empirical Analysis.”</span> <em>Journal of
+Financial and Quantitative Analysis</em> 44 (1): 189–212.
+</div>
+<div id="ref-greenwood2011stock" class="csl-entry" role="listitem">
+Greenwood, Robin, and David Thesmar. 2011. <span>“Stock Price
+Fragility.”</span> <em>Journal of Financial Economics</em> 102 (3):
+471–90. <a href="https://doi.org/10.1016/j.jfineco.2011.06.003">https://doi.org/10.1016/j.jfineco.2011.06.003</a>.
 </div>
 <div id="ref-griffin2002fama" class="csl-entry" role="listitem">
 Griffin, John M. 2002. <span>“Are the Fama and French Factors Global or
@@ -1799,6 +2129,10 @@ Gürkaynak, Refet S, Brian Sack, and Jonathan H Wright. 2007. <span>“The
 US Treasury Yield Curve: 1961 to the Present.”</span> <em>Journal of
 Monetary Economics</em> 54 (8): 2291–2304.
 </div>
+<div id="ref-gurrea2024reinventing" class="csl-entry" role="listitem">
+Gurrea-Martínez, Aurelio. 2024. <em>Reinventing Insolvency Law in
+Emerging Economies</em>. Cambridge: Cambridge University Press.
+</div>
 <div id="ref-hadlock2010new" class="csl-entry" role="listitem">
 Hadlock, Charles J, and Joshua R Pierce. 2010. <span>“New Evidence on
 Measuring Financial Constraints: Moving Beyond the KZ Index.”</span>
@@ -1823,6 +2157,16 @@ Setting and Price Formation in an Order Driven Market.”</span>
 Hansen, Lars Peter. 1982. <span>“Large Sample Properties of Generalized
 Method of Moments Estimators.”</span> <em>Econometrica: Journal of the
 Econometric Society</em>, 1029–54.
+</div>
+<div id="ref-hansen2006realized" class="csl-entry" role="listitem">
+Hansen, Peter R., and Asger Lunde. 2006. <span>“Realized Variance and
+Market Microstructure Noise.”</span> <em>Journal of Business &amp;
+Economic Statistics</em> 24 (2): 127–61. <a href="https://doi.org/10.1198/073500106000000071">https://doi.org/10.1198/073500106000000071</a>.
+</div>
+<div id="ref-harris1991stock" class="csl-entry" role="listitem">
+Harris, Lawrence. 1991. <span>“Stock Price Clustering and
+Discreteness.”</span> <em>The Review of Financial Studies</em> 4 (3):
+389–415. <a href="https://doi.org/10.1093/rfs/4.3.389">https://doi.org/10.1093/rfs/4.3.389</a>.
 </div>
 <div id="ref-harris1993differences" class="csl-entry" role="listitem">
 Harris, Milton, and Artur Raviv. 1993. <span>“Differences of Opinion
@@ -1856,11 +2200,16 @@ University Press.
 <div id="ref-hasbrouck2009trading" class="csl-entry" role="listitem">
 ———. 2009. <span>“Trading Costs and Returns for US Equities: Estimating
 Effective Costs from Daily Data.”</span> <em>The Journal of Finance</em>
-64 (3): 1445–77.
+64 (3): 1445–77. <a href="https://doi.org/10.1111/j.1540-6261.2009.01469.x">https://doi.org/10.1111/j.1540-6261.2009.01469.x</a>.
 </div>
 <div id="ref-Hasler2021" class="csl-entry" role="listitem">
 Hasler, Mathias. 2021. <span>“Is the Value Premium Smaller Than We
 Thought?”</span> <em><span>Working Paper</span></em>. <a href="https://ssrn.com/abstract=3886984">https://ssrn.com/abstract=3886984</a>.
+</div>
+<div id="ref-hausman2001mismeasured" class="csl-entry" role="listitem">
+Hausman, Jerry. 2001. <span>“Mismeasured Variables in Econometric
+Analysis: Problems from the Right and Problems from the Left.”</span>
+<em>Journal of Economic Perspectives</em> 15 (4): 57–67. <a href="https://doi.org/10.1257/jep.15.4.57">https://doi.org/10.1257/jep.15.4.57</a>.
 </div>
 <div id="ref-hayashi1982tobin" class="csl-entry" role="listitem">
 Hayashi, Fumio. 1982. <span>“Tobin’s Marginal q and Average q: A
@@ -1884,6 +2233,12 @@ Corporate Disclosure, and the Capital Markets: A Review of the Empirical
 Disclosure Literature.”</span> <em>Journal of Accounting and
 Economics</em> 31 (1-3): 405–40.
 </div>
+<div id="ref-henderson2018global" class="csl-entry" role="listitem">
+Henderson, J Vernon, Tim Squires, Adam Storeygard, and David Weil. 2018.
+<span>“The Global Distribution of Economic Activity: Nature, History,
+and the Role of Trade.”</span> <em>The Quarterly Journal of
+Economics</em> 133 (1): 357–406.
+</div>
 <div id="ref-henderson2012measuring" class="csl-entry" role="listitem">
 Henderson, J Vernon, Adam Storeygard, and David N Weil. 2012.
 <span>“Measuring Economic Growth from Outer Space.”</span> <em>American
@@ -1903,6 +2258,11 @@ the Tail of a Distribution.”</span> <em>The Annals of Statistics</em>,
 Hillion, Pierre, and Matti Suominen. 2004. <span>“The Manipulation of
 Closing Prices.”</span> <em>Journal of Financial Markets</em> 7 (4):
 351–75.
+</div>
+<div id="ref-hirshleifer2018superstition" class="csl-entry" role="listitem">
+Hirshleifer, David, Ming Jian, and Huai Zhang. 2018. <span>“Superstition
+and Financial Decision Making.”</span> <em>Management Science</em> 64
+(1): 235–52. <a href="https://doi.org/10.1287/mnsc.2016.2584">https://doi.org/10.1287/mnsc.2016.2584</a>.
 </div>
 <div id="ref-hirshleifer2009driven" class="csl-entry" role="listitem">
 Hirshleifer, David, Sonya Seongyeon Lim, and Siew Hong Teoh. 2009.
@@ -1924,17 +2284,27 @@ Analysis.”</span> <em>The Review of Financial Studies</em> 23 (10):
 <div id="ref-hoberg2016text" class="csl-entry" role="listitem">
 ———. 2016. <span>“Text-Based Network Industries and Endogenous Product
 Differentiation.”</span> <em>Journal of Political Economy</em> 124 (5):
-1423–65.
+1423–65. <a href="https://doi.org/10.1086/688176">https://doi.org/10.1086/688176</a>.
 </div>
 <div id="ref-hoberg2018text" class="csl-entry" role="listitem">
 Hoberg, Gerard, and Gordon M Phillips. 2018. <span>“Text-Based Industry
 Momentum.”</span> <em>Journal of Financial and Quantitative
 Analysis</em> 53 (6): 2355–88.
 </div>
+<div id="ref-hodler2014regional" class="csl-entry" role="listitem">
+Hodler, Roland, and Paul A Raschky. 2014. <span>“Regional
+Favoritism.”</span> <em>The Quarterly Journal of Economics</em> 129 (2):
+995–1033.
+</div>
 <div id="ref-hofstede2001culture" class="csl-entry" role="listitem">
 Hofstede, Geert. 2001. <span>“Culture’s Consequences: Comparing Values,
 Behaviors, Institutions and Organizations Across Nations.”</span>
 <em>International Educational and Professional</em>.
+</div>
+<div id="ref-hong2004social" class="csl-entry" role="listitem">
+Hong, Harrison, Jeffrey D. Kubik, and Jeremy C. Stein. 2004.
+<span>“Social Interaction and Stock-Market Participation.”</span>
+<em>The Journal of Finance</em> 59 (1): 137–63. <a href="https://doi.org/10.1111/j.1540-6261.2004.00629.x">https://doi.org/10.1111/j.1540-6261.2004.00629.x</a>.
 </div>
 <div id="ref-hong1999unified" class="csl-entry" role="listitem">
 Hong, Harrison, and Jeremy C Stein. 1999. <span>“A Unified Theory of
@@ -1950,6 +2320,16 @@ Market Crashes.”</span> <em>The Review of Financial Studies</em> 16 (2):
 Hope, Ole-Kristian. 2003. <span>“Disclosure Practices, Enforcement of
 Accounting Standards, and Analysts’ Forecast Accuracy: An International
 Study.”</span> <em>Journal of Accounting Research</em> 41 (2): 235–72.
+</div>
+<div id="ref-hotchkiss1995postbankruptcy" class="csl-entry" role="listitem">
+Hotchkiss, Edith S. 1995. <span>“Postbankruptcy Performance and
+Management Turnover.”</span> <em>The Journal of Finance</em> 50 (1):
+3–21. <a href="https://doi.org/10.1111/j.1540-6261.1995.tb05165.x">https://doi.org/10.1111/j.1540-6261.1995.tb05165.x</a>.
+</div>
+<div id="ref-hotchkiss2026can" class="csl-entry" role="listitem">
+Hotchkiss, Edith S., Benjamin Iverson, and Xiang Zheng. 2026. <span>“Can
+Small Businesses Survive <span>C</span>hapter 11?”</span> <em>The
+Journal of Finance</em>.
 </div>
 <div id="ref-Hou2015" class="csl-entry" role="listitem">
 Hou, Kewei, Chen Xue, and Lu Zhang. 2014. <span>“<span class="nocase">Digesting anomalies: An investment
@@ -1980,7 +2360,7 @@ Accruals: Implications for Empirical Research.”</span> <em>Journal of
 Accounting Research</em> 40 (1): 105–34.
 </div>
 <div id="ref-hsu2004cap" class="csl-entry" role="listitem">
-Hsu, Jason C. 2004. <span>“Cap-Weighted Portfolios Are Sub-Optimal
+Hsu, Jason C. 2006. <span>“Cap-Weighted Portfolios Are Sub-Optimal
 Portfolios.”</span> <em>Journal of Investment Management</em> 4 (3).
 </div>
 <div id="ref-huang2018analyst" class="csl-entry" role="listitem">
@@ -2025,10 +2405,26 @@ Hutton, Amy P, Alan J Marcus, and Hassan Tehranian. 2009. <span>“Opaque
 Financial Reports, R2, and Crash Risk.”</span> <em>Journal of Financial
 Economics</em> 94 (1): 67–86.
 </div>
+<div id="ref-imbens2008regression" class="csl-entry" role="listitem">
+Imbens, Guido W., and Thomas Lemieux. 2008. <span>“Regression
+Discontinuity Designs: <span>A</span> Guide to Practice.”</span>
+<em>Journal of Econometrics</em> 142 (2): 615–35. <a href="https://doi.org/10.1016/j.jeconom.2007.05.001">https://doi.org/10.1016/j.jeconom.2007.05.001</a>.
+</div>
+<div id="ref-iverson2018get" class="csl-entry" role="listitem">
+Iverson, Benjamin. 2018. <span>“Get in Line: <span>C</span>hapter 11
+Restructuring in Crowded Bankruptcy Courts.”</span> <em>Management
+Science</em> 64 (11): 5370–94. <a href="https://doi.org/10.1287/mnsc.2017.2808">https://doi.org/10.1287/mnsc.2017.2808</a>.
+</div>
 <div id="ref-jacobs2020anomalies" class="csl-entry" role="listitem">
 Jacobs, Heiko, and Sebastian Müller. 2020. <span>“Anomalies Across the
 Globe: Once Public, No Longer Existent?”</span> <em>Journal of Financial
 Economics</em> 135 (1): 213–30.
+</div>
+<div id="ref-jacod2009microstructure" class="csl-entry" role="listitem">
+Jacod, Jean, Yingying Li, Per A. Mykland, Mark Podolskij, and Mathias
+Vetter. 2009. <span>“Microstructure Noise in the Continuous Case: The
+Pre-Averaging Approach.”</span> <em>Stochastic Processes and Their
+Applications</em> 119 (7): 2249–76. <a href="https://doi.org/10.1016/j.spa.2008.11.004">https://doi.org/10.1016/j.spa.2008.11.004</a>.
 </div>
 <div id="ref-jagannathan2003risk" class="csl-entry" role="listitem">
 Jagannathan, Ravi, and Tongshu Ma. 2003. <span>“Risk Reduction in Large
@@ -2080,6 +2476,12 @@ Jensen, Michael C, and Richard S Ruback. 1983. <span>“The Market for
 Corporate Control: The Scientific Evidence.”</span> <em>Journal of
 Financial Economics</em> 11 (1-4): 5–50.
 </div>
+<div id="ref-jensen2026machine" class="csl-entry" role="listitem">
+Jensen, Theis Ingerslev, Bryan Kelly, Semyon Malamud, and Lasse Heje
+Pedersen. 2026. <span>“Machine Learning and the Implementable Efficient
+Frontier.”</span> <em>The Review of Financial Studies</em> 39 (10):
+3035–78. <a href="https://doi.org/10.1093/rfs/hhag022">https://doi.org/10.1093/rfs/hhag022</a>.
+</div>
 <div id="ref-jensen2023there" class="csl-entry" role="listitem">
 Jensen, Theis Ingerslev, Bryan Kelly, and Lasse Heje Pedersen. 2023.
 <span>“Is There a Replication Crisis in Finance?”</span> <em>The Journal
@@ -2089,6 +2491,11 @@ of Finance</em> 78 (5): 2465–2518.
 Jha, Manish, Jialin Qian, Michael Weber, and Baozhong Yang. 2024.
 <span>“ChatGPT and Corporate Policies.”</span> National Bureau of
 Economic Research.
+</div>
+<div id="ref-john2015employee" class="csl-entry" role="listitem">
+John, Kose, Anzhela Knyazeva, and Diana Knyazeva. 2015. <span>“Employee
+Rights and Acquisitions.”</span> <em>Journal of Financial Economics</em>
+118 (1): 49–69.
 </div>
 <div id="ref-johnson2000tunneling" class="csl-entry" role="listitem">
 Johnson, Simon, Rafael La Porta, Florencio Lopez-de-Silanes, and Andrei
@@ -2111,7 +2518,12 @@ Multinationals.”</span> <em>Journal of Business</em>, 331–45.
 <div id="ref-jorion1991pricing" class="csl-entry" role="listitem">
 ———. 1991. <span>“The Pricing of Exchange Rate Risk in the Stock
 Market.”</span> <em>Journal of Financial and Quantitative Analysis</em>
-26 (3): 363–76.
+26 (3): 363–76. <a href="https://doi.org/10.2307/2331212">https://doi.org/10.2307/2331212</a>.
+</div>
+<div id="ref-jung2018firms" class="csl-entry" role="listitem">
+Jung, Michael J, James P Naughton, Ahmed Tahoun, and Clare Wang. 2018.
+<span>“Do Firms Strategically Disseminate? Evidence from Corporate Use
+of Social Media.”</span> <em>The Accounting Review</em> 93 (4): 225–52.
 </div>
 <div id="ref-kacperczyk2008unobserved" class="csl-entry" role="listitem">
 Kacperczyk, Marcin, Clemens Sialm, and Lu Zheng. 2008. <span>“Unobserved
@@ -2133,6 +2545,7 @@ Economic Perspectives</em> 17 (4): 51–74.
 Kandel, Eugene, and Neil D Pearson. 1995. <span>“Differential
 Interpretation of Public Signals and Trade in Speculative
 Markets.”</span> <em>Journal of Political Economy</em> 103 (4): 831–72.
+<a href="https://doi.org/10.1086/262005">https://doi.org/10.1086/262005</a>.
 </div>
 <div id="ref-kaniel2012individual" class="csl-entry" role="listitem">
 Kaniel, Ron, Shuming Liu, Gideon Saar, and Sheridan Titman. 2012.
@@ -2145,6 +2558,11 @@ Flow Sensitivities Provide Useful Measures of Financing
 Constraints?”</span> <em>The Quarterly Journal of Economics</em> 112
 (1): 169–215.
 </div>
+<div id="ref-karolyi2012understanding" class="csl-entry" role="listitem">
+Karolyi, G. Andrew, Kuan-Hui Lee, and Mathijs A. van Dijk. 2012.
+<span>“Understanding Commonality in Liquidity Around the World.”</span>
+<em>Journal of Financial Economics</em> 105 (1): 82–112. <a href="https://doi.org/10.1016/j.jfineco.2011.12.008">https://doi.org/10.1016/j.jfineco.2011.12.008</a>.
+</div>
 <div id="ref-karpoff1987relation" class="csl-entry" role="listitem">
 Karpoff, Jonathan M. 1987. <span>“The Relation Between Price Changes and
 Trading Volume: A Survey.”</span> <em>Journal of Financial and
@@ -2155,16 +2573,32 @@ Kelly, Bryan, and Hao Jiang. 2014. <span>“Tail Risk and Asset
 Prices.”</span> <em>The Review of Financial Studies</em> 27 (10):
 2841–71.
 </div>
+<div id="ref-kelly2024virtue" class="csl-entry" role="listitem">
+Kelly, Bryan, Semyon Malamud, and Kangying Zhou. 2024. <span>“The Virtue
+of Complexity in Return Prediction.”</span> <em>The Journal of
+Finance</em> 79 (1): 459–503. <a href="https://doi.org/10.1111/jofi.13298">https://doi.org/10.1111/jofi.13298</a>.
+</div>
 <div id="ref-khan2008accruals" class="csl-entry" role="listitem">
 Khan, Mozaffar. 2008. <span>“Are Accruals Mispriced? Evidence from Tests
 of an Intertemporal Capital Asset Pricing Model.”</span> <em>Journal of
 Accounting and Economics</em> 45 (1): 55–77.
+</div>
+<div id="ref-khan2012mutual" class="csl-entry" role="listitem">
+Khan, Mozaffar, Leonid Kogan, and George Serafeim. 2012. <span>“Mutual
+Fund Trading Pressure: <span>F</span>irm-Level Stock Price Impact and
+Timing of <span>SEO</span>s.”</span> <em>The Journal of Finance</em> 67
+(4): 1371–95. <a href="https://doi.org/10.1111/j.1540-6261.2012.01750.x">https://doi.org/10.1111/j.1540-6261.2012.01750.x</a>.
 </div>
 <div id="ref-khanh2018audit" class="csl-entry" role="listitem">
 Khanh, Hoang Thi Mai, and Vinh Khuong Nguyen. 2018. <span>“Audit
 Quality, Firm Characteristics and Real Earnings Management: The Case of
 Listed Vietnamese Firms.”</span> <em>International Journal of Economics
 and Financial Issues</em> 8 (4): 243.
+</div>
+<div id="ref-khorrami2026dynamic" class="csl-entry" role="listitem">
+Khorrami, Paymon, and Fernando Mendo. 2026. <span>“Dynamic
+Self-Fulfilling Fire Sales.”</span> <em>The Journal of Finance</em> 81
+(5): 3087–3126. <a href="https://doi.org/10.1111/jofi.70069">https://doi.org/10.1111/jofi.70069</a>.
 </div>
 <div id="ref-kim2022ocr" class="csl-entry" role="listitem">
 Kim, Geewook, Teakgyu Hong, Moonbin Yim, JeongYeon Nam, Jinyoung Park,
@@ -2180,7 +2614,7 @@ Financial Research</em> 36 (4): 493–518.
 <div id="ref-kim1997price" class="csl-entry" role="listitem">
 Kim, Kenneth A, and S Ghon Rhee. 1997. <span>“Price Limit Performance:
 Evidence from the Tokyo Stock Exchange.”</span> <em>The Journal of
-Finance</em> 52 (2): 885–901.
+Finance</em> 52 (2): 885–901. <a href="https://doi.org/10.1111/j.1540-6261.1997.tb04827.x">https://doi.org/10.1111/j.1540-6261.1997.tb04827.x</a>.
 </div>
 <div id="ref-kim1991market" class="csl-entry" role="listitem">
 Kim, Oliver, and Robert E Verrecchia. 1991. <span>“Market Reaction to
@@ -2196,6 +2630,10 @@ Studies</em> 3 (1): 5–33.
 Kipf, Thomas N, and Max Welling. 2016. <span>“Semi-Supervised
 Classification with Graph Convolutional Networks.”</span> <em>arXiv
 Preprint arXiv:1609.02907</em>.
+</div>
+<div id="ref-kiyotaki1997credit" class="csl-entry" role="listitem">
+Kiyotaki, Nobuhiro, and John Moore. 1997. <span>“Credit Cycles.”</span>
+<em>Journal of Political Economy</em> 105 (2): 211–48. <a href="https://doi.org/10.1086/262072">https://doi.org/10.1086/262072</a>.
 </div>
 <div id="ref-klapper2004corporate" class="csl-entry" role="listitem">
 Klapper, Leora F, and Inessa Love. 2004. <span>“Corporate Governance,
@@ -2248,6 +2686,17 @@ Krishnamurthy, Arvind, and Annette Vissing-Jorgensen. 2012. <span>“The
 Aggregate Demand for Treasury Debt.”</span> <em>Journal of Political
 Economy</em> 120 (2): 233–67.
 </div>
+<div id="ref-kuchler2022social" class="csl-entry" role="listitem">
+Kuchler, Theresa, Yan Li, Lin Peng, Johannes Stroebel, and Dexin Zhou.
+2022. <span>“Social Proximity to Capital: <span>I</span>mplications for
+Investors and Firms.”</span> <em>The Review of Financial Studies</em> 35
+(6): 2743–89. <a href="https://doi.org/10.1093/rfs/hhab111">https://doi.org/10.1093/rfs/hhab111</a>.
+</div>
+<div id="ref-kuchler2021social" class="csl-entry" role="listitem">
+Kuchler, Theresa, and Johannes Stroebel. 2021. <span>“Social
+Finance.”</span> <em>Annual Review of Financial Economics</em> 13 (1):
+37–55. <a href="https://doi.org/10.1146/annurev-financial-101320-062446">https://doi.org/10.1146/annurev-financial-101320-062446</a>.
+</div>
 <div id="ref-kupiec1995techniques" class="csl-entry" role="listitem">
 Kupiec, Paul H et al. 1995. <span>“Techniques for Verifying the Accuracy
 of Risk Measurement Models.”</span>
@@ -2255,7 +2704,7 @@ of Risk Measurement Models.”</span>
 <div id="ref-kyle1985continuous" class="csl-entry" role="listitem">
 Kyle, Albert S. 1985. <span>“Continuous Auctions and Insider
 Trading.”</span> <em>Econometrica: Journal of the Econometric
-Society</em>, 1315–35.
+Society</em> 53 (6): 1315–35. <a href="https://doi.org/10.2307/1913210">https://doi.org/10.2307/1913210</a>.
 </div>
 <div id="ref-la2000investor" class="csl-entry" role="listitem">
 La Porta, Rafael, Florencio Lopez-de-Silanes, Andrei Shleifer, and
@@ -2267,6 +2716,14 @@ Governance.”</span> <em>Journal of Financial Economics</em> 58 (1-2):
 La Porta, Rafael, Florencio Lopez-de-Silanes, Andrei Shleifer, and
 Robert W Vishny. 2000b. <span>“Agency Problems and Dividend Policies
 Around the World.”</span> <em>The Journal of Finance</em> 55 (1): 1–33.
+</div>
+<div id="ref-lacava2026realized" class="csl-entry" role="listitem">
+Lacava, Danilo, Angelo Ranaldo, and Paolo Santucci de Magistris. 2026.
+<span>“Realized Illiquidity.”</span> <em>Management Science</em>. <a href="https://doi.org/10.1287/mnsc.2023.02505">https://doi.org/10.1287/mnsc.2023.02505</a>.
+</div>
+<div id="ref-lagaras2026mas" class="csl-entry" role="listitem">
+Lagaras, Spyridon. 2026. <span>“<span>M&amp;As</span>, Employee Costs
+and Labor Reallocation.”</span> <em>The Journal of Finance</em>. <a href="https://doi.org/10.2139/ssrn.3560620">https://doi.org/10.2139/ssrn.3560620</a>.
 </div>
 <div id="ref-lamont2001financial" class="csl-entry" role="listitem">
 Lamont, Owen, Christopher Polk, and Jesús Saaá-Requejo. 2001.
@@ -2304,6 +2761,16 @@ Machine Learning</em>, 1188–96. PMLR.
 Ledoit, Olivier, and Michael Wolf. 2004. <span>“A Well-Conditioned
 Estimator for Large-Dimensional Covariance Matrices.”</span> <em>Journal
 of Multivariate Analysis</em> 88 (2): 365–411.
+</div>
+<div id="ref-lee2010regression" class="csl-entry" role="listitem">
+Lee, David S., and Thomas Lemieux. 2010. <span>“Regression Discontinuity
+Designs in Economics.”</span> <em>Journal of Economic Literature</em> 48
+(2): 281–355. <a href="https://doi.org/10.1257/jel.48.2.281">https://doi.org/10.1257/jel.48.2.281</a>.
+</div>
+<div id="ref-lee2018human" class="csl-entry" role="listitem">
+Lee, Kyeong Hun, David C Mauer, and Emma Q Xu. 2018. <span>“Human
+Capital Relatedness and Mergers and Acquisitions.”</span> <em>Journal of
+Financial Economics</em> 129 (1): 111–35.
 </div>
 <div id="ref-lehavy2008investor" class="csl-entry" role="listitem">
 Lehavy, Reuven, and Richard G Sloan. 2008. <span>“Investor Recognition
@@ -2349,6 +2816,10 @@ Li, Feng et al. 2010. <span>“Textual Analysis of Corporate Disclosures:
 A Survey of the Literature.”</span> <em>Journal of Accounting
 Literature</em> 29 (1): 143–65.
 </div>
+<div id="ref-li2025measuring" class="csl-entry" role="listitem">
+Li, James J., and Lu Zheng. 2025. <span>“Measuring Mutual Fund
+Flows.”</span> <em>Financial Analysts Journal</em> 81 (3): 27–59. <a href="https://doi.org/10.1080/0015198X.2025.2521233">https://doi.org/10.1080/0015198X.2025.2521233</a>.
+</div>
 <div id="ref-li2023blip" class="csl-entry" role="listitem">
 Li, Junnan, Dongxu Li, Silvio Savarese, and Steven Hoi. 2023.
 <span>“Blip-2: Bootstrapping Language-Image Pre-Training with Frozen
@@ -2360,6 +2831,13 @@ Liang, Paul Pu, Amir Zadeh, and Louis-Philippe Morency. 2024.
 <span>“Foundations &amp; Trends in Multimodal Machine Learning:
 Principles, Challenges, and Open Questions.”</span> <em>ACM Computing
 Surveys</em> 56 (10): 1–42.
+</div>
+<div id="ref-lin2013judging" class="csl-entry" role="listitem">
+Lin, Mingfeng, Nagpurnanand R. Prabhala, and Siva Viswanathan. 2013.
+<span>“Judging Borrowers by the Company They Keep:
+<span>F</span>riendship Networks and Information Asymmetry in Online
+Peer-to-Peer Lending.”</span> <em>Management Science</em> 59 (1): 17–35.
+<a href="https://doi.org/10.1287/mnsc.1120.1560">https://doi.org/10.1287/mnsc.1120.1560</a>.
 </div>
 <div id="ref-lindenberg1981tobin" class="csl-entry" role="listitem">
 Lindenberg, Eric B, and Stephen A Ross. 1981. <span>“Tobin’s q Ratio and
@@ -2379,10 +2857,21 @@ of Finance</span></em> 20 (4): 587–615. <a href="https://doi.org/10.1111/j.154
 Little, Roderick JA, and Donald B Rubin. 2019. <em>Statistical Analysis
 with Missing Data</em>. John Wiley &amp; Sons.
 </div>
+<div id="ref-liu2026anatomy" class="csl-entry" role="listitem">
+Liu, Jiageng, Igor Makarov, and Antoinette Schoar. 2026. <span>“Anatomy
+of a Run: The <span>Terra Luna</span> Crash.”</span> <em>Journal of
+Financial Economics</em> 184: 104359. <a href="https://doi.org/10.1016/j.jfineco.2026.104359">https://doi.org/10.1016/j.jfineco.2026.104359</a>.
+</div>
 <div id="ref-liu2009investment" class="csl-entry" role="listitem">
 Liu, Laura Xiaolei, Toni M Whited, and Lu Zhang. 2009.
 <span>“Investment-Based Expected Stock Returns.”</span> <em>Journal of
 Political Economy</em> 117 (6): 1105–39.
+</div>
+<div id="ref-liu2015does" class="csl-entry" role="listitem">
+Liu, Lily Y., Andrew J. Patton, and Kevin Sheppard. 2015. <span>“Does
+Anything Beat 5-Minute <span>RV</span>? A Comparison of Realized
+Measures Across Multiple Asset Classes.”</span> <em>Journal of
+Econometrics</em> 187 (1): 293–311. <a href="https://doi.org/10.1016/j.jeconom.2015.02.008">https://doi.org/10.1016/j.jeconom.2015.02.008</a>.
 </div>
 <div id="ref-livnat2006comparing" class="csl-entry" role="listitem">
 Livnat, Joshua, and Richard R Mendenhall. 2006. <span>“Comparing the
@@ -2398,7 +2887,22 @@ Econometrics</em> 45 (1-2): 181–211.
 <div id="ref-longin2001extreme" class="csl-entry" role="listitem">
 Longin, Francois, and Bruno Solnik. 2001. <span>“Extreme Correlation of
 International Equity Markets.”</span> <em>The Journal of Finance</em> 56
-(2): 649–76.
+(2): 649–76. <a href="https://doi.org/10.1111/0022-1082.00340">https://doi.org/10.1111/0022-1082.00340</a>.
+</div>
+<div id="ref-lou2012flow" class="csl-entry" role="listitem">
+Lou, Dong. 2012. <span>“A Flow-Based Explanation for Return
+Predictability.”</span> <em>The Review of Financial Studies</em> 25
+(12): 3457–89. <a href="https://doi.org/10.1093/rfs/hhs103">https://doi.org/10.1093/rfs/hhs103</a>.
+</div>
+<div id="ref-lou2017price" class="csl-entry" role="listitem">
+Lou, Xiaoxia, and Tao Shu. 2017. <span>“Price Impact or Trading Volume:
+Why Is the <span>A</span>mihud (2002) Measure Priced?”</span> <em>The
+Review of Financial Studies</em> 30 (12): 4481–4520. <a href="https://doi.org/10.1093/rfs/hhx072">https://doi.org/10.1093/rfs/hhx072</a>.
+</div>
+<div id="ref-lou2018flow" class="csl-entry" role="listitem">
+Lou, Xiaoxia, and Albert Y. Wang. 2018. <span>“Flow-Induced Trading
+Pressure and Corporate Investment.”</span> <em>Journal of Financial and
+Quantitative Analysis</em> 53 (1): 171–201. <a href="https://doi.org/10.1017/S0022109017000953">https://doi.org/10.1017/S0022109017000953</a>.
 </div>
 <div id="ref-loughran2011liability" class="csl-entry" role="listitem">
 Loughran, Tim, and Bill McDonald. 2011. <span>“When Is a Liability Not a
@@ -2419,6 +2923,11 @@ Lyon, John D, Brad M Barber, and Chih-Ling Tsai. 1999. <span>“Improved
 Methods for Tests of Long-Run Abnormal Stock Returns.”</span> <em>The
 Journal of Finance</em> 54 (1): 165–201.
 </div>
+<div id="ref-ma2025mergers" class="csl-entry" role="listitem">
+Ma, Wenting, Paige Ouimet, and Elena Simintzi. 2025. <span>“Mergers and
+Acquisitions, Technological Change, and Inequality.”</span> <em>Journal
+of Financial Economics</em> 172.
+</div>
 <div id="ref-mackinlay1997event" class="csl-entry" role="listitem">
 MacKinlay, A Craig. 1997. <span>“Event Studies in Economics and
 Finance.”</span> <em>Journal of Economic Literature</em> 35 (1): 13–39.
@@ -2436,6 +2945,11 @@ Speculative Prices.”</span> <em>Journal of Business</em> 36 (4): 394.
 Markowitz, Harry. 1952. <span>“<span class="nocase">Portfolio
 selection</span>.”</span> <em><span>The Journal of Finance</span></em> 7
 (1): 77–91. <a href="https://doi.org/10.1111/j.1540-6261.1952.tb01525.x">https://doi.org/10.1111/j.1540-6261.1952.tb01525.x</a>.
+</div>
+<div id="ref-mccrary2008manipulation" class="csl-entry" role="listitem">
+McCrary, Justin. 2008. <span>“Manipulation of the Running Variable in
+the Regression Discontinuity Design: <span>A</span> Density
+Test.”</span> <em>Journal of Econometrics</em> 142 (2): 698–714. <a href="https://doi.org/10.1016/j.jeconom.2007.05.005">https://doi.org/10.1016/j.jeconom.2007.05.005</a>.
 </div>
 <div id="ref-mclean2016does" class="csl-entry" role="listitem">
 McLean, R David, and Jeffrey Pontiff. 2016. <span>“Does Academic
@@ -2515,6 +3029,12 @@ Morck, Randall, Andrei Shleifer, and Robert W Vishny. 1988.
 <span>“Management Ownership and Market Valuation: An Empirical
 Analysis.”</span> <em>Journal of Financial Economics</em> 20: 293–315.
 </div>
+<div id="ref-morrison2007bankruptcy" class="csl-entry" role="listitem">
+Morrison, Edward R. 2007. <span>“Bankruptcy Decision Making:
+<span>A</span>n Empirical Study of Continuation Bias in Small-Business
+Bankruptcies.”</span> <em>The Journal of Law and Economics</em> 50 (2):
+381–419. <a href="https://doi.org/10.1086/511318">https://doi.org/10.1086/511318</a>.
+</div>
 <div id="ref-Mossin1966" class="csl-entry" role="listitem">
 Mossin, Jan. 1966. <span>“<span class="nocase">Equilibrium in a capital
 asset market</span>.”</span> <em><span>Econometrica</span></em> 34 (4):
@@ -2566,6 +3086,11 @@ Trilemma in History: Tradeoffs Among Exchange Rates, Monetary Policies,
 and Capital Mobility.”</span> <em>Review of Economics and
 Statistics</em> 87 (3): 423–38.
 </div>
+<div id="ref-olley1996dynamics" class="csl-entry" role="listitem">
+Olley, G. Steven, and Ariel Pakes. 1996. <span>“The Dynamics of
+Productivity in the Telecommunications Equipment Industry.”</span>
+<em>Econometrica</em> 64 (6): 1263–97. <a href="https://doi.org/10.2307/2171831">https://doi.org/10.2307/2171831</a>.
+</div>
 <div id="ref-oord2018representation" class="csl-entry" role="listitem">
 Oord, Aaron van den, Yazhe Li, and Oriol Vinyals. 2018.
 <span>“Representation Learning with Contrastive Predictive
@@ -2579,7 +3104,7 @@ Markets.”</span> <em>The Review of Financial Studies</em> 11 (4):
 <div id="ref-pastor2003liquidity" class="csl-entry" role="listitem">
 Pástor, L’uboš, and Robert F Stambaugh. 2003. <span>“Liquidity Risk and
 Expected Stock Returns.”</span> <em>Journal of Political Economy</em>
-111 (3): 642–85.
+111 (3): 642–85. <a href="https://doi.org/10.1086/374184">https://doi.org/10.1086/374184</a>.
 </div>
 <div id="ref-patell1976corporate" class="csl-entry" role="listitem">
 Patell, James M. 1976. <span>“Corporate Forecasts of Earnings Per Share
@@ -2594,6 +3119,17 @@ Review</em>, 509–27.
 <div id="ref-peng2011reproducible" class="csl-entry" role="listitem">
 Peng, Roger D. 2011. <span>“Reproducible Research in Computational
 Science.”</span> <em>Science</em> 334 (6060): 1226–27.
+</div>
+<div id="ref-pesaran2024testing" class="csl-entry" role="listitem">
+Pesaran, M Hashem, and Takashi Yamagata. 2024. <span>“Testing for Alpha
+in Linear Factor Pricing Models with a Large Number of
+Securities.”</span> <em>Journal of Financial Econometrics</em> 22 (2):
+407–60.
+</div>
+<div id="ref-peters2017intangible" class="csl-entry" role="listitem">
+Peters, Ryan H., and Lucian A. Taylor. 2017. <span>“Intangible Capital
+and the Investment-q Relation.”</span> <em>Journal of Financial
+Economics</em> 123 (2): 251–72. <a href="https://doi.org/10.1016/j.jfineco.2016.03.011">https://doi.org/10.1016/j.jfineco.2016.03.011</a>.
 </div>
 <div id="ref-phan2023role" class="csl-entry" role="listitem">
 Phan, Thi Nha Truc, Philippe Bertrand, Hong Hai Phan, and Xuan Vinh Vo.
@@ -2616,6 +3152,15 @@ Pontiff, Jeffrey, and Artemiza Woodgate. 2008. <span>“Share Issuance and
 Cross-Sectional Returns.”</span> <em>The Journal of Finance</em> 63 (2):
 921–45.
 </div>
+<div id="ref-pool2016it" class="csl-entry" role="listitem">
+Pool, Veronika K, Clemens Sialm, and Irina Stefanescu. 2016. <span>“It
+Pays to Set the Menu: Mutual Fund Investment Options in 401(k)
+Plans.”</span> <em>The Journal of Finance</em> 71 (4): 1779–1812.
+</div>
+<div id="ref-pool2026mutual" class="csl-entry" role="listitem">
+———. 2026. <span>“Mutual Fund Revenue Sharing in 401(k) Plans.”</span>
+<em>Management Science</em> 72 (7): 5698–5722. <a href="https://doi.org/10.1287/mnsc.2023.01560">https://doi.org/10.1287/mnsc.2023.01560</a>.
+</div>
 <div id="ref-pukthuanthong2009global" class="csl-entry" role="listitem">
 Pukthuanthong, Kuntara, and Richard Roll. 2009. <span>“Global Market
 Integration: An Alternative Measure and Its Application.”</span>
@@ -2625,7 +3170,8 @@ Integration: An Alternative Measure and Its Application.”</span>
 Radford, Alec, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh,
 Sandhini Agarwal, Girish Sastry, et al. 2021. <span>“Learning
 Transferable Visual Models from Natural Language Supervision.”</span> In
-<em>International Conference on Machine Learning</em>, 8748–63. PmLR.
+<em>International Conference on Machine Learning</em>, 139:8748–63.
+Proceedings of Machine Learning Research. PMLR.
 </div>
 <div id="ref-rajan1998financial" class="csl-entry" role="listitem">
 Rajan, Raghuram G, and Luigi Zingales. 1998. <span>“Financial Dependence
@@ -2643,7 +3189,7 @@ Rock, Kevin. 1986. <span>“Why New Issues Are Underpriced.”</span>
 <div id="ref-roll1984simple" class="csl-entry" role="listitem">
 Roll, Richard. 1984. <span>“A Simple Implicit Measure of the Effective
 Bid-Ask Spread in an Efficient Market.”</span> <em>The Journal of
-Finance</em> 39 (4): 1127–39.
+Finance</em> 39 (4): 1127–39. <a href="https://doi.org/10.1111/j.1540-6261.1984.tb03897.x">https://doi.org/10.1111/j.1540-6261.1984.tb03897.x</a>.
 </div>
 <div id="ref-romano2005exact" class="csl-entry" role="listitem">
 Romano, Joseph P, and Michael Wolf. 2005. <span>“Exact and Approximate
@@ -2705,10 +3251,15 @@ Finance with r</em>. CRC Press.
 Scheuch, Christoph, Stefan Voigt, Patrick Weiss, and Christoph Frey.
 2024. <em>Tidy Finance with Python</em>. Chapman; Hall/CRC.
 </div>
+<div id="ref-schoenherr2022when" class="csl-entry" role="listitem">
+Schoenherr, David, and Jan Starmans. 2022. <span>“When Should Bankruptcy
+Law Be Creditor- or Debtor-Friendly? <span>T</span>heory and
+Evidence.”</span> <em>The Journal of Finance</em> 77 (5): 2669–2717. <a href="https://doi.org/10.1111/jofi.13171">https://doi.org/10.1111/jofi.13171</a>.
+</div>
 <div id="ref-scholes1977estimating" class="csl-entry" role="listitem">
 Scholes, Myron, and Joseph Williams. 1977. <span>“Estimating Betas from
 Nonsynchronous Data.”</span> <em>Journal of Financial Economics</em> 5
-(3): 309–27.
+(3): 309–27. <a href="https://doi.org/10.1016/0304-405X(77)90041-1">https://doi.org/10.1016/0304-405X(77)90041-1</a>.
 </div>
 <div id="ref-schwert1981using" class="csl-entry" role="listitem">
 Schwert, G William. 1981. <span>“Using Financial Data to Measure Effects
@@ -2734,14 +3285,24 @@ prices: A theory of market equilibrium under conditions of risk
 </span>.”</span> <em><span>The Journal of Finance</span></em> 19 (3):
 425–42. <a href="https://doi.org/10.1111/j.1540-6261.1964.tb02865.x">https://doi.org/10.1111/j.1540-6261.1964.tb02865.x</a>.
 </div>
+<div id="ref-shleifer1992liquidation" class="csl-entry" role="listitem">
+Shleifer, Andrei, and Robert W. Vishny. 1992. <span>“Liquidation Values
+and Debt Capacity: <span>A</span> Market Equilibrium Approach.”</span>
+<em>The Journal of Finance</em> 47 (4): 1343–66. <a href="https://doi.org/10.1111/j.1540-6261.1992.tb04661.x">https://doi.org/10.1111/j.1540-6261.1992.tb04661.x</a>.
+</div>
 <div id="ref-shumway1997delisting" class="csl-entry" role="listitem">
 Shumway, Tyler. 1997. <span>“The Delisting Bias in CRSP Data.”</span>
-<em>The Journal of Finance</em> 52 (1): 327–40.
+<em>The Journal of Finance</em> 52 (1): 327–40. <a href="https://doi.org/10.1111/j.1540-6261.1997.tb03818.x">https://doi.org/10.1111/j.1540-6261.1997.tb03818.x</a>.
 </div>
 <div id="ref-shyam1999testing" class="csl-entry" role="listitem">
 Shyam-Sunder, Lakshmi, and Stewart C Myers. 1999. <span>“Testing Static
 Tradeoff Against Pecking Order Models of Capital Structure.”</span>
 <em>Journal of Financial Economics</em> 51 (2): 219–44.
+</div>
+<div id="ref-sialm2015defined" class="csl-entry" role="listitem">
+Sialm, Clemens, Laura T Starks, and Hanjiang Zhang. 2015. <span>“Defined
+Contribution Pension Plans: Sticky or Discerning Money?”</span> <em>The
+Journal of Finance</em> 70 (2): 805–38.
 </div>
 <div id="ref-sias2004institutional" class="csl-entry" role="listitem">
 Sias, Richard W. 2004. <span>“Institutional Herding.”</span> <em>The
@@ -2769,6 +3330,11 @@ Statistics</em> 31 (6): 2013–35.
 Subrahmanyam, Avanidhar. 1994. <span>“Circuit Breakers and Market
 Volatility: A Theoretical Perspective.”</span> <em>The Journal of
 Finance</em> 49 (1): 237–54.
+</div>
+<div id="ref-sullivan2009job" class="csl-entry" role="listitem">
+Sullivan, Daniel, and Till von Wachter. 2009. <span>“Job Displacement
+and Mortality: An Analysis Using Administrative Data.”</span> <em>The
+Quarterly Journal of Economics</em> 124 (3): 1265–1306.
 </div>
 <div id="ref-svensson1994estimating" class="csl-entry" role="listitem">
 Svensson, Lars EO. 1994. <span>“Estimating and Interpreting Forward
@@ -2804,6 +3370,11 @@ Quantitative Analysis</em> 39 (4): 677–700.
 Tobin, James. 1969. <span>“A General Equilibrium Approach to Monetary
 Theory.”</span> <em>Journal of Money, Credit and Banking</em> 1 (1):
 15–29.
+</div>
+<div id="ref-tversky1974judgment" class="csl-entry" role="listitem">
+Tversky, Amos, and Daniel Kahneman. 1974. <span>“Judgment Under
+Uncertainty: <span>H</span>euristics and Biases.”</span>
+<em>Science</em> 185 (4157): 1124–31. <a href="https://doi.org/10.1126/science.185.4157.1124">https://doi.org/10.1126/science.185.4157.1124</a>.
 </div>
 <div id="ref-varian1985divergence" class="csl-entry" role="listitem">
 Varian, Hal R. 1985. <span>“Divergence of Opinion in Complete Markets: A
@@ -2858,10 +3429,19 @@ Demonstrations</em>, 56–60.
 Walter, Dominik, Rüdiger Weber, and Patrick Weiss. 2022. <span>“<span class="nocase">Non-standard errors in portfolio sorts</span>.”</span>
 <em><span>Working Paper</span></em>. <a href="https://ssrn.com/abstract=4164117">https://ssrn.com/abstract=4164117</a>.
 </div>
+<div id="ref-wardlaw2020measuring" class="csl-entry" role="listitem">
+Wardlaw, Malcolm. 2020. <span>“Measuring Mutual Fund Flow Pressure as
+Shock to Stock Returns.”</span> <em>The Journal of Finance</em> 75 (6):
+3221–43. <a href="https://doi.org/10.1111/jofi.12962">https://doi.org/10.1111/jofi.12962</a>.
+</div>
 <div id="ref-warner1988stock" class="csl-entry" role="listitem">
 Warner, Jerold B, Ross L Watts, and Karen H Wruck. 1988. <span>“Stock
 Prices and Top Management Changes.”</span> <em>Journal of Financial
 Economics</em> 20: 461–92.
+</div>
+<div id="ref-wei2026narrative" class="csl-entry" role="listitem">
+Wei, Xinbei, and Qunzi Zhang. 2026. <span>“Narrative Ambiguity
+Matters.”</span> <em>Management Science</em>. <a href="https://doi.org/10.1287/mnsc.2025.02735">https://doi.org/10.1287/mnsc.2025.02735</a>.
 </div>
 <div id="ref-wermers2000mutual" class="csl-entry" role="listitem">
 Wermers, Russ. 2000. <span>“Mutual Fund Performance: An Empirical
@@ -2886,6 +3466,11 @@ Yang, Dennis, and Qiang Zhang. 2000. <span>“Drift-Independent Volatility
 Estimation Based on High, Low, Open, and Close Prices.”</span> <em>The
 Journal of Business</em> 73 (3): 477–92.
 </div>
+<div id="ref-yin2026learning" class="csl-entry" role="listitem">
+Yin, Xiao. 2026. <span>“Learning in the Limit: <span>I</span>ncome
+Inference from Credit Extensions.”</span> <em>The Journal of
+Finance</em> 81 (5): 2729–72. <a href="https://doi.org/10.1111/jofi.70040">https://doi.org/10.1111/jofi.70040</a>.
+</div>
 <div id="ref-young2008corporate" class="csl-entry" role="listitem">
 Young, Michael N, Mike W Peng, David Ahlstrom, Garry D Bruton, and Yi
 Jiang. 2008. <span>“Corporate Governance in Emerging Economies: A Review
@@ -2897,6 +3482,12 @@ Zang, Amy Y. 2012. <span>“Evidence on the Trade-Off Between Real
 Activities Manipulation and Accrual-Based Earnings Management.”</span>
 <em>The Accounting Review</em> 87 (2): 675–703.
 </div>
+<div id="ref-zhang2005tale" class="csl-entry" role="listitem">
+Zhang, Lan, Per A. Mykland, and Yacine Aït-Sahalia. 2005. <span>“A Tale
+of Two Time Scales: Determining Integrated Volatility with Noisy
+High-Frequency Data.”</span> <em>Journal of the American Statistical
+Association</em> 100 (472): 1394–1411. <a href="https://doi.org/10.1198/016214505000000169">https://doi.org/10.1198/016214505000000169</a>.
+</div>
 </div>
 
 
@@ -2905,19 +3496,33 @@ Activities Manipulation and Accrual-Based Earnings Management.”</span>
 
 </main> <!-- /main -->
 <script>
+
 document.addEventListener("DOMContentLoaded", function () {
+
   const year = new Date().getFullYear();
+
   document.getElementById("copyright").textContent = "© " + year;
+
 });
+
 </script>
+
 <!-- Google tag (gtag.js) -->
+
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-LG91D0C6RB"></script>
+
 <script>
+
   window.dataLayer = window.dataLayer || [];
+
   function gtag(){dataLayer.push(arguments);}
+
   gtag('js', new Date());
 
+
+
   gtag('config', 'G-LG91D0C6RB');
+
 </script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
@@ -2957,12 +3562,12 @@ document.addEventListener("DOMContentLoaded", function () {
       // flash "checked"
       button.classList.add('code-copy-button-checked');
       var currentTitle = button.getAttribute("title");
-      button.setAttribute("title", "Copied!");
+      button.setAttribute("title", "Đã sao chép!");
       let tooltip;
       if (window.bootstrap) {
         button.setAttribute("data-bs-toggle", "tooltip");
         button.setAttribute("data-bs-placement", "left");
-        button.setAttribute("data-bs-title", "Copied!");
+        button.setAttribute("data-bs-title", "Đã sao chép!");
         tooltip = new bootstrap.Tooltip(button, 
           { trigger: "manual", 
             customClass: "code-copy-button-tooltip",
@@ -2983,14 +3588,13 @@ document.addEventListener("DOMContentLoaded", function () {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-      const outerScaffold = trigger.parentElement.cloneNode(true);
-      const codeEl = outerScaffold.querySelector('code');
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
         }
-      }
-      return codeEl.innerText;
+        return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
@@ -3391,11 +3995,11 @@ document.addEventListener("DOMContentLoaded", function () {
   </div>
   <div class="nav-page nav-page-next">
   </div>
-</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># References {.unnumbered}</span></span>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Mã nguồn</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># References {.unnumbered}</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>::: {#refs}</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>:::</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>:::</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
@@ -3405,7 +4009,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/references.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/references.qmd" class="toc-action"><i class="bi bi-github"></i>Chỉnh sửa trang này</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Báo lỗi</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>

@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi" xml:lang="vi"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.26">
+<meta name="generator" content="quarto-1.7.33">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 
 <title>11&nbsp; Value and Bivariate Sorts – Tài Chính Ứng Dụng với Python</title>
 <style>
@@ -70,19 +71,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="./favicon.ico" rel="icon">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-bc185b5c5bdbcb35c2eb49d8a876ef70.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-72097b8a1e3a3da1d7b8bbfaaf81c3d8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-5ee5e5a16e06a4aa31defda297eed821.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -97,27 +97,51 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   ],
   "show-item-context": false,
   "language": {
-    "search-no-results-text": "No results",
-    "search-matching-documents-text": "matching documents",
-    "search-copy-link-title": "Copy link to search",
-    "search-hide-matches-text": "Hide additional matches",
-    "search-more-match-text": "more match in this document",
-    "search-more-matches-text": "more matches in this document",
-    "search-clear-button-title": "Clear",
+    "search-no-results-text": "Không có kết quả",
+    "search-matching-documents-text": "tài liệu phù hợp",
+    "search-copy-link-title": "Sao chép liên kết tìm kiếm",
+    "search-hide-matches-text": "Ẩn các kết quả khớp khác",
+    "search-more-match-text": "kết quả khớp khác trong tài liệu này",
+    "search-more-matches-text": "kết quả khớp khác trong tài liệu này",
+    "search-clear-button-title": "Xóa",
     "search-text-placeholder": "",
-    "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit",
-    "search-label": "Search"
+    "search-detached-cancel-button-title": "Hủy",
+    "search-submit-button-title": "Gửi",
+    "search-label": "Tìm kiếm"
   }
 }</script>
+<!-- =====================================================================
+     SEO: schema.org Book JSON-LD, injected into the <head> of every page
+     via format.html include-in-header. The plain meta description and the
+     og:/twitter: descriptions come from the book `description:` key in
+     _quarto.yml - don't repeat them here (duplicate meta description).
+     ===================================================================== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": "Tài Chính Ứng Dụng với Python",
+  "url": "https://mikenguyen13.github.io/tidy_finance_vn_vi/",
+  "inLanguage": "vi",
+  "bookFormat": "https://schema.org/EBook",
+  "genre": "Empirical Finance",
+  "description": "Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: truy cập và quản lý dữ liệu tài chính, xây dựng danh mục đầu tư, mô hình định giá tài sản, kiểm định chéo, phân tích cơ bản và định giá doanh nghiệp.",
+  "keywords": "tài chính định lượng, thị trường chứng khoán Việt Nam, tài chính thực nghiệm, định giá tài sản, Fama-French, danh mục đầu tư, Python, VN30, HOSE",
+  "author": {
+    "@type": "Person",
+    "name": "Mike Nguyen"
+  },
+  "isAccessibleForFree": true
+}
+</script>
 
 
 <link rel="stylesheet" href="styles.css">
 <meta property="og:title" content="11&nbsp; Value and Bivariate Sorts – Tài Chính Ứng Dụng với Python">
-<meta property="og:description" content="">
+<meta property="og:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta property="og:site_name" content="Tài Chính Ứng Dụng với Python">
 <meta name="twitter:title" content="11&nbsp; Value and Bivariate Sorts – Tài Chính Ứng Dụng với Python">
-<meta name="twitter:description" content="">
+<meta name="twitter:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta name="twitter:card" content="summary">
 </head>
 
@@ -294,8 +318,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <span class="navbar-title">Tài Chính Ứng Dụng với Python</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+            <div id="quarto-search" class="" title="Tìm kiếm"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Bật/tắt điều hướng" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -315,18 +339,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Mã nguồn" class="quarto-navigation-tool px-1" aria-label="Mã nguồn"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Bật/tắt chế độ tối"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
   <nav class="quarto-secondary-nav">
     <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
         <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./10_modern_portfolio_theory.html">Xây dựng danh mục đầu tư, rủi ro và cơ học thực nghiệm</a></li><li class="breadcrumb-item"><a href="./13_value_bivariate.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Value and Bivariate Sorts</span></a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
   </nav>
@@ -347,7 +371,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
  <span class="menu-text">Thị trường tài chính, thể chế và dữ liệu Việt Nam</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -355,7 +379,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./00_institutional_background.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Nền tảng thể chế và cấu trúc thị trường của thị trường chứng khoán Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Bối cảnh thể chế và cấu trúc thị trường cổ phiếu Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -373,7 +397,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./03_market_microstructure.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Cấu trúc thị trường vi mô tại Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Vi cấu trúc thị trường tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -385,7 +409,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05_working_with_stock_returns.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận vốn chủ sở hữu</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận cổ phiếu</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -400,7 +424,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
  <span class="menu-text">Xây dựng danh mục đầu tư, rủi ro và cơ học thực nghiệm</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -408,7 +432,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./10_modern_portfolio_theory.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Lý thuyết danh mục đầu tư hiện đại</span></span></a>
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -420,7 +444,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./12_size_sorts.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Size Sorts</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phân loại theo quy mô</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -432,19 +456,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./14_portfolio_weighting_and_rebalancing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Portfolio Weighting and Rebalancing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Trọng số danh mục đầu tư và tái cân bằng danh mục</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./15_missing_data_and_survivorship.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Missing Data and Survivorship Bias</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Dữ liệu bị thiếu và thiên kiến sống sót</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./16_liquidity_and_turnover_measures.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Liquidity and Turnover Measures</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Các thước đo Thanh khoản và Vòng quay Giao dịch</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -459,7 +483,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình định giá tài sản</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -473,19 +497,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./21_fama_french.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Các nhân tố Fama-French</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./22_momentum.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Momentum Strategies</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Chiến lược động lượng</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./23_factor_construction_principles.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Factor Construction Principles</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Nguyên tắc xây dựng nhân tố</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -497,13 +521,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./25_factor_zoo_and_multiple_testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Factor Zoo and Multiple Testing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Vườn thú nhân tố và kiểm định đa giả thuyết</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./26_time_series_vs_cross_section.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Time-Series vs.&nbsp;Cross-Sectional Factor Tests</span></span></a>
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Kiểm định nhân tố theo chuỗi thời gian và theo mặt cắt ngang</span></span></a>
   </div>
 </li>
       </ul>
@@ -512,7 +536,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
  <span class="menu-text">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -532,49 +556,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./32_info_earnings.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Information Content of Earnings Announcements</span></span></a>
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Hàm lượng thông tin của các thông báo lợi nhuận</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./33_accruals.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Accruals, Earnings Persistence, and Market Efficiency</span></span></a>
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Các khoản dồn tích, tính bền vững của lợi nhuận và hiệu quả thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./34_earning_management.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Earnings Management: Detection and Measurement</span></span></a>
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Quản trị lợi nhuận: Phát hiện và đo lường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./35_pe_ratio.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">P/E Ratio</span></span></a>
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Tỷ số P/E</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./36_valuation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Firm Valuation, Financial Distress, and Company Maturity</span></span></a>
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Định giá doanh nghiệp, kiệt quệ tài chính và mức độ trưởng thành của công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./37_disclosure_quality_and_timing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Disclosure Quality and Timing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Chất lượng và thời điểm công bố thông tin</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./38_sue.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></span></a>
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Bất ngờ lợi nhuận chuẩn hóa (SUE)</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./39_divop.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Measuring Divergence of Investor Opinion</span></span></a>
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Đo lường sự phân kỳ quan điểm của nhà đầu tư</span></span></a>
   </div>
 </li>
       </ul>
@@ -583,7 +607,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
  <span class="menu-text">Quyền sở hữu, ma sát thị trường và rủi ro quốc tế</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -591,43 +615,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./50_institutional_ownership.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Institutional Ownership Analytics in Vietnam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Phân tích sở hữu tổ chức tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./52_institutional_trade_flow.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Institutional Trades, Flows, and Turnover Ratios</span></span></a>
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Giao dịch, dòng vốn và tỷ lệ vòng quay của nhà đầu tư tổ chức</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./53_governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Corporate Governance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Quản trị công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./54_return_gaps.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Return Gap: Measuring Unobserved Actions of Fund Managers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Chênh lệch lợi nhuận (Return Gap): Đo lường các hành động không quan sát được của nhà quản lý quỹ</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./55_price_limits_and_volatility.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Price Limits and Volatility</span></span></a>
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Biên độ giá và biến động</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./56_market_integration_and_segmentation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Market Integration and Segmentation</span></span></a>
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Hội nhập và phân khúc thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./57_exchange_rate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Exchange Rate Dynamics</span></span></a>
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Động lực của tỷ giá hối đoái</span></span></a>
   </div>
 </li>
       </ul>
@@ -636,7 +660,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình tài chính nâng cao</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -644,25 +668,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./60_event_studies.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Event Studies in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Nghiên cứu sự kiện trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./61_tail_risk_extreme_events.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Tail Risk and Extreme Events</span></span></a>
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Rủi ro đuôi và các sự kiện cực đoan</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./62_corporate_finance_estimators.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Corporate Finance Estimators and Identification</span></span></a>
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Các công cụ ước lượng và nhận dạng trong tài chính doanh nghiệp</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./63_structural_models_finance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Structural Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Các mô hình cấu trúc trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -671,7 +695,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
  <span class="menu-text">Dữ liệu thay thế và Trí tuệ nhân tạo trong tài chính</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -679,25 +703,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./70_textual.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Textual Analysis</span></span></a>
+ <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Phân tích văn bản</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./71_image.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Image and Visual Data in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Dữ liệu hình ảnh và dữ liệu thị giác trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./73_networks_graphs.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Networks and Graphs in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Mạng lưới và đồ thị trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./74_multimodel.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Multimodal Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Các mô hình đa phương thức trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -721,16 +745,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="-1">
-    <h2 id="toc-title">Table of contents</h2>
+    <h2 id="toc-title">Mục lục</h2>
    
   <ul>
-  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link active" data-scroll-target="#data-preparation"><span class="header-section-number">11.1</span> Data Preparation</a></li>
-  <li><a href="#book-to-market-ratio" id="toc-book-to-market-ratio" class="nav-link" data-scroll-target="#book-to-market-ratio"><span class="header-section-number">11.2</span> Book-to-Market Ratio</a></li>
-  <li><a href="#independent-sorts" id="toc-independent-sorts" class="nav-link" data-scroll-target="#independent-sorts"><span class="header-section-number">11.3</span> Independent Sorts</a></li>
-  <li><a href="#dependent-sorts" id="toc-dependent-sorts" class="nav-link" data-scroll-target="#dependent-sorts"><span class="header-section-number">11.4</span> Dependent Sorts</a></li>
-  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">11.5</span> Key Takeaways</a></li>
+  <li><a href="#chuẩn-bị-dữ-liệu" id="toc-chuẩn-bị-dữ-liệu" class="nav-link active" data-scroll-target="#chuẩn-bị-dữ-liệu"><span class="header-section-number">11.1</span> Chuẩn bị dữ liệu</a></li>
+  <li><a href="#tỷ-số-giá-trị-sổ-sách-trên-giá-trị-thị-trường" id="toc-tỷ-số-giá-trị-sổ-sách-trên-giá-trị-thị-trường" class="nav-link" data-scroll-target="#tỷ-số-giá-trị-sổ-sách-trên-giá-trị-thị-trường"><span class="header-section-number">11.2</span> Tỷ số giá trị sổ sách trên giá trị thị trường</a></li>
+  <li><a href="#phân-loại-độc-lập" id="toc-phân-loại-độc-lập" class="nav-link" data-scroll-target="#phân-loại-độc-lập"><span class="header-section-number">11.3</span> Phân loại độc lập</a></li>
+  <li><a href="#phân-loại-phụ-thuộc" id="toc-phân-loại-phụ-thuộc" class="nav-link" data-scroll-target="#phân-loại-phụ-thuộc"><span class="header-section-number">11.4</span> Phân loại phụ thuộc</a></li>
+  <li><a href="#những-điểm-chính" id="toc-những-điểm-chính" class="nav-link" data-scroll-target="#những-điểm-chính"><span class="header-section-number">11.5</span> Những điểm chính</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/13_value_bivariate.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/13_value_bivariate.qmd" class="toc-action"><i class="bi bi-github"></i>Chỉnh sửa trang này</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Báo lỗi</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -738,7 +762,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./10_modern_portfolio_theory.html">Xây dựng danh mục đầu tư, rủi ro và cơ học thực nghiệm</a></li><li class="breadcrumb-item"><a href="./13_value_bivariate.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Value and Bivariate Sorts</span></a></li></ol></nav>
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Value and Bivariate Sorts</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Value and Bivariate Sorts</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Mã</button></div></div>
 </div>
 
 
@@ -755,19 +779,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>In this chapter, we extend the univariate portfolio analysis of Univariate Portfolio Sorts to bivariate portfolio sorting, in which stocks are assigned to portfolios based on two characteristics. Bivariate sorts are commonly used in the academic asset pricing literature and underpin the factors in the Fama-French three-factor model. However, some scholars also use sorts with three grouping variables. Conceptually, portfolio sorts are easily applicable in higher dimensions.</p>
-<p>We form portfolios on firm size and the book-to-market ratio. Calculating book-to-market ratios requires accounting data, which necessitates additional steps during portfolio formation. In the end, we demonstrate how to form portfolios on two sorting variables using so-called independent and dependent portfolio sorts.</p>
+<p>Trong chương này, chúng ta mở rộng phân tích danh mục đơn biến của chương Phân loại danh mục đơn biến sang phân loại danh mục hai biến, trong đó cổ phiếu được gán vào các danh mục dựa trên hai đặc điểm. Phân loại hai biến thường được dùng trong tài liệu định giá tài sản học thuật và là nền tảng của các nhân tố trong mô hình ba nhân tố Fama-French. Tuy nhiên, một số học giả cũng dùng phân loại với ba biến nhóm. Về mặt khái niệm, phân loại danh mục dễ dàng áp dụng được trong các chiều cao hơn.</p>
+<p>Chúng ta hình thành các danh mục theo quy mô doanh nghiệp và tỷ số giá trị sổ sách trên giá trị thị trường (B/M). Việc tính tỷ số B/M đòi hỏi dữ liệu kế toán, kéo theo các bước bổ sung trong quá trình hình thành danh mục. Cuối cùng, chúng ta trình bày cách hình thành danh mục theo hai biến phân loại bằng cái gọi là phân loại danh mục độc lập và phân loại danh mục phụ thuộc.</p>
 <div id="8ab2a715" class="cell" data-execution_count="1">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> datetime <span class="im">as</span> dt</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sqlite3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sqlite3</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<section id="data-preparation" class="level2" data-number="11.1">
-<h2 data-number="11.1" class="anchored" data-anchor-id="data-preparation"><span class="header-section-number">11.1</span> Data Preparation</h2>
-<p>First, we load the necessary data from our SQLite database introduced in Accessing and Managing Financial Data and DataCore Data. We conduct portfolio sorts based on our sample but keep only the necessary columns in our memory. We use the same data sources for firm size as in Size Sorts and P-Hacking.</p>
+<section id="chuẩn-bị-dữ-liệu" class="level2" data-number="11.1">
+<h2 data-number="11.1" class="anchored" data-anchor-id="chuẩn-bị-dữ-liệu"><span class="header-section-number">11.1</span> Chuẩn bị dữ liệu</h2>
+<p>Trước hết, chúng ta tải dữ liệu cần thiết từ cơ sở dữ liệu SQLite đã được giới thiệu trong chương Truy cập và quản lý dữ liệu tài chính và Dữ liệu DataCore. Chúng ta thực hiện phân loại danh mục dựa trên mẫu của mình nhưng chỉ giữ các cột cần thiết trong bộ nhớ. Chúng ta dùng cùng các nguồn dữ liệu cho quy mô doanh nghiệp như trong chương Phân loại theo quy mô và P-Hacking.</p>
 <div id="ed5f613a" class="cell" data-execution_count="2">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>tidy_finance <span class="op">=</span> sqlite3.<span class="ex">connect</span>(database<span class="op">=</span><span class="st">"data/tidy_finance_python.sqlite"</span>)</span>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>tidy_finance <span class="op">=</span> sqlite3.<span class="ex">connect</span>(database<span class="op">=</span><span class="st">"data/tidy_finance_python.sqlite"</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>prices_monthly <span class="op">=</span> (pd.read_sql_query(</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    sql<span class="op">=</span>(<span class="st">"SELECT symbol, date, ret_excess, mktcap, "</span> </span>
@@ -775,11 +799,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    con<span class="op">=</span>tidy_finance,</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    parse_dates<span class="op">=</span>{<span class="st">"date"</span>})</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  .dropna()</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Further, we utilize accounting data. We only need book equity data in this application, which we select from our database. Additionally, we convert the variable <code>datadate</code> to its monthly value, as we only consider monthly returns here and do not need to account for the exact date.</p>
+<p>Ngoài ra, chúng ta sử dụng dữ liệu kế toán. Trong ứng dụng này, chúng ta chỉ cần dữ liệu giá trị sổ sách của vốn chủ sở hữu, được chọn từ cơ sở dữ liệu của chúng ta. Bên cạnh đó, chúng ta chuyển biến <code>datadate</code> sang giá trị theo tháng, vì ở đây chúng ta chỉ xét lợi nhuận theo tháng và không cần quan tâm đến ngày chính xác.</p>
 <div id="4be29ddf" class="cell" data-execution_count="3">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>book_equity <span class="op">=</span> (pd.read_sql_query(</span>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>book_equity <span class="op">=</span> (pd.read_sql_query(</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    sql<span class="op">=</span><span class="st">"SELECT symbol, datadate, be FROM datacore"</span>,</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    con<span class="op">=</span>tidy_finance, </span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    parse_dates<span class="op">=</span>{<span class="st">"datadate"</span>})</span>
@@ -789,16 +813,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>      pd.to_datetime(x[<span class="st">"datadate"</span>]).dt.to_period(<span class="st">"M"</span>).dt.to_timestamp()</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="book-to-market-ratio" class="level2" data-number="11.2">
-<h2 data-number="11.2" class="anchored" data-anchor-id="book-to-market-ratio"><span class="header-section-number">11.2</span> Book-to-Market Ratio</h2>
-<p>A fundamental problem in handling accounting data is the <em>look-ahead bias</em>; we must not include data in forming a portfolio that was not available knowledge at the time. Of course, researchers have more information when looking into the past than agents actually had at that moment. However, abnormal excess returns from a trading strategy should not rely on an information advantage because the differential cannot be the result of informed agents’ trades. Hence, we have to lag accounting information.</p>
-<p>As in the previous chapter, we continue to lag firm size by one month. Then, we compute the book-to-market ratio, which relates a firm’s book equity to its market equity. Firms with high (low) book-to-market ratio are called value (growth) firms. After matching the accounting and market equity information from the same month, we lag book-to-market by six months. This is a sufficiently conservative approach because accounting information is usually released well before six months pass. However, in the asset pricing literature, even longer lags are used as well.</p>
-<p>Having both variables, i.e., firm size lagged by one month and book-to-market lagged by six months, we merge these sorting variables to our returns using the <code>sorting_date</code>-column created for this purpose. The final step in our data preparation deals with differences in the frequency of our variables. Returns and firm size are recorded monthly. Yet, the accounting information is only released on an annual basis. Hence, we only match book-to-market to one month per year and have eleven empty observations. To solve this frequency issue, we carry the latest book-to-market ratio of each firm to the subsequent months, i.e., we fill the missing observations with the most current report. This is done via the <code>fillna(method="ffill")</code>-function after sorting by date and firm (which we identify by <code>symbol</code> and <code>symbol</code>) and on a firm basis (which we do by <code>.groupby()</code> as usual). We filter out all observations with accounting data that is older than a year. As the last step, we remove all rows with missing entries because the returns cannot be matched to any annual report.</p>
+<section id="tỷ-số-giá-trị-sổ-sách-trên-giá-trị-thị-trường" class="level2" data-number="11.2">
+<h2 data-number="11.2" class="anchored" data-anchor-id="tỷ-số-giá-trị-sổ-sách-trên-giá-trị-thị-trường"><span class="header-section-number">11.2</span> Tỷ số giá trị sổ sách trên giá trị thị trường</h2>
+<p>Một vấn đề cơ bản khi xử lý dữ liệu kế toán là <em>thiên lệch nhìn trước</em>; chúng ta không được đưa vào việc hình thành danh mục những dữ liệu mà tại thời điểm đó chưa được biết. Tất nhiên, các nhà nghiên cứu có nhiều thông tin hơn khi nhìn lại quá khứ so với những gì các tác nhân thực sự có vào thời điểm đó. Tuy nhiên, lợi nhuận vượt mức bất thường từ một chiến lược giao dịch không nên dựa trên lợi thế thông tin, vì phần chênh lệch đó không thể là kết quả của các giao dịch của những tác nhân có thông tin. Do đó, chúng ta phải làm trễ thông tin kế toán.</p>
+<p>Như ở chương trước, chúng ta tiếp tục làm trễ quy mô doanh nghiệp một tháng. Sau đó, chúng ta tính tỷ số B/M, tức tỷ số liên hệ giá trị sổ sách của vốn chủ sở hữu với vốn chủ sở hữu theo giá thị trường của doanh nghiệp. Các doanh nghiệp có tỷ số B/M cao (thấp) được gọi là doanh nghiệp giá trị (tăng trưởng). Sau khi ghép thông tin kế toán và thông tin vốn chủ sở hữu thị trường của cùng một tháng, chúng ta làm trễ B/M sáu tháng. Đây là cách tiếp cận đủ thận trọng vì thông tin kế toán thường được công bố rất sớm trước khi sáu tháng trôi qua. Tuy nhiên, trong tài liệu định giá tài sản, người ta cũng dùng các độ trễ dài hơn nữa.</p>
+<p>Khi đã có cả hai biến, tức quy mô doanh nghiệp trễ một tháng và B/M trễ sáu tháng, chúng ta ghép các biến phân loại này vào dữ liệu lợi nhuận bằng cột <code>sorting_date</code> được tạo cho mục đích này. Bước cuối cùng trong chuẩn bị dữ liệu xử lý sự khác biệt về tần suất của các biến. Lợi nhuận và quy mô doanh nghiệp được ghi nhận theo tháng. Tuy nhiên, thông tin kế toán chỉ được công bố theo năm. Do đó, chúng ta chỉ ghép B/M vào một tháng mỗi năm và còn mười một quan sát trống. Để giải quyết vấn đề tần suất này, chúng ta mang tỷ số B/M mới nhất của mỗi doanh nghiệp sang các tháng tiếp theo, tức là điền các quan sát thiếu bằng báo cáo gần đây nhất. Việc này được thực hiện qua hàm <code>fillna(method="ffill")</code> sau khi sắp xếp theo ngày và doanh nghiệp (mà chúng ta xác định bằng <code>symbol</code> và <code>symbol</code>) và trên cơ sở từng doanh nghiệp (mà chúng ta thực hiện bằng <code>.groupby()</code> như thường lệ). Chúng ta loại bỏ mọi quan sát có dữ liệu kế toán cũ hơn một năm. Ở bước cuối, chúng ta xóa mọi dòng có giá trị thiếu vì lợi nhuận không thể ghép với bất kỳ báo cáo thường niên nào.</p>
 <div id="2ed52d3c" class="cell" data-execution_count="4">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>size <span class="op">=</span> (prices_monthly</span>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>size <span class="op">=</span> (prices_monthly</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  .assign(sorting_date<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="st">"date"</span>]<span class="op">+</span>pd.DateOffset(months<span class="op">=</span><span class="dv">1</span>))</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  .rename(columns<span class="op">=</span>{<span class="st">"mktcap"</span>: <span class="st">"size"</span>})</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  .get([<span class="st">"symbol"</span>, <span class="st">"sorting_date"</span>, <span class="st">"size"</span>])</span>
@@ -838,11 +862,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>  .query(<span class="st">"accounting_date &gt; threshold_date"</span>)</span>
 <span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>  .drop(columns<span class="op">=</span>[<span class="st">"accounting_date"</span>, <span class="st">"threshold_date"</span>])</span>
 <span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>  .dropna()</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The last step of preparation for the portfolio sorts is the computation of breakpoints. We continue to use the same function, allowing for the specification of exchanges to be used for the breakpoints. Additionally, we reintroduce the argument <code>sorting_variable</code> into the function for defining different sorting variables.</p>
+<p>Bước chuẩn bị cuối cùng cho việc phân loại danh mục là tính các điểm cắt. Chúng ta tiếp tục dùng cùng một hàm, cho phép chỉ định các sàn dùng để tính điểm cắt. Ngoài ra, chúng ta đưa lại đối số <code>sorting_variable</code> vào hàm để xác định các biến phân loại khác nhau.</p>
 <div id="2f07b4bf" class="cell" data-execution_count="5">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> assign_portfolio(data, exchanges, sorting_variable, n_portfolios):</span>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> assign_portfolio(data, exchanges, sorting_variable, n_portfolios):</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Assign portfolio for a given sorting variable."""</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    breakpoints <span class="op">=</span> (data</span>
@@ -863,16 +887,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>      right<span class="op">=</span><span class="va">False</span></span>
 <span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> assigned_portfolios</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> assigned_portfolios</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>After these data preparation steps, we present bivariate portfolio sorts on an independent and dependent basis.</p>
+<p>Sau các bước chuẩn bị dữ liệu này, chúng ta trình bày phân loại danh mục hai biến theo cách độc lập và phụ thuộc.</p>
 </section>
-<section id="independent-sorts" class="level2" data-number="11.3">
-<h2 data-number="11.3" class="anchored" data-anchor-id="independent-sorts"><span class="header-section-number">11.3</span> Independent Sorts</h2>
-<p>Bivariate sorts create portfolios within a two-dimensional space spanned by two sorting variables. It is then possible to assess the return impact of either sorting variable by the return differential from a trading strategy that invests in the portfolios at either end of the respective variables spectrum. We create a five-by-five matrix using book-to-market and firm size as sorting variables in our example below. We end up with 25 portfolios. Since we are interested in the <em>value premium</em> (i.e., the return differential between high and low book-to-market firms), we go long the five portfolios of the highest book-to-market firms and short the five portfolios of the lowest book-to-market firms. The five portfolios at each end are due to the size splits we employed alongside the book-to-market splits.</p>
-<p>To implement the independent bivariate portfolio sort, we assign monthly portfolios for each of our sorting variables separately to create the variables <code>portfolio_bm</code> and <code>portfolio_size</code>, respectively. Then, these separate portfolios are combined to the final sort stored in <code>portfolio_combined</code>. After assigning the portfolios, we compute the average return within each portfolio for each month. Additionally, we keep the book-to-market portfolio as it makes the computation of the value premium easier. The alternative would be to disaggregate the combined portfolio in a separate step. Notice that we weigh the stocks within each portfolio by their market capitalization, i.e., we decide to value-weight our returns.</p>
+<section id="phân-loại-độc-lập" class="level2" data-number="11.3">
+<h2 data-number="11.3" class="anchored" data-anchor-id="phân-loại-độc-lập"><span class="header-section-number">11.3</span> Phân loại độc lập</h2>
+<p>Phân loại hai biến tạo ra các danh mục trong không gian hai chiều được căng bởi hai biến phân loại. Khi đó, có thể đánh giá tác động lên lợi nhuận của từng biến phân loại qua chênh lệch lợi nhuận của một chiến lược giao dịch đầu tư vào các danh mục ở hai đầu của phổ giá trị của biến tương ứng. Trong ví dụ dưới đây, chúng ta tạo ma trận năm nhân năm dùng B/M và quy mô doanh nghiệp làm biến phân loại. Kết quả là 25 danh mục. Vì chúng ta quan tâm đến <em>phần bù giá trị</em> (tức là chênh lệch lợi nhuận giữa các doanh nghiệp có B/M cao và thấp), chúng ta mua năm danh mục gồm các doanh nghiệp có B/M cao nhất và bán khống năm danh mục gồm các doanh nghiệp có B/M thấp nhất. Có năm danh mục ở mỗi đầu là do các lần chia theo quy mô mà chúng ta áp dụng song song với các lần chia theo B/M.</p>
+<p>Để triển khai phân loại hai biến độc lập, chúng ta gán các danh mục theo tháng cho từng biến phân loại một cách riêng biệt để tạo các biến <code>portfolio_bm</code> và <code>portfolio_size</code>. Sau đó, các danh mục riêng biệt này được kết hợp thành phân loại cuối cùng lưu trong <code>portfolio_combined</code>. Sau khi gán danh mục, chúng ta tính lợi nhuận trung bình trong mỗi danh mục cho từng tháng. Ngoài ra, chúng ta giữ lại danh mục B/M vì điều này giúp việc tính phần bù giá trị dễ hơn. Phương án thay thế là tách danh mục kết hợp ở một bước riêng. Lưu ý rằng chúng ta đặt trọng số cho các cổ phiếu trong mỗi danh mục theo vốn hóa thị trường của chúng, tức là chúng ta quyết định dùng trọng số theo vốn hóa cho lợi nhuận.</p>
 <div id="1d09530f" class="cell" data-execution_count="6">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>value_portfolios <span class="op">=</span> (data_for_sorts</span>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>value_portfolios <span class="op">=</span> (data_for_sorts</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  .groupby(<span class="st">"date"</span>)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  .<span class="bu">apply</span>(<span class="kw">lambda</span> x: x.assign(</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>      portfolio_bm<span class="op">=</span>assign_portfolio(</span>
@@ -890,11 +914,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    })</span>
 <span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  .reset_index()</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Equipped with our monthly portfolio returns, we are ready to compute the value premium. However, we still have to decide how to invest in the five high and the five low book-to-market portfolios. The most common approach is to weigh these portfolios equally, but this is yet another researcher’s choice. Then, we compute the return differential between the high and low book-to-market portfolios and show the average value premium.</p>
+<p>Khi đã có lợi nhuận danh mục theo tháng, chúng ta sẵn sàng tính phần bù giá trị. Tuy nhiên, chúng ta vẫn phải quyết định cách đầu tư vào năm danh mục B/M cao và năm danh mục B/M thấp. Cách phổ biến nhất là đặt trọng số bằng nhau cho các danh mục này, nhưng đây lại là một lựa chọn nữa của nhà nghiên cứu. Sau đó, chúng ta tính chênh lệch lợi nhuận giữa các danh mục B/M cao và thấp và trình bày phần bù giá trị trung bình.</p>
 <div id="0a1ee3a8" class="cell" data-execution_count="7">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>value_premium <span class="op">=</span> (value_portfolios</span>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>value_premium <span class="op">=</span> (value_portfolios</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  .groupby([<span class="st">"date"</span>, <span class="st">"portfolio_bm"</span>])</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  .aggregate({<span class="st">"ret"</span>: <span class="st">"mean"</span>})</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  .reset_index()</span>
@@ -907,15 +931,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    })</span>
 <span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  .aggregate({<span class="st">"value_premium"</span>: <span class="st">"mean"</span>})</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="dependent-sorts" class="level2" data-number="11.4">
-<h2 data-number="11.4" class="anchored" data-anchor-id="dependent-sorts"><span class="header-section-number">11.4</span> Dependent Sorts</h2>
-<p>In the previous exercise, we assigned the portfolios without considering the second variable in the assignment. This protocol is called independent portfolio sorts. The alternative, i.e., dependent sorts, creates portfolios for the second sorting variable within each bucket of the first sorting variable. In our example below, we sort firms into five size buckets, and within each of those buckets, we assign firms to five book-to-market portfolios. Hence, we have monthly breakpoints that are specific to each size group. The decision between independent and dependent portfolio sorts is another choice for the researcher. Notice that dependent sorts guarantee that portfolios have roughly equal numbers of stocks when breakpoints are computed from all exchanges. However, if breakpoints are based only on HOSE stocks, portfolio counts will generally be uneven — reflecting the large presence of small-cap stocks on HNX and UPCoM (see Exercise below).</p>
-<p>To implement the dependent sorts, we first create the size portfolios by calling <code>assign_portfolio()</code> with <code>sorting_variable="me"</code>. Then, we group our data again by month and by the size portfolio before assigning the book-to-market portfolio. The rest of the implementation is the same as before. Finally, we compute the value premium.</p>
+<section id="phân-loại-phụ-thuộc" class="level2" data-number="11.4">
+<h2 data-number="11.4" class="anchored" data-anchor-id="phân-loại-phụ-thuộc"><span class="header-section-number">11.4</span> Phân loại phụ thuộc</h2>
+<p>Trong bài tập trước, chúng ta gán các danh mục mà không xét đến biến thứ hai trong việc gán. Quy ước này được gọi là phân loại danh mục độc lập. Phương án thay thế, tức phân loại phụ thuộc, tạo các danh mục cho biến phân loại thứ hai trong từng nhóm của biến phân loại thứ nhất. Trong ví dụ dưới đây, chúng ta chia doanh nghiệp thành năm nhóm quy mô, và trong mỗi nhóm đó, chúng ta gán doanh nghiệp vào năm danh mục B/M. Do đó, chúng ta có các điểm cắt theo tháng riêng cho từng nhóm quy mô. Việc chọn giữa phân loại danh mục độc lập và phụ thuộc là một lựa chọn nữa của nhà nghiên cứu. Lưu ý rằng phân loại phụ thuộc bảo đảm các danh mục có số cổ phiếu xấp xỉ bằng nhau khi các điểm cắt được tính từ tất cả các sàn. Tuy nhiên, nếu các điểm cắt chỉ dựa trên cổ phiếu HOSE, số lượng cổ phiếu trong danh mục nhìn chung sẽ không đồng đều, phản ánh sự hiện diện lớn của cổ phiếu vốn hóa nhỏ trên HNX và UPCoM (xem Bài tập bên dưới).</p>
+<p>Để triển khai phân loại phụ thuộc, trước hết chúng ta tạo các danh mục quy mô bằng cách gọi <code>assign_portfolio()</code> với <code>sorting_variable="me"</code>. Sau đó, chúng ta nhóm dữ liệu một lần nữa theo tháng và theo danh mục quy mô trước khi gán danh mục B/M. Phần còn lại của việc triển khai giống như trước. Cuối cùng, chúng ta tính phần bù giá trị.</p>
 <div id="19c5e866" class="cell" data-execution_count="8">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>value_portfolios <span class="op">=</span> (data_for_sorts</span>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>value_portfolios <span class="op">=</span> (data_for_sorts</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  .groupby(<span class="st">"date"</span>)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  .<span class="bu">apply</span>(<span class="kw">lambda</span> x: x.assign(</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>      portfolio_size<span class="op">=</span>assign_portfolio(</span>
@@ -953,24 +977,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>    })</span>
 <span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>  .aggregate({<span class="st">"value_premium"</span>: <span class="st">"mean"</span>})</span>
-<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Overall, we show how to conduct bivariate portfolio sorts in this chapter. In one case, we sort the portfolios independently of each other. Yet we also discuss how to create dependent portfolio sorts. Along the lines of Size Sorts, we see how many choices a researcher has to make to implement portfolio sorts, and bivariate sorts increase the number of choices.</p>
+<p>Nhìn chung, chúng ta đã trình bày cách thực hiện phân loại danh mục hai biến trong chương này. Ở một trường hợp, chúng ta phân loại các danh mục độc lập với nhau. Tuy nhiên, chúng ta cũng thảo luận cách tạo phân loại danh mục phụ thuộc. Tương tự chương Phân loại theo quy mô, chúng ta thấy nhà nghiên cứu phải đưa ra bao nhiêu lựa chọn để triển khai phân loại danh mục, và phân loại hai biến làm tăng số lượng lựa chọn.</p>
 </section>
-<section id="key-takeaways" class="level2" data-number="11.5">
-<h2 data-number="11.5" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">11.5</span> Key Takeaways</h2>
+<section id="những-điểm-chính" class="level2" data-number="11.5">
+<h2 data-number="11.5" class="anchored" data-anchor-id="những-điểm-chính"><span class="header-section-number">11.5</span> Những điểm chính</h2>
 <ul>
-<li>Bivariate portfolio sorts assign stocks based on two characteristics, such as firm size and book-to-market ratio, to better capture return patterns in asset pricing.</li>
-<li>Independent sorts treat each variable separately, while dependent sorts condition the second sort on the first.</li>
-<li>Proper handling of accounting data, especially lagging the book-to-market ratio, is essential to avoid look-ahead bias and ensure valid backtesting.</li>
-<li>Value premiums are derived by comparing returns of high versus low book-to-market portfolios, with results sensitive to sorting choices and weighting schemes.</li>
+<li>Phân loại danh mục hai biến gán cổ phiếu dựa trên hai đặc điểm, như quy mô doanh nghiệp và tỷ số B/M, để nắm bắt tốt hơn các quy luật lợi nhuận trong định giá tài sản.</li>
+<li>Phân loại độc lập xử lý từng biến một cách riêng biệt, trong khi phân loại phụ thuộc thực hiện lần phân loại thứ hai có điều kiện theo kết quả của lần thứ nhất.</li>
+<li>Xử lý đúng dữ liệu kế toán, đặc biệt là làm trễ tỷ số B/M, là thiết yếu để tránh thiên lệch nhìn trước và bảo đảm kiểm định ngược (backtesting) hợp lệ.</li>
+<li>Phần bù giá trị được tính bằng cách so sánh lợi nhuận của các danh mục B/M cao với B/M thấp, với kết quả nhạy cảm với các lựa chọn phân loại và cách đặt trọng số.</li>
 </ul>
-<!-- ## Exercises
+<!-- ## Bài tập
 
-1.  Calculate the number of stocks in each size–value portfolio under two scenarios: (i) breakpoints based on all exchanges (HOSE, UPCoM, HNX) and (ii) breakpoints based on HOSE stocks only. Compare the portfolio counts between the two methods and explain the differences.
-2.  In Size Sorts, we examine the distribution of market equity. Repeat this analysis for book equity and the book-to-market ratio (alongside a plot of the breakpoints, i.e., deciles).
-3.  When we investigate the portfolios, we focus on the returns exclusively. However, it is also of interest to understand the characteristics of the portfolios. Write a function to compute the average characteristics for size and book-to-market across the 25 independently and dependently sorted portfolios.
-4.  As for the size premium, also the value premium constructed here does not follow @Fama1993. Implement a p-hacking setup as in Size Sorts to find a premium that comes closest to their HML premium. -->
+1.  Tính số cổ phiếu trong mỗi danh mục quy mô–giá trị theo hai kịch bản: (i) các điểm cắt dựa trên tất cả các sàn (HOSE, UPCoM, HNX) và (ii) các điểm cắt chỉ dựa trên cổ phiếu HOSE. So sánh số lượng cổ phiếu trong danh mục giữa hai phương pháp và giải thích các khác biệt.
+2.  Trong chương Phân loại theo quy mô, chúng ta khảo sát phân phối của vốn chủ sở hữu thị trường. Hãy lặp lại phân tích này cho giá trị sổ sách của vốn chủ sở hữu và tỷ số B/M (kèm biểu đồ các điểm cắt, tức các thập phân vị).
+3.  Khi khảo sát các danh mục, chúng ta chỉ tập trung vào lợi nhuận. Tuy nhiên, việc hiểu các đặc điểm của danh mục cũng đáng quan tâm. Hãy viết một hàm để tính các đặc điểm trung bình về quy mô và B/M trên 25 danh mục được phân loại độc lập và phụ thuộc.
+4.  Cũng như phần bù quy mô, phần bù giá trị được xây dựng ở đây cũng không tuân theo @Fama1993. Hãy triển khai một thiết lập p-hacking như trong chương Phân loại theo quy mô để tìm ra phần bù gần nhất với phần bù HML của họ. -->
 
 
 <!-- -->
@@ -979,19 +1003,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </main> <!-- /main -->
 <script>
+
 document.addEventListener("DOMContentLoaded", function () {
+
   const year = new Date().getFullYear();
+
   document.getElementById("copyright").textContent = "© " + year;
+
 });
+
 </script>
+
 <!-- Google tag (gtag.js) -->
+
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-LG91D0C6RB"></script>
+
 <script>
+
   window.dataLayer = window.dataLayer || [];
+
   function gtag(){dataLayer.push(arguments);}
+
   gtag('js', new Date());
 
+
+
   gtag('config', 'G-LG91D0C6RB');
+
 </script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
@@ -1031,12 +1069,12 @@ document.addEventListener("DOMContentLoaded", function () {
       // flash "checked"
       button.classList.add('code-copy-button-checked');
       var currentTitle = button.getAttribute("title");
-      button.setAttribute("title", "Copied!");
+      button.setAttribute("title", "Đã sao chép!");
       let tooltip;
       if (window.bootstrap) {
         button.setAttribute("data-bs-toggle", "tooltip");
         button.setAttribute("data-bs-placement", "left");
-        button.setAttribute("data-bs-title", "Copied!");
+        button.setAttribute("data-bs-title", "Đã sao chép!");
         tooltip = new bootstrap.Tooltip(button, 
           { trigger: "manual", 
             customClass: "code-copy-button-tooltip",
@@ -1057,14 +1095,13 @@ document.addEventListener("DOMContentLoaded", function () {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-      const outerScaffold = trigger.parentElement.cloneNode(true);
-      const codeEl = outerScaffold.querySelector('code');
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
         }
-      }
-      return codeEl.innerText;
+        return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
@@ -1459,17 +1496,17 @@ document.addEventListener("DOMContentLoaded", function () {
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./12_size_sorts.html" class="pagination-link" aria-label="Size Sorts">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Size Sorts</span></span>
+      <a href="./12_size_sorts.html" class="pagination-link" aria-label="Phân loại theo quy mô">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phân loại theo quy mô</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./14_portfolio_weighting_and_rebalancing.html" class="pagination-link" aria-label="Portfolio Weighting and Rebalancing">
-        <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Portfolio Weighting and Rebalancing</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./14_portfolio_weighting_and_rebalancing.html" class="pagination-link" aria-label="Trọng số danh mục đầu tư và tái cân bằng danh mục">
+        <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Trọng số danh mục đầu tư và tái cân bằng danh mục</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
-</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Mã nguồn</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb9" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> Value and Bivariate Sorts</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
@@ -1482,9 +1519,9 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co">  message: false</span></span>
 <span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>In this chapter, we extend the univariate portfolio analysis of Univariate Portfolio Sorts to bivariate portfolio sorting, in which stocks are assigned to portfolios based on two characteristics. Bivariate sorts are commonly used in the academic asset pricing literature and underpin the factors in the Fama-French three-factor model. However, some scholars also use sorts with three grouping variables. Conceptually, portfolio sorts are easily applicable in higher dimensions.</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>Trong chương này, chúng ta mở rộng phân tích danh mục đơn biến của chương Phân loại danh mục đơn biến sang phân loại danh mục hai biến, trong đó cổ phiếu được gán vào các danh mục dựa trên hai đặc điểm. Phân loại hai biến thường được dùng trong tài liệu định giá tài sản học thuật và là nền tảng của các nhân tố trong mô hình ba nhân tố Fama-French. Tuy nhiên, một số học giả cũng dùng phân loại với ba biến nhóm. Về mặt khái niệm, phân loại danh mục dễ dàng áp dụng được trong các chiều cao hơn.</span>
 <span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>We form portfolios on firm size and the book-to-market ratio. Calculating book-to-market ratios requires accounting data, which necessitates additional steps during portfolio formation. In the end, we demonstrate how to form portfolios on two sorting variables using so-called independent and dependent portfolio sorts.</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>Chúng ta hình thành các danh mục theo quy mô doanh nghiệp và tỷ số giá trị sổ sách trên giá trị thị trường (B/M). Việc tính tỷ số B/M đòi hỏi dữ liệu kế toán, kéo theo các bước bổ sung trong quá trình hình thành danh mục. Cuối cùng, chúng ta trình bày cách hình thành danh mục theo hai biến phân loại bằng cái gọi là phân loại danh mục độc lập và phân loại danh mục phụ thuộc.</span>
 <span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -1493,9 +1530,9 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sqlite3</span>
 <span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="fu">## Data Preparation</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="fu">## Chuẩn bị dữ liệu</span></span>
 <span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>First, we load the necessary data from our SQLite database introduced in Accessing and Managing Financial Data and DataCore Data. We conduct portfolio sorts based on our sample but keep only the necessary columns in our memory. We use the same data sources for firm size as in Size Sorts and P-Hacking.</span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>Trước hết, chúng ta tải dữ liệu cần thiết từ cơ sở dữ liệu SQLite đã được giới thiệu trong chương Truy cập và quản lý dữ liệu tài chính và Dữ liệu DataCore. Chúng ta thực hiện phân loại danh mục dựa trên mẫu của mình nhưng chỉ giữ các cột cần thiết trong bộ nhớ. Chúng ta dùng cùng các nguồn dữ liệu cho quy mô doanh nghiệp như trong chương Phân loại theo quy mô và P-Hacking.</span>
 <span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1510,7 +1547,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>Further, we utilize accounting data. We only need book equity data in this application, which we select from our database. Additionally, we convert the variable <span class="in">`datadate`</span> to its monthly value, as we only consider monthly returns here and do not need to account for the exact date.</span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>Ngoài ra, chúng ta sử dụng dữ liệu kế toán. Trong ứng dụng này, chúng ta chỉ cần dữ liệu giá trị sổ sách của vốn chủ sở hữu, được chọn từ cơ sở dữ liệu của chúng ta. Bên cạnh đó, chúng ta chuyển biến <span class="in">`datadate`</span> sang giá trị theo tháng, vì ở đây chúng ta chỉ xét lợi nhuận theo tháng và không cần quan tâm đến ngày chính xác.</span>
 <span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1527,13 +1564,13 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb9-64"><a href="#cb9-64" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a><span class="fu">## Book-to-Market Ratio</span></span>
+<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a><span class="fu">## Tỷ số giá trị sổ sách trên giá trị thị trường</span></span>
 <span id="cb9-66"><a href="#cb9-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-67"><a href="#cb9-67" aria-hidden="true" tabindex="-1"></a>A fundamental problem in handling accounting data is the *look-ahead bias*; we must not include data in forming a portfolio that was not available knowledge at the time. Of course, researchers have more information when looking into the past than agents actually had at that moment. However, abnormal excess returns from a trading strategy should not rely on an information advantage because the differential cannot be the result of informed agents' trades. Hence, we have to lag accounting information.</span>
+<span id="cb9-67"><a href="#cb9-67" aria-hidden="true" tabindex="-1"></a>Một vấn đề cơ bản khi xử lý dữ liệu kế toán là *thiên lệch nhìn trước*; chúng ta không được đưa vào việc hình thành danh mục những dữ liệu mà tại thời điểm đó chưa được biết. Tất nhiên, các nhà nghiên cứu có nhiều thông tin hơn khi nhìn lại quá khứ so với những gì các tác nhân thực sự có vào thời điểm đó. Tuy nhiên, lợi nhuận vượt mức bất thường từ một chiến lược giao dịch không nên dựa trên lợi thế thông tin, vì phần chênh lệch đó không thể là kết quả của các giao dịch của những tác nhân có thông tin. Do đó, chúng ta phải làm trễ thông tin kế toán.</span>
 <span id="cb9-68"><a href="#cb9-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-69"><a href="#cb9-69" aria-hidden="true" tabindex="-1"></a>As in the previous chapter, we continue to lag firm size by one month. Then, we compute the book-to-market ratio, which relates a firm's book equity to its market equity. Firms with high (low) book-to-market ratio are called value (growth) firms. After matching the accounting and market equity information from the same month, we lag book-to-market by six months. This is a sufficiently conservative approach because accounting information is usually released well before six months pass. However, in the asset pricing literature, even longer lags are used as well.</span>
+<span id="cb9-69"><a href="#cb9-69" aria-hidden="true" tabindex="-1"></a>Như ở chương trước, chúng ta tiếp tục làm trễ quy mô doanh nghiệp một tháng. Sau đó, chúng ta tính tỷ số B/M, tức tỷ số liên hệ giá trị sổ sách của vốn chủ sở hữu với vốn chủ sở hữu theo giá thị trường của doanh nghiệp. Các doanh nghiệp có tỷ số B/M cao (thấp) được gọi là doanh nghiệp giá trị (tăng trưởng). Sau khi ghép thông tin kế toán và thông tin vốn chủ sở hữu thị trường của cùng một tháng, chúng ta làm trễ B/M sáu tháng. Đây là cách tiếp cận đủ thận trọng vì thông tin kế toán thường được công bố rất sớm trước khi sáu tháng trôi qua. Tuy nhiên, trong tài liệu định giá tài sản, người ta cũng dùng các độ trễ dài hơn nữa.</span>
 <span id="cb9-70"><a href="#cb9-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-71"><a href="#cb9-71" aria-hidden="true" tabindex="-1"></a>Having both variables, i.e., firm size lagged by one month and book-to-market lagged by six months, we merge these sorting variables to our returns using the <span class="in">`sorting_date`</span>-column created for this purpose. The final step in our data preparation deals with differences in the frequency of our variables. Returns and firm size are recorded monthly. Yet, the accounting information is only released on an annual basis. Hence, we only match book-to-market to one month per year and have eleven empty observations. To solve this frequency issue, we carry the latest book-to-market ratio of each firm to the subsequent months, i.e., we fill the missing observations with the most current report. This is done via the <span class="in">`fillna(method="ffill")`</span>-function after sorting by date and firm (which we identify by <span class="in">`symbol`</span> and <span class="in">`symbol`</span>) and on a firm basis (which we do by <span class="in">`.groupby()`</span> as usual). We filter out all observations with accounting data that is older than a year. As the last step, we remove all rows with missing entries because the returns cannot be matched to any annual report.</span>
+<span id="cb9-71"><a href="#cb9-71" aria-hidden="true" tabindex="-1"></a>Khi đã có cả hai biến, tức quy mô doanh nghiệp trễ một tháng và B/M trễ sáu tháng, chúng ta ghép các biến phân loại này vào dữ liệu lợi nhuận bằng cột <span class="in">`sorting_date`</span> được tạo cho mục đích này. Bước cuối cùng trong chuẩn bị dữ liệu xử lý sự khác biệt về tần suất của các biến. Lợi nhuận và quy mô doanh nghiệp được ghi nhận theo tháng. Tuy nhiên, thông tin kế toán chỉ được công bố theo năm. Do đó, chúng ta chỉ ghép B/M vào một tháng mỗi năm và còn mười một quan sát trống. Để giải quyết vấn đề tần suất này, chúng ta mang tỷ số B/M mới nhất của mỗi doanh nghiệp sang các tháng tiếp theo, tức là điền các quan sát thiếu bằng báo cáo gần đây nhất. Việc này được thực hiện qua hàm <span class="in">`fillna(method="ffill")`</span> sau khi sắp xếp theo ngày và doanh nghiệp (mà chúng ta xác định bằng <span class="in">`symbol`</span> và <span class="in">`symbol`</span>) và trên cơ sở từng doanh nghiệp (mà chúng ta thực hiện bằng <span class="in">`.groupby()`</span> như thường lệ). Chúng ta loại bỏ mọi quan sát có dữ liệu kế toán cũ hơn một năm. Ở bước cuối, chúng ta xóa mọi dòng có giá trị thiếu vì lợi nhuận không thể ghép với bất kỳ báo cáo thường niên nào.</span>
 <span id="cb9-72"><a href="#cb9-72" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-75"><a href="#cb9-75" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb9-76"><a href="#cb9-76" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1580,7 +1617,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb9-117"><a href="#cb9-117" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb9-118"><a href="#cb9-118" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb9-119"><a href="#cb9-119" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-120"><a href="#cb9-120" aria-hidden="true" tabindex="-1"></a>The last step of preparation for the portfolio sorts is the computation of breakpoints. We continue to use the same function, allowing for the specification of exchanges to be used for the breakpoints. Additionally, we reintroduce the argument <span class="in">`sorting_variable`</span> into the function for defining different sorting variables.</span>
+<span id="cb9-120"><a href="#cb9-120" aria-hidden="true" tabindex="-1"></a>Bước chuẩn bị cuối cùng cho việc phân loại danh mục là tính các điểm cắt. Chúng ta tiếp tục dùng cùng một hàm, cho phép chỉ định các sàn dùng để tính điểm cắt. Ngoài ra, chúng ta đưa lại đối số <span class="in">`sorting_variable`</span> vào hàm để xác định các biến phân loại khác nhau.</span>
 <span id="cb9-121"><a href="#cb9-121" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-124"><a href="#cb9-124" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb9-125"><a href="#cb9-125" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1608,13 +1645,13 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb9-147"><a href="#cb9-147" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> assigned_portfolios</span>
 <span id="cb9-148"><a href="#cb9-148" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb9-149"><a href="#cb9-149" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-150"><a href="#cb9-150" aria-hidden="true" tabindex="-1"></a>After these data preparation steps, we present bivariate portfolio sorts on an independent and dependent basis.</span>
+<span id="cb9-150"><a href="#cb9-150" aria-hidden="true" tabindex="-1"></a>Sau các bước chuẩn bị dữ liệu này, chúng ta trình bày phân loại danh mục hai biến theo cách độc lập và phụ thuộc.</span>
 <span id="cb9-151"><a href="#cb9-151" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-152"><a href="#cb9-152" aria-hidden="true" tabindex="-1"></a><span class="fu">## Independent Sorts</span></span>
+<span id="cb9-152"><a href="#cb9-152" aria-hidden="true" tabindex="-1"></a><span class="fu">## Phân loại độc lập</span></span>
 <span id="cb9-153"><a href="#cb9-153" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-154"><a href="#cb9-154" aria-hidden="true" tabindex="-1"></a>Bivariate sorts create portfolios within a two-dimensional space spanned by two sorting variables. It is then possible to assess the return impact of either sorting variable by the return differential from a trading strategy that invests in the portfolios at either end of the respective variables spectrum. We create a five-by-five matrix using book-to-market and firm size as sorting variables in our example below. We end up with 25 portfolios. Since we are interested in the *value premium* (i.e., the return differential between high and low book-to-market firms), we go long the five portfolios of the highest book-to-market firms and short the five portfolios of the lowest book-to-market firms. The five portfolios at each end are due to the size splits we employed alongside the book-to-market splits.</span>
+<span id="cb9-154"><a href="#cb9-154" aria-hidden="true" tabindex="-1"></a>Phân loại hai biến tạo ra các danh mục trong không gian hai chiều được căng bởi hai biến phân loại. Khi đó, có thể đánh giá tác động lên lợi nhuận của từng biến phân loại qua chênh lệch lợi nhuận của một chiến lược giao dịch đầu tư vào các danh mục ở hai đầu của phổ giá trị của biến tương ứng. Trong ví dụ dưới đây, chúng ta tạo ma trận năm nhân năm dùng B/M và quy mô doanh nghiệp làm biến phân loại. Kết quả là 25 danh mục. Vì chúng ta quan tâm đến *phần bù giá trị* (tức là chênh lệch lợi nhuận giữa các doanh nghiệp có B/M cao và thấp), chúng ta mua năm danh mục gồm các doanh nghiệp có B/M cao nhất và bán khống năm danh mục gồm các doanh nghiệp có B/M thấp nhất. Có năm danh mục ở mỗi đầu là do các lần chia theo quy mô mà chúng ta áp dụng song song với các lần chia theo B/M.</span>
 <span id="cb9-155"><a href="#cb9-155" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-156"><a href="#cb9-156" aria-hidden="true" tabindex="-1"></a>To implement the independent bivariate portfolio sort, we assign monthly portfolios for each of our sorting variables separately to create the variables <span class="in">`portfolio_bm`</span> and <span class="in">`portfolio_size`</span>, respectively. Then, these separate portfolios are combined to the final sort stored in <span class="in">`portfolio_combined`</span>. After assigning the portfolios, we compute the average return within each portfolio for each month. Additionally, we keep the book-to-market portfolio as it makes the computation of the value premium easier. The alternative would be to disaggregate the combined portfolio in a separate step. Notice that we weigh the stocks within each portfolio by their market capitalization, i.e., we decide to value-weight our returns.</span>
+<span id="cb9-156"><a href="#cb9-156" aria-hidden="true" tabindex="-1"></a>Để triển khai phân loại hai biến độc lập, chúng ta gán các danh mục theo tháng cho từng biến phân loại một cách riêng biệt để tạo các biến <span class="in">`portfolio_bm`</span> và <span class="in">`portfolio_size`</span>. Sau đó, các danh mục riêng biệt này được kết hợp thành phân loại cuối cùng lưu trong <span class="in">`portfolio_combined`</span>. Sau khi gán danh mục, chúng ta tính lợi nhuận trung bình trong mỗi danh mục cho từng tháng. Ngoài ra, chúng ta giữ lại danh mục B/M vì điều này giúp việc tính phần bù giá trị dễ hơn. Phương án thay thế là tách danh mục kết hợp ở một bước riêng. Lưu ý rằng chúng ta đặt trọng số cho các cổ phiếu trong mỗi danh mục theo vốn hóa thị trường của chúng, tức là chúng ta quyết định dùng trọng số theo vốn hóa cho lợi nhuận.</span>
 <span id="cb9-157"><a href="#cb9-157" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-160"><a href="#cb9-160" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb9-161"><a href="#cb9-161" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1639,7 +1676,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb9-180"><a href="#cb9-180" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb9-181"><a href="#cb9-181" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb9-182"><a href="#cb9-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-183"><a href="#cb9-183" aria-hidden="true" tabindex="-1"></a>Equipped with our monthly portfolio returns, we are ready to compute the value premium. However, we still have to decide how to invest in the five high and the five low book-to-market portfolios. The most common approach is to weigh these portfolios equally, but this is yet another researcher's choice. Then, we compute the return differential between the high and low book-to-market portfolios and show the average value premium.</span>
+<span id="cb9-183"><a href="#cb9-183" aria-hidden="true" tabindex="-1"></a>Khi đã có lợi nhuận danh mục theo tháng, chúng ta sẵn sàng tính phần bù giá trị. Tuy nhiên, chúng ta vẫn phải quyết định cách đầu tư vào năm danh mục B/M cao và năm danh mục B/M thấp. Cách phổ biến nhất là đặt trọng số bằng nhau cho các danh mục này, nhưng đây lại là một lựa chọn nữa của nhà nghiên cứu. Sau đó, chúng ta tính chênh lệch lợi nhuận giữa các danh mục B/M cao và thấp và trình bày phần bù giá trị trung bình.</span>
 <span id="cb9-184"><a href="#cb9-184" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-187"><a href="#cb9-187" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb9-188"><a href="#cb9-188" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1661,11 +1698,11 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb9-204"><a href="#cb9-204" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-205"><a href="#cb9-205" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-206"><a href="#cb9-206" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-207"><a href="#cb9-207" aria-hidden="true" tabindex="-1"></a><span class="fu">## Dependent Sorts</span></span>
+<span id="cb9-207"><a href="#cb9-207" aria-hidden="true" tabindex="-1"></a><span class="fu">## Phân loại phụ thuộc</span></span>
 <span id="cb9-208"><a href="#cb9-208" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-209"><a href="#cb9-209" aria-hidden="true" tabindex="-1"></a>In the previous exercise, we assigned the portfolios without considering the second variable in the assignment. This protocol is called independent portfolio sorts. The alternative, i.e., dependent sorts, creates portfolios for the second sorting variable within each bucket of the first sorting variable. In our example below, we sort firms into five size buckets, and within each of those buckets, we assign firms to five book-to-market portfolios. Hence, we have monthly breakpoints that are specific to each size group. The decision between independent and dependent portfolio sorts is another choice for the researcher. Notice that dependent sorts guarantee that portfolios have roughly equal numbers of stocks when breakpoints are computed from all exchanges. However, if breakpoints are based only on HOSE stocks, portfolio counts will generally be uneven — reflecting the large presence of small-cap stocks on HNX and UPCoM (see Exercise below).</span>
+<span id="cb9-209"><a href="#cb9-209" aria-hidden="true" tabindex="-1"></a>Trong bài tập trước, chúng ta gán các danh mục mà không xét đến biến thứ hai trong việc gán. Quy ước này được gọi là phân loại danh mục độc lập. Phương án thay thế, tức phân loại phụ thuộc, tạo các danh mục cho biến phân loại thứ hai trong từng nhóm của biến phân loại thứ nhất. Trong ví dụ dưới đây, chúng ta chia doanh nghiệp thành năm nhóm quy mô, và trong mỗi nhóm đó, chúng ta gán doanh nghiệp vào năm danh mục B/M. Do đó, chúng ta có các điểm cắt theo tháng riêng cho từng nhóm quy mô. Việc chọn giữa phân loại danh mục độc lập và phụ thuộc là một lựa chọn nữa của nhà nghiên cứu. Lưu ý rằng phân loại phụ thuộc bảo đảm các danh mục có số cổ phiếu xấp xỉ bằng nhau khi các điểm cắt được tính từ tất cả các sàn. Tuy nhiên, nếu các điểm cắt chỉ dựa trên cổ phiếu HOSE, số lượng cổ phiếu trong danh mục nhìn chung sẽ không đồng đều, phản ánh sự hiện diện lớn của cổ phiếu vốn hóa nhỏ trên HNX và UPCoM (xem Bài tập bên dưới).</span>
 <span id="cb9-210"><a href="#cb9-210" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-211"><a href="#cb9-211" aria-hidden="true" tabindex="-1"></a>To implement the dependent sorts, we first create the size portfolios by calling <span class="in">`assign_portfolio()`</span> with <span class="in">`sorting_variable="me"`</span>. Then, we group our data again by month and by the size portfolio before assigning the book-to-market portfolio. The rest of the implementation is the same as before. Finally, we compute the value premium.</span>
+<span id="cb9-211"><a href="#cb9-211" aria-hidden="true" tabindex="-1"></a>Để triển khai phân loại phụ thuộc, trước hết chúng ta tạo các danh mục quy mô bằng cách gọi <span class="in">`assign_portfolio()`</span> với <span class="in">`sorting_variable="me"`</span>. Sau đó, chúng ta nhóm dữ liệu một lần nữa theo tháng và theo danh mục quy mô trước khi gán danh mục B/M. Phần còn lại của việc triển khai giống như trước. Cuối cùng, chúng ta tính phần bù giá trị.</span>
 <span id="cb9-212"><a href="#cb9-212" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-215"><a href="#cb9-215" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb9-216"><a href="#cb9-216" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1712,22 +1749,22 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb9-257"><a href="#cb9-257" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-258"><a href="#cb9-258" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-259"><a href="#cb9-259" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-260"><a href="#cb9-260" aria-hidden="true" tabindex="-1"></a>Overall, we show how to conduct bivariate portfolio sorts in this chapter. In one case, we sort the portfolios independently of each other. Yet we also discuss how to create dependent portfolio sorts. Along the lines of Size Sorts, we see how many choices a researcher has to make to implement portfolio sorts, and bivariate sorts increase the number of choices.</span>
+<span id="cb9-260"><a href="#cb9-260" aria-hidden="true" tabindex="-1"></a>Nhìn chung, chúng ta đã trình bày cách thực hiện phân loại danh mục hai biến trong chương này. Ở một trường hợp, chúng ta phân loại các danh mục độc lập với nhau. Tuy nhiên, chúng ta cũng thảo luận cách tạo phân loại danh mục phụ thuộc. Tương tự chương Phân loại theo quy mô, chúng ta thấy nhà nghiên cứu phải đưa ra bao nhiêu lựa chọn để triển khai phân loại danh mục, và phân loại hai biến làm tăng số lượng lựa chọn.</span>
 <span id="cb9-261"><a href="#cb9-261" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-262"><a href="#cb9-262" aria-hidden="true" tabindex="-1"></a><span class="fu">## Key Takeaways</span></span>
+<span id="cb9-262"><a href="#cb9-262" aria-hidden="true" tabindex="-1"></a><span class="fu">## Những điểm chính</span></span>
 <span id="cb9-263"><a href="#cb9-263" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-264"><a href="#cb9-264" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Bivariate portfolio sorts assign stocks based on two characteristics, such as firm size and book-to-market ratio, to better capture return patterns in asset pricing.</span>
-<span id="cb9-265"><a href="#cb9-265" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Independent sorts treat each variable separately, while dependent sorts condition the second sort on the first.</span>
-<span id="cb9-266"><a href="#cb9-266" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Proper handling of accounting data, especially lagging the book-to-market ratio, is essential to avoid look-ahead bias and ensure valid backtesting.</span>
-<span id="cb9-267"><a href="#cb9-267" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Value premiums are derived by comparing returns of high versus low book-to-market portfolios, with results sensitive to sorting choices and weighting schemes.</span>
+<span id="cb9-264"><a href="#cb9-264" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Phân loại danh mục hai biến gán cổ phiếu dựa trên hai đặc điểm, như quy mô doanh nghiệp và tỷ số B/M, để nắm bắt tốt hơn các quy luật lợi nhuận trong định giá tài sản.</span>
+<span id="cb9-265"><a href="#cb9-265" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Phân loại độc lập xử lý từng biến một cách riêng biệt, trong khi phân loại phụ thuộc thực hiện lần phân loại thứ hai có điều kiện theo kết quả của lần thứ nhất.</span>
+<span id="cb9-266"><a href="#cb9-266" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Xử lý đúng dữ liệu kế toán, đặc biệt là làm trễ tỷ số B/M, là thiết yếu để tránh thiên lệch nhìn trước và bảo đảm kiểm định ngược (backtesting) hợp lệ.</span>
+<span id="cb9-267"><a href="#cb9-267" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Phần bù giá trị được tính bằng cách so sánh lợi nhuận của các danh mục B/M cao với B/M thấp, với kết quả nhạy cảm với các lựa chọn phân loại và cách đặt trọng số.</span>
 <span id="cb9-268"><a href="#cb9-268" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-269"><a href="#cb9-269" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- ## Exercises</span></span>
+<span id="cb9-269"><a href="#cb9-269" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- ## Bài tập</span></span>
 <span id="cb9-270"><a href="#cb9-270" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-271"><a href="#cb9-271" aria-hidden="true" tabindex="-1"></a><span class="co">1.  Calculate the number of stocks in each size–value portfolio under two scenarios: (i) breakpoints based on all exchanges (HOSE, UPCoM, HNX) and (ii) breakpoints based on HOSE stocks only. Compare the portfolio counts between the two methods and explain the differences.</span></span>
-<span id="cb9-272"><a href="#cb9-272" aria-hidden="true" tabindex="-1"></a><span class="co">2.  In Size Sorts, we examine the distribution of market equity. Repeat this analysis for book equity and the book-to-market ratio (alongside a plot of the breakpoints, i.e., deciles).</span></span>
-<span id="cb9-273"><a href="#cb9-273" aria-hidden="true" tabindex="-1"></a><span class="co">3.  When we investigate the portfolios, we focus on the returns exclusively. However, it is also of interest to understand the characteristics of the portfolios. Write a function to compute the average characteristics for size and book-to-market across the 25 independently and dependently sorted portfolios.</span></span>
-<span id="cb9-274"><a href="#cb9-274" aria-hidden="true" tabindex="-1"></a><span class="co">4.  As for the size premium, also the value premium constructed here does not follow @Fama1993. Implement a p-hacking setup as in Size Sorts to find a premium that comes closest to their HML premium. --&gt;</span></span>
-</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb9-271"><a href="#cb9-271" aria-hidden="true" tabindex="-1"></a><span class="co">1.  Tính số cổ phiếu trong mỗi danh mục quy mô–giá trị theo hai kịch bản: (i) các điểm cắt dựa trên tất cả các sàn (HOSE, UPCoM, HNX) và (ii) các điểm cắt chỉ dựa trên cổ phiếu HOSE. So sánh số lượng cổ phiếu trong danh mục giữa hai phương pháp và giải thích các khác biệt.</span></span>
+<span id="cb9-272"><a href="#cb9-272" aria-hidden="true" tabindex="-1"></a><span class="co">2.  Trong chương Phân loại theo quy mô, chúng ta khảo sát phân phối của vốn chủ sở hữu thị trường. Hãy lặp lại phân tích này cho giá trị sổ sách của vốn chủ sở hữu và tỷ số B/M (kèm biểu đồ các điểm cắt, tức các thập phân vị).</span></span>
+<span id="cb9-273"><a href="#cb9-273" aria-hidden="true" tabindex="-1"></a><span class="co">3.  Khi khảo sát các danh mục, chúng ta chỉ tập trung vào lợi nhuận. Tuy nhiên, việc hiểu các đặc điểm của danh mục cũng đáng quan tâm. Hãy viết một hàm để tính các đặc điểm trung bình về quy mô và B/M trên 25 danh mục được phân loại độc lập và phụ thuộc.</span></span>
+<span id="cb9-274"><a href="#cb9-274" aria-hidden="true" tabindex="-1"></a><span class="co">4.  Cũng như phần bù quy mô, phần bù giá trị được xây dựng ở đây cũng không tuân theo @Fama1993. Hãy triển khai một thiết lập p-hacking như trong chương Phân loại theo quy mô để tìm ra phần bù gần nhất với phần bù HML của họ. --&gt;</span></span>
+</code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
@@ -1737,7 +1774,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/13_value_bivariate.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/13_value_bivariate.qmd" class="toc-action"><i class="bi bi-github"></i>Chỉnh sửa trang này</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Báo lỗi</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>

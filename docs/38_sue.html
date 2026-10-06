@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi" xml:lang="vi"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.26">
+<meta name="generator" content="quarto-1.7.33">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 
-<title>31&nbsp; Standardized Earnings Surprises (SUE) – Tài Chính Ứng Dụng với Python</title>
+<title>31&nbsp; Bất ngờ lợi nhuận chuẩn hóa (SUE) – Tài Chính Ứng Dụng với Python</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -90,19 +91,18 @@ div.csl-indent {
 <link href="./favicon.ico" rel="icon">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-bc185b5c5bdbcb35c2eb49d8a876ef70.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-72097b8a1e3a3da1d7b8bbfaaf81c3d8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-5ee5e5a16e06a4aa31defda297eed821.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -117,19 +117,43 @@ div.csl-indent {
   ],
   "show-item-context": false,
   "language": {
-    "search-no-results-text": "No results",
-    "search-matching-documents-text": "matching documents",
-    "search-copy-link-title": "Copy link to search",
-    "search-hide-matches-text": "Hide additional matches",
-    "search-more-match-text": "more match in this document",
-    "search-more-matches-text": "more matches in this document",
-    "search-clear-button-title": "Clear",
+    "search-no-results-text": "Không có kết quả",
+    "search-matching-documents-text": "tài liệu phù hợp",
+    "search-copy-link-title": "Sao chép liên kết tìm kiếm",
+    "search-hide-matches-text": "Ẩn các kết quả khớp khác",
+    "search-more-match-text": "kết quả khớp khác trong tài liệu này",
+    "search-more-matches-text": "kết quả khớp khác trong tài liệu này",
+    "search-clear-button-title": "Xóa",
     "search-text-placeholder": "",
-    "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit",
-    "search-label": "Search"
+    "search-detached-cancel-button-title": "Hủy",
+    "search-submit-button-title": "Gửi",
+    "search-label": "Tìm kiếm"
   }
 }</script>
+<!-- =====================================================================
+     SEO: schema.org Book JSON-LD, injected into the <head> of every page
+     via format.html include-in-header. The plain meta description and the
+     og:/twitter: descriptions come from the book `description:` key in
+     _quarto.yml - don't repeat them here (duplicate meta description).
+     ===================================================================== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": "Tài Chính Ứng Dụng với Python",
+  "url": "https://mikenguyen13.github.io/tidy_finance_vn_vi/",
+  "inLanguage": "vi",
+  "bookFormat": "https://schema.org/EBook",
+  "genre": "Empirical Finance",
+  "description": "Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: truy cập và quản lý dữ liệu tài chính, xây dựng danh mục đầu tư, mô hình định giá tài sản, kiểm định chéo, phân tích cơ bản và định giá doanh nghiệp.",
+  "keywords": "tài chính định lượng, thị trường chứng khoán Việt Nam, tài chính thực nghiệm, định giá tài sản, Fama-French, danh mục đầu tư, Python, VN30, HOSE",
+  "author": {
+    "@type": "Person",
+    "name": "Mike Nguyen"
+  },
+  "isAccessibleForFree": true
+}
+</script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -145,7 +169,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+      if (mathElements[i].tagName == "SPAN") {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -162,14 +186,14 @@ window.Quarto = {
 </script>
 
 <link rel="stylesheet" href="styles.css">
-<meta property="og:title" content="31&nbsp; Standardized Earnings Surprises (SUE) – Tài Chính Ứng Dụng với Python">
-<meta property="og:description" content="">
+<meta property="og:title" content="31&nbsp; Bất ngờ lợi nhuận chuẩn hóa (SUE) – Tài Chính Ứng Dụng với Python">
+<meta property="og:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta property="og:image" content="https://mikenguyen13.github.io/tidy_finance_vn_vi/38_sue_files/figure-html/fig-sue-output-1.png">
 <meta property="og:site_name" content="Tài Chính Ứng Dụng với Python">
 <meta property="og:image:height" content="1046">
 <meta property="og:image:width" content="1663">
-<meta name="twitter:title" content="31&nbsp; Standardized Earnings Surprises (SUE) – Tài Chính Ứng Dụng với Python">
-<meta name="twitter:description" content="">
+<meta name="twitter:title" content="31&nbsp; Bất ngờ lợi nhuận chuẩn hóa (SUE) – Tài Chính Ứng Dụng với Python">
+<meta name="twitter:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta name="twitter:image" content="https://mikenguyen13.github.io/tidy_finance_vn_vi/38_sue_files/figure-html/fig-sue-output-1.png">
 <meta name="twitter:image-height" content="1046">
 <meta name="twitter:image-width" content="1663">
@@ -349,8 +373,8 @@ window.Quarto = {
     <span class="navbar-title">Tài Chính Ứng Dụng với Python</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+            <div id="quarto-search" class="" title="Tìm kiếm"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Bật/tắt điều hướng" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -370,18 +394,18 @@ window.Quarto = {
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Mã nguồn" class="quarto-navigation-tool px-1" aria-label="Mã nguồn"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Bật/tắt chế độ tối"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
   <nav class="quarto-secondary-nav">
     <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./30_financial_statement_analysis.html">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</a></li><li class="breadcrumb-item"><a href="./38_sue.html"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./30_financial_statement_analysis.html">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</a></li><li class="breadcrumb-item"><a href="./38_sue.html"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Bất ngờ lợi nhuận chuẩn hóa (SUE)</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
   </nav>
@@ -402,7 +426,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
  <span class="menu-text">Thị trường tài chính, thể chế và dữ liệu Việt Nam</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -410,7 +434,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./00_institutional_background.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Nền tảng thể chế và cấu trúc thị trường của thị trường chứng khoán Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Bối cảnh thể chế và cấu trúc thị trường cổ phiếu Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -428,7 +452,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./03_market_microstructure.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Cấu trúc thị trường vi mô tại Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Vi cấu trúc thị trường tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -440,7 +464,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05_working_with_stock_returns.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận vốn chủ sở hữu</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận cổ phiếu</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -455,7 +479,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
  <span class="menu-text">Xây dựng danh mục đầu tư, rủi ro và cơ học thực nghiệm</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -463,7 +487,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./10_modern_portfolio_theory.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Lý thuyết danh mục đầu tư hiện đại</span></span></a>
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -475,7 +499,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./12_size_sorts.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Size Sorts</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phân loại theo quy mô</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -487,19 +511,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./14_portfolio_weighting_and_rebalancing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Portfolio Weighting and Rebalancing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Trọng số danh mục đầu tư và tái cân bằng danh mục</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./15_missing_data_and_survivorship.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Missing Data and Survivorship Bias</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Dữ liệu bị thiếu và thiên kiến sống sót</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./16_liquidity_and_turnover_measures.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Liquidity and Turnover Measures</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Các thước đo Thanh khoản và Vòng quay Giao dịch</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -514,7 +538,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình định giá tài sản</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -528,19 +552,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./21_fama_french.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Các nhân tố Fama-French</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./22_momentum.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Momentum Strategies</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Chiến lược động lượng</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./23_factor_construction_principles.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Factor Construction Principles</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Nguyên tắc xây dựng nhân tố</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -552,13 +576,13 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./25_factor_zoo_and_multiple_testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Factor Zoo and Multiple Testing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Vườn thú nhân tố và kiểm định đa giả thuyết</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./26_time_series_vs_cross_section.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Time-Series vs.&nbsp;Cross-Sectional Factor Tests</span></span></a>
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Kiểm định nhân tố theo chuỗi thời gian và theo mặt cắt ngang</span></span></a>
   </div>
 </li>
       </ul>
@@ -567,7 +591,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
  <span class="menu-text">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -587,49 +611,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./32_info_earnings.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Information Content of Earnings Announcements</span></span></a>
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Hàm lượng thông tin của các thông báo lợi nhuận</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./33_accruals.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Accruals, Earnings Persistence, and Market Efficiency</span></span></a>
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Các khoản dồn tích, tính bền vững của lợi nhuận và hiệu quả thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./34_earning_management.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Earnings Management: Detection and Measurement</span></span></a>
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Quản trị lợi nhuận: Phát hiện và đo lường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./35_pe_ratio.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">P/E Ratio</span></span></a>
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Tỷ số P/E</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./36_valuation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Firm Valuation, Financial Distress, and Company Maturity</span></span></a>
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Định giá doanh nghiệp, kiệt quệ tài chính và mức độ trưởng thành của công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./37_disclosure_quality_and_timing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Disclosure Quality and Timing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Chất lượng và thời điểm công bố thông tin</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./38_sue.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></span></a>
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Bất ngờ lợi nhuận chuẩn hóa (SUE)</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./39_divop.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Measuring Divergence of Investor Opinion</span></span></a>
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Đo lường sự phân kỳ quan điểm của nhà đầu tư</span></span></a>
   </div>
 </li>
       </ul>
@@ -638,7 +662,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
  <span class="menu-text">Quyền sở hữu, ma sát thị trường và rủi ro quốc tế</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -646,43 +670,43 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./50_institutional_ownership.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Institutional Ownership Analytics in Vietnam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Phân tích sở hữu tổ chức tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./52_institutional_trade_flow.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Institutional Trades, Flows, and Turnover Ratios</span></span></a>
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Giao dịch, dòng vốn và tỷ lệ vòng quay của nhà đầu tư tổ chức</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./53_governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Corporate Governance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Quản trị công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./54_return_gaps.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Return Gap: Measuring Unobserved Actions of Fund Managers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Chênh lệch lợi nhuận (Return Gap): Đo lường các hành động không quan sát được của nhà quản lý quỹ</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./55_price_limits_and_volatility.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Price Limits and Volatility</span></span></a>
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Biên độ giá và biến động</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./56_market_integration_and_segmentation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Market Integration and Segmentation</span></span></a>
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Hội nhập và phân khúc thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./57_exchange_rate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Exchange Rate Dynamics</span></span></a>
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Động lực của tỷ giá hối đoái</span></span></a>
   </div>
 </li>
       </ul>
@@ -691,7 +715,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình tài chính nâng cao</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -699,25 +723,25 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./60_event_studies.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Event Studies in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Nghiên cứu sự kiện trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./61_tail_risk_extreme_events.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Tail Risk and Extreme Events</span></span></a>
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Rủi ro đuôi và các sự kiện cực đoan</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./62_corporate_finance_estimators.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Corporate Finance Estimators and Identification</span></span></a>
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Các công cụ ước lượng và nhận dạng trong tài chính doanh nghiệp</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./63_structural_models_finance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Structural Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Các mô hình cấu trúc trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -726,7 +750,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
  <span class="menu-text">Dữ liệu thay thế và Trí tuệ nhân tạo trong tài chính</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -734,25 +758,25 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./70_textual.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Textual Analysis</span></span></a>
+ <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Phân tích văn bản</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./71_image.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Image and Visual Data in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Dữ liệu hình ảnh và dữ liệu thị giác trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./73_networks_graphs.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Networks and Graphs in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Mạng lưới và đồ thị trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./74_multimodel.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Multimodal Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Các mô hình đa phương thức trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -776,40 +800,40 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="-1">
-    <h2 id="toc-title">Table of contents</h2>
+    <h2 id="toc-title">Mục lục</h2>
    
   <ul>
-  <li><a href="#methodology" id="toc-methodology" class="nav-link active" data-scroll-target="#methodology"><span class="header-section-number">31.1</span> Methodology</a>
+  <li><a href="#phương-pháp-luận" id="toc-phương-pháp-luận" class="nav-link active" data-scroll-target="#phương-pháp-luận"><span class="header-section-number">31.1</span> Phương pháp luận</a>
   <ul class="collapse">
-  <li><a href="#method-1-seasonal-random-walk" id="toc-method-1-seasonal-random-walk" class="nav-link" data-scroll-target="#method-1-seasonal-random-walk"><span class="header-section-number">31.1.1</span> Method 1: Seasonal Random Walk</a></li>
-  <li><a href="#method-2-exclusion-of-special-items" id="toc-method-2-exclusion-of-special-items" class="nav-link" data-scroll-target="#method-2-exclusion-of-special-items"><span class="header-section-number">31.1.2</span> Method 2: Exclusion of Special Items</a></li>
-  <li><a href="#method-3-analyst-consensus" id="toc-method-3-analyst-consensus" class="nav-link" data-scroll-target="#method-3-analyst-consensus"><span class="header-section-number">31.1.3</span> Method 3: Analyst Consensus</a></li>
+  <li><a href="#phương-pháp-1-bước-ngẫu-nhiên-theo-mùa-vụ" id="toc-phương-pháp-1-bước-ngẫu-nhiên-theo-mùa-vụ" class="nav-link" data-scroll-target="#phương-pháp-1-bước-ngẫu-nhiên-theo-mùa-vụ"><span class="header-section-number">31.1.1</span> Phương pháp 1: Bước ngẫu nhiên theo mùa vụ</a></li>
+  <li><a href="#phương-pháp-2-loại-trừ-các-khoản-mục-đặc-biệt" id="toc-phương-pháp-2-loại-trừ-các-khoản-mục-đặc-biệt" class="nav-link" data-scroll-target="#phương-pháp-2-loại-trừ-các-khoản-mục-đặc-biệt"><span class="header-section-number">31.1.2</span> Phương pháp 2: Loại trừ các khoản mục đặc biệt</a></li>
+  <li><a href="#phương-pháp-3-đồng-thuận-của-các-nhà-phân-tích" id="toc-phương-pháp-3-đồng-thuận-của-các-nhà-phân-tích" class="nav-link" data-scroll-target="#phương-pháp-3-đồng-thuận-của-các-nhà-phân-tích"><span class="header-section-number">31.1.3</span> Phương pháp 3: Đồng thuận của các nhà phân tích</a></li>
   </ul></li>
-  <li><a href="#data-description" id="toc-data-description" class="nav-link" data-scroll-target="#data-description"><span class="header-section-number">31.2</span> Data Description</a>
+  <li><a href="#mô-tả-dữ-liệu" id="toc-mô-tả-dữ-liệu" class="nav-link" data-scroll-target="#mô-tả-dữ-liệu"><span class="header-section-number">31.2</span> Mô tả dữ liệu</a>
   <ul class="collapse">
-  <li><a href="#visualizing-the-core-data" id="toc-visualizing-the-core-data" class="nav-link" data-scroll-target="#visualizing-the-core-data"><span class="header-section-number">31.2.1</span> Visualizing the Core Data</a></li>
+  <li><a href="#trực-quan-hóa-dữ-liệu-cốt-lõi" id="toc-trực-quan-hóa-dữ-liệu-cốt-lõi" class="nav-link" data-scroll-target="#trực-quan-hóa-dữ-liệu-cốt-lõi"><span class="header-section-number">31.2.1</span> Trực quan hóa dữ liệu cốt lõi</a></li>
   </ul></li>
-  <li><a href="#implementation" id="toc-implementation" class="nav-link" data-scroll-target="#implementation"><span class="header-section-number">31.3</span> Implementation</a>
+  <li><a href="#triển-khai" id="toc-triển-khai" class="nav-link" data-scroll-target="#triển-khai"><span class="header-section-number">31.3</span> Triển khai</a>
   <ul class="collapse">
-  <li><a href="#python-setup-and-data-loading" id="toc-python-setup-and-data-loading" class="nav-link" data-scroll-target="#python-setup-and-data-loading"><span class="header-section-number">31.3.1</span> Python Setup and Data Loading</a></li>
-  <li><a href="#calculation-logic" id="toc-calculation-logic" class="nav-link" data-scroll-target="#calculation-logic"><span class="header-section-number">31.3.2</span> Calculation Logic</a></li>
+  <li><a href="#thiết-lập-python-và-nạp-dữ-liệu" id="toc-thiết-lập-python-và-nạp-dữ-liệu" class="nav-link" data-scroll-target="#thiết-lập-python-và-nạp-dữ-liệu"><span class="header-section-number">31.3.1</span> Thiết lập Python và nạp dữ liệu</a></li>
+  <li><a href="#logic-tính-toán" id="toc-logic-tính-toán" class="nav-link" data-scroll-target="#logic-tính-toán"><span class="header-section-number">31.3.2</span> Logic tính toán</a></li>
   </ul></li>
-  <li><a href="#results-and-analysis" id="toc-results-and-analysis" class="nav-link" data-scroll-target="#results-and-analysis"><span class="header-section-number">31.4</span> Results and Analysis</a>
+  <li><a href="#kết-quả-và-phân-tích" id="toc-kết-quả-và-phân-tích" class="nav-link" data-scroll-target="#kết-quả-và-phân-tích"><span class="header-section-number">31.4</span> Kết quả và phân tích</a>
   <ul class="collapse">
-  <li><a href="#tabular-results-fy-2024" id="toc-tabular-results-fy-2024" class="nav-link" data-scroll-target="#tabular-results-fy-2024"><span class="header-section-number">31.4.1</span> Tabular Results (FY 2024)</a></li>
-  <li><a href="#visualization" id="toc-visualization" class="nav-link" data-scroll-target="#visualization"><span class="header-section-number">31.4.2</span> Visualization</a></li>
+  <li><a href="#kết-quả-dạng-bảng-năm-tài-chính-2024" id="toc-kết-quả-dạng-bảng-năm-tài-chính-2024" class="nav-link" data-scroll-target="#kết-quả-dạng-bảng-năm-tài-chính-2024"><span class="header-section-number">31.4.1</span> Kết quả dạng bảng (năm tài chính 2024)</a></li>
+  <li><a href="#trực-quan-hóa" id="toc-trực-quan-hóa" class="nav-link" data-scroll-target="#trực-quan-hóa"><span class="header-section-number">31.4.2</span> Trực quan hóa</a></li>
   </ul></li>
-  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><span class="header-section-number">31.5</span> Conclusion</a></li>
+  <li><a href="#kết-luận" id="toc-kết-luận" class="nav-link" data-scroll-target="#kết-luận"><span class="header-section-number">31.5</span> Kết luận</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/38_sue.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/38_sue.qmd" class="toc-action"><i class="bi bi-github"></i>Chỉnh sửa trang này</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Báo lỗi</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./30_financial_statement_analysis.html">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</a></li><li class="breadcrumb-item"><a href="./38_sue.html"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./30_financial_statement_analysis.html">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</a></li><li class="breadcrumb-item"><a href="./38_sue.html"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Bất ngờ lợi nhuận chuẩn hóa (SUE)</span></a></li></ol></nav>
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Bất ngờ lợi nhuận chuẩn hóa (SUE)</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Mã</button></div></div>
 </div>
 
 
@@ -826,54 +850,54 @@ window.Quarto = {
 </header>
 
 
-<p>In the context of the Ho Chi Minh Stock Exchange (HOSE) and the Hanoi Stock Exchange (HNX), earnings announcements represent critical information events. Investors and quantitative analysts continuously monitor the deviation between reported earnings and market expectations. This deviation is quantified as the Standardized Earnings Surprise (SUE).</p>
-<p>This chapter details the methodology for calculating SUE using three distinct approaches frequently utilized in academic literature and institutional research. We apply these methods to a dataset of Vietnamese large-cap equities to illustrate the mechanics of the calculation. The goal is to isolate the “surprise” component of earnings, which is a known predictor of post-earnings announcement drift (PEAD) <span class="citation" data-cites="bernard1989post livnat2006comparing">(<a href="references.html#ref-bernard1989post" role="doc-biblioref">Bernard and Thomas 1989</a>; <a href="references.html#ref-livnat2006comparing" role="doc-biblioref">Livnat and Mendenhall 2006</a>)</span>.</p>
-<section id="methodology" class="level2" data-number="31.1">
-<h2 data-number="31.1" class="anchored" data-anchor-id="methodology"><span class="header-section-number">31.1</span> Methodology</h2>
-<p>We define three primary methods for calculating SUE. Each method differs in how it establishes the “expected” earnings value.</p>
-<section id="method-1-seasonal-random-walk" class="level3" data-number="31.1.1">
-<h3 data-number="31.1.1" class="anchored" data-anchor-id="method-1-seasonal-random-walk"><span class="header-section-number">31.1.1</span> Method 1: Seasonal Random Walk</h3>
-<p>This method assumes that earnings follow a seasonal pattern. The best predictor for the current quarter’s earnings per share (EPS) is the EPS from the same quarter in the previous year. This controls for the seasonality often seen in Vietnamese sectors like retail and agriculture.</p>
+<p>Trên Sở Giao dịch Chứng khoán Thành phố Hồ Chí Minh (HOSE) và Sở Giao dịch Chứng khoán Hà Nội (HNX), các thông báo lợi nhuận là những sự kiện thông tin quan trọng. Nhà đầu tư và các nhà phân tích định lượng liên tục theo dõi độ lệch giữa lợi nhuận kế toán được báo cáo và kỳ vọng của thị trường. Độ lệch này được đo lường bằng bất ngờ lợi nhuận chuẩn hóa (Standardized Earnings Surprise, SUE).</p>
+<p>Chương này trình bày chi tiết phương pháp tính SUE theo ba cách tiếp cận khác nhau, thường được sử dụng trong các nghiên cứu học thuật và nghiên cứu của các tổ chức. Chúng ta áp dụng các phương pháp này cho một bộ dữ liệu gồm các cổ phiếu vốn hóa lớn của Việt Nam để minh họa cơ chế tính toán. Mục tiêu là tách riêng thành phần “bất ngờ” của lợi nhuận, vốn là một yếu tố dự báo đã được biết đến của hiện tượng trôi dạt sau thông báo lợi nhuận (PEAD) <span class="citation" data-cites="bernard1989post livnat2006comparing">(<a href="references.html#ref-bernard1989post" role="doc-biblioref">Bernard và Thomas 1989</a>; <a href="references.html#ref-livnat2006comparing" role="doc-biblioref">Livnat và Mendenhall 2006</a>)</span>.</p>
+<section id="phương-pháp-luận" class="level2" data-number="31.1">
+<h2 data-number="31.1" class="anchored" data-anchor-id="phương-pháp-luận"><span class="header-section-number">31.1</span> Phương pháp luận</h2>
+<p>Chúng ta định nghĩa ba phương pháp chính để tính SUE. Mỗi phương pháp khác nhau ở cách xác lập giá trị lợi nhuận “kỳ vọng”.</p>
+<section id="phương-pháp-1-bước-ngẫu-nhiên-theo-mùa-vụ" class="level3" data-number="31.1.1">
+<h3 data-number="31.1.1" class="anchored" data-anchor-id="phương-pháp-1-bước-ngẫu-nhiên-theo-mùa-vụ"><span class="header-section-number">31.1.1</span> Phương pháp 1: Bước ngẫu nhiên theo mùa vụ</h3>
+<p>Phương pháp này giả định lợi nhuận tuân theo một quy luật mùa vụ. Yếu tố dự báo tốt nhất cho lợi nhuận trên mỗi cổ phiếu (EPS) của quý hiện tại là EPS của cùng quý trong năm trước. Cách làm này kiểm soát tính mùa vụ thường thấy ở các ngành của Việt Nam như bán lẻ và nông nghiệp.</p>
 <p><span class="math display">\[SUE_{1} = \frac{EPS_{t} - EPS_{t-4}}{P_{t}}\]</span></p>
-<p>Where:</p>
+<p>Trong đó:</p>
 <ul>
-<li><p><span class="math inline">\(EPS_{t}\)</span> is the current quarterly Earnings Per Share.</p></li>
-<li><p><span class="math inline">\(EPS_{t-4}\)</span> is the Earnings Per Share from the same quarter of the prior fiscal year.</p></li>
-<li><p><span class="math inline">\(P_{t}\)</span> is the stock price at the end of the quarter (used as a deflator).</p></li>
+<li><p><span class="math inline">\(EPS_{t}\)</span> là lợi nhuận trên mỗi cổ phiếu của quý hiện tại.</p></li>
+<li><p><span class="math inline">\(EPS_{t-4}\)</span> là lợi nhuận trên mỗi cổ phiếu của cùng quý trong năm tài chính trước.</p></li>
+<li><p><span class="math inline">\(P_{t}\)</span> là giá cổ phiếu vào cuối quý (được dùng làm mẫu số chuẩn hóa).</p></li>
 </ul>
 </section>
-<section id="method-2-exclusion-of-special-items" class="level3" data-number="31.1.2">
-<h3 data-number="31.1.2" class="anchored" data-anchor-id="method-2-exclusion-of-special-items"><span class="header-section-number">31.1.2</span> Method 2: Exclusion of Special Items</h3>
-<p>Reported earnings often contain non-recurring items (e.g., asset sales, one-time write-offs) that distort the true operating performance. This method adjusts the reported EPS by removing the after-tax impact of special items.</p>
-<p>In Vietnam, the standard Corporate Income Tax (CIT) rate is generally 20%. We adjust special items to reflect their impact on net income.</p>
+<section id="phương-pháp-2-loại-trừ-các-khoản-mục-đặc-biệt" class="level3" data-number="31.1.2">
+<h3 data-number="31.1.2" class="anchored" data-anchor-id="phương-pháp-2-loại-trừ-các-khoản-mục-đặc-biệt"><span class="header-section-number">31.1.2</span> Phương pháp 2: Loại trừ các khoản mục đặc biệt</h3>
+<p>Lợi nhuận được báo cáo thường chứa các khoản mục không thường xuyên (ví dụ: bán tài sản, xóa sổ một lần) làm sai lệch hiệu quả hoạt động thực sự. Phương pháp này điều chỉnh EPS được báo cáo bằng cách loại bỏ tác động sau thuế của các khoản mục đặc biệt.</p>
+<p>Tại Việt Nam, thuế suất thuế thu nhập doanh nghiệp (CIT) tiêu chuẩn nhìn chung là 20%. Chúng ta điều chỉnh các khoản mục đặc biệt để phản ánh tác động của chúng lên lợi nhuận ròng.</p>
 <p><span class="math display">\[
 Adjusted \ EPS = Reported \ EPS - \frac{Special \ Items \times (1 - CIT)}{Shares \ Outstanding}
 \]</span></p>
-<p>The SUE calculation then follows the seasonal logic but uses the adjusted EPS figures: <span class="math display">\[SUE_{2} = \frac{Adj \ EPS_{t} - Adj \ EPS_{t-4}}{P_{t}}\]</span></p>
+<p>Khi đó, cách tính SUE tuân theo logic mùa vụ nhưng sử dụng các số liệu EPS đã điều chỉnh: <span class="math display">\[SUE_{2} = \frac{Adj \ EPS_{t} - Adj \ EPS_{t-4}}{P_{t}}\]</span></p>
 </section>
-<section id="method-3-analyst-consensus" class="level3" data-number="31.1.3">
-<h3 data-number="31.1.3" class="anchored" data-anchor-id="method-3-analyst-consensus"><span class="header-section-number">31.1.3</span> Method 3: Analyst Consensus</h3>
-<p>This method relies on market consensus rather than historical time series. It compares the actual reported earnings against the median analyst forecast provided prior to the announcement.</p>
+<section id="phương-pháp-3-đồng-thuận-của-các-nhà-phân-tích" class="level3" data-number="31.1.3">
+<h3 data-number="31.1.3" class="anchored" data-anchor-id="phương-pháp-3-đồng-thuận-của-các-nhà-phân-tích"><span class="header-section-number">31.1.3</span> Phương pháp 3: Đồng thuận của các nhà phân tích</h3>
+<p>Phương pháp này dựa vào đồng thuận của thị trường thay vì chuỗi thời gian lịch sử. Phương pháp so sánh lợi nhuận thực tế được báo cáo với dự báo trung vị của các nhà phân tích được công bố trước thông báo.</p>
 <p><span class="math display">\[SUE_{3} = \frac{Actual \ EPS - Median \ Estimate}{P_{t}}\]</span></p>
 </section>
 </section>
-<section id="data-description" class="level2" data-number="31.2">
-<h2 data-number="31.2" class="anchored" data-anchor-id="data-description"><span class="header-section-number">31.2</span> Data Description</h2>
-<p>For this analysis, we utilize a dataset covering the fiscal years 2023 through 2025. The data includes quarterly financial statements and analyst consensus estimates for a selection of VN30 index constituents.</p>
-<p>The dataset, <code>vietnam_fin_data.csv</code>, contains the following columns:</p>
+<section id="mô-tả-dữ-liệu" class="level2" data-number="31.2">
+<h2 data-number="31.2" class="anchored" data-anchor-id="mô-tả-dữ-liệu"><span class="header-section-number">31.2</span> Mô tả dữ liệu</h2>
+<p>Trong phân tích này, chúng ta sử dụng một bộ dữ liệu bao phủ các năm tài chính từ 2023 đến 2025. Dữ liệu gồm báo cáo tài chính hằng quý và ước tính đồng thuận của các nhà phân tích đối với một số cổ phiếu thành phần của chỉ số VN30.</p>
+<p>Bộ dữ liệu <code>vietnam_fin_data.csv</code> gồm các cột sau:</p>
 <ul>
-<li><p><strong>ticker</strong>: Stock symbol (e.g., VNM, VCB, HPG).</p></li>
-<li><p><strong>fiscal_year</strong>: The financial year.</p></li>
-<li><p><strong>fiscal_qtr</strong>: The financial quarter (1-4).</p></li>
-<li><p><strong>eps_basic</strong>: Basic Earnings Per Share (VND).</p></li>
-<li><p><strong>price_close</strong>: Closing price at quarter end (VND).</p></li>
-<li><p><strong>special_items</strong>: Pre-tax special items value (VND millions). (i.e., <code>is_other_profit</code> in DataCore).</p></li>
-<li><p><strong>shares_out</strong>: Shares outstanding (millions).</p></li>
-<li><p><strong>analyst_med</strong>: Median analyst EPS estimate (VND).</p></li>
+<li><p><strong>ticker</strong>: Mã cổ phiếu (ví dụ: VNM, VCB, HPG).</p></li>
+<li><p><strong>fiscal_year</strong>: Năm tài chính.</p></li>
+<li><p><strong>fiscal_qtr</strong>: Quý tài chính (1-4).</p></li>
+<li><p><strong>eps_basic</strong>: Lợi nhuận cơ bản trên mỗi cổ phiếu (VND).</p></li>
+<li><p><strong>price_close</strong>: Giá đóng cửa vào cuối quý (VND).</p></li>
+<li><p><strong>special_items</strong>: Giá trị các khoản mục đặc biệt trước thuế (triệu VND). (tức là <code>is_other_profit</code> trong DataCore).</p></li>
+<li><p><strong>shares_out</strong>: Số cổ phiếu đang lưu hành (triệu).</p></li>
+<li><p><strong>analyst_med</strong>: Ước tính EPS trung vị của các nhà phân tích (VND).</p></li>
 </ul>
-<section id="visualizing-the-core-data" class="level3" data-number="31.2.1">
-<h3 data-number="31.2.1" class="anchored" data-anchor-id="visualizing-the-core-data"><span class="header-section-number">31.2.1</span> Visualizing the Core Data</h3>
-<p>Below is a tabular representation of the raw data we have ingested for the analysis.</p>
+<section id="trực-quan-hóa-dữ-liệu-cốt-lõi" class="level3" data-number="31.2.1">
+<h3 data-number="31.2.1" class="anchored" data-anchor-id="trực-quan-hóa-dữ-liệu-cốt-lõi"><span class="header-section-number">31.2.1</span> Trực quan hóa dữ liệu cốt lõi</h3>
+<p>Dưới đây là bảng biểu diễn dữ liệu thô mà chúng ta đã nạp cho phân tích.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 12%">
@@ -887,14 +911,14 @@ Adjusted \ EPS = Reported \ EPS - \frac{Special \ Items \times (1 - CIT)}{Shares
 </colgroup>
 <thead>
 <tr class="header">
-<th style="text-align: left;">ticker</th>
-<th style="text-align: left;">fiscal_year</th>
-<th style="text-align: left;">fiscal_qtr</th>
-<th style="text-align: left;">eps_basic</th>
-<th style="text-align: left;">price_close</th>
-<th style="text-align: left;">special_items</th>
-<th style="text-align: left;">shares_out</th>
-<th style="text-align: left;">analyst_med</th>
+<th style="text-align: left;">ticker (mã CP)</th>
+<th style="text-align: left;">fiscal_year (năm TC)</th>
+<th style="text-align: left;">fiscal_qtr (quý TC)</th>
+<th style="text-align: left;">eps_basic (EPS cơ bản)</th>
+<th style="text-align: left;">price_close (giá đóng cửa)</th>
+<th style="text-align: left;">special_items (khoản mục đặc biệt)</th>
+<th style="text-align: left;">shares_out (số CP lưu hành)</th>
+<th style="text-align: left;">analyst_med (trung vị nhà phân tích)</th>
 </tr>
 </thead>
 <tbody>
@@ -982,13 +1006,13 @@ Adjusted \ EPS = Reported \ EPS - \frac{Special \ Items \times (1 - CIT)}{Shares
 </table>
 </section>
 </section>
-<section id="implementation" class="level2" data-number="31.3">
-<h2 data-number="31.3" class="anchored" data-anchor-id="implementation"><span class="header-section-number">31.3</span> Implementation</h2>
-<section id="python-setup-and-data-loading" class="level3" data-number="31.3.1">
-<h3 data-number="31.3.1" class="anchored" data-anchor-id="python-setup-and-data-loading"><span class="header-section-number">31.3.1</span> Python Setup and Data Loading</h3>
-<p>First, we establish our environment and load the dataset. We ensure the data is sorted by ticker and time to allow for accurate lag calculations.</p>
-<div id="1e2b9816" class="cell" data-execution_count="2">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<section id="triển-khai" class="level2" data-number="31.3">
+<h2 data-number="31.3" class="anchored" data-anchor-id="triển-khai"><span class="header-section-number">31.3</span> Triển khai</h2>
+<section id="thiết-lập-python-và-nạp-dữ-liệu" class="level3" data-number="31.3.1">
+<h3 data-number="31.3.1" class="anchored" data-anchor-id="thiết-lập-python-và-nạp-dữ-liệu"><span class="header-section-number">31.3.1</span> Thiết lập Python và nạp dữ liệu</h3>
+<p>Trước tiên, chúng ta thiết lập môi trường và nạp bộ dữ liệu. Chúng ta đảm bảo dữ liệu được sắp xếp theo mã cổ phiếu và thời gian để tính độ trễ một cách chính xác.</p>
+<div id="124f1208" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -1024,7 +1048,7 @@ Adjusted \ EPS = Reported \ EPS - \frac{Special \ Items \times (1 - CIT)}{Shares
 <span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Sort strictly to ensure shift operations work on correct temporal sequence</span></span>
 <span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.sort_values(by<span class="op">=</span>[<span class="st">'ticker'</span>, <span class="st">'fiscal_year'</span>, <span class="st">'fiscal_qtr'</span>])</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.head())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.head())</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   ticker  fiscal_year  fiscal_qtr  eps_basic  price_close  special_items  \
 16    HPG         2023           1        500        20000              0   
@@ -1042,20 +1066,20 @@ Adjusted \ EPS = Reported \ EPS - \frac{Special \ Items \times (1 - CIT)}{Shares
 </div>
 </div>
 </section>
-<section id="calculation-logic" class="level3" data-number="31.3.2">
-<h3 data-number="31.3.2" class="anchored" data-anchor-id="calculation-logic"><span class="header-section-number">31.3.2</span> Calculation Logic</h3>
-<p>We now apply the functions to calculate the three variations of SUE.</p>
-<p><strong>Step 1: Handling Seasonality (Lags)</strong></p>
-<p>For Methods 1 and 2, we require the data from the same quarter of the previous year (lag 4).</p>
-<div id="bccc3926" class="cell" data-execution_count="3">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Group by ticker to ensure we don't shift data between companies</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'eps_lag4'</span>] <span class="op">=</span> df.groupby(<span class="st">'ticker'</span>)[<span class="st">'eps_basic'</span>].shift(<span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="logic-tính-toán" class="level3" data-number="31.3.2">
+<h3 data-number="31.3.2" class="anchored" data-anchor-id="logic-tính-toán"><span class="header-section-number">31.3.2</span> Logic tính toán</h3>
+<p>Bây giờ chúng ta áp dụng các hàm để tính ba biến thể của SUE.</p>
+<p><strong>Bước 1: Xử lý tính mùa vụ (độ trễ)</strong></p>
+<p>Với Phương pháp 1 và 2, chúng ta cần dữ liệu của cùng quý năm trước (độ trễ 4).</p>
+<div id="c93d425f" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Group by ticker to ensure we don't shift data between companies</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'eps_lag4'</span>] <span class="op">=</span> df.groupby(<span class="st">'ticker'</span>)[<span class="st">'eps_basic'</span>].shift(<span class="dv">4</span>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><strong>Step 2: Adjusting for Special Items</strong></p>
-<p>For Method 2, we must strip out non-recurring items. We apply the Vietnamese Corporate Income Tax (CIT) rate of 20%.</p>
-<p>The formula for the adjustment per share is: <span class="math display">\[ \text{Adjustment} = \frac{\text{Special Items} \times (1 - 0.20)}{\text{Shares Outstanding}} \]</span></p>
-<div id="7511a325" class="cell" data-execution_count="4">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Constants</span></span>
+<p><strong>Bước 2: Điều chỉnh các khoản mục đặc biệt</strong></p>
+<p>Với Phương pháp 2, chúng ta phải loại bỏ các khoản mục không thường xuyên. Chúng ta áp dụng thuế suất thuế thu nhập doanh nghiệp (CIT) của Việt Nam là 20%.</p>
+<p>Công thức điều chỉnh trên mỗi cổ phiếu là: <span class="math display">\[ \text{Adjustment} = \frac{\text{Special Items} \times (1 - 0.20)}{\text{Shares Outstanding}} \]</span></p>
+<div id="d9ad3eba" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Constants</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>CIT_RATE_VN <span class="op">=</span> <span class="fl">0.20</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate impact per share</span></span>
@@ -1067,12 +1091,12 @@ Adjusted \ EPS = Reported \ EPS - \frac{Special \ Items \times (1 - CIT)}{Shares
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'eps_adjusted'</span>] <span class="op">=</span> df[<span class="st">'eps_basic'</span>] <span class="op">-</span> df[<span class="st">'spi_impact_per_share'</span>]</span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Create lag for Adjusted EPS</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'eps_adj_lag4'</span>] <span class="op">=</span> df.groupby(<span class="st">'ticker'</span>)[<span class="st">'eps_adjusted'</span>].shift(<span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'eps_adj_lag4'</span>] <span class="op">=</span> df.groupby(<span class="st">'ticker'</span>)[<span class="st">'eps_adjusted'</span>].shift(<span class="dv">4</span>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><strong>Step 3: Computing SUE Variants</strong></p>
-<p>We finalize the calculation by computing the difference between actual (or adjusted) and expected values, deflated by the stock price.</p>
-<div id="9ccac8ca" class="cell" data-execution_count="5">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Method 1: Seasonal Random Walk (Standard EPS)</span></span>
+<p><strong>Bước 3: Tính các biến thể của SUE</strong></p>
+<p>Chúng ta hoàn tất phép tính bằng cách lấy chênh lệch giữa giá trị thực tế (hoặc đã điều chỉnh) và giá trị kỳ vọng, chia cho giá cổ phiếu.</p>
+<div id="cb4d5592" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Method 1: Seasonal Random Walk (Standard EPS)</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sue_1'</span>] <span class="op">=</span> (df[<span class="st">'eps_basic'</span>] <span class="op">-</span> df[<span class="st">'eps_lag4'</span>]) <span class="op">/</span> df[<span class="st">'price_close'</span>]</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Method 2: Seasonal Random Walk (Excluding Special Items)</span></span>
@@ -1084,23 +1108,23 @@ Adjusted \ EPS = Reported \ EPS - \frac{Special \ Items \times (1 - CIT)}{Shares
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Scaling for readability (converting to percentage)</span></span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sue_1_pct'</span>] <span class="op">=</span> df[<span class="st">'sue_1'</span>] <span class="op">*</span> <span class="dv">100</span></span>
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sue_2_pct'</span>] <span class="op">=</span> df[<span class="st">'sue_2'</span>] <span class="op">*</span> <span class="dv">100</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sue_3_pct'</span>] <span class="op">=</span> df[<span class="st">'sue_3'</span>] <span class="op">*</span> <span class="dv">100</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sue_3_pct'</span>] <span class="op">=</span> df[<span class="st">'sue_3'</span>] <span class="op">*</span> <span class="dv">100</span></span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
-<section id="results-and-analysis" class="level2" data-number="31.4">
-<h2 data-number="31.4" class="anchored" data-anchor-id="results-and-analysis"><span class="header-section-number">31.4</span> Results and Analysis</h2>
-<p>We present the calculated standardized earnings surprises for the fiscal year 2024. Positive values indicate a positive surprise (beating expectations), while negative values indicate a miss.</p>
-<section id="tabular-results-fy-2024" class="level3" data-number="31.4.1">
-<h3 data-number="31.4.1" class="anchored" data-anchor-id="tabular-results-fy-2024"><span class="header-section-number">31.4.1</span> Tabular Results (FY 2024)</h3>
-<div id="85248510" class="cell" data-execution_count="6">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter for 2024 results where lag data exists</span></span>
+<section id="kết-quả-và-phân-tích" class="level2" data-number="31.4">
+<h2 data-number="31.4" class="anchored" data-anchor-id="kết-quả-và-phân-tích"><span class="header-section-number">31.4</span> Kết quả và phân tích</h2>
+<p>Chúng ta trình bày bất ngờ lợi nhuận chuẩn hóa đã tính cho năm tài chính 2024. Giá trị dương cho thấy một bất ngờ tích cực (vượt kỳ vọng), còn giá trị âm cho thấy kết quả không đạt kỳ vọng.</p>
+<section id="kết-quả-dạng-bảng-năm-tài-chính-2024" class="level3" data-number="31.4.1">
+<h3 data-number="31.4.1" class="anchored" data-anchor-id="kết-quả-dạng-bảng-năm-tài-chính-2024"><span class="header-section-number">31.4.1</span> Kết quả dạng bảng (năm tài chính 2024)</h3>
+<div id="01106293" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter for 2024 results where lag data exists</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>results_2024 <span class="op">=</span> df[df[<span class="st">'fiscal_year'</span>] <span class="op">==</span> <span class="dv">2024</span>][[<span class="st">'ticker'</span>, <span class="st">'fiscal_qtr'</span>, <span class="st">'sue_1_pct'</span>, <span class="st">'sue_2_pct'</span>, <span class="st">'sue_3_pct'</span>]]</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Display formatted table</span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> IPython.display <span class="im">import</span> display, Markdown</span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>markdown_table <span class="op">=</span> results_2024.to_markdown(index<span class="op">=</span><span class="va">False</span>, floatfmt<span class="op">=</span><span class="st">".4f"</span>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>display(Markdown(markdown_table))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>display(Markdown(markdown_table))</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display cell-output-markdown">
 <table class="caption-top table table-sm table-striped small">
 <thead>
@@ -1221,11 +1245,11 @@ Adjusted \ EPS = Reported \ EPS - \frac{Special \ Items \times (1 - CIT)}{Shares
 2.  **Impact of Special Items (Method 2 vs 1):** In the case of HPG in Q1 2024, there was a significant special item adjustment. SUE 1 (0.8000%) differs from SUE 2 (0.7449%), showing that the raw EPS growth was partially driven by one-off events. Using Method 1 alone would have overstated the sustainable earnings surprise.
 3.  **Sector Volatility:** HPG (Steel sector) shows higher volatility in surprises compared to VNM (Consumer Staples), reflecting the cyclical nature of the construction materials market in Vietnam. -->
 </section>
-<section id="visualization" class="level3" data-number="31.4.2">
-<h3 data-number="31.4.2" class="anchored" data-anchor-id="visualization"><span class="header-section-number">31.4.2</span> Visualization</h3>
-<p>The following figure plots the Analyst-based SUE (Method 3) for the selected tickers over the 2024 fiscal year.</p>
-<div id="cell-fig-sue" class="cell" data-fig-width="7" data-execution_count="7">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>pivot_sue <span class="op">=</span> results_2024.pivot(index<span class="op">=</span><span class="st">'fiscal_qtr'</span>, columns<span class="op">=</span><span class="st">'ticker'</span>, values<span class="op">=</span><span class="st">'sue_3_pct'</span>)</span>
+<section id="trực-quan-hóa" class="level3" data-number="31.4.2">
+<h3 data-number="31.4.2" class="anchored" data-anchor-id="trực-quan-hóa"><span class="header-section-number">31.4.2</span> Trực quan hóa</h3>
+<p>Hình sau vẽ SUE dựa trên dự báo của nhà phân tích (Phương pháp 3) cho các mã cổ phiếu được chọn trong năm tài chính 2024.</p>
+<div id="cell-fig-sue" class="cell" data-fig-width="7" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>pivot_sue <span class="op">=</span> results_2024.pivot(index<span class="op">=</span><span class="st">'fiscal_qtr'</span>, columns<span class="op">=</span><span class="st">'ticker'</span>, values<span class="op">=</span><span class="st">'sue_3_pct'</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> column <span class="kw">in</span> pivot_sue.columns:</span>
@@ -1238,15 +1262,15 @@ Adjusted \ EPS = Reported \ EPS - \frac{Special \ Items \times (1 - CIT)}{Shares
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>plt.legend(title<span class="op">=</span><span class="st">'Ticker'</span>)</span>
 <span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>, linestyle<span class="op">=</span><span class="st">':'</span>, alpha<span class="op">=</span><span class="fl">0.6</span>)</span>
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>plt.xticks([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>])</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<div id="fig-sue" class="quarto-float quarto-figure quarto-figure-center anchored" height="523" width="832">
+<div id="fig-sue" class="quarto-float quarto-figure quarto-figure-center anchored" width="832" height="523">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-sue-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="38_sue_files/figure-html/fig-sue-output-1.png" id="fig-sue" width="832" height="523" class="figure-img">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-sue-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;31.1
+Hình&nbsp;31.1
 </figcaption>
 </figure>
 </div>
@@ -1254,39 +1278,53 @@ Figure&nbsp;31.1
 </div>
 </section>
 </section>
-<section id="conclusion" class="level2" data-number="31.5">
-<h2 data-number="31.5" class="anchored" data-anchor-id="conclusion"><span class="header-section-number">31.5</span> Conclusion</h2>
-<p>In this chapter, we have formalized the calculation of Standardized Earnings Surprises for the Vietnamese market. We demonstrated that relying solely on raw EPS growth (Method 1) can be misleading in the presence of non-recurring items. Furthermore, analyst-based surprises (Method 3) often provide a cleaner signal of new information reaching the market.</p>
-<p>For robust quantitative modeling in Vietnam, we recommend using Method 2 when analyst data is sparse (common in small-cap stocks) and Method 3 for VN30 constituents where analyst coverage is deep and liquid.</p>
+<section id="kết-luận" class="level2" data-number="31.5">
+<h2 data-number="31.5" class="anchored" data-anchor-id="kết-luận"><span class="header-section-number">31.5</span> Kết luận</h2>
+<p>Trong chương này, chúng ta đã chính thức hóa cách tính bất ngờ lợi nhuận chuẩn hóa cho thị trường Việt Nam. Chúng ta đã chỉ ra rằng chỉ dựa vào tăng trưởng EPS thô (Phương pháp 1) có thể gây hiểu lầm khi có các khoản mục không thường xuyên. Hơn nữa, các bất ngờ dựa trên nhà phân tích (Phương pháp 3) thường cung cấp tín hiệu rõ ràng hơn về thông tin mới đi vào thị trường.</p>
+<p>Để xây dựng mô hình định lượng vững chắc tại Việt Nam, chúng tôi khuyến nghị dùng Phương pháp 2 khi dữ liệu nhà phân tích thưa thớt (phổ biến ở các cổ phiếu vốn hóa nhỏ) và Phương pháp 3 cho các cổ phiếu thành phần VN30, nơi mức độ phủ sóng của nhà phân tích sâu và thanh khoản cao.</p>
 
 
 <!-- -->
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
 <div id="ref-bernard1989post" class="csl-entry" role="listitem">
-Bernard, Victor L, and Jacob K Thomas. 1989. <span>“Post-Earnings-Announcement Drift: Delayed Price Response or Risk Premium?”</span> <em>Journal of Accounting Research</em> 27: 1–36.
+Bernard, Victor L, và Jacob K Thomas. 1989. <span>“Post-earnings-announcement drift: delayed price response or risk premium?”</span> <em>Journal of Accounting research</em> 27: 1–36. <a href="https://doi.org/10.2307/2491062">https://doi.org/10.2307/2491062</a>.
 </div>
 <div id="ref-livnat2006comparing" class="csl-entry" role="listitem">
-Livnat, Joshua, and Richard R Mendenhall. 2006. <span>“Comparing the Post–Earnings Announcement Drift for Surprises Calculated from Analyst and Time Series Forecasts.”</span> <em>Journal of Accounting Research</em> 44 (1): 177–205.
+Livnat, Joshua, và Richard R Mendenhall. 2006. <span>“Comparing the post–earnings announcement drift for surprises calculated from analyst and time series forecasts”</span>. <em>Journal of accounting research</em> 44 (1): 177–205.
 </div>
 </div>
 </section>
 
 </main> <!-- /main -->
 <script>
+
 document.addEventListener("DOMContentLoaded", function () {
+
   const year = new Date().getFullYear();
+
   document.getElementById("copyright").textContent = "© " + year;
+
 });
+
 </script>
+
 <!-- Google tag (gtag.js) -->
+
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-LG91D0C6RB"></script>
+
 <script>
+
   window.dataLayer = window.dataLayer || [];
+
   function gtag(){dataLayer.push(arguments);}
+
   gtag('js', new Date());
 
+
+
   gtag('config', 'G-LG91D0C6RB');
+
 </script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
@@ -1326,12 +1364,12 @@ document.addEventListener("DOMContentLoaded", function () {
       // flash "checked"
       button.classList.add('code-copy-button-checked');
       var currentTitle = button.getAttribute("title");
-      button.setAttribute("title", "Copied!");
+      button.setAttribute("title", "Đã sao chép!");
       let tooltip;
       if (window.bootstrap) {
         button.setAttribute("data-bs-toggle", "tooltip");
         button.setAttribute("data-bs-placement", "left");
-        button.setAttribute("data-bs-title", "Copied!");
+        button.setAttribute("data-bs-title", "Đã sao chép!");
         tooltip = new bootstrap.Tooltip(button, 
           { trigger: "manual", 
             customClass: "code-copy-button-tooltip",
@@ -1352,14 +1390,13 @@ document.addEventListener("DOMContentLoaded", function () {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-      const outerScaffold = trigger.parentElement.cloneNode(true);
-      const codeEl = outerScaffold.querySelector('code');
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
         }
-      }
-      return codeEl.innerText;
+        return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
@@ -1754,85 +1791,85 @@ document.addEventListener("DOMContentLoaded", function () {
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./37_disclosure_quality_and_timing.html" class="pagination-link" aria-label="Disclosure Quality and Timing">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Disclosure Quality and Timing</span></span>
+      <a href="./37_disclosure_quality_and_timing.html" class="pagination-link" aria-label="Chất lượng và thời điểm công bố thông tin">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Chất lượng và thời điểm công bố thông tin</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./39_divop.html" class="pagination-link" aria-label="Measuring Divergence of Investor Opinion">
-        <span class="nav-page-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Measuring Divergence of Investor Opinion</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./39_divop.html" class="pagination-link" aria-label="Đo lường sự phân kỳ quan điểm của nhà đầu tư">
+        <span class="nav-page-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Đo lường sự phân kỳ quan điểm của nhà đầu tư</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
-</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Standardized Earnings Surprises (SUE)</span></span>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Mã nguồn</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb8" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Bất ngờ lợi nhuận chuẩn hóa (SUE)</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>In the context of the Ho Chi Minh Stock Exchange (HOSE) and the Hanoi Stock Exchange (HNX), earnings announcements represent critical information events. Investors and quantitative analysts continuously monitor the deviation between reported earnings and market expectations. This deviation is quantified as the Standardized Earnings Surprise (SUE).</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>Trên Sở Giao dịch Chứng khoán Thành phố Hồ Chí Minh (HOSE) và Sở Giao dịch Chứng khoán Hà Nội (HNX), các thông báo lợi nhuận là những sự kiện thông tin quan trọng. Nhà đầu tư và các nhà phân tích định lượng liên tục theo dõi độ lệch giữa lợi nhuận kế toán được báo cáo và kỳ vọng của thị trường. Độ lệch này được đo lường bằng bất ngờ lợi nhuận chuẩn hóa (Standardized Earnings Surprise, SUE).</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>This chapter details the methodology for calculating SUE using three distinct approaches frequently utilized in academic literature and institutional research. We apply these methods to a dataset of Vietnamese large-cap equities to illustrate the mechanics of the calculation. The goal is to isolate the "surprise" component of earnings, which is a known predictor of post-earnings announcement drift (PEAD) <span class="co">[</span><span class="ot">@bernard1989post; @livnat2006comparing</span><span class="co">]</span>.</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>Chương này trình bày chi tiết phương pháp tính SUE theo ba cách tiếp cận khác nhau, thường được sử dụng trong các nghiên cứu học thuật và nghiên cứu của các tổ chức. Chúng ta áp dụng các phương pháp này cho một bộ dữ liệu gồm các cổ phiếu vốn hóa lớn của Việt Nam để minh họa cơ chế tính toán. Mục tiêu là tách riêng thành phần "bất ngờ" của lợi nhuận, vốn là một yếu tố dự báo đã được biết đến của hiện tượng trôi dạt sau thông báo lợi nhuận (PEAD) <span class="co">[</span><span class="ot">@bernard1989post; @livnat2006comparing</span><span class="co">]</span>.</span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## Methodology</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## Phương pháp luận</span></span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>We define three primary methods for calculating SUE. Each method differs in how it establishes the "expected" earnings value.</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>Chúng ta định nghĩa ba phương pháp chính để tính SUE. Mỗi phương pháp khác nhau ở cách xác lập giá trị lợi nhuận "kỳ vọng".</span>
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="fu">### Method 1: Seasonal Random Walk</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="fu">### Phương pháp 1: Bước ngẫu nhiên theo mùa vụ</span></span>
 <span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>This method assumes that earnings follow a seasonal pattern. The best predictor for the current quarter's earnings per share (EPS) is the EPS from the same quarter in the previous year. This controls for the seasonality often seen in Vietnamese sectors like retail and agriculture.</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>Phương pháp này giả định lợi nhuận tuân theo một quy luật mùa vụ. Yếu tố dự báo tốt nhất cho lợi nhuận trên mỗi cổ phiếu (EPS) của quý hiện tại là EPS của cùng quý trong năm trước. Cách làm này kiểm soát tính mùa vụ thường thấy ở các ngành của Việt Nam như bán lẻ và nông nghiệp.</span>
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>$$SUE_{1} = \frac{EPS_{t} - EPS_{t-4}}{P_{t}}$$</span>
 <span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>Where:</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>Trong đó:</span>
 <span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>$EPS_{t}$ is the current quarterly Earnings Per Share.</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>$EPS_{t}$ là lợi nhuận trên mỗi cổ phiếu của quý hiện tại.</span>
 <span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>$EPS_{t-4}$ is the Earnings Per Share from the same quarter of the prior fiscal year.</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>$EPS_{t-4}$ là lợi nhuận trên mỗi cổ phiếu của cùng quý trong năm tài chính trước.</span>
 <span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>$P_{t}$ is the stock price at the end of the quarter (used as a deflator).</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>$P_{t}$ là giá cổ phiếu vào cuối quý (được dùng làm mẫu số chuẩn hóa).</span>
 <span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="fu">### Method 2: Exclusion of Special Items</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="fu">### Phương pháp 2: Loại trừ các khoản mục đặc biệt</span></span>
 <span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>Reported earnings often contain non-recurring items (e.g., asset sales, one-time write-offs) that distort the true operating performance. This method adjusts the reported EPS by removing the after-tax impact of special items.</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>Lợi nhuận được báo cáo thường chứa các khoản mục không thường xuyên (ví dụ: bán tài sản, xóa sổ một lần) làm sai lệch hiệu quả hoạt động thực sự. Phương pháp này điều chỉnh EPS được báo cáo bằng cách loại bỏ tác động sau thuế của các khoản mục đặc biệt.</span>
 <span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>In Vietnam, the standard Corporate Income Tax (CIT) rate is generally 20%. We adjust special items to reflect their impact on net income.</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>Tại Việt Nam, thuế suất thuế thu nhập doanh nghiệp (CIT) tiêu chuẩn nhìn chung là 20%. Chúng ta điều chỉnh các khoản mục đặc biệt để phản ánh tác động của chúng lên lợi nhuận ròng.</span>
 <span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>Adjusted \ EPS = Reported \ EPS - \frac{Special \ Items \times (1 - CIT)}{Shares \ Outstanding}</span>
 <span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>The SUE calculation then follows the seasonal logic but uses the adjusted EPS figures: $$SUE_{2} = \frac{Adj \ EPS_{t} - Adj \ EPS_{t-4}}{P_{t}}$$</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>Khi đó, cách tính SUE tuân theo logic mùa vụ nhưng sử dụng các số liệu EPS đã điều chỉnh: $$SUE_{2} = \frac{Adj \ EPS_{t} - Adj \ EPS_{t-4}}{P_{t}}$$</span>
 <span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a><span class="fu">### Method 3: Analyst Consensus</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a><span class="fu">### Phương pháp 3: Đồng thuận của các nhà phân tích</span></span>
 <span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>This method relies on market consensus rather than historical time series. It compares the actual reported earnings against the median analyst forecast provided prior to the announcement.</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>Phương pháp này dựa vào đồng thuận của thị trường thay vì chuỗi thời gian lịch sử. Phương pháp so sánh lợi nhuận thực tế được báo cáo với dự báo trung vị của các nhà phân tích được công bố trước thông báo.</span>
 <span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>$$SUE_{3} = \frac{Actual \ EPS - Median \ Estimate}{P_{t}}$$</span>
 <span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="fu">## Data Description</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="fu">## Mô tả dữ liệu</span></span>
 <span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>For this analysis, we utilize a dataset covering the fiscal years 2023 through 2025. The data includes quarterly financial statements and analyst consensus estimates for a selection of VN30 index constituents.</span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>Trong phân tích này, chúng ta sử dụng một bộ dữ liệu bao phủ các năm tài chính từ 2023 đến 2025. Dữ liệu gồm báo cáo tài chính hằng quý và ước tính đồng thuận của các nhà phân tích đối với một số cổ phiếu thành phần của chỉ số VN30.</span>
 <span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>The dataset, <span class="in">`vietnam_fin_data.csv`</span>, contains the following columns:</span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>Bộ dữ liệu <span class="in">`vietnam_fin_data.csv`</span> gồm các cột sau:</span>
 <span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**ticker**: Stock symbol (e.g., VNM, VCB, HPG).</span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**ticker**: Mã cổ phiếu (ví dụ: VNM, VCB, HPG).</span>
 <span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**fiscal_year**: The financial year.</span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**fiscal_year**: Năm tài chính.</span>
 <span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**fiscal_qtr**: The financial quarter (1-4).</span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**fiscal_qtr**: Quý tài chính (1-4).</span>
 <span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**eps_basic**: Basic Earnings Per Share (VND).</span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**eps_basic**: Lợi nhuận cơ bản trên mỗi cổ phiếu (VND).</span>
 <span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**price_close**: Closing price at quarter end (VND).</span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**price_close**: Giá đóng cửa vào cuối quý (VND).</span>
 <span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**special_items**: Pre-tax special items value (VND millions). (i.e., <span class="in">`is_other_profit`</span> in DataCore).</span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**special_items**: Giá trị các khoản mục đặc biệt trước thuế (triệu VND). (tức là <span class="in">`is_other_profit`</span> trong DataCore).</span>
 <span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**shares_out**: Shares outstanding (millions).</span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**shares_out**: Số cổ phiếu đang lưu hành (triệu).</span>
 <span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**analyst_med**: Median analyst EPS estimate (VND).</span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**analyst_med**: Ước tính EPS trung vị của các nhà phân tích (VND).</span>
 <span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a><span class="fu">### Visualizing the Core Data</span></span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a><span class="fu">### Trực quan hóa dữ liệu cốt lõi</span></span>
 <span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>Below is a tabular representation of the raw data we have ingested for the analysis.</span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>Dưới đây là bảng biểu diễn dữ liệu thô mà chúng ta đã nạp cho phân tích.</span>
 <span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> ticker <span class="pp">|</span> fiscal_year <span class="pp">|</span> fiscal_qtr <span class="pp">|</span> eps_basic <span class="pp">|</span> price_close <span class="pp">|</span> special_items <span class="pp">|</span> shares_out <span class="pp">|</span> analyst_med <span class="pp">|</span></span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> ticker (mã CP) <span class="pp">|</span> fiscal_year (năm TC) <span class="pp">|</span> fiscal_qtr (quý TC) <span class="pp">|</span> eps_basic (EPS cơ bản) <span class="pp">|</span> price_close (giá đóng cửa) <span class="pp">|</span> special_items (khoản mục đặc biệt) <span class="pp">|</span> shares_out (số CP lưu hành) <span class="pp">|</span> analyst_med (trung vị nhà phân tích) <span class="pp">|</span></span>
 <span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a><span class="pp">|:--------|:--------|:--------|:--------|:--------|:--------|:--------|:--------|</span></span>
 <span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> VNM <span class="pp">|</span> 2023 <span class="pp">|</span> 1 <span class="pp">|</span> 1200 <span class="pp">|</span> 68000 <span class="pp">|</span> 0 <span class="pp">|</span> 2090 <span class="pp">|</span> 1150 <span class="pp">|</span></span>
 <span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> VNM <span class="pp">|</span> 2023 <span class="pp">|</span> 2 <span class="pp">|</span> 1350 <span class="pp">|</span> 71000 <span class="pp">|</span> 50000 <span class="pp">|</span> 2090 <span class="pp">|</span> 1300 <span class="pp">|</span></span>
@@ -1843,11 +1880,11 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> VCB <span class="pp">|</span> 2023 <span class="pp">|</span> 1 <span class="pp">|</span> 1800 <span class="pp">|</span> 85000 <span class="pp">|</span> 10000 <span class="pp">|</span> 5500 <span class="pp">|</span> 1700 <span class="pp">|</span></span>
 <span id="cb8-78"><a href="#cb8-78" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> VCB <span class="pp">|</span> 2024 <span class="pp">|</span> 1 <span class="pp">|</span> 2100 <span class="pp">|</span> 92000 <span class="pp">|</span> 0 <span class="pp">|</span> 5500 <span class="pp">|</span> 2000 <span class="pp">|</span></span>
 <span id="cb8-79"><a href="#cb8-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-80"><a href="#cb8-80" aria-hidden="true" tabindex="-1"></a><span class="fu">## Implementation</span></span>
+<span id="cb8-80"><a href="#cb8-80" aria-hidden="true" tabindex="-1"></a><span class="fu">## Triển khai</span></span>
 <span id="cb8-81"><a href="#cb8-81" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a><span class="fu">### Python Setup and Data Loading</span></span>
+<span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a><span class="fu">### Thiết lập Python và nạp dữ liệu</span></span>
 <span id="cb8-83"><a href="#cb8-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-84"><a href="#cb8-84" aria-hidden="true" tabindex="-1"></a>First, we establish our environment and load the dataset. We ensure the data is sorted by ticker and time to allow for accurate lag calculations.</span>
+<span id="cb8-84"><a href="#cb8-84" aria-hidden="true" tabindex="-1"></a>Trước tiên, chúng ta thiết lập môi trường và nạp bộ dữ liệu. Chúng ta đảm bảo dữ liệu được sắp xếp theo mã cổ phiếu và thời gian để tính độ trễ một cách chính xác.</span>
 <span id="cb8-85"><a href="#cb8-85" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-88"><a href="#cb8-88" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb8-89"><a href="#cb8-89" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -1889,24 +1926,24 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb8-125"><a href="#cb8-125" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.head())</span>
 <span id="cb8-126"><a href="#cb8-126" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb8-127"><a href="#cb8-127" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-128"><a href="#cb8-128" aria-hidden="true" tabindex="-1"></a><span class="fu">### Calculation Logic</span></span>
+<span id="cb8-128"><a href="#cb8-128" aria-hidden="true" tabindex="-1"></a><span class="fu">### Logic tính toán</span></span>
 <span id="cb8-129"><a href="#cb8-129" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-130"><a href="#cb8-130" aria-hidden="true" tabindex="-1"></a>We now apply the functions to calculate the three variations of SUE.</span>
+<span id="cb8-130"><a href="#cb8-130" aria-hidden="true" tabindex="-1"></a>Bây giờ chúng ta áp dụng các hàm để tính ba biến thể của SUE.</span>
 <span id="cb8-131"><a href="#cb8-131" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-132"><a href="#cb8-132" aria-hidden="true" tabindex="-1"></a>**Step 1: Handling Seasonality (Lags)**</span>
+<span id="cb8-132"><a href="#cb8-132" aria-hidden="true" tabindex="-1"></a>**Bước 1: Xử lý tính mùa vụ (độ trễ)**</span>
 <span id="cb8-133"><a href="#cb8-133" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-134"><a href="#cb8-134" aria-hidden="true" tabindex="-1"></a>For Methods 1 and 2, we require the data from the same quarter of the previous year (lag 4).</span>
+<span id="cb8-134"><a href="#cb8-134" aria-hidden="true" tabindex="-1"></a>Với Phương pháp 1 và 2, chúng ta cần dữ liệu của cùng quý năm trước (độ trễ 4).</span>
 <span id="cb8-135"><a href="#cb8-135" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-138"><a href="#cb8-138" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb8-139"><a href="#cb8-139" aria-hidden="true" tabindex="-1"></a><span class="co"># Group by ticker to ensure we don't shift data between companies</span></span>
 <span id="cb8-140"><a href="#cb8-140" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'eps_lag4'</span>] <span class="op">=</span> df.groupby(<span class="st">'ticker'</span>)[<span class="st">'eps_basic'</span>].shift(<span class="dv">4</span>)</span>
 <span id="cb8-141"><a href="#cb8-141" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb8-142"><a href="#cb8-142" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-143"><a href="#cb8-143" aria-hidden="true" tabindex="-1"></a>**Step 2: Adjusting for Special Items**</span>
+<span id="cb8-143"><a href="#cb8-143" aria-hidden="true" tabindex="-1"></a>**Bước 2: Điều chỉnh các khoản mục đặc biệt**</span>
 <span id="cb8-144"><a href="#cb8-144" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-145"><a href="#cb8-145" aria-hidden="true" tabindex="-1"></a>For Method 2, we must strip out non-recurring items. We apply the Vietnamese Corporate Income Tax (CIT) rate of 20%.</span>
+<span id="cb8-145"><a href="#cb8-145" aria-hidden="true" tabindex="-1"></a>Với Phương pháp 2, chúng ta phải loại bỏ các khoản mục không thường xuyên. Chúng ta áp dụng thuế suất thuế thu nhập doanh nghiệp (CIT) của Việt Nam là 20%.</span>
 <span id="cb8-146"><a href="#cb8-146" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-147"><a href="#cb8-147" aria-hidden="true" tabindex="-1"></a>The formula for the adjustment per share is: $$ \text{Adjustment} = \frac{\text{Special Items} \times (1 - 0.20)}{\text{Shares Outstanding}} $$</span>
+<span id="cb8-147"><a href="#cb8-147" aria-hidden="true" tabindex="-1"></a>Công thức điều chỉnh trên mỗi cổ phiếu là: $$ \text{Adjustment} = \frac{\text{Special Items} \times (1 - 0.20)}{\text{Shares Outstanding}} $$</span>
 <span id="cb8-148"><a href="#cb8-148" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-151"><a href="#cb8-151" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb8-152"><a href="#cb8-152" aria-hidden="true" tabindex="-1"></a><span class="co"># Constants</span></span>
@@ -1924,9 +1961,9 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb8-164"><a href="#cb8-164" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'eps_adj_lag4'</span>] <span class="op">=</span> df.groupby(<span class="st">'ticker'</span>)[<span class="st">'eps_adjusted'</span>].shift(<span class="dv">4</span>)</span>
 <span id="cb8-165"><a href="#cb8-165" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb8-166"><a href="#cb8-166" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-167"><a href="#cb8-167" aria-hidden="true" tabindex="-1"></a>**Step 3: Computing SUE Variants**</span>
+<span id="cb8-167"><a href="#cb8-167" aria-hidden="true" tabindex="-1"></a>**Bước 3: Tính các biến thể của SUE**</span>
 <span id="cb8-168"><a href="#cb8-168" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-169"><a href="#cb8-169" aria-hidden="true" tabindex="-1"></a>We finalize the calculation by computing the difference between actual (or adjusted) and expected values, deflated by the stock price.</span>
+<span id="cb8-169"><a href="#cb8-169" aria-hidden="true" tabindex="-1"></a>Chúng ta hoàn tất phép tính bằng cách lấy chênh lệch giữa giá trị thực tế (hoặc đã điều chỉnh) và giá trị kỳ vọng, chia cho giá cổ phiếu.</span>
 <span id="cb8-170"><a href="#cb8-170" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-173"><a href="#cb8-173" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb8-174"><a href="#cb8-174" aria-hidden="true" tabindex="-1"></a><span class="co"># Method 1: Seasonal Random Walk (Standard EPS)</span></span>
@@ -1944,11 +1981,11 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb8-186"><a href="#cb8-186" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sue_3_pct'</span>] <span class="op">=</span> df[<span class="st">'sue_3'</span>] <span class="op">*</span> <span class="dv">100</span></span>
 <span id="cb8-187"><a href="#cb8-187" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb8-188"><a href="#cb8-188" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-189"><a href="#cb8-189" aria-hidden="true" tabindex="-1"></a><span class="fu">## Results and Analysis</span></span>
+<span id="cb8-189"><a href="#cb8-189" aria-hidden="true" tabindex="-1"></a><span class="fu">## Kết quả và phân tích</span></span>
 <span id="cb8-190"><a href="#cb8-190" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-191"><a href="#cb8-191" aria-hidden="true" tabindex="-1"></a>We present the calculated standardized earnings surprises for the fiscal year 2024. Positive values indicate a positive surprise (beating expectations), while negative values indicate a miss.</span>
+<span id="cb8-191"><a href="#cb8-191" aria-hidden="true" tabindex="-1"></a>Chúng ta trình bày bất ngờ lợi nhuận chuẩn hóa đã tính cho năm tài chính 2024. Giá trị dương cho thấy một bất ngờ tích cực (vượt kỳ vọng), còn giá trị âm cho thấy kết quả không đạt kỳ vọng.</span>
 <span id="cb8-192"><a href="#cb8-192" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-193"><a href="#cb8-193" aria-hidden="true" tabindex="-1"></a><span class="fu">### Tabular Results (FY 2024)</span></span>
+<span id="cb8-193"><a href="#cb8-193" aria-hidden="true" tabindex="-1"></a><span class="fu">### Kết quả dạng bảng (năm tài chính 2024)</span></span>
 <span id="cb8-194"><a href="#cb8-194" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-197"><a href="#cb8-197" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb8-198"><a href="#cb8-198" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter for 2024 results where lag data exists</span></span>
@@ -1985,9 +2022,9 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb8-229"><a href="#cb8-229" aria-hidden="true" tabindex="-1"></a><span class="in">3.  **Sector Volatility:** HPG (Steel sector) shows higher volatility in surprises compared to VNM (Consumer Staples), reflecting the cyclical nature of the construction materials market in Vietnam. --&gt;</span></span>
 <span id="cb8-230"><a href="#cb8-230" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb8-231"><a href="#cb8-231" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-232"><a href="#cb8-232" aria-hidden="true" tabindex="-1"></a><span class="fu">### Visualization</span></span>
+<span id="cb8-232"><a href="#cb8-232" aria-hidden="true" tabindex="-1"></a><span class="fu">### Trực quan hóa</span></span>
 <span id="cb8-233"><a href="#cb8-233" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-234"><a href="#cb8-234" aria-hidden="true" tabindex="-1"></a>The following figure plots the Analyst-based SUE (Method 3) for the selected tickers over the 2024 fiscal year.</span>
+<span id="cb8-234"><a href="#cb8-234" aria-hidden="true" tabindex="-1"></a>Hình sau vẽ SUE dựa trên dự báo của nhà phân tích (Phương pháp 3) cho các mã cổ phiếu được chọn trong năm tài chính 2024.</span>
 <span id="cb8-235"><a href="#cb8-235" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-238"><a href="#cb8-238" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb8-239"><a href="#cb8-239" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-width: 7</span></span>
@@ -2009,12 +2046,12 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb8-255"><a href="#cb8-255" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
 <span id="cb8-256"><a href="#cb8-256" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb8-257"><a href="#cb8-257" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-258"><a href="#cb8-258" aria-hidden="true" tabindex="-1"></a><span class="fu">## Conclusion</span></span>
+<span id="cb8-258"><a href="#cb8-258" aria-hidden="true" tabindex="-1"></a><span class="fu">## Kết luận</span></span>
 <span id="cb8-259"><a href="#cb8-259" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-260"><a href="#cb8-260" aria-hidden="true" tabindex="-1"></a>In this chapter, we have formalized the calculation of Standardized Earnings Surprises for the Vietnamese market. We demonstrated that relying solely on raw EPS growth (Method 1) can be misleading in the presence of non-recurring items. Furthermore, analyst-based surprises (Method 3) often provide a cleaner signal of new information reaching the market.</span>
+<span id="cb8-260"><a href="#cb8-260" aria-hidden="true" tabindex="-1"></a>Trong chương này, chúng ta đã chính thức hóa cách tính bất ngờ lợi nhuận chuẩn hóa cho thị trường Việt Nam. Chúng ta đã chỉ ra rằng chỉ dựa vào tăng trưởng EPS thô (Phương pháp 1) có thể gây hiểu lầm khi có các khoản mục không thường xuyên. Hơn nữa, các bất ngờ dựa trên nhà phân tích (Phương pháp 3) thường cung cấp tín hiệu rõ ràng hơn về thông tin mới đi vào thị trường.</span>
 <span id="cb8-261"><a href="#cb8-261" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-262"><a href="#cb8-262" aria-hidden="true" tabindex="-1"></a>For robust quantitative modeling in Vietnam, we recommend using Method 2 when analyst data is sparse (common in small-cap stocks) and Method 3 for VN30 constituents where analyst coverage is deep and liquid.</span>
-</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb8-262"><a href="#cb8-262" aria-hidden="true" tabindex="-1"></a>Để xây dựng mô hình định lượng vững chắc tại Việt Nam, chúng tôi khuyến nghị dùng Phương pháp 2 khi dữ liệu nhà phân tích thưa thớt (phổ biến ở các cổ phiếu vốn hóa nhỏ) và Phương pháp 3 cho các cổ phiếu thành phần VN30, nơi mức độ phủ sóng của nhà phân tích sâu và thanh khoản cao.</span>
+</code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
@@ -2024,7 +2061,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/38_sue.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/38_sue.qmd" class="toc-action"><i class="bi bi-github"></i>Chỉnh sửa trang này</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Báo lỗi</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>

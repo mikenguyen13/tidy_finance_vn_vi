@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi" xml:lang="vi"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.26">
+<meta name="generator" content="quarto-1.7.33">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 
 <title>48&nbsp; Conclusion – Tài Chính Ứng Dụng với Python</title>
 <style>
@@ -90,19 +91,18 @@ div.csl-indent {
 <link href="./favicon.ico" rel="icon">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-bc185b5c5bdbcb35c2eb49d8a876ef70.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-72097b8a1e3a3da1d7b8bbfaaf81c3d8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-5ee5e5a16e06a4aa31defda297eed821.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -117,19 +117,43 @@ div.csl-indent {
   ],
   "show-item-context": false,
   "language": {
-    "search-no-results-text": "No results",
-    "search-matching-documents-text": "matching documents",
-    "search-copy-link-title": "Copy link to search",
-    "search-hide-matches-text": "Hide additional matches",
-    "search-more-match-text": "more match in this document",
-    "search-more-matches-text": "more matches in this document",
-    "search-clear-button-title": "Clear",
+    "search-no-results-text": "Không có kết quả",
+    "search-matching-documents-text": "tài liệu phù hợp",
+    "search-copy-link-title": "Sao chép liên kết tìm kiếm",
+    "search-hide-matches-text": "Ẩn các kết quả khớp khác",
+    "search-more-match-text": "kết quả khớp khác trong tài liệu này",
+    "search-more-matches-text": "kết quả khớp khác trong tài liệu này",
+    "search-clear-button-title": "Xóa",
     "search-text-placeholder": "",
-    "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit",
-    "search-label": "Search"
+    "search-detached-cancel-button-title": "Hủy",
+    "search-submit-button-title": "Gửi",
+    "search-label": "Tìm kiếm"
   }
 }</script>
+<!-- =====================================================================
+     SEO: schema.org Book JSON-LD, injected into the <head> of every page
+     via format.html include-in-header. The plain meta description and the
+     og:/twitter: descriptions come from the book `description:` key in
+     _quarto.yml - don't repeat them here (duplicate meta description).
+     ===================================================================== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": "Tài Chính Ứng Dụng với Python",
+  "url": "https://mikenguyen13.github.io/tidy_finance_vn_vi/",
+  "inLanguage": "vi",
+  "bookFormat": "https://schema.org/EBook",
+  "genre": "Empirical Finance",
+  "description": "Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: truy cập và quản lý dữ liệu tài chính, xây dựng danh mục đầu tư, mô hình định giá tài sản, kiểm định chéo, phân tích cơ bản và định giá doanh nghiệp.",
+  "keywords": "tài chính định lượng, thị trường chứng khoán Việt Nam, tài chính thực nghiệm, định giá tài sản, Fama-French, danh mục đầu tư, Python, VN30, HOSE",
+  "author": {
+    "@type": "Person",
+    "name": "Mike Nguyen"
+  },
+  "isAccessibleForFree": true
+}
+</script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -145,7 +169,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+      if (mathElements[i].tagName == "SPAN") {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -163,10 +187,10 @@ window.Quarto = {
 
 <link rel="stylesheet" href="styles.css">
 <meta property="og:title" content="48&nbsp; Conclusion – Tài Chính Ứng Dụng với Python">
-<meta property="og:description" content="">
+<meta property="og:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta property="og:site_name" content="Tài Chính Ứng Dụng với Python">
 <meta name="twitter:title" content="48&nbsp; Conclusion – Tài Chính Ứng Dụng với Python">
-<meta name="twitter:description" content="">
+<meta name="twitter:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta name="twitter:card" content="summary">
 </head>
 
@@ -343,8 +367,8 @@ window.Quarto = {
     <span class="navbar-title">Tài Chính Ứng Dụng với Python</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+            <div id="quarto-search" class="" title="Tìm kiếm"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Bật/tắt điều hướng" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -364,18 +388,18 @@ window.Quarto = {
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Mã nguồn" class="quarto-navigation-tool px-1" aria-label="Mã nguồn"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Bật/tắt chế độ tối"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
   <nav class="quarto-secondary-nav">
     <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
         <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./99_conclusion.html"><span class="chapter-number">48</span>&nbsp; <span class="chapter-title">Conclusion</span></a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
   </nav>
@@ -396,7 +420,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
  <span class="menu-text">Thị trường tài chính, thể chế và dữ liệu Việt Nam</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -404,7 +428,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./00_institutional_background.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Nền tảng thể chế và cấu trúc thị trường của thị trường chứng khoán Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Bối cảnh thể chế và cấu trúc thị trường cổ phiếu Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -422,7 +446,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./03_market_microstructure.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Cấu trúc thị trường vi mô tại Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Vi cấu trúc thị trường tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -434,7 +458,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05_working_with_stock_returns.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận vốn chủ sở hữu</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận cổ phiếu</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -449,7 +473,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
  <span class="menu-text">Xây dựng danh mục đầu tư, rủi ro và cơ học thực nghiệm</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -457,7 +481,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./10_modern_portfolio_theory.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Lý thuyết danh mục đầu tư hiện đại</span></span></a>
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -469,7 +493,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./12_size_sorts.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Size Sorts</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phân loại theo quy mô</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -481,19 +505,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./14_portfolio_weighting_and_rebalancing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Portfolio Weighting and Rebalancing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Trọng số danh mục đầu tư và tái cân bằng danh mục</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./15_missing_data_and_survivorship.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Missing Data and Survivorship Bias</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Dữ liệu bị thiếu và thiên kiến sống sót</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./16_liquidity_and_turnover_measures.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Liquidity and Turnover Measures</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Các thước đo Thanh khoản và Vòng quay Giao dịch</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -508,7 +532,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình định giá tài sản</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -522,19 +546,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./21_fama_french.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Các nhân tố Fama-French</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./22_momentum.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Momentum Strategies</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Chiến lược động lượng</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./23_factor_construction_principles.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Factor Construction Principles</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Nguyên tắc xây dựng nhân tố</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -546,13 +570,13 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./25_factor_zoo_and_multiple_testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Factor Zoo and Multiple Testing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Vườn thú nhân tố và kiểm định đa giả thuyết</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./26_time_series_vs_cross_section.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Time-Series vs.&nbsp;Cross-Sectional Factor Tests</span></span></a>
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Kiểm định nhân tố theo chuỗi thời gian và theo mặt cắt ngang</span></span></a>
   </div>
 </li>
       </ul>
@@ -561,7 +585,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
  <span class="menu-text">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -581,49 +605,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./32_info_earnings.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Information Content of Earnings Announcements</span></span></a>
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Hàm lượng thông tin của các thông báo lợi nhuận</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./33_accruals.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Accruals, Earnings Persistence, and Market Efficiency</span></span></a>
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Các khoản dồn tích, tính bền vững của lợi nhuận và hiệu quả thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./34_earning_management.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Earnings Management: Detection and Measurement</span></span></a>
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Quản trị lợi nhuận: Phát hiện và đo lường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./35_pe_ratio.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">P/E Ratio</span></span></a>
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Tỷ số P/E</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./36_valuation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Firm Valuation, Financial Distress, and Company Maturity</span></span></a>
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Định giá doanh nghiệp, kiệt quệ tài chính và mức độ trưởng thành của công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./37_disclosure_quality_and_timing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Disclosure Quality and Timing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Chất lượng và thời điểm công bố thông tin</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./38_sue.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></span></a>
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Bất ngờ lợi nhuận chuẩn hóa (SUE)</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./39_divop.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Measuring Divergence of Investor Opinion</span></span></a>
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Đo lường sự phân kỳ quan điểm của nhà đầu tư</span></span></a>
   </div>
 </li>
       </ul>
@@ -632,7 +656,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
  <span class="menu-text">Quyền sở hữu, ma sát thị trường và rủi ro quốc tế</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -640,43 +664,43 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./50_institutional_ownership.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Institutional Ownership Analytics in Vietnam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Phân tích sở hữu tổ chức tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./52_institutional_trade_flow.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Institutional Trades, Flows, and Turnover Ratios</span></span></a>
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Giao dịch, dòng vốn và tỷ lệ vòng quay của nhà đầu tư tổ chức</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./53_governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Corporate Governance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Quản trị công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./54_return_gaps.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Return Gap: Measuring Unobserved Actions of Fund Managers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Chênh lệch lợi nhuận (Return Gap): Đo lường các hành động không quan sát được của nhà quản lý quỹ</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./55_price_limits_and_volatility.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Price Limits and Volatility</span></span></a>
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Biên độ giá và biến động</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./56_market_integration_and_segmentation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Market Integration and Segmentation</span></span></a>
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Hội nhập và phân khúc thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./57_exchange_rate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Exchange Rate Dynamics</span></span></a>
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Động lực của tỷ giá hối đoái</span></span></a>
   </div>
 </li>
       </ul>
@@ -685,7 +709,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình tài chính nâng cao</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -693,25 +717,25 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./60_event_studies.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Event Studies in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Nghiên cứu sự kiện trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./61_tail_risk_extreme_events.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Tail Risk and Extreme Events</span></span></a>
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Rủi ro đuôi và các sự kiện cực đoan</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./62_corporate_finance_estimators.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Corporate Finance Estimators and Identification</span></span></a>
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Các công cụ ước lượng và nhận dạng trong tài chính doanh nghiệp</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./63_structural_models_finance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Structural Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Các mô hình cấu trúc trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -720,7 +744,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
  <span class="menu-text">Dữ liệu thay thế và Trí tuệ nhân tạo trong tài chính</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -728,25 +752,25 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./70_textual.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Textual Analysis</span></span></a>
+ <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Phân tích văn bản</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./71_image.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Image and Visual Data in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Dữ liệu hình ảnh và dữ liệu thị giác trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./73_networks_graphs.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Networks and Graphs in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Mạng lưới và đồ thị trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./74_multimodel.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Multimodal Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Các mô hình đa phương thức trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -770,18 +794,18 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="-1">
-    <h2 id="toc-title">Table of contents</h2>
+    <h2 id="toc-title">Mục lục</h2>
    
   <ul>
-  <li><a href="#what-you-should-take-away" id="toc-what-you-should-take-away" class="nav-link active" data-scroll-target="#what-you-should-take-away"><span class="header-section-number">48.1</span> What you should take away</a>
+  <li><a href="#những-điều-bạn-cần-ghi-nhớ" id="toc-những-điều-bạn-cần-ghi-nhớ" class="nav-link active" data-scroll-target="#những-điều-bạn-cần-ghi-nhớ"><span class="header-section-number">48.1</span> Những điều bạn cần ghi nhớ</a>
   <ul class="collapse">
-  <li><a href="#reproducibility-is-an-identification-strategy" id="toc-reproducibility-is-an-identification-strategy" class="nav-link" data-scroll-target="#reproducibility-is-an-identification-strategy"><span class="header-section-number">48.1.1</span> Reproducibility is an identification strategy</a></li>
-  <li><a href="#vietnam-rewards-microstructure-humility" id="toc-vietnam-rewards-microstructure-humility" class="nav-link" data-scroll-target="#vietnam-rewards-microstructure-humility"><span class="header-section-number">48.1.2</span> Vietnam rewards “microstructure humility”</a></li>
+  <li><a href="#khả-năng-tái-lập-là-một-chiến-lược-nhận-diện" id="toc-khả-năng-tái-lập-là-một-chiến-lược-nhận-diện" class="nav-link" data-scroll-target="#khả-năng-tái-lập-là-một-chiến-lược-nhận-diện"><span class="header-section-number">48.1.1</span> Khả năng tái lập là một chiến lược nhận diện</a></li>
+  <li><a href="#việt-nam-đòi-hỏi-sự-khiêm-tốn-về-vi-cấu-trúc" id="toc-việt-nam-đòi-hỏi-sự-khiêm-tốn-về-vi-cấu-trúc" class="nav-link" data-scroll-target="#việt-nam-đòi-hỏi-sự-khiêm-tốn-về-vi-cấu-trúc"><span class="header-section-number">48.1.2</span> Việt Nam đòi hỏi “sự khiêm tốn về vi cấu trúc”</a></li>
   </ul></li>
-  <li><a href="#a-reproducibility-checklist-you-can-actually-use" id="toc-a-reproducibility-checklist-you-can-actually-use" class="nav-link" data-scroll-target="#a-reproducibility-checklist-you-can-actually-use"><span class="header-section-number">48.2</span> A reproducibility checklist you can actually use</a></li>
-  <li><a href="#closing-perspective" id="toc-closing-perspective" class="nav-link" data-scroll-target="#closing-perspective"><span class="header-section-number">49</span> Closing perspective</a></li>
+  <li><a href="#danh-mục-kiểm-tra-khả-năng-tái-lập-mà-bạn-có-thể-áp-dụng-ngay" id="toc-danh-mục-kiểm-tra-khả-năng-tái-lập-mà-bạn-có-thể-áp-dụng-ngay" class="nav-link" data-scroll-target="#danh-mục-kiểm-tra-khả-năng-tái-lập-mà-bạn-có-thể-áp-dụng-ngay"><span class="header-section-number">48.2</span> Danh mục kiểm tra khả năng tái lập mà bạn có thể áp dụng ngay</a></li>
+  <li><a href="#góc-nhìn-khép-lại" id="toc-góc-nhìn-khép-lại" class="nav-link" data-scroll-target="#góc-nhìn-khép-lại"><span class="header-section-number">49</span> Góc nhìn khép lại</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/99_conclusion.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/99_conclusion.qmd" class="toc-action"><i class="bi bi-github"></i>Chỉnh sửa trang này</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Báo lỗi</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -789,7 +813,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">48</span>&nbsp; <span class="chapter-title">Conclusion</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">48</span>&nbsp; <span class="chapter-title">Conclusion</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Mã</button></div></div>
 </div>
 
 
@@ -806,25 +830,25 @@ window.Quarto = {
 </header>
 
 
-<p>Empirical finance in emerging and frontier markets is often judged less by the elegance of an estimator than by the credibility of its inputs and the transparency of its decisions. Vietnam makes this point vividly: trading venues and regulatory regimes have evolved quickly, firm coverage can be uneven across time, corporate actions need careful treatment, and accounting conventions require close attention to timing and comparability. Those features do not prevent high-quality research; they simply shift the center of gravity toward <em>reproducible data engineering</em>, <em>auditable transformations</em>, and <em>clear identification of assumptions</em>.</p>
-<section id="what-you-should-take-away" class="level2" data-number="48.1">
-<h2 data-number="48.1" class="anchored" data-anchor-id="what-you-should-take-away"><span class="header-section-number">48.1</span> What you should take away</h2>
-<section id="reproducibility-is-an-identification-strategy" class="level3" data-number="48.1.1">
-<h3 data-number="48.1.1" class="anchored" data-anchor-id="reproducibility-is-an-identification-strategy"><span class="header-section-number">48.1.1</span> Reproducibility is an identification strategy</h3>
-<p>In textbook settings, identification focuses on variation and exogeneity. In real-world market data, identification also depends on whether your dataset is <em>the same dataset</em> when you rerun the work next month or next year. The practical discipline of versioned inputs, deterministic transformations, and documented filters reduces the scope for accidental <span class="math inline">\(p\)</span>-hacking and silent sample drift (e.g., survivorship bias from symbol changes or late-arriving delistings). Reproducible workflows are not administrative overhead; they are a commitment device that makes results more trustworthy and easier to challenge constructively <span class="citation" data-cites="peng2011reproducible sandve2013ten">(<a href="references.html#ref-peng2011reproducible" role="doc-biblioref">Peng 2011</a>; <a href="references.html#ref-sandve2013ten" role="doc-biblioref">Sandve et al. 2013</a>)</span>.</p>
+<p>Tài chính thực nghiệm ở các thị trường mới nổi và thị trường cận biên thường được đánh giá không phải bởi sự thanh lịch của một công cụ ước lượng, mà bởi độ tin cậy của dữ liệu đầu vào và tính minh bạch của các quyết định xử lý. Việt Nam cho thấy điều này rất rõ: các sàn giao dịch và khuôn khổ pháp lý thay đổi nhanh, phạm vi dữ liệu doanh nghiệp có thể không đồng đều theo thời gian, các sự kiện doanh nghiệp (corporate actions) cần được xử lý cẩn thận, và các quy ước kế toán đòi hỏi sự chú ý sát sao đến thời điểm ghi nhận và tính so sánh được. Những đặc điểm này không ngăn cản nghiên cứu chất lượng cao; chúng chỉ chuyển trọng tâm sang <em>kỹ thuật dữ liệu có thể tái lập</em>, <em>các phép biến đổi có thể kiểm toán</em>, và <em>việc xác định rõ ràng các giả định</em>.</p>
+<section id="những-điều-bạn-cần-ghi-nhớ" class="level2" data-number="48.1">
+<h2 data-number="48.1" class="anchored" data-anchor-id="những-điều-bạn-cần-ghi-nhớ"><span class="header-section-number">48.1</span> Những điều bạn cần ghi nhớ</h2>
+<section id="khả-năng-tái-lập-là-một-chiến-lược-nhận-diện" class="level3" data-number="48.1.1">
+<h3 data-number="48.1.1" class="anchored" data-anchor-id="khả-năng-tái-lập-là-một-chiến-lược-nhận-diện"><span class="header-section-number">48.1.1</span> Khả năng tái lập là một chiến lược nhận diện</h3>
+<p>Trong các tình huống sách giáo khoa, nhận diện nhân quả tập trung vào biến thiên và tính ngoại sinh. Với dữ liệu thị trường thực tế, nhận diện còn phụ thuộc vào việc bộ dữ liệu của bạn có <em>vẫn là bộ dữ liệu đó</em> khi bạn chạy lại công trình vào tháng sau hay năm sau hay không. Kỷ luật thực hành gồm dữ liệu đầu vào có phiên bản, các phép biến đổi mang tính xác định, và các bộ lọc được ghi chép đầy đủ giúp giảm nguy cơ <span class="math inline">\(p\)</span>-hacking vô ý và sự trôi dạt mẫu âm thầm (ví dụ: thiên kiến sống sót do đổi mã chứng khoán hoặc do các trường hợp hủy niêm yết được cập nhật muộn). Quy trình tái lập được không phải là gánh nặng hành chính; đó là một cơ chế cam kết giúp kết quả đáng tin cậy hơn và dễ được phản biện một cách xây dựng hơn <span class="citation" data-cites="peng2011reproducible sandve2013ten">(<a href="references.html#ref-peng2011reproducible" role="doc-biblioref">Peng 2011</a>; <a href="references.html#ref-sandve2013ten" role="doc-biblioref">Sandve và c.s. 2013</a>)</span>.</p>
 </section>
-<section id="vietnam-rewards-microstructure-humility" class="level3" data-number="48.1.2">
-<h3 data-number="48.1.2" class="anchored" data-anchor-id="vietnam-rewards-microstructure-humility"><span class="header-section-number">48.1.2</span> Vietnam rewards “microstructure humility”</h3>
-<p>The chapters on returns, beta estimation, and factor construction emphasized that naïve carryover of developed-market defaults can be costly. Thin trading, price limits, lot-size rules, and regime changes mean that decisions like (i) return interval, (ii) stale-price handling, (iii) corporate-action adjustment, and (iv) portfolio formation frequency can materially change inference. This is not a Vietnam-only phenomenon, but it is more visible there, and therefore a useful laboratory for best practices in emerging markets.</p>
+<section id="việt-nam-đòi-hỏi-sự-khiêm-tốn-về-vi-cấu-trúc" class="level3" data-number="48.1.2">
+<h3 data-number="48.1.2" class="anchored" data-anchor-id="việt-nam-đòi-hỏi-sự-khiêm-tốn-về-vi-cấu-trúc"><span class="header-section-number">48.1.2</span> Việt Nam đòi hỏi “sự khiêm tốn về vi cấu trúc”</h3>
+<p>Các chương về lợi nhuận, ước lượng beta và xây dựng nhân tố đã nhấn mạnh rằng việc áp dụng máy móc các thiết lập mặc định của thị trường phát triển có thể gây tốn kém. Giao dịch thưa thớt, biên độ giá, quy định về lô giao dịch và các thay đổi chế độ khiến những quyết định như (i) khoảng thời gian tính lợi nhuận, (ii) cách xử lý giá không được cập nhật, (iii) điều chỉnh sự kiện doanh nghiệp, và (iv) tần suất hình thành danh mục có thể làm thay đổi đáng kể kết quả suy luận. Đây không phải hiện tượng chỉ có ở Việt Nam, nhưng nó thể hiện rõ hơn ở đây, và do đó là một phòng thí nghiệm hữu ích cho các thực hành tốt nhất tại thị trường mới nổi.</p>
 </section>
 </section>
-<section id="a-reproducibility-checklist-you-can-actually-use" class="level2" data-number="48.2">
-<h2 data-number="48.2" class="anchored" data-anchor-id="a-reproducibility-checklist-you-can-actually-use"><span class="header-section-number">48.2</span> A reproducibility checklist you can actually use</h2>
-<p>The list below is designed to be operational: each item can be verified in a repository review.</p>
+<section id="danh-mục-kiểm-tra-khả-năng-tái-lập-mà-bạn-có-thể-áp-dụng-ngay" class="level2" data-number="48.2">
+<h2 data-number="48.2" class="anchored" data-anchor-id="danh-mục-kiểm-tra-khả-năng-tái-lập-mà-bạn-có-thể-áp-dụng-ngay"><span class="header-section-number">48.2</span> Danh mục kiểm tra khả năng tái lập mà bạn có thể áp dụng ngay</h2>
+<p>Danh sách dưới đây được thiết kế để có thể vận hành: mỗi mục đều có thể được kiểm chứng khi rà soát một kho mã nguồn.</p>
 <div id="tbl-repro-checklist" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-repro-checklist-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;48.1: Reproducibility deliverables for research
+Bảng&nbsp;48.1: Các sản phẩm bàn giao về khả năng tái lập trong nghiên cứu
 </figcaption>
 <div aria-describedby="tbl-repro-checklist-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -835,35 +859,35 @@ Table&nbsp;48.1: Reproducibility deliverables for research
 </colgroup>
 <thead>
 <tr class="header">
-<th>Deliverable</th>
-<th>What “done” looks like</th>
-<th>Where it lives</th>
+<th>Sản phẩm bàn giao</th>
+<th>“Hoàn thành” trông như thế nào</th>
+<th>Vị trí lưu</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Deterministic transforms</td>
-<td>Same raw inputs yield identical normalized outputs</td>
-<td><code>R/transform_*.R</code> (or <code>python/transform_*.py</code>)</td>
+<td>Biến đổi mang tính xác định</td>
+<td>Cùng dữ liệu thô đầu vào cho ra kết quả chuẩn hóa giống hệt nhau</td>
+<td><code>R/transform_*.R</code> (hoặc <code>python/transform_*.py</code>)</td>
 </tr>
 <tr class="even">
-<td>Test suite</td>
-<td>Coverage, identity, and corporate-action tests run in CI</td>
-<td><code>tests/</code> + CI config</td>
+<td>Bộ kiểm thử</td>
+<td>Các kiểm thử về độ phủ, định danh và sự kiện doanh nghiệp chạy được trong CI</td>
+<td><code>tests/</code> + cấu hình CI</td>
 </tr>
 <tr class="odd">
-<td>Data dictionary</td>
-<td>Tables/fields documented with units, timing, and keys</td>
+<td>Từ điển dữ liệu</td>
+<td>Các bảng/trường được ghi chép đầy đủ đơn vị, thời điểm và khóa</td>
 <td><code>docs/dictionary.qmd</code></td>
 </tr>
 <tr class="even">
-<td>Research log</td>
-<td>All key design choices recorded (filters, winsorization, periods)</td>
+<td>Nhật ký nghiên cứu</td>
+<td>Mọi lựa chọn thiết kế quan trọng đều được ghi lại (bộ lọc, winsorization, giai đoạn)</td>
 <td><code>notes/research_log.md</code></td>
 </tr>
 <tr class="odd">
-<td>Artifact registry</td>
-<td>Every figure/table has a script and a checksum</td>
+<td>Sổ đăng ký sản phẩm đầu ra</td>
+<td>Mỗi hình/bảng đều có một đoạn mã và một giá trị checksum</td>
 <td><code>artifacts/manifest.json</code></td>
 </tr>
 </tbody>
@@ -872,9 +896,9 @@ Table&nbsp;48.1: Reproducibility deliverables for research
 </figure>
 </div>
 </section>
-<section id="closing-perspective" class="level1" data-number="49">
-<h1 data-number="49"><span class="header-section-number">49</span> Closing perspective</h1>
-<p>Vietnam is not “hard mode” finance; it is <em>real mode</em> finance. The market’s growth, institutional evolution, and data idiosyncrasies force the habits that modern empirical finance increasingly requires everywhere: transparent datasets, careful treatment of identities and corporate actions, and codebases that can be rerun and audited.</p>
+<section id="góc-nhìn-khép-lại" class="level1" data-number="49">
+<h1 data-number="49"><span class="header-section-number">49</span> Góc nhìn khép lại</h1>
+<p>Việt Nam không phải là tài chính ở “chế độ khó”; đó là tài chính ở <em>chế độ thực</em>. Sự tăng trưởng của thị trường, quá trình phát triển thể chế và những đặc thù của dữ liệu buộc chúng ta hình thành những thói quen mà tài chính thực nghiệm hiện đại ngày càng đòi hỏi ở mọi nơi: bộ dữ liệu minh bạch, xử lý cẩn thận các định danh và sự kiện doanh nghiệp, và các mã nguồn có thể chạy lại và kiểm toán.</p>
 <!-- ## Suggested next projects
 
 1. **Liquidity-aware factor models for Vietnam**: incorporate trading frictions and stale prices into factor design and evaluation.
@@ -887,29 +911,43 @@ Table&nbsp;48.1: Reproducibility deliverables for research
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
 <div id="ref-peng2011reproducible" class="csl-entry" role="listitem">
-Peng, Roger D. 2011. <span>“Reproducible Research in Computational Science.”</span> <em>Science</em> 334 (6060): 1226–27.
+Peng, Roger D. 2011. <span>“Reproducible research in computational science”</span>. <em>Science</em> 334 (6060): 1226–27.
 </div>
 <div id="ref-sandve2013ten" class="csl-entry" role="listitem">
-Sandve, Geir Kjetil, Anton Nekrutenko, James Taylor, and Eivind Hovig. 2013. <span>“Ten Simple Rules for Reproducible Computational Research.”</span> <em>PLoS Computational Biology</em> 9 (10): e1003285.
+Sandve, Geir Kjetil, Anton Nekrutenko, James Taylor, và Eivind Hovig. 2013. <span>“Ten simple rules for reproducible computational research”</span>. <em>PLoS computational biology</em> 9 (10): e1003285.
 </div>
 </div>
 </section>
 
 </main> <!-- /main -->
 <script>
+
 document.addEventListener("DOMContentLoaded", function () {
+
   const year = new Date().getFullYear();
+
   document.getElementById("copyright").textContent = "© " + year;
+
 });
+
 </script>
+
 <!-- Google tag (gtag.js) -->
+
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-LG91D0C6RB"></script>
+
 <script>
+
   window.dataLayer = window.dataLayer || [];
+
   function gtag(){dataLayer.push(arguments);}
+
   gtag('js', new Date());
 
+
+
   gtag('config', 'G-LG91D0C6RB');
+
 </script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
@@ -949,12 +987,12 @@ document.addEventListener("DOMContentLoaded", function () {
       // flash "checked"
       button.classList.add('code-copy-button-checked');
       var currentTitle = button.getAttribute("title");
-      button.setAttribute("title", "Copied!");
+      button.setAttribute("title", "Đã sao chép!");
       let tooltip;
       if (window.bootstrap) {
         button.setAttribute("data-bs-toggle", "tooltip");
         button.setAttribute("data-bs-placement", "left");
-        button.setAttribute("data-bs-title", "Copied!");
+        button.setAttribute("data-bs-title", "Đã sao chép!");
         tooltip = new bootstrap.Tooltip(button, 
           { trigger: "manual", 
             customClass: "code-copy-button-tooltip",
@@ -975,14 +1013,13 @@ document.addEventListener("DOMContentLoaded", function () {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-      const outerScaffold = trigger.parentElement.cloneNode(true);
-      const codeEl = outerScaffold.querySelector('code');
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
         }
-      }
-      return codeEl.innerText;
+        return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
@@ -1377,8 +1414,8 @@ document.addEventListener("DOMContentLoaded", function () {
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./74_multimodel.html" class="pagination-link" aria-label="Multimodal Models in Finance">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Multimodal Models in Finance</span></span>
+      <a href="./74_multimodel.html" class="pagination-link" aria-label="Các mô hình đa phương thức trong tài chính">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Các mô hình đa phương thức trong tài chính</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
@@ -1386,8 +1423,8 @@ document.addEventListener("DOMContentLoaded", function () {
         <span class="nav-page-text">References</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
-</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Mã nguồn</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Conclusion"</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span><span class="co"> html</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">execute:</span></span>
@@ -1396,35 +1433,35 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">  message: false</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>Empirical finance in emerging and frontier markets is often judged less by the elegance of an estimator than by the credibility of its inputs and the transparency of its decisions. Vietnam makes this point vividly: trading venues and regulatory regimes have evolved quickly, firm coverage can be uneven across time, corporate actions need careful treatment, and accounting conventions require close attention to timing and comparability. Those features do not prevent high-quality research; they simply shift the center of gravity toward *reproducible data engineering*, *auditable transformations*, and *clear identification of assumptions*.</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>Tài chính thực nghiệm ở các thị trường mới nổi và thị trường cận biên thường được đánh giá không phải bởi sự thanh lịch của một công cụ ước lượng, mà bởi độ tin cậy của dữ liệu đầu vào và tính minh bạch của các quyết định xử lý. Việt Nam cho thấy điều này rất rõ: các sàn giao dịch và khuôn khổ pháp lý thay đổi nhanh, phạm vi dữ liệu doanh nghiệp có thể không đồng đều theo thời gian, các sự kiện doanh nghiệp (corporate actions) cần được xử lý cẩn thận, và các quy ước kế toán đòi hỏi sự chú ý sát sao đến thời điểm ghi nhận và tính so sánh được. Những đặc điểm này không ngăn cản nghiên cứu chất lượng cao; chúng chỉ chuyển trọng tâm sang *kỹ thuật dữ liệu có thể tái lập*, *các phép biến đổi có thể kiểm toán*, và *việc xác định rõ ràng các giả định*.</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">## What you should take away</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">## Những điều bạn cần ghi nhớ</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">### Reproducibility is an identification strategy</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">### Khả năng tái lập là một chiến lược nhận diện</span></span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>In textbook settings, identification focuses on variation and exogeneity. In real-world market data, identification also depends on whether your dataset is *the same dataset* when you rerun the work next month or next year. The practical discipline of versioned inputs, deterministic transformations, and documented filters reduces the scope for accidental $p$-hacking and silent sample drift (e.g., survivorship bias from symbol changes or late-arriving delistings). Reproducible workflows are not administrative overhead; they are a commitment device that makes results more trustworthy and easier to challenge constructively <span class="co">[</span><span class="ot">@peng2011reproducible; @sandve2013ten</span><span class="co">]</span>.</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>Trong các tình huống sách giáo khoa, nhận diện nhân quả tập trung vào biến thiên và tính ngoại sinh. Với dữ liệu thị trường thực tế, nhận diện còn phụ thuộc vào việc bộ dữ liệu của bạn có *vẫn là bộ dữ liệu đó* khi bạn chạy lại công trình vào tháng sau hay năm sau hay không. Kỷ luật thực hành gồm dữ liệu đầu vào có phiên bản, các phép biến đổi mang tính xác định, và các bộ lọc được ghi chép đầy đủ giúp giảm nguy cơ $p$-hacking vô ý và sự trôi dạt mẫu âm thầm (ví dụ: thiên kiến sống sót do đổi mã chứng khoán hoặc do các trường hợp hủy niêm yết được cập nhật muộn). Quy trình tái lập được không phải là gánh nặng hành chính; đó là một cơ chế cam kết giúp kết quả đáng tin cậy hơn và dễ được phản biện một cách xây dựng hơn <span class="co">[</span><span class="ot">@peng2011reproducible; @sandve2013ten</span><span class="co">]</span>.</span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">### Vietnam rewards “microstructure humility”</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">### Việt Nam đòi hỏi “sự khiêm tốn về vi cấu trúc”</span></span>
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>The chapters on returns, beta estimation, and factor construction emphasized that naïve carryover of developed-market defaults can be costly. Thin trading, price limits, lot-size rules, and regime changes mean that decisions like (i) return interval, (ii) stale-price handling, (iii) corporate-action adjustment, and (iv) portfolio formation frequency can materially change inference. This is not a Vietnam-only phenomenon, but it is more visible there, and therefore a useful laboratory for best practices in emerging markets.</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>Các chương về lợi nhuận, ước lượng beta và xây dựng nhân tố đã nhấn mạnh rằng việc áp dụng máy móc các thiết lập mặc định của thị trường phát triển có thể gây tốn kém. Giao dịch thưa thớt, biên độ giá, quy định về lô giao dịch và các thay đổi chế độ khiến những quyết định như (i) khoảng thời gian tính lợi nhuận, (ii) cách xử lý giá không được cập nhật, (iii) điều chỉnh sự kiện doanh nghiệp, và (iv) tần suất hình thành danh mục có thể làm thay đổi đáng kể kết quả suy luận. Đây không phải hiện tượng chỉ có ở Việt Nam, nhưng nó thể hiện rõ hơn ở đây, và do đó là một phòng thí nghiệm hữu ích cho các thực hành tốt nhất tại thị trường mới nổi.</span>
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="fu">## A reproducibility checklist you can actually use</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="fu">## Danh mục kiểm tra khả năng tái lập mà bạn có thể áp dụng ngay</span></span>
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>The list below is designed to be operational: each item can be verified in a repository review.</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>Danh sách dưới đây được thiết kế để có thể vận hành: mỗi mục đều có thể được kiểm chứng khi rà soát một kho mã nguồn.</span>
 <span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Deliverable <span class="pp">|</span> What “done” looks like <span class="pp">|</span> Where it lives <span class="pp">|</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Sản phẩm bàn giao <span class="pp">|</span> “Hoàn thành” trông như thế nào <span class="pp">|</span> Vị trí lưu <span class="pp">|</span></span>
 <span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="pp">|-----------------|---------------------------------|-----------------------|</span></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Deterministic transforms <span class="pp">|</span> Same raw inputs yield identical normalized outputs <span class="pp">|</span> <span class="in">`R/transform_*.R`</span> (or <span class="in">`python/transform_*.py`</span>) <span class="pp">|</span></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Test suite <span class="pp">|</span> Coverage, identity, and corporate-action tests run in CI <span class="pp">|</span> <span class="in">`tests/`</span> + CI config <span class="pp">|</span></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Data dictionary <span class="pp">|</span> Tables/fields documented with units, timing, and keys <span class="pp">|</span> <span class="in">`docs/dictionary.qmd`</span> <span class="pp">|</span></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Research log <span class="pp">|</span> All key design choices recorded (filters, winsorization, periods) <span class="pp">|</span> <span class="in">`notes/research_log.md`</span> <span class="pp">|</span></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Artifact registry <span class="pp">|</span> Every figure/table has a script and a checksum <span class="pp">|</span> <span class="in">`artifacts/manifest.json`</span> <span class="pp">|</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Biến đổi mang tính xác định <span class="pp">|</span> Cùng dữ liệu thô đầu vào cho ra kết quả chuẩn hóa giống hệt nhau <span class="pp">|</span> <span class="in">`R/transform_*.R`</span> (hoặc <span class="in">`python/transform_*.py`</span>) <span class="pp">|</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Bộ kiểm thử <span class="pp">|</span> Các kiểm thử về độ phủ, định danh và sự kiện doanh nghiệp chạy được trong CI <span class="pp">|</span> <span class="in">`tests/`</span> + cấu hình CI <span class="pp">|</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Từ điển dữ liệu <span class="pp">|</span> Các bảng/trường được ghi chép đầy đủ đơn vị, thời điểm và khóa <span class="pp">|</span> <span class="in">`docs/dictionary.qmd`</span> <span class="pp">|</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Nhật ký nghiên cứu <span class="pp">|</span> Mọi lựa chọn thiết kế quan trọng đều được ghi lại (bộ lọc, winsorization, giai đoạn) <span class="pp">|</span> <span class="in">`notes/research_log.md`</span> <span class="pp">|</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Sổ đăng ký sản phẩm đầu ra <span class="pp">|</span> Mỗi hình/bảng đều có một đoạn mã và một giá trị checksum <span class="pp">|</span> <span class="in">`artifacts/manifest.json`</span> <span class="pp">|</span></span>
 <span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>: Reproducibility deliverables for research {#tbl-repro-checklist}</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>: Các sản phẩm bàn giao về khả năng tái lập trong nghiên cứu {#tbl-repro-checklist}</span>
 <span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="fu"># Closing perspective</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="fu"># Góc nhìn khép lại</span></span>
 <span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>Vietnam is not “hard mode” finance; it is *real mode* finance. The market’s growth, institutional evolution, and data idiosyncrasies force the habits that modern empirical finance increasingly requires everywhere: transparent datasets, careful treatment of identities and corporate actions, and codebases that can be rerun and audited.</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>Việt Nam không phải là tài chính ở “chế độ khó”; đó là tài chính ở *chế độ thực*. Sự tăng trưởng của thị trường, quá trình phát triển thể chế và những đặc thù của dữ liệu buộc chúng ta hình thành những thói quen mà tài chính thực nghiệm hiện đại ngày càng đòi hỏi ở mọi nơi: bộ dữ liệu minh bạch, xử lý cẩn thận các định danh và sự kiện doanh nghiệp, và các mã nguồn có thể chạy lại và kiểm toán.</span>
 <span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="in">```{=html}</span></span>
 <span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="in">&lt;!-- ## Suggested next projects</span></span>
@@ -1433,7 +1470,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="in">2. **Event studies with corporate actions and disclosures**: build a disclosure calendar and test abnormal returns with robust inference.</span></span>
 <span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="in">3. **Integrated valuation + asset pricing**: connect DCF assumptions to cross-sectional expected return estimates.</span></span>
 <span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="in">4. **Macro-finance linkages**: align FX, rates, and macro series with trading calendars and test regime-dependent exposures. --&gt;</span></span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
@@ -1443,7 +1480,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/99_conclusion.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/99_conclusion.qmd" class="toc-action"><i class="bi bi-github"></i>Chỉnh sửa trang này</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Báo lỗi</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>

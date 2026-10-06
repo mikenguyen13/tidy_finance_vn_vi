@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi" xml:lang="vi"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.26">
+<meta name="generator" content="quarto-1.7.33">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 
-<title>10&nbsp; Size Sorts – Tài Chính Ứng Dụng với Python</title>
+<title>10&nbsp; Phân loại theo quy mô – Tài Chính Ứng Dụng với Python</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -90,19 +91,18 @@ div.csl-indent {
 <link href="./favicon.ico" rel="icon">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-bc185b5c5bdbcb35c2eb49d8a876ef70.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-72097b8a1e3a3da1d7b8bbfaaf81c3d8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-5ee5e5a16e06a4aa31defda297eed821.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -117,19 +117,43 @@ div.csl-indent {
   ],
   "show-item-context": false,
   "language": {
-    "search-no-results-text": "No results",
-    "search-matching-documents-text": "matching documents",
-    "search-copy-link-title": "Copy link to search",
-    "search-hide-matches-text": "Hide additional matches",
-    "search-more-match-text": "more match in this document",
-    "search-more-matches-text": "more matches in this document",
-    "search-clear-button-title": "Clear",
+    "search-no-results-text": "Không có kết quả",
+    "search-matching-documents-text": "tài liệu phù hợp",
+    "search-copy-link-title": "Sao chép liên kết tìm kiếm",
+    "search-hide-matches-text": "Ẩn các kết quả khớp khác",
+    "search-more-match-text": "kết quả khớp khác trong tài liệu này",
+    "search-more-matches-text": "kết quả khớp khác trong tài liệu này",
+    "search-clear-button-title": "Xóa",
     "search-text-placeholder": "",
-    "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit",
-    "search-label": "Search"
+    "search-detached-cancel-button-title": "Hủy",
+    "search-submit-button-title": "Gửi",
+    "search-label": "Tìm kiếm"
   }
 }</script>
+<!-- =====================================================================
+     SEO: schema.org Book JSON-LD, injected into the <head> of every page
+     via format.html include-in-header. The plain meta description and the
+     og:/twitter: descriptions come from the book `description:` key in
+     _quarto.yml - don't repeat them here (duplicate meta description).
+     ===================================================================== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": "Tài Chính Ứng Dụng với Python",
+  "url": "https://mikenguyen13.github.io/tidy_finance_vn_vi/",
+  "inLanguage": "vi",
+  "bookFormat": "https://schema.org/EBook",
+  "genre": "Empirical Finance",
+  "description": "Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: truy cập và quản lý dữ liệu tài chính, xây dựng danh mục đầu tư, mô hình định giá tài sản, kiểm định chéo, phân tích cơ bản và định giá doanh nghiệp.",
+  "keywords": "tài chính định lượng, thị trường chứng khoán Việt Nam, tài chính thực nghiệm, định giá tài sản, Fama-French, danh mục đầu tư, Python, VN30, HOSE",
+  "author": {
+    "@type": "Person",
+    "name": "Mike Nguyen"
+  },
+  "isAccessibleForFree": true
+}
+</script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -145,7 +169,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+      if (mathElements[i].tagName == "SPAN") {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -162,17 +186,17 @@ window.Quarto = {
 </script>
 
 <link rel="stylesheet" href="styles.css">
-<meta property="og:title" content="10&nbsp; Size Sorts – Tài Chính Ứng Dụng với Python">
-<meta property="og:description" content="">
+<meta property="og:title" content="10&nbsp; Phân loại theo quy mô – Tài Chính Ứng Dụng với Python">
+<meta property="og:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta property="og:image" content="https://mikenguyen13.github.io/tidy_finance_vn_vi/12_size_sorts_files/figure-html/fig-801-output-2.png">
 <meta property="og:site_name" content="Tài Chính Ứng Dụng với Python">
-<meta property="og:image:alt" content="Title: Percentage of total market capitalization in largest stocks. The figure shows a line chart with four different lines that are relatively stable during the entire sample period. The largest 1 percent of all stocks on average comprise around 40 percent of the entire market capitalization. For the largest 25 percent, the share is around 90 percent.">
+<meta property="og:image:alt" content="Tiêu đề: Tỷ lệ phần trăm tổng vốn hóa thị trường nằm ở các cổ phiếu lớn nhất. Hình cho thấy biểu đồ đường với bốn đường khác nhau tương đối ổn định trong toàn bộ giai đoạn mẫu. 1 phần trăm cổ phiếu lớn nhất trung bình chiếm khoảng 40 phần trăm toàn bộ vốn hóa thị trường. Với 25 phần trăm lớn nhất, tỷ trọng vào khoảng 90 phần trăm.">
 <meta property="og:image:height" content="960">
 <meta property="og:image:width" content="1344">
-<meta name="twitter:title" content="10&nbsp; Size Sorts – Tài Chính Ứng Dụng với Python">
-<meta name="twitter:description" content="">
+<meta name="twitter:title" content="10&nbsp; Phân loại theo quy mô – Tài Chính Ứng Dụng với Python">
+<meta name="twitter:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta name="twitter:image" content="https://mikenguyen13.github.io/tidy_finance_vn_vi/12_size_sorts_files/figure-html/fig-801-output-2.png">
-<meta name="twitter:image:alt" content="Title: Percentage of total market capitalization in largest stocks. The figure shows a line chart with four different lines that are relatively stable during the entire sample period. The largest 1 percent of all stocks on average comprise around 40 percent of the entire market capitalization. For the largest 25 percent, the share is around 90 percent.">
+<meta name="twitter:image:alt" content="Tiêu đề: Tỷ lệ phần trăm tổng vốn hóa thị trường nằm ở các cổ phiếu lớn nhất. Hình cho thấy biểu đồ đường với bốn đường khác nhau tương đối ổn định trong toàn bộ giai đoạn mẫu. 1 phần trăm cổ phiếu lớn nhất trung bình chiếm khoảng 40 phần trăm toàn bộ vốn hóa thị trường. Với 25 phần trăm lớn nhất, tỷ trọng vào khoảng 90 phần trăm.">
 <meta name="twitter:image-height" content="960">
 <meta name="twitter:image-width" content="1344">
 <meta name="twitter:card" content="summary_large_image">
@@ -351,8 +375,8 @@ window.Quarto = {
     <span class="navbar-title">Tài Chính Ứng Dụng với Python</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+            <div id="quarto-search" class="" title="Tìm kiếm"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Bật/tắt điều hướng" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -372,18 +396,18 @@ window.Quarto = {
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Mã nguồn" class="quarto-navigation-tool px-1" aria-label="Mã nguồn"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Bật/tắt chế độ tối"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
   <nav class="quarto-secondary-nav">
     <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./10_modern_portfolio_theory.html">Xây dựng danh mục đầu tư, rủi ro và cơ học thực nghiệm</a></li><li class="breadcrumb-item"><a href="./12_size_sorts.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Size Sorts</span></a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./10_modern_portfolio_theory.html">Xây dựng danh mục đầu tư, rủi ro và cơ học thực nghiệm</a></li><li class="breadcrumb-item"><a href="./12_size_sorts.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phân loại theo quy mô</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
   </nav>
@@ -404,7 +428,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
  <span class="menu-text">Thị trường tài chính, thể chế và dữ liệu Việt Nam</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -412,7 +436,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./00_institutional_background.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Nền tảng thể chế và cấu trúc thị trường của thị trường chứng khoán Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Bối cảnh thể chế và cấu trúc thị trường cổ phiếu Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -430,7 +454,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./03_market_microstructure.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Cấu trúc thị trường vi mô tại Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Vi cấu trúc thị trường tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -442,7 +466,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05_working_with_stock_returns.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận vốn chủ sở hữu</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận cổ phiếu</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -457,7 +481,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
  <span class="menu-text">Xây dựng danh mục đầu tư, rủi ro và cơ học thực nghiệm</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -465,7 +489,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./10_modern_portfolio_theory.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Lý thuyết danh mục đầu tư hiện đại</span></span></a>
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -477,7 +501,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./12_size_sorts.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Size Sorts</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phân loại theo quy mô</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -489,19 +513,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./14_portfolio_weighting_and_rebalancing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Portfolio Weighting and Rebalancing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Trọng số danh mục đầu tư và tái cân bằng danh mục</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./15_missing_data_and_survivorship.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Missing Data and Survivorship Bias</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Dữ liệu bị thiếu và thiên kiến sống sót</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./16_liquidity_and_turnover_measures.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Liquidity and Turnover Measures</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Các thước đo Thanh khoản và Vòng quay Giao dịch</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -516,7 +540,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình định giá tài sản</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -530,19 +554,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./21_fama_french.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Các nhân tố Fama-French</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./22_momentum.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Momentum Strategies</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Chiến lược động lượng</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./23_factor_construction_principles.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Factor Construction Principles</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Nguyên tắc xây dựng nhân tố</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -554,13 +578,13 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./25_factor_zoo_and_multiple_testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Factor Zoo and Multiple Testing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Vườn thú nhân tố và kiểm định đa giả thuyết</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./26_time_series_vs_cross_section.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Time-Series vs.&nbsp;Cross-Sectional Factor Tests</span></span></a>
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Kiểm định nhân tố theo chuỗi thời gian và theo mặt cắt ngang</span></span></a>
   </div>
 </li>
       </ul>
@@ -569,7 +593,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
  <span class="menu-text">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -589,49 +613,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./32_info_earnings.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Information Content of Earnings Announcements</span></span></a>
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Hàm lượng thông tin của các thông báo lợi nhuận</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./33_accruals.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Accruals, Earnings Persistence, and Market Efficiency</span></span></a>
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Các khoản dồn tích, tính bền vững của lợi nhuận và hiệu quả thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./34_earning_management.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Earnings Management: Detection and Measurement</span></span></a>
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Quản trị lợi nhuận: Phát hiện và đo lường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./35_pe_ratio.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">P/E Ratio</span></span></a>
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Tỷ số P/E</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./36_valuation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Firm Valuation, Financial Distress, and Company Maturity</span></span></a>
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Định giá doanh nghiệp, kiệt quệ tài chính và mức độ trưởng thành của công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./37_disclosure_quality_and_timing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Disclosure Quality and Timing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Chất lượng và thời điểm công bố thông tin</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./38_sue.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></span></a>
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Bất ngờ lợi nhuận chuẩn hóa (SUE)</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./39_divop.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Measuring Divergence of Investor Opinion</span></span></a>
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Đo lường sự phân kỳ quan điểm của nhà đầu tư</span></span></a>
   </div>
 </li>
       </ul>
@@ -640,7 +664,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
  <span class="menu-text">Quyền sở hữu, ma sát thị trường và rủi ro quốc tế</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -648,43 +672,43 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./50_institutional_ownership.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Institutional Ownership Analytics in Vietnam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Phân tích sở hữu tổ chức tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./52_institutional_trade_flow.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Institutional Trades, Flows, and Turnover Ratios</span></span></a>
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Giao dịch, dòng vốn và tỷ lệ vòng quay của nhà đầu tư tổ chức</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./53_governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Corporate Governance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Quản trị công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./54_return_gaps.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Return Gap: Measuring Unobserved Actions of Fund Managers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Chênh lệch lợi nhuận (Return Gap): Đo lường các hành động không quan sát được của nhà quản lý quỹ</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./55_price_limits_and_volatility.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Price Limits and Volatility</span></span></a>
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Biên độ giá và biến động</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./56_market_integration_and_segmentation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Market Integration and Segmentation</span></span></a>
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Hội nhập và phân khúc thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./57_exchange_rate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Exchange Rate Dynamics</span></span></a>
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Động lực của tỷ giá hối đoái</span></span></a>
   </div>
 </li>
       </ul>
@@ -693,7 +717,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình tài chính nâng cao</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -701,25 +725,25 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./60_event_studies.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Event Studies in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Nghiên cứu sự kiện trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./61_tail_risk_extreme_events.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Tail Risk and Extreme Events</span></span></a>
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Rủi ro đuôi và các sự kiện cực đoan</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./62_corporate_finance_estimators.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Corporate Finance Estimators and Identification</span></span></a>
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Các công cụ ước lượng và nhận dạng trong tài chính doanh nghiệp</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./63_structural_models_finance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Structural Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Các mô hình cấu trúc trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -728,7 +752,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
  <span class="menu-text">Dữ liệu thay thế và Trí tuệ nhân tạo trong tài chính</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -736,25 +760,25 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./70_textual.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Textual Analysis</span></span></a>
+ <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Phân tích văn bản</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./71_image.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Image and Visual Data in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Dữ liệu hình ảnh và dữ liệu thị giác trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./73_networks_graphs.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Networks and Graphs in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Mạng lưới và đồ thị trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./74_multimodel.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Multimodal Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Các mô hình đa phương thức trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -778,26 +802,26 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="-1">
-    <h2 id="toc-title">Table of contents</h2>
+    <h2 id="toc-title">Mục lục</h2>
    
   <ul>
-  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link active" data-scroll-target="#data-preparation"><span class="header-section-number">10.1</span> Data Preparation</a></li>
-  <li><a href="#size-distribution" id="toc-size-distribution" class="nav-link" data-scroll-target="#size-distribution"><span class="header-section-number">10.2</span> Size Distribution</a></li>
-  <li><a href="#univariate-size-portfolios-with-flexible-breakpoints" id="toc-univariate-size-portfolios-with-flexible-breakpoints" class="nav-link" data-scroll-target="#univariate-size-portfolios-with-flexible-breakpoints"><span class="header-section-number">10.3</span> Univariate Size Portfolios with Flexible Breakpoints</a></li>
-  <li><a href="#weighting-schemes-for-portfolios" id="toc-weighting-schemes-for-portfolios" class="nav-link" data-scroll-target="#weighting-schemes-for-portfolios"><span class="header-section-number">10.4</span> Weighting Schemes for Portfolios</a></li>
-  <li><a href="#p-hacking-and-non-standard-errors" id="toc-p-hacking-and-non-standard-errors" class="nav-link" data-scroll-target="#p-hacking-and-non-standard-errors"><span class="header-section-number">10.5</span> P-Hacking and Non-Standard Errors</a></li>
-  <li><a href="#size-premium-variation" id="toc-size-premium-variation" class="nav-link" data-scroll-target="#size-premium-variation"><span class="header-section-number">10.6</span> Size-Premium Variation</a></li>
-  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">10.7</span> Key Takeaways</a></li>
+  <li><a href="#chuẩn-bị-dữ-liệu" id="toc-chuẩn-bị-dữ-liệu" class="nav-link active" data-scroll-target="#chuẩn-bị-dữ-liệu"><span class="header-section-number">10.1</span> Chuẩn bị dữ liệu</a></li>
+  <li><a href="#phân-phối-quy-mô" id="toc-phân-phối-quy-mô" class="nav-link" data-scroll-target="#phân-phối-quy-mô"><span class="header-section-number">10.2</span> Phân phối quy mô</a></li>
+  <li><a href="#danh-mục-quy-mô-đơn-biến-với-các-điểm-cắt-linh-hoạt" id="toc-danh-mục-quy-mô-đơn-biến-với-các-điểm-cắt-linh-hoạt" class="nav-link" data-scroll-target="#danh-mục-quy-mô-đơn-biến-với-các-điểm-cắt-linh-hoạt"><span class="header-section-number">10.3</span> Danh mục quy mô đơn biến với các điểm cắt linh hoạt</a></li>
+  <li><a href="#các-cách-đặt-trọng-số-cho-danh-mục" id="toc-các-cách-đặt-trọng-số-cho-danh-mục" class="nav-link" data-scroll-target="#các-cách-đặt-trọng-số-cho-danh-mục"><span class="header-section-number">10.4</span> Các cách đặt trọng số cho danh mục</a></li>
+  <li><a href="#p-hacking-và-sai-số-phi-chuẩn" id="toc-p-hacking-và-sai-số-phi-chuẩn" class="nav-link" data-scroll-target="#p-hacking-và-sai-số-phi-chuẩn"><span class="header-section-number">10.5</span> P-Hacking và sai số phi chuẩn</a></li>
+  <li><a href="#biến-thiên-của-phần-bù-quy-mô" id="toc-biến-thiên-của-phần-bù-quy-mô" class="nav-link" data-scroll-target="#biến-thiên-của-phần-bù-quy-mô"><span class="header-section-number">10.6</span> Biến thiên của phần bù quy mô</a></li>
+  <li><a href="#những-điểm-chính" id="toc-những-điểm-chính" class="nav-link" data-scroll-target="#những-điểm-chính"><span class="header-section-number">10.7</span> Những điểm chính</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/12_size_sorts.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/12_size_sorts.qmd" class="toc-action"><i class="bi bi-github"></i>Chỉnh sửa trang này</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Báo lỗi</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./10_modern_portfolio_theory.html">Xây dựng danh mục đầu tư, rủi ro và cơ học thực nghiệm</a></li><li class="breadcrumb-item"><a href="./12_size_sorts.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Size Sorts</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./10_modern_portfolio_theory.html">Xây dựng danh mục đầu tư, rủi ro và cơ học thực nghiệm</a></li><li class="breadcrumb-item"><a href="./12_size_sorts.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phân loại theo quy mô</span></a></li></ol></nav>
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Size Sorts</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phân loại theo quy mô</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Mã</button></div></div>
 </div>
 
 
@@ -814,23 +838,23 @@ window.Quarto = {
 </header>
 
 
-<p>In this chapter, we continue with portfolio sorts in a univariate setting. Yet, we consider firm size as a sorting variable, which gives rise to a well-known return factor: the size premium. The size premium arises from buying small stocks and selling large stocks. Prominently, <span class="citation" data-cites="Fama1993">Fama and French (<a href="references.html#ref-Fama1993" role="doc-biblioref">1993</a>)</span> include it as a factor in their three-factor model. Apart from that, asset managers commonly include size as a key firm characteristic when making investment decisions.</p>
-<p>We also introduce new choices in the formation of portfolios. In particular, we discuss listing exchanges, industries, weighting regimes, and periods. These choices matter for the portfolio returns and result in different size premiums (see <span class="citation" data-cites="Hasler2021">Hasler (<a href="references.html#ref-Hasler2021" role="doc-biblioref">2021</a>)</span>, <span class="citation" data-cites="Soebhag2022">Soebhag, Van Vliet, and Verwijmeren (<a href="references.html#ref-Soebhag2022" role="doc-biblioref">2022</a>)</span>, and <span class="citation" data-cites="Walter2022">Walter, Weber, and Weiss (<a href="references.html#ref-Walter2022" role="doc-biblioref">2022</a>)</span> for more insights into decision nodes and their effect on premiums).</p>
+<p>Trong chương này, chúng ta tiếp tục với phân loại danh mục trong bối cảnh đơn biến. Tuy nhiên, chúng ta xét quy mô doanh nghiệp làm biến phân loại, từ đó hình thành một nhân tố lợi nhuận nổi tiếng: phần bù quy mô. Phần bù quy mô phát sinh từ việc mua cổ phiếu nhỏ và bán cổ phiếu lớn. Đáng chú ý, <span class="citation" data-cites="Fama1993">Fama và French (<a href="references.html#ref-Fama1993" role="doc-biblioref">1993</a>)</span> đưa nó vào như một nhân tố trong mô hình ba nhân tố của họ. Ngoài ra, các nhà quản lý tài sản thường đưa quy mô vào như một đặc điểm then chốt của doanh nghiệp khi ra quyết định đầu tư.</p>
+<p>Chúng ta cũng giới thiệu các lựa chọn mới trong việc hình thành danh mục. Cụ thể, chúng ta thảo luận về sàn niêm yết, ngành, cách đặt trọng số và giai đoạn. Những lựa chọn này ảnh hưởng đến lợi nhuận danh mục và dẫn đến các phần bù quy mô khác nhau (xem <span class="citation" data-cites="Hasler2021">Hasler (<a href="references.html#ref-Hasler2021" role="doc-biblioref">2021</a>)</span>, <span class="citation" data-cites="Soebhag2022">Soebhag, Van Vliet, và Verwijmeren (<a href="references.html#ref-Soebhag2022" role="doc-biblioref">2022</a>)</span> và <span class="citation" data-cites="Walter2022">Walter, Weber, và Weiss (<a href="references.html#ref-Walter2022" role="doc-biblioref">2022</a>)</span> để hiểu thêm về các nút quyết định và tác động của chúng lên các phần bù).</p>
 <div id="aecde9bf" class="cell" data-execution_count="1">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sqlite3</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotnine <span class="im">import</span> <span class="op">*</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> mizani.formatters <span class="im">import</span> percent_format</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> product</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> joblib <span class="im">import</span> Parallel, delayed, cpu_count</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> joblib <span class="im">import</span> Parallel, delayed, cpu_count</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<section id="data-preparation" class="level2" data-number="10.1">
-<h2 data-number="10.1" class="anchored" data-anchor-id="data-preparation"><span class="header-section-number">10.1</span> Data Preparation</h2>
-<p>First, we retrieve the relevant data from our SQLite database introduced in Accessing and Managing Financial Data and DataCore Data. Firm size is defined as market equity in most asset pricing applications. We further use the Fama-French factor returns for performance evaluation.</p>
+<section id="chuẩn-bị-dữ-liệu" class="level2" data-number="10.1">
+<h2 data-number="10.1" class="anchored" data-anchor-id="chuẩn-bị-dữ-liệu"><span class="header-section-number">10.1</span> Chuẩn bị dữ liệu</h2>
+<p>Trước hết, chúng ta lấy dữ liệu liên quan từ cơ sở dữ liệu SQLite đã được giới thiệu trong chương Truy cập và quản lý dữ liệu tài chính và Dữ liệu DataCore. Quy mô doanh nghiệp được định nghĩa là vốn chủ sở hữu theo giá thị trường trong hầu hết các ứng dụng định giá tài sản. Chúng ta còn dùng lợi nhuận nhân tố Fama-French để đánh giá hiệu quả.</p>
 <div id="ca2c6f8d" class="cell" data-execution_count="2">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>tidy_finance <span class="op">=</span> sqlite3.<span class="ex">connect</span>(</span>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>tidy_finance <span class="op">=</span> sqlite3.<span class="ex">connect</span>(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  database<span class="op">=</span><span class="st">"data/tidy_finance_python.sqlite"</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -844,15 +868,15 @@ window.Quarto = {
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  sql<span class="op">=</span><span class="st">"SELECT * FROM factors_ff3_monthly"</span>, </span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  con<span class="op">=</span>tidy_finance, </span>
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  parse_dates<span class="op">=</span>{<span class="st">"date"</span>}</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="size-distribution" class="level2" data-number="10.2">
-<h2 data-number="10.2" class="anchored" data-anchor-id="size-distribution"><span class="header-section-number">10.2</span> Size Distribution</h2>
-<p>Before we build our size portfolios, we investigate the distribution of the variable <em>firm size</em>. Visualizing the data is a valuable starting point to understand the input to the analysis. <a href="#fig-801" class="quarto-xref">Figure&nbsp;<span>10.1</span></a> shows the fraction of total market capitalization concentrated in the largest firm. To produce this graph, we create monthly indicators that track whether a stock belongs to the largest x percent of the firms. Then, we aggregate the firms within each bucket and compute the buckets’ share of total market capitalization.</p>
-<p><a href="#fig-801" class="quarto-xref">Figure&nbsp;<span>10.1</span></a> shows that the largest 1 percent of firms cover up to 50 percent of the total market capitalization, and holding just the 25 percent largest firms in the universe essentially replicates the market portfolio. The distribution of firm size thus implies that the largest firms of the market dominate many small firms whenever we use value-weighted benchmarks.</p>
+<section id="phân-phối-quy-mô" class="level2" data-number="10.2">
+<h2 data-number="10.2" class="anchored" data-anchor-id="phân-phối-quy-mô"><span class="header-section-number">10.2</span> Phân phối quy mô</h2>
+<p>Trước khi xây dựng các danh mục theo quy mô, chúng ta khảo sát phân phối của biến <em>quy mô doanh nghiệp</em>. Trực quan hóa dữ liệu là điểm khởi đầu có giá trị để hiểu đầu vào của phân tích. <a href="#fig-801" class="quarto-xref">Hình&nbsp;<span>10.1</span></a> cho thấy tỷ lệ tổng vốn hóa thị trường tập trung ở các doanh nghiệp lớn nhất. Để tạo biểu đồ này, chúng ta lập các chỉ báo theo tháng theo dõi xem một cổ phiếu có thuộc x phần trăm doanh nghiệp lớn nhất hay không. Sau đó, chúng ta gộp các doanh nghiệp trong mỗi nhóm và tính tỷ trọng của từng nhóm trong tổng vốn hóa thị trường.</p>
+<p><a href="#fig-801" class="quarto-xref">Hình&nbsp;<span>10.1</span></a> cho thấy 1 phần trăm doanh nghiệp lớn nhất chiếm tới 50 phần trăm tổng vốn hóa thị trường, và chỉ cần nắm giữ 25 phần trăm doanh nghiệp lớn nhất trong tập hợp về cơ bản đã tái tạo được danh mục thị trường. Do đó, phân phối quy mô doanh nghiệp hàm ý rằng các doanh nghiệp lớn nhất của thị trường lấn át nhiều doanh nghiệp nhỏ mỗi khi chúng ta dùng các chuẩn so sánh theo trọng số vốn hóa.</p>
 <div id="cell-fig-801" class="cell" data-execution_count="3">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>market_cap_concentration <span class="op">=</span> (prices_monthly</span>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>market_cap_concentration <span class="op">=</span> (prices_monthly</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  .groupby(<span class="st">"date"</span>)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  .<span class="bu">apply</span>(<span class="kw">lambda</span> x: pd.Series({</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Largest 1%"</span>: x.loc[x[<span class="st">"mktcap"</span>] <span class="op">&gt;=</span> x[<span class="st">"mktcap"</span>].quantile(<span class="fl">0.99</span>), <span class="st">"mktcap"</span>].<span class="bu">sum</span>() <span class="op">/</span> x[<span class="st">"mktcap"</span>].<span class="bu">sum</span>(),</span>
@@ -878,7 +902,7 @@ window.Quarto = {
 <span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  ) <span class="op">+</span></span>
 <span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  theme(legend_title<span class="op">=</span>element_blank())</span>
 <span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>market_cap_concentration_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>market_cap_concentration_figure.show()</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>/tmp/ipykernel_3244990/419327778.py:4: RuntimeWarning: invalid value encountered in scalar divide
 /tmp/ipykernel_3244990/419327778.py:5: RuntimeWarning: invalid value encountered in scalar divide
@@ -951,23 +975,23 @@ window.Quarto = {
 /home/mikenguyen/project/tidyfinance/.venv/lib/python3.13/site-packages/plotnine/geoms/geom_path.py:100: PlotnineWarning: geom_path: Removed 17 rows containing missing values.</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<div id="fig-801" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="htb" alt="Title: Percentage of total market capitalization in largest stocks. The figure shows a line chart with four different lines that are relatively stable during the entire sample period. The largest 1 percent of all stocks on average comprise around 40 percent of the entire market capitalization. For the largest 25 percent, the share is around 90 percent.">
+<div id="fig-801" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="htb" alt="Tiêu đề: Tỷ lệ phần trăm tổng vốn hóa thị trường nằm ở các cổ phiếu lớn nhất. Hình cho thấy biểu đồ đường với bốn đường khác nhau tương đối ổn định trong toàn bộ giai đoạn mẫu. 1 phần trăm cổ phiếu lớn nhất trung bình chiếm khoảng 40 phần trăm toàn bộ vốn hóa thị trường. Với 25 phần trăm lớn nhất, tỷ trọng vào khoảng 90 phần trăm.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-801-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="12_size_sorts_files/figure-html/fig-801-output-2.png" data-fig-pos="htb" alt="Title: Percentage of total market capitalization in largest stocks. The figure shows a line chart with four different lines that are relatively stable during the entire sample period. The largest 1 percent of all stocks on average comprise around 40 percent of the entire market capitalization. For the largest 25 percent, the share is around 90 percent." width="672" height="480" class="figure-img">
+<img src="12_size_sorts_files/figure-html/fig-801-output-2.png" data-fig-pos="htb" alt="Tiêu đề: Tỷ lệ phần trăm tổng vốn hóa thị trường nằm ở các cổ phiếu lớn nhất. Hình cho thấy biểu đồ đường với bốn đường khác nhau tương đối ổn định trong toàn bộ giai đoạn mẫu. 1 phần trăm cổ phiếu lớn nhất trung bình chiếm khoảng 40 phần trăm toàn bộ vốn hóa thị trường. Với 25 phần trăm lớn nhất, tỷ trọng vào khoảng 90 phần trăm." width="672" height="480" class="figure-img">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-801-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;10.1: The figure shows the percentage of total market capitalization in largest stocks. We report the aggregate market capitalization of all stocks that belong to the 1, 5, 10, and 25 percent quantile of the largest firms in the monthly cross-section relative to the market capitalization of all stocks during the month.
+Hình&nbsp;10.1: Hình cho thấy tỷ lệ phần trăm tổng vốn hóa thị trường nằm ở các cổ phiếu lớn nhất. Chúng ta báo cáo tổng vốn hóa thị trường của tất cả cổ phiếu thuộc nhóm phân vị 1, 5, 10 và 25 phần trăm doanh nghiệp lớn nhất trong mặt cắt ngang hằng tháng, so với vốn hóa thị trường của tất cả cổ phiếu trong tháng đó.
 </figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>Next, firm sizes also differ across listing exchanges. The primary listings of stocks were important in the past and are potentially still relevant today.</p>
+<p>Tiếp theo, quy mô doanh nghiệp cũng khác nhau giữa các sàn niêm yết. Sàn niêm yết chính của cổ phiếu từng quan trọng trong quá khứ và có thể vẫn còn liên quan hiện nay.</p>
 <div id="fig-802" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-fig.alt="Title: Share of total market capitalization per listing exchange." data-execution_count="4">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-802-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>market_cap_share <span class="op">=</span> (prices_monthly</span>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>market_cap_share <span class="op">=</span> (prices_monthly</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  .groupby([<span class="st">"date"</span>, <span class="st">"exchange"</span>])</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  .aggregate({<span class="st">"mktcap"</span>: <span class="st">"sum"</span>})</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  .reset_index(drop<span class="op">=</span><span class="va">False</span>)</span>
@@ -992,16 +1016,16 @@ Figure&nbsp;10.1: The figure shows the percentage of total market capitalization
 <span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>       title<span class="op">=</span><span class="st">"Share of total market capitalization per listing exchange"</span>) <span class="op">+</span></span>
 <span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  theme(legend_title<span class="op">=</span>element_blank())</span>
 <span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>plot_market_cap_share.draw()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>plot_market_cap_share.draw()</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-802-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;10.2
+Hình&nbsp;10.2
 </figcaption>
 </figure>
 </div>
-<p>Finally, we consider the distribution of firm size across listing exchanges and create summary statistics. The function <code>describe()</code> does not include all statistics we are interested in, which is why we create the function <code>compute_summary()</code> that adds the standard deviation and the number of observations. Then, we apply it to the most current month of our data on each listing exchange. We also add a row with the overall summary statistics. In the following, we use this distinction to update our portfolio sort procedure.</p>
+<p>Cuối cùng, chúng ta xem xét phân phối quy mô doanh nghiệp giữa các sàn niêm yết và lập các thống kê tóm tắt. Hàm <code>describe()</code> không bao gồm mọi thống kê mà chúng ta quan tâm, vì vậy chúng ta tạo hàm <code>compute_summary()</code> bổ sung độ lệch chuẩn và số quan sát. Sau đó, chúng ta áp dụng hàm này cho tháng gần nhất trong dữ liệu trên từng sàn niêm yết. Chúng ta cũng thêm một dòng chứa các thống kê tóm tắt chung. Dưới đây, chúng ta dùng sự phân biệt này để cập nhật quy trình phân loại danh mục.</p>
 <div id="45b29761" class="cell" data-execution_count="5">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_summary(data, variable, filter_variable, percentiles):</span>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_summary(data, variable, filter_variable, percentiles):</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Compute summary statistics for a given variable and percentiles."""</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    summary <span class="op">=</span> (data[[filter_variable, variable]]</span>
@@ -1024,15 +1048,15 @@ Figure&nbsp;10.2
 <span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  variable<span class="op">=</span><span class="st">"mktcap"</span>,</span>
 <span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  filter_variable<span class="op">=</span><span class="st">"exchange"</span>,</span>
 <span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>  percentiles<span class="op">=</span>[<span class="fl">0.05</span>, <span class="fl">0.5</span>, <span class="fl">0.95</span>]</span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="univariate-size-portfolios-with-flexible-breakpoints" class="level2" data-number="10.3">
-<h2 data-number="10.3" class="anchored" data-anchor-id="univariate-size-portfolios-with-flexible-breakpoints"><span class="header-section-number">10.3</span> Univariate Size Portfolios with Flexible Breakpoints</h2>
-<p>In Univariate Portfolio Sorts, we construct portfolios with a varying number of breakpoints and different sorting variables. Here, we extend the framework such that we compute breakpoints on a subset of the data, for instance, based on selected listing exchanges.</p>
-<p>We introduce <code>exchanges</code> as an argument in our <code>assign_portfolio()</code> function from Univariate Portfolio Sorts. The exchange-specific argument then enters in the filter <code>data["exchanges"].isin(exchanges)</code>. For example, if <code>exchanges='HOSE'</code> is specified, only stocks listed on HOSE are used to compute the breakpoints. Alternatively, you could specify <code>exchanges=["HOSE", "HNX", "UPCoM"]</code>, which keeps all stocks listed on either of these exchanges.</p>
+<section id="danh-mục-quy-mô-đơn-biến-với-các-điểm-cắt-linh-hoạt" class="level2" data-number="10.3">
+<h2 data-number="10.3" class="anchored" data-anchor-id="danh-mục-quy-mô-đơn-biến-với-các-điểm-cắt-linh-hoạt"><span class="header-section-number">10.3</span> Danh mục quy mô đơn biến với các điểm cắt linh hoạt</h2>
+<p>Trong chương Phân loại danh mục đơn biến, chúng ta xây dựng các danh mục với số lượng điểm cắt thay đổi và các biến phân loại khác nhau. Ở đây, chúng ta mở rộng khung phân tích để tính các điểm cắt trên một tập con của dữ liệu, chẳng hạn dựa trên một số sàn niêm yết được chọn.</p>
+<p>Chúng ta đưa <code>exchanges</code> vào làm một đối số trong hàm <code>assign_portfolio()</code> từ chương Phân loại danh mục đơn biến. Đối số theo sàn này sau đó đi vào bộ lọc <code>data["exchanges"].isin(exchanges)</code>. Ví dụ, nếu chỉ định <code>exchanges='HOSE'</code>, chỉ các cổ phiếu niêm yết trên HOSE được dùng để tính các điểm cắt. Ngoài ra, bạn có thể chỉ định <code>exchanges=["HOSE", "HNX", "UPCoM"]</code>, giữ lại tất cả cổ phiếu niêm yết trên một trong các sàn này.</p>
 <div id="19613ddf" class="cell" data-execution_count="6">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> assign_portfolio(data, exchanges, sorting_variable, n_portfolios):</span>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> assign_portfolio(data, exchanges, sorting_variable, n_portfolios):</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Assign portfolio for a given sorting variable."""</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    breakpoints <span class="op">=</span> (data</span>
@@ -1052,15 +1076,15 @@ Figure&nbsp;10.2
 <span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>      right<span class="op">=</span><span class="va">False</span></span>
 <span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> assigned_portfolios</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> assigned_portfolios</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="weighting-schemes-for-portfolios" class="level2" data-number="10.4">
-<h2 data-number="10.4" class="anchored" data-anchor-id="weighting-schemes-for-portfolios"><span class="header-section-number">10.4</span> Weighting Schemes for Portfolios</h2>
-<p>Apart from computing breakpoints on different samples, researchers often use different portfolio weighting schemes. So far, we weighted each portfolio constituent by its relative market equity of the previous period. This protocol is called <em>value-weighting</em>. The alternative protocol is <em>equal-weighting</em>, which assigns each stock’s return the same weight, i.e., a simple average of the constituents’ returns. Notice that equal-weighting is difficult in practice as the portfolio manager needs to rebalance the portfolio monthly, while value-weighting is a truly passive investment.</p>
-<p>We implement the two weighting schemes in the function <code>compute_portfolio_returns()</code> that takes a logical argument to weight the returns by firm value. Additionally, the long-short portfolio is long in the smallest firms and short in the largest firms, consistent with research showing that small firms outperform their larger counterparts. Apart from these two changes, the function is similar to the procedure in Univariate Portfolio Sorts.</p>
+<section id="các-cách-đặt-trọng-số-cho-danh-mục" class="level2" data-number="10.4">
+<h2 data-number="10.4" class="anchored" data-anchor-id="các-cách-đặt-trọng-số-cho-danh-mục"><span class="header-section-number">10.4</span> Các cách đặt trọng số cho danh mục</h2>
+<p>Ngoài việc tính các điểm cắt trên những mẫu khác nhau, các nhà nghiên cứu thường dùng các cách đặt trọng số danh mục khác nhau. Cho đến nay, chúng ta đã đặt trọng số cho mỗi thành phần danh mục theo vốn chủ sở hữu thị trường tương đối của kỳ trước. Quy ước này được gọi là <em>trọng số theo vốn hóa</em>. Quy ước thay thế là <em>trọng số bằng nhau</em>, gán cho lợi nhuận của mỗi cổ phiếu cùng một trọng số, tức là trung bình giản đơn của lợi nhuận các thành phần. Lưu ý rằng trọng số bằng nhau khó thực hiện trong thực tế vì nhà quản lý danh mục cần tái cân bằng danh mục hằng tháng, trong khi trọng số theo vốn hóa là một khoản đầu tư thụ động đúng nghĩa.</p>
+<p>Chúng ta triển khai hai cách đặt trọng số trong hàm <code>compute_portfolio_returns()</code>, hàm này nhận một đối số logic để đặt trọng số lợi nhuận theo giá trị doanh nghiệp. Ngoài ra, danh mục mua–bán khống mua các doanh nghiệp nhỏ nhất và bán khống các doanh nghiệp lớn nhất, nhất quán với nghiên cứu cho thấy doanh nghiệp nhỏ vượt trội hơn các doanh nghiệp lớn. Ngoài hai thay đổi này, hàm tương tự quy trình trong chương Phân loại danh mục đơn biến.</p>
 <div id="3c1b031f" class="cell" data-execution_count="7">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calculate_returns(data, value_weighted):</span>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calculate_returns(data, value_weighted):</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Calculate (value-weighted) returns."""</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> value_weighted:</span>
@@ -1094,11 +1118,11 @@ Figure&nbsp;10.2
 <span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>      .aggregate({<span class="st">"size_premium"</span>: <span class="st">"mean"</span>})</span>
 <span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> returns</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> returns</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>To see how the function <code>compute_portfolio_returns()</code> works, we consider a simple median breakpoint example with value-weighted returns. We are interested in the effect of restricting listing exchanges on the estimation of the size premium. In the first function call, we compute returns based on breakpoints from all listing exchanges. Then, we computed returns based on breakpoints from HOSE-listed stocks.</p>
+<p>Để thấy hàm <code>compute_portfolio_returns()</code> hoạt động ra sao, chúng ta xét một ví dụ đơn giản với điểm cắt là trung vị và lợi nhuận theo trọng số vốn hóa. Chúng ta quan tâm đến tác động của việc giới hạn sàn niêm yết lên ước lượng phần bù quy mô. Ở lần gọi hàm đầu tiên, chúng ta tính lợi nhuận dựa trên các điểm cắt từ tất cả các sàn niêm yết. Sau đó, chúng ta tính lợi nhuận dựa trên các điểm cắt từ các cổ phiếu niêm yết trên HOSE.</p>
 <div id="4e366729" class="cell" data-execution_count="8">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ret_all <span class="op">=</span> compute_portfolio_returns(</span>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ret_all <span class="op">=</span> compute_portfolio_returns(</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  n_portfolios<span class="op">=</span><span class="dv">2</span>,</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  exchanges<span class="op">=</span>[<span class="st">"HOSE"</span>, <span class="st">"HNX"</span>, <span class="st">"UPCoM"</span>],</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  value_weighted<span class="op">=</span><span class="va">True</span>,</span>
@@ -1115,18 +1139,18 @@ Figure&nbsp;10.2
 <span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> pd.DataFrame([ret_all<span class="op">*</span><span class="dv">100</span>, ret_HOSE<span class="op">*</span><span class="dv">100</span>], </span>
 <span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>                    index<span class="op">=</span>[<span class="st">"HOSE, HNX &amp; UPCoM"</span>, <span class="st">"HOSE"</span>])</span>
 <span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>data.columns <span class="op">=</span> [<span class="st">"Premium"</span>]</span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>data.<span class="bu">round</span>(<span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>data.<span class="bu">round</span>(<span class="dv">2</span>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="p-hacking-and-non-standard-errors" class="level2" data-number="10.5">
-<h2 data-number="10.5" class="anchored" data-anchor-id="p-hacking-and-non-standard-errors"><span class="header-section-number">10.5</span> P-Hacking and Non-Standard Errors</h2>
-<p>Since the choice of the listing exchange has a significant impact, the next step is to investigate the effect of other data processing decisions researchers have to make along the way. In particular, any portfolio sort analysis has to decide at least on the number of portfolios, the listing exchanges to form breakpoints, and equal- or value-weighting. Further, one may exclude firms that are active in the finance industry or restrict the analysis to some parts of the time series. All of the variations of these choices that we discuss here are part of scholarly articles published in the top finance journals. We refer to <span class="citation" data-cites="Walter2022">Walter, Weber, and Weiss (<a href="references.html#ref-Walter2022" role="doc-biblioref">2022</a>)</span> for an extensive set of other decision nodes at the discretion of researchers.</p>
-<p>The intention of this application is to show that the different ways to form portfolios result in different estimated size premiums. Despite the effects of this multitude of choices, there is no correct way. It should also be noted that none of the procedures is wrong. The aim is simply to illustrate the changes that can arise due to the variation in the evidence-generating process <span class="citation" data-cites="Menkveld2022">(<a href="references.html#ref-Menkveld2022" role="doc-biblioref">Menkveld et al., n.d.</a>)</span>. The term <em>non-standard errors</em> refers to the variation due to (suitable) choices made by researchers. Interestingly, in a large-scale study, <span class="citation" data-cites="Menkveld2022">Menkveld et al. (<a href="references.html#ref-Menkveld2022" role="doc-biblioref">n.d.</a>)</span> find that the magnitude of non-standard errors is similar to the estimation uncertainty based on a chosen model. This shows how important it is to adjust for the seemingly innocent choices in the data preparation and evaluation workflow. Moreover, it seems that this methodology-related uncertainty should be embraced rather than hidden away.</p>
-<p>From a malicious perspective, these modeling choices give the researcher multiple <em>chances</em> to find statistically significant results. Yet this is considered <em>p-hacking</em>, which renders the statistical inference invalid due to multiple testing <span class="citation" data-cites="Harvey2016">(<a href="references.html#ref-Harvey2016" role="doc-biblioref">Harvey, Liu, and Zhu 2016</a>)</span>.</p>
-<p>Nevertheless, the multitude of options creates a problem since there is no single correct way of sorting portfolios. How should a researcher convince a reader that their results do not come from a p-hacking exercise? To circumvent this dilemma, academics are encouraged to present evidence from different sorting schemes as <em>robustness tests</em> and report multiple approaches to show that a result does not depend on a single choice. Thus, the robustness of premiums is a key feature.</p>
-<p>Below, we conduct a series of robustness tests, which could also be interpreted as a p-hacking exercise. To do so, we examine the size premium in different specifications presented in the table <code>p_hacking_setup</code>. The function <code>itertools.product()</code> produces all possible permutations of its arguments. Note that we use the argument <code>data</code> to exclude financial firms and truncate the time series.</p>
+<section id="p-hacking-và-sai-số-phi-chuẩn" class="level2" data-number="10.5">
+<h2 data-number="10.5" class="anchored" data-anchor-id="p-hacking-và-sai-số-phi-chuẩn"><span class="header-section-number">10.5</span> P-Hacking và sai số phi chuẩn</h2>
+<p>Vì việc chọn sàn niêm yết có tác động đáng kể, bước tiếp theo là khảo sát ảnh hưởng của các quyết định xử lý dữ liệu khác mà nhà nghiên cứu phải đưa ra trong quá trình thực hiện. Cụ thể, mọi phân tích phân loại danh mục đều phải quyết định ít nhất về số lượng danh mục, các sàn niêm yết dùng để hình thành điểm cắt, và trọng số bằng nhau hay trọng số theo vốn hóa. Hơn nữa, người ta có thể loại các doanh nghiệp hoạt động trong ngành tài chính hoặc giới hạn phân tích ở một số phần của chuỗi thời gian. Tất cả các biến thể của những lựa chọn này mà chúng ta thảo luận ở đây đều là một phần của các bài báo học thuật đã công bố trên các tạp chí tài chính hàng đầu. Xem <span class="citation" data-cites="Walter2022">Walter, Weber, và Weiss (<a href="references.html#ref-Walter2022" role="doc-biblioref">2022</a>)</span> để biết thêm một tập hợp rộng các nút quyết định khác thuộc quyền quyết định của nhà nghiên cứu.</p>
+<p>Mục đích của ứng dụng này là cho thấy các cách hình thành danh mục khác nhau dẫn đến các phần bù quy mô ước lượng khác nhau. Dù có vô số lựa chọn như vậy, không có một cách duy nhất nào là đúng. Cũng cần lưu ý rằng không có quy trình nào là sai. Mục tiêu đơn giản là minh họa những thay đổi có thể phát sinh do sự biến thiên trong quá trình tạo ra bằng chứng <span class="citation" data-cites="Menkveld2022">(<a href="references.html#ref-Menkveld2022" role="doc-biblioref">Menkveld và c.s., không ngày</a>)</span>. Thuật ngữ <em>sai số phi chuẩn</em> (non-standard errors) chỉ sự biến thiên do các lựa chọn (hợp lý) của nhà nghiên cứu. Thú vị là, trong một nghiên cứu quy mô lớn, <span class="citation" data-cites="Menkveld2022">Menkveld và c.s. (<a href="references.html#ref-Menkveld2022" role="doc-biblioref">không ngày</a>)</span> phát hiện rằng độ lớn của sai số phi chuẩn tương đương với độ bất định ước lượng dựa trên một mô hình đã chọn. Điều này cho thấy việc điều chỉnh cho những lựa chọn tưởng chừng vô hại trong quy trình chuẩn bị và đánh giá dữ liệu quan trọng đến mức nào. Hơn nữa, có vẻ sự bất định liên quan đến phương pháp luận này nên được đón nhận hơn là che giấu.</p>
+<p>Từ góc nhìn ác ý, các lựa chọn mô hình hóa này cho nhà nghiên cứu nhiều <em>cơ hội</em> để tìm ra kết quả có ý nghĩa thống kê. Tuy nhiên, điều này bị coi là <em>p-hacking</em>, làm cho suy luận thống kê mất hiệu lực do kiểm định đa giả thuyết <span class="citation" data-cites="Harvey2016">(<a href="references.html#ref-Harvey2016" role="doc-biblioref">Harvey, Liu, và Zhu 2016</a>)</span>.</p>
+<p>Tuy vậy, vô số lựa chọn tạo ra một vấn đề vì không có cách phân loại danh mục nào duy nhất đúng. Làm thế nào một nhà nghiên cứu thuyết phục người đọc rằng kết quả của mình không phải do p-hacking? Để tránh thế tiến thoái lưỡng nan này, giới học thuật được khuyến khích trình bày bằng chứng từ các cách phân loại khác nhau dưới dạng <em>kiểm định độ vững</em> và báo cáo nhiều cách tiếp cận để cho thấy kết quả không phụ thuộc vào một lựa chọn duy nhất. Do đó, độ vững của các phần bù là một đặc điểm then chốt.</p>
+<p>Dưới đây, chúng ta thực hiện một loạt kiểm định độ vững, cũng có thể được diễn giải như một bài tập p-hacking. Để làm vậy, chúng ta khảo sát phần bù quy mô trong các đặc tả khác nhau được trình bày trong bảng <code>p_hacking_setup</code>. Hàm <code>itertools.product()</code> tạo ra mọi hoán vị có thể của các đối số. Lưu ý rằng chúng ta dùng đối số <code>data</code> để loại các doanh nghiệp tài chính và cắt ngắn chuỗi thời gian.</p>
 <div id="b6514d29" class="cell" data-execution_count="9">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>n_portfolios <span class="op">=</span> [<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>]</span>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>n_portfolios <span class="op">=</span> [<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>]</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>exchanges <span class="op">=</span> [[<span class="st">"HOSE"</span>], [<span class="st">"HOSE"</span>, <span class="st">"HNX"</span>, <span class="st">"UPCoM"</span>]]</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>value_weighted <span class="op">=</span> [<span class="va">True</span>, <span class="va">False</span>]</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> [</span>
@@ -1137,26 +1161,26 @@ Figure&nbsp;10.2
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>]</span>
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>p_hacking_setup <span class="op">=</span> <span class="bu">list</span>(</span>
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  product(n_portfolios, exchanges, value_weighted, data)</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>To speed the computation up, we parallelize the (many) different sorting procedures. Finally, we report the resulting size premiums in descending order. There are indeed substantial size premiums possible in our data, in particular when we use equal-weighted portfolios.</p>
+<p>Để tăng tốc tính toán, chúng ta song song hóa (rất nhiều) quy trình phân loại khác nhau. Cuối cùng, chúng ta báo cáo các phần bù quy mô thu được theo thứ tự giảm dần. Quả thật có thể có những phần bù quy mô đáng kể trong dữ liệu của chúng ta, đặc biệt khi dùng các danh mục trọng số bằng nhau.</p>
 <div id="6ece868b" class="cell" data-execution_count="10">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>n_cores <span class="op">=</span> cpu_count()<span class="op">-</span><span class="dv">1</span></span>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>n_cores <span class="op">=</span> cpu_count()<span class="op">-</span><span class="dv">1</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>p_hacking_results <span class="op">=</span> pd.concat(</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  Parallel(n_jobs<span class="op">=</span>n_cores)</span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  (delayed(compute_portfolio_returns)(x, y, z, w) </span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>   <span class="cf">for</span> x, y, z, w <span class="kw">in</span> p_hacking_setup)</span>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>p_hacking_results <span class="op">=</span> p_hacking_results.reset_index(name<span class="op">=</span><span class="st">"size_premium"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>p_hacking_results <span class="op">=</span> p_hacking_results.reset_index(name<span class="op">=</span><span class="st">"size_premium"</span>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="size-premium-variation" class="level2" data-number="10.6">
-<h2 data-number="10.6" class="anchored" data-anchor-id="size-premium-variation"><span class="header-section-number">10.6</span> Size-Premium Variation</h2>
-<p>We provide a graph in <a href="#fig-803" class="quarto-xref">Figure&nbsp;<span>10.3</span></a> that shows the different premiums. The figure also shows the relation to the average Fama-French SMB (small minus big) premium used in the literature, which we include as a dotted vertical line.</p>
+<section id="biến-thiên-của-phần-bù-quy-mô" class="level2" data-number="10.6">
+<h2 data-number="10.6" class="anchored" data-anchor-id="biến-thiên-của-phần-bù-quy-mô"><span class="header-section-number">10.6</span> Biến thiên của phần bù quy mô</h2>
+<p>Chúng ta cung cấp một biểu đồ trong <a href="#fig-803" class="quarto-xref">Hình&nbsp;<span>10.3</span></a> cho thấy các phần bù khác nhau. Hình cũng cho thấy mối quan hệ với phần bù SMB (small minus big) trung bình của Fama-French được dùng trong tài liệu, mà chúng ta đưa vào dưới dạng đường thẳng đứng chấm chấm.</p>
 <div id="fig-803" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="11">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-803-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>p_hacking_results_figure <span class="op">=</span> (</span>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>p_hacking_results_figure <span class="op">=</span> (</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  ggplot(</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    p_hacking_results, </span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    aes(x<span class="op">=</span><span class="st">"size_premium"</span>)</span>
@@ -1171,70 +1195,84 @@ Figure&nbsp;10.2
 <span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>      aes(xintercept<span class="op">=</span>factors_ff3_monthly[<span class="st">"smb"</span>].mean()), linetype<span class="op">=</span><span class="st">"dashed"</span></span>
 <span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>p_hacking_results_figure.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>p_hacking_results_figure.show()</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-803-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;10.3
+Hình&nbsp;10.3
 </figcaption>
 </figure>
 </div>
 </section>
-<section id="key-takeaways" class="level2" data-number="10.7">
-<h2 data-number="10.7" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">10.7</span> Key Takeaways</h2>
+<section id="những-điểm-chính" class="level2" data-number="10.7">
+<h2 data-number="10.7" class="anchored" data-anchor-id="những-điểm-chính"><span class="header-section-number">10.7</span> Những điểm chính</h2>
 <ul>
-<li>Firm size is a crucial factor in asset pricing, and sorting stocks by size reveals the size premium, where small-cap stocks tend to outperform large-cap stocks.</li>
-<li>Portfolio returns are sensitive to research design choices like exchange filters, weighting schemes, and the number of portfolios—decisions that can meaningfully shift results.</li>
-<li>Methodological flexibility can lead to non-standard errors and potential p-hacking.</li>
-<li>Validate results by varying assumptions and show that findings hold across multiple specifications.</li>
+<li>Quy mô doanh nghiệp là một nhân tố quan trọng trong định giá tài sản, và việc phân loại cổ phiếu theo quy mô cho thấy phần bù quy mô, trong đó cổ phiếu vốn hóa nhỏ có xu hướng vượt trội so với cổ phiếu vốn hóa lớn.</li>
+<li>Lợi nhuận danh mục nhạy cảm với các lựa chọn thiết kế nghiên cứu như bộ lọc sàn niêm yết, cách đặt trọng số và số lượng danh mục, những quyết định có thể làm thay đổi kết quả đáng kể.</li>
+<li>Sự linh hoạt về phương pháp luận có thể dẫn đến sai số phi chuẩn và nguy cơ p-hacking.</li>
+<li>Hãy kiểm chứng kết quả bằng cách thay đổi các giả định và cho thấy các phát hiện đứng vững qua nhiều đặc tả.</li>
 </ul>
-<!-- ## Exercises
+<!-- ## Bài tập
 
-1.  We gained several insights on the size distribution above. However, we did not analyze the average size across listing exchanges and industries. Which listing exchanges/industries have the largest firms? Plot the average firm size for the three listing exchanges over time. What do you conclude?
-2.  We compute breakpoints but do not take a look at them in the exposition above. This might cover potential data errors. Plot the breakpoints for ten size portfolios over time. Then, take the difference between the two extreme portfolios and plot it. Describe your results.
-3.  The returns that we analyze above do not account for differences in the exposure to market risk, i.e., the CAPM beta. Change the function `compute_portfolio_returns()` to output the CAPM alpha or beta instead of the average excess return.
-4.  While you saw the spread in returns from the p-hacking exercise, we did not show which choices led to the largest effects. Find a way to investigate which choice variable has the largest impact on the estimated size premium.
-5.  We computed several size premiums, but they do not follow the definition of @Fama1993. Which of our approaches comes closest to their SMB premium? -->
+1.  Chúng ta đã có một số hiểu biết về phân phối quy mô ở trên. Tuy nhiên, chúng ta chưa phân tích quy mô trung bình giữa các sàn niêm yết và các ngành. Sàn niêm yết/ngành nào có các doanh nghiệp lớn nhất? Vẽ biểu đồ quy mô doanh nghiệp trung bình của ba sàn niêm yết theo thời gian. Bạn rút ra kết luận gì?
+2.  Chúng ta tính các điểm cắt nhưng không xem xét chúng trong phần trình bày ở trên. Điều này có thể che giấu các lỗi dữ liệu tiềm tàng. Vẽ biểu đồ các điểm cắt cho mười danh mục quy mô theo thời gian. Sau đó, lấy chênh lệch giữa hai danh mục cực trị và vẽ biểu đồ. Mô tả kết quả của bạn.
+3.  Lợi nhuận mà chúng ta phân tích ở trên không tính đến sự khác biệt về mức phơi nhiễm với rủi ro thị trường, tức là beta CAPM. Hãy thay đổi hàm `compute_portfolio_returns()` để xuất ra alpha hoặc beta CAPM thay cho lợi nhuận vượt mức trung bình.
+4.  Dù bạn đã thấy độ chênh lệch lợi nhuận từ bài tập p-hacking, chúng ta chưa chỉ ra những lựa chọn nào dẫn đến tác động lớn nhất. Hãy tìm cách khảo sát biến lựa chọn nào có tác động lớn nhất lên phần bù quy mô ước lượng.
+5.  Chúng ta đã tính nhiều phần bù quy mô, nhưng chúng không tuân theo định nghĩa của @Fama1993. Cách tiếp cận nào của chúng ta gần nhất với phần bù SMB của họ? -->
 
 
 <!-- -->
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
 <div id="ref-Fama1993" class="csl-entry" role="listitem">
-Fama, Eugene F., and Kenneth R. French. 1993. <span>“<span class="nocase">Common risk factors in the returns on stocks and bonds</span>.”</span> <em><span>Journal of Financial Economics</span></em> 33 (1): 3–56. <a href="https://doi.org/10.1016/0304-405X(93)90023-5">https://doi.org/10.1016/0304-405X(93)90023-5</a>.
+Fama, Eugene F., và Kenneth R. French. 1993. <span>“<span>Common risk factors in the returns on stocks and bonds</span>”</span>. <em><span>Journal of Financial Economics</span></em> 33 (1): 3–56. <a href="https://doi.org/10.1016/0304-405X(93)90023-5">https://doi.org/10.1016/0304-405X(93)90023-5</a>.
 </div>
 <div id="ref-Harvey2016" class="csl-entry" role="listitem">
-Harvey, Campbell R., Yan Liu, and Heqing Zhu. 2016. <span>“<span class="nocase"><span class="math inline">\(\ldots\)</span> and the cross-section of expected returns</span>.”</span> <em><span>Review of Financial Studies</span></em> 29 (1): 5–68. <a href="https://doi.org/10.1093/rfs/hhv059">https://doi.org/10.1093/rfs/hhv059</a>.
+Harvey, Campbell R., Yan Liu, và Heqing Zhu. 2016. <span>“<span><span class="math inline">\(\ldots\)</span> and the cross-section of expected returns</span>”</span>. <em><span>Review of Financial Studies</span></em> 29 (1): 5–68. <a href="https://doi.org/10.1093/rfs/hhv059">https://doi.org/10.1093/rfs/hhv059</a>.
 </div>
 <div id="ref-Hasler2021" class="csl-entry" role="listitem">
 Hasler, Mathias. 2021. <span>“Is the Value Premium Smaller Than We Thought?”</span> <em><span>Working Paper</span></em>. <a href="https://ssrn.com/abstract=3886984">https://ssrn.com/abstract=3886984</a>.
 </div>
 <div id="ref-Menkveld2022" class="csl-entry" role="listitem">
-Menkveld, Albert J., Anna Dreber, Felix Holzmeister, Juergen Huber, Magnus Johannesson, Michael Kirchler, Sebastian Neusüss, Michael Razen, and Utz Weitzel. n.d. <span>“<span class="nocase">Nonstandard errors</span>.”</span> <em>The Journal of Finance</em> 79 (3): 2339–90. https://doi.org/<a href="https://doi.org/10.1111/jofi.13337">https://doi.org/10.1111/jofi.13337</a>.
+Menkveld, Albert J., Anna Dreber, Felix Holzmeister, Juergen Huber, Magnus Johannesson, Michael Kirchler, Sebastian Neusüss, Michael Razen, và Utz Weitzel. không ngày. <span>“<span>Nonstandard errors</span>”</span>. <em>The Journal of Finance</em> 79 (3): 2339–90. https://doi.org/<a href="https://doi.org/10.1111/jofi.13337">https://doi.org/10.1111/jofi.13337</a>.
 </div>
 <div id="ref-Soebhag2022" class="csl-entry" role="listitem">
-Soebhag, Amar, Bart Van Vliet, and Patrick Verwijmeren. 2022. <span>“Mind Your Sorts.”</span> <em>Working Paper</em>. <a href="https://di.org/10.2139/ssrn.4136672">https://di.org/10.2139/ssrn.4136672</a>.
+Soebhag, Amar, Bart Van Vliet, và Patrick Verwijmeren. 2022. <span>“Mind your sorts”</span>. <em>Working Paper</em>. <a href="https://di.org/10.2139/ssrn.4136672">https://di.org/10.2139/ssrn.4136672</a>.
 </div>
 <div id="ref-Walter2022" class="csl-entry" role="listitem">
-Walter, Dominik, Rüdiger Weber, and Patrick Weiss. 2022. <span>“<span class="nocase">Non-standard errors in portfolio sorts</span>.”</span> <em><span>Working Paper</span></em>. <a href="https://ssrn.com/abstract=4164117">https://ssrn.com/abstract=4164117</a>.
+Walter, Dominik, Rüdiger Weber, và Patrick Weiss. 2022. <span>“<span>Non-standard errors in portfolio sorts</span>”</span>. <em><span>Working Paper</span></em>. <a href="https://ssrn.com/abstract=4164117">https://ssrn.com/abstract=4164117</a>.
 </div>
 </div>
 </section>
 
 </main> <!-- /main -->
 <script>
+
 document.addEventListener("DOMContentLoaded", function () {
+
   const year = new Date().getFullYear();
+
   document.getElementById("copyright").textContent = "© " + year;
+
 });
+
 </script>
+
 <!-- Google tag (gtag.js) -->
+
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-LG91D0C6RB"></script>
+
 <script>
+
   window.dataLayer = window.dataLayer || [];
+
   function gtag(){dataLayer.push(arguments);}
+
   gtag('js', new Date());
 
+
+
   gtag('config', 'G-LG91D0C6RB');
+
 </script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
@@ -1274,12 +1312,12 @@ document.addEventListener("DOMContentLoaded", function () {
       // flash "checked"
       button.classList.add('code-copy-button-checked');
       var currentTitle = button.getAttribute("title");
-      button.setAttribute("title", "Copied!");
+      button.setAttribute("title", "Đã sao chép!");
       let tooltip;
       if (window.bootstrap) {
         button.setAttribute("data-bs-toggle", "tooltip");
         button.setAttribute("data-bs-placement", "left");
-        button.setAttribute("data-bs-title", "Copied!");
+        button.setAttribute("data-bs-title", "Đã sao chép!");
         tooltip = new bootstrap.Tooltip(button, 
           { trigger: "manual", 
             customClass: "code-copy-button-tooltip",
@@ -1300,14 +1338,13 @@ document.addEventListener("DOMContentLoaded", function () {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-      const outerScaffold = trigger.parentElement.cloneNode(true);
-      const codeEl = outerScaffold.querySelector('code');
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
         }
-      }
-      return codeEl.innerText;
+        return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
@@ -1711,12 +1748,12 @@ document.addEventListener("DOMContentLoaded", function () {
         <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Value and Bivariate Sorts</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
-</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Size Sorts</span></span>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Mã nguồn</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb13" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Phân loại theo quy mô</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>In this chapter, we continue with portfolio sorts in a univariate setting. Yet, we consider firm size as a sorting variable, which gives rise to a well-known return factor: the size premium. The size premium arises from buying small stocks and selling large stocks. Prominently, @Fama1993 include it as a factor in their three-factor model. Apart from that, asset managers commonly include size as a key firm characteristic when making investment decisions.</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>Trong chương này, chúng ta tiếp tục với phân loại danh mục trong bối cảnh đơn biến. Tuy nhiên, chúng ta xét quy mô doanh nghiệp làm biến phân loại, từ đó hình thành một nhân tố lợi nhuận nổi tiếng: phần bù quy mô. Phần bù quy mô phát sinh từ việc mua cổ phiếu nhỏ và bán cổ phiếu lớn. Đáng chú ý, @Fama1993 đưa nó vào như một nhân tố trong mô hình ba nhân tố của họ. Ngoài ra, các nhà quản lý tài sản thường đưa quy mô vào như một đặc điểm then chốt của doanh nghiệp khi ra quyết định đầu tư.</span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>We also introduce new choices in the formation of portfolios. In particular, we discuss listing exchanges, industries, weighting regimes, and periods. These choices matter for the portfolio returns and result in different size premiums (see @Hasler2021, @Soebhag2022, and @Walter2022 for more insights into decision nodes and their effect on premiums).</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>Chúng ta cũng giới thiệu các lựa chọn mới trong việc hình thành danh mục. Cụ thể, chúng ta thảo luận về sàn niêm yết, ngành, cách đặt trọng số và giai đoạn. Những lựa chọn này ảnh hưởng đến lợi nhuận danh mục và dẫn đến các phần bù quy mô khác nhau (xem @Hasler2021, @Soebhag2022 và @Walter2022 để hiểu thêm về các nút quyết định và tác động của chúng lên các phần bù).</span>
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -1729,9 +1766,9 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> joblib <span class="im">import</span> Parallel, delayed, cpu_count</span>
 <span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="fu">## Data Preparation</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="fu">## Chuẩn bị dữ liệu</span></span>
 <span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>First, we retrieve the relevant data from our SQLite database introduced in Accessing and Managing Financial Data and DataCore Data. Firm size is defined as market equity in most asset pricing applications. We further use the Fama-French factor returns for performance evaluation.</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>Trước hết, chúng ta lấy dữ liệu liên quan từ cơ sở dữ liệu SQLite đã được giới thiệu trong chương Truy cập và quản lý dữ liệu tài chính và Dữ liệu DataCore. Quy mô doanh nghiệp được định nghĩa là vốn chủ sở hữu theo giá thị trường trong hầu hết các ứng dụng định giá tài sản. Chúng ta còn dùng lợi nhuận nhân tố Fama-French để đánh giá hiệu quả.</span>
 <span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>tidy_finance <span class="op">=</span> sqlite3.<span class="ex">connect</span>(</span>
@@ -1751,16 +1788,16 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a><span class="fu">## Size Distribution</span></span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a><span class="fu">## Phân phối quy mô</span></span>
 <span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>Before we build our size portfolios, we investigate the distribution of the variable *firm size*. Visualizing the data is a valuable starting point to understand the input to the analysis. @fig-801 shows the fraction of total market capitalization concentrated in the largest firm. To produce this graph, we create monthly indicators that track whether a stock belongs to the largest x percent of the firms. Then, we aggregate the firms within each bucket and compute the buckets' share of total market capitalization.</span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>Trước khi xây dựng các danh mục theo quy mô, chúng ta khảo sát phân phối của biến *quy mô doanh nghiệp*. Trực quan hóa dữ liệu là điểm khởi đầu có giá trị để hiểu đầu vào của phân tích. @fig-801 cho thấy tỷ lệ tổng vốn hóa thị trường tập trung ở các doanh nghiệp lớn nhất. Để tạo biểu đồ này, chúng ta lập các chỉ báo theo tháng theo dõi xem một cổ phiếu có thuộc x phần trăm doanh nghiệp lớn nhất hay không. Sau đó, chúng ta gộp các doanh nghiệp trong mỗi nhóm và tính tỷ trọng của từng nhóm trong tổng vốn hóa thị trường.</span>
 <span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>@fig-801 shows that the largest 1 percent of firms cover up to 50 percent of the total market capitalization, and holding just the 25 percent largest firms in the universe essentially replicates the market portfolio. The distribution of firm size thus implies that the largest firms of the market dominate many small firms whenever we use value-weighted benchmarks.</span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>@fig-801 cho thấy 1 phần trăm doanh nghiệp lớn nhất chiếm tới 50 phần trăm tổng vốn hóa thị trường, và chỉ cần nắm giữ 25 phần trăm doanh nghiệp lớn nhất trong tập hợp về cơ bản đã tái tạo được danh mục thị trường. Do đó, phân phối quy mô doanh nghiệp hàm ý rằng các doanh nghiệp lớn nhất của thị trường lấn át nhiều doanh nghiệp nhỏ mỗi khi chúng ta dùng các chuẩn so sánh theo trọng số vốn hóa.</span>
 <span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-801</span></span>
-<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "The figure shows the percentage of total market capitalization in largest stocks. We report the aggregate market capitalization of all stocks that belong to the 1, 5, 10, and 25 percent quantile of the largest firms in the monthly cross-section relative to the market capitalization of all stocks during the month."</span></span>
-<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-alt: "Title: Percentage of total market capitalization in largest stocks. The figure shows a line chart with four different lines that are relatively stable during the entire sample period. The largest 1 percent of all stocks on average comprise around 40 percent of the entire market capitalization. For the largest 25 percent, the share is around 90 percent."</span></span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Hình cho thấy tỷ lệ phần trăm tổng vốn hóa thị trường nằm ở các cổ phiếu lớn nhất. Chúng ta báo cáo tổng vốn hóa thị trường của tất cả cổ phiếu thuộc nhóm phân vị 1, 5, 10 và 25 phần trăm doanh nghiệp lớn nhất trong mặt cắt ngang hằng tháng, so với vốn hóa thị trường của tất cả cổ phiếu trong tháng đó."</span></span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-alt: "Tiêu đề: Tỷ lệ phần trăm tổng vốn hóa thị trường nằm ở các cổ phiếu lớn nhất. Hình cho thấy biểu đồ đường với bốn đường khác nhau tương đối ổn định trong toàn bộ giai đoạn mẫu. 1 phần trăm cổ phiếu lớn nhất trung bình chiếm khoảng 40 phần trăm toàn bộ vốn hóa thị trường. Với 25 phần trăm lớn nhất, tỷ trọng vào khoảng 90 phần trăm."</span></span>
 <span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-pos: "htb"</span></span>
 <span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a>market_cap_concentration <span class="op">=</span> (prices_monthly</span>
@@ -1792,12 +1829,12 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-84"><a href="#cb13-84" aria-hidden="true" tabindex="-1"></a>market_cap_concentration_figure.show()</span>
 <span id="cb13-85"><a href="#cb13-85" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-86"><a href="#cb13-86" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-87"><a href="#cb13-87" aria-hidden="true" tabindex="-1"></a>Next, firm sizes also differ across listing exchanges. The primary listings of stocks were important in the past and are potentially still relevant today. </span>
+<span id="cb13-87"><a href="#cb13-87" aria-hidden="true" tabindex="-1"></a>Tiếp theo, quy mô doanh nghiệp cũng khác nhau giữa các sàn niêm yết. Sàn niêm yết chính của cổ phiếu từng quan trọng trong quá khứ và có thể vẫn còn liên quan hiện nay.</span>
 <span id="cb13-88"><a href="#cb13-88" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-91"><a href="#cb13-91" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-92"><a href="#cb13-92" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-802</span></span>
 <span id="cb13-93"><a href="#cb13-93" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
-<span id="cb13-94"><a href="#cb13-94" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "The figure shows the share of total market capitalization per listing exchange. Years are on the horizontal axis and the corresponding share of total market capitalization per listing exchange on the vertical axis."</span></span>
+<span id="cb13-94"><a href="#cb13-94" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Hình cho thấy tỷ trọng trong tổng vốn hóa thị trường theo từng sàn niêm yết. Các năm nằm trên trục hoành và tỷ trọng tương ứng trong tổng vốn hóa thị trường theo sàn niêm yết nằm trên trục tung."</span></span>
 <span id="cb13-95"><a href="#cb13-95" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig.alt: "Title: Share of total market capitalization per listing exchange."</span></span>
 <span id="cb13-96"><a href="#cb13-96" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-pos: "htb"</span></span>
 <span id="cb13-97"><a href="#cb13-97" aria-hidden="true" tabindex="-1"></a>market_cap_share <span class="op">=</span> (prices_monthly</span>
@@ -1828,7 +1865,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-122"><a href="#cb13-122" aria-hidden="true" tabindex="-1"></a>plot_market_cap_share.draw()</span>
 <span id="cb13-123"><a href="#cb13-123" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-124"><a href="#cb13-124" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-125"><a href="#cb13-125" aria-hidden="true" tabindex="-1"></a>Finally, we consider the distribution of firm size across listing exchanges and create summary statistics. The function <span class="in">`describe()`</span> does not include all statistics we are interested in, which is why we create the function <span class="in">`compute_summary()`</span> that adds the standard deviation and the number of observations. Then, we apply it to the most current month of our data on each listing exchange. We also add a row with the overall summary statistics. In the following, we use this distinction to update our portfolio sort procedure.</span>
+<span id="cb13-125"><a href="#cb13-125" aria-hidden="true" tabindex="-1"></a>Cuối cùng, chúng ta xem xét phân phối quy mô doanh nghiệp giữa các sàn niêm yết và lập các thống kê tóm tắt. Hàm <span class="in">`describe()`</span> không bao gồm mọi thống kê mà chúng ta quan tâm, vì vậy chúng ta tạo hàm <span class="in">`compute_summary()`</span> bổ sung độ lệch chuẩn và số quan sát. Sau đó, chúng ta áp dụng hàm này cho tháng gần nhất trong dữ liệu trên từng sàn niêm yết. Chúng ta cũng thêm một dòng chứa các thống kê tóm tắt chung. Dưới đây, chúng ta dùng sự phân biệt này để cập nhật quy trình phân loại danh mục.</span>
 <span id="cb13-126"><a href="#cb13-126" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-129"><a href="#cb13-129" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-130"><a href="#cb13-130" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1858,11 +1895,11 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-154"><a href="#cb13-154" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb13-155"><a href="#cb13-155" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-156"><a href="#cb13-156" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-157"><a href="#cb13-157" aria-hidden="true" tabindex="-1"></a><span class="fu">## Univariate Size Portfolios with Flexible Breakpoints</span></span>
+<span id="cb13-157"><a href="#cb13-157" aria-hidden="true" tabindex="-1"></a><span class="fu">## Danh mục quy mô đơn biến với các điểm cắt linh hoạt</span></span>
 <span id="cb13-158"><a href="#cb13-158" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-159"><a href="#cb13-159" aria-hidden="true" tabindex="-1"></a>In Univariate Portfolio Sorts, we construct portfolios with a varying number of breakpoints and different sorting variables. Here, we extend the framework such that we compute breakpoints on a subset of the data, for instance, based on selected listing exchanges. </span>
+<span id="cb13-159"><a href="#cb13-159" aria-hidden="true" tabindex="-1"></a>Trong chương Phân loại danh mục đơn biến, chúng ta xây dựng các danh mục với số lượng điểm cắt thay đổi và các biến phân loại khác nhau. Ở đây, chúng ta mở rộng khung phân tích để tính các điểm cắt trên một tập con của dữ liệu, chẳng hạn dựa trên một số sàn niêm yết được chọn.</span>
 <span id="cb13-160"><a href="#cb13-160" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-161"><a href="#cb13-161" aria-hidden="true" tabindex="-1"></a>We introduce <span class="in">`exchanges`</span> as an argument in our <span class="in">`assign_portfolio()`</span> function from Univariate Portfolio Sorts. The exchange-specific argument then enters in the filter <span class="in">`data["exchanges"].isin(exchanges)`</span>. For example, if <span class="in">`exchanges='HOSE'`</span> is specified, only stocks listed on HOSE are used to compute the breakpoints. Alternatively, you could specify <span class="in">`exchanges=["HOSE", "HNX", "UPCoM"]`</span>, which keeps all stocks listed on either of these exchanges.</span>
+<span id="cb13-161"><a href="#cb13-161" aria-hidden="true" tabindex="-1"></a>Chúng ta đưa <span class="in">`exchanges`</span> vào làm một đối số trong hàm <span class="in">`assign_portfolio()`</span> từ chương Phân loại danh mục đơn biến. Đối số theo sàn này sau đó đi vào bộ lọc <span class="in">`data["exchanges"].isin(exchanges)`</span>. Ví dụ, nếu chỉ định <span class="in">`exchanges='HOSE'`</span>, chỉ các cổ phiếu niêm yết trên HOSE được dùng để tính các điểm cắt. Ngoài ra, bạn có thể chỉ định <span class="in">`exchanges=["HOSE", "HNX", "UPCoM"]`</span>, giữ lại tất cả cổ phiếu niêm yết trên một trong các sàn này.</span>
 <span id="cb13-162"><a href="#cb13-162" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-165"><a href="#cb13-165" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-166"><a href="#cb13-166" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1889,11 +1926,11 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-187"><a href="#cb13-187" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> assigned_portfolios</span>
 <span id="cb13-188"><a href="#cb13-188" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-189"><a href="#cb13-189" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-190"><a href="#cb13-190" aria-hidden="true" tabindex="-1"></a><span class="fu">## Weighting Schemes for Portfolios</span></span>
+<span id="cb13-190"><a href="#cb13-190" aria-hidden="true" tabindex="-1"></a><span class="fu">## Các cách đặt trọng số cho danh mục</span></span>
 <span id="cb13-191"><a href="#cb13-191" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-192"><a href="#cb13-192" aria-hidden="true" tabindex="-1"></a>Apart from computing breakpoints on different samples, researchers often use different portfolio weighting schemes. So far, we weighted each portfolio constituent by its relative market equity of the previous period. This protocol is called *value-weighting*. The alternative protocol is *equal-weighting*, which assigns each stock's return the same weight, i.e., a simple average of the constituents' returns. Notice that equal-weighting is difficult in practice as the portfolio manager needs to rebalance the portfolio monthly, while value-weighting is a truly passive investment.</span>
+<span id="cb13-192"><a href="#cb13-192" aria-hidden="true" tabindex="-1"></a>Ngoài việc tính các điểm cắt trên những mẫu khác nhau, các nhà nghiên cứu thường dùng các cách đặt trọng số danh mục khác nhau. Cho đến nay, chúng ta đã đặt trọng số cho mỗi thành phần danh mục theo vốn chủ sở hữu thị trường tương đối của kỳ trước. Quy ước này được gọi là *trọng số theo vốn hóa*. Quy ước thay thế là *trọng số bằng nhau*, gán cho lợi nhuận của mỗi cổ phiếu cùng một trọng số, tức là trung bình giản đơn của lợi nhuận các thành phần. Lưu ý rằng trọng số bằng nhau khó thực hiện trong thực tế vì nhà quản lý danh mục cần tái cân bằng danh mục hằng tháng, trong khi trọng số theo vốn hóa là một khoản đầu tư thụ động đúng nghĩa.</span>
 <span id="cb13-193"><a href="#cb13-193" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-194"><a href="#cb13-194" aria-hidden="true" tabindex="-1"></a>We implement the two weighting schemes in the function <span class="in">`compute_portfolio_returns()`</span> that takes a logical argument to weight the returns by firm value. Additionally, the long-short portfolio is long in the smallest firms and short in the largest firms, consistent with research showing that small firms outperform their larger counterparts. Apart from these two changes, the function is similar to the procedure in Univariate Portfolio Sorts.</span>
+<span id="cb13-194"><a href="#cb13-194" aria-hidden="true" tabindex="-1"></a>Chúng ta triển khai hai cách đặt trọng số trong hàm <span class="in">`compute_portfolio_returns()`</span>, hàm này nhận một đối số logic để đặt trọng số lợi nhuận theo giá trị doanh nghiệp. Ngoài ra, danh mục mua–bán khống mua các doanh nghiệp nhỏ nhất và bán khống các doanh nghiệp lớn nhất, nhất quán với nghiên cứu cho thấy doanh nghiệp nhỏ vượt trội hơn các doanh nghiệp lớn. Ngoài hai thay đổi này, hàm tương tự quy trình trong chương Phân loại danh mục đơn biến.</span>
 <span id="cb13-195"><a href="#cb13-195" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-198"><a href="#cb13-198" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-199"><a href="#cb13-199" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1934,7 +1971,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-234"><a href="#cb13-234" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> returns</span>
 <span id="cb13-235"><a href="#cb13-235" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-236"><a href="#cb13-236" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-237"><a href="#cb13-237" aria-hidden="true" tabindex="-1"></a>To see how the function <span class="in">`compute_portfolio_returns()`</span> works, we consider a simple median breakpoint example with value-weighted returns. We are interested in the effect of restricting listing exchanges on the estimation of the size premium. In the first function call, we compute returns based on breakpoints from all listing exchanges. Then, we computed returns based on breakpoints from HOSE-listed stocks.</span>
+<span id="cb13-237"><a href="#cb13-237" aria-hidden="true" tabindex="-1"></a>Để thấy hàm <span class="in">`compute_portfolio_returns()`</span> hoạt động ra sao, chúng ta xét một ví dụ đơn giản với điểm cắt là trung vị và lợi nhuận theo trọng số vốn hóa. Chúng ta quan tâm đến tác động của việc giới hạn sàn niêm yết lên ước lượng phần bù quy mô. Ở lần gọi hàm đầu tiên, chúng ta tính lợi nhuận dựa trên các điểm cắt từ tất cả các sàn niêm yết. Sau đó, chúng ta tính lợi nhuận dựa trên các điểm cắt từ các cổ phiếu niêm yết trên HOSE.</span>
 <span id="cb13-238"><a href="#cb13-238" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-241"><a href="#cb13-241" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-242"><a href="#cb13-242" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1959,17 +1996,17 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-261"><a href="#cb13-261" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-262"><a href="#cb13-262" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-263"><a href="#cb13-263" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-264"><a href="#cb13-264" aria-hidden="true" tabindex="-1"></a><span class="fu">## P-Hacking and Non-Standard Errors</span></span>
+<span id="cb13-264"><a href="#cb13-264" aria-hidden="true" tabindex="-1"></a><span class="fu">## P-Hacking và sai số phi chuẩn</span></span>
 <span id="cb13-265"><a href="#cb13-265" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-266"><a href="#cb13-266" aria-hidden="true" tabindex="-1"></a>Since the choice of the listing exchange has a significant impact, the next step is to investigate the effect of other data processing decisions researchers have to make along the way. In particular, any portfolio sort analysis has to decide at least on the number of portfolios, the listing exchanges to form breakpoints, and equal- or value-weighting. Further, one may exclude firms that are active in the finance industry or restrict the analysis to some parts of the time series. All of the variations of these choices that we discuss here are part of scholarly articles published in the top finance journals. We refer to @Walter2022 for an extensive set of other decision nodes at the discretion of researchers.</span>
+<span id="cb13-266"><a href="#cb13-266" aria-hidden="true" tabindex="-1"></a>Vì việc chọn sàn niêm yết có tác động đáng kể, bước tiếp theo là khảo sát ảnh hưởng của các quyết định xử lý dữ liệu khác mà nhà nghiên cứu phải đưa ra trong quá trình thực hiện. Cụ thể, mọi phân tích phân loại danh mục đều phải quyết định ít nhất về số lượng danh mục, các sàn niêm yết dùng để hình thành điểm cắt, và trọng số bằng nhau hay trọng số theo vốn hóa. Hơn nữa, người ta có thể loại các doanh nghiệp hoạt động trong ngành tài chính hoặc giới hạn phân tích ở một số phần của chuỗi thời gian. Tất cả các biến thể của những lựa chọn này mà chúng ta thảo luận ở đây đều là một phần của các bài báo học thuật đã công bố trên các tạp chí tài chính hàng đầu. Xem @Walter2022 để biết thêm một tập hợp rộng các nút quyết định khác thuộc quyền quyết định của nhà nghiên cứu.</span>
 <span id="cb13-267"><a href="#cb13-267" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-268"><a href="#cb13-268" aria-hidden="true" tabindex="-1"></a>The intention of this application is to show that the different ways to form portfolios result in different estimated size premiums. Despite the effects of this multitude of choices, there is no correct way. It should also be noted that none of the procedures is wrong. The aim is simply to illustrate the changes that can arise due to the variation in the evidence-generating process <span class="co">[</span><span class="ot">@Menkveld2022</span><span class="co">]</span>. The term *non-standard errors* refers to the variation due to (suitable) choices made by researchers. Interestingly, in a large-scale study, @Menkveld2022 find that the magnitude of non-standard errors is similar to the estimation uncertainty based on a chosen model. This shows how important it is to adjust for the seemingly innocent choices in the data preparation and evaluation workflow. Moreover, it seems that this methodology-related uncertainty should be embraced rather than hidden away.</span>
+<span id="cb13-268"><a href="#cb13-268" aria-hidden="true" tabindex="-1"></a>Mục đích của ứng dụng này là cho thấy các cách hình thành danh mục khác nhau dẫn đến các phần bù quy mô ước lượng khác nhau. Dù có vô số lựa chọn như vậy, không có một cách duy nhất nào là đúng. Cũng cần lưu ý rằng không có quy trình nào là sai. Mục tiêu đơn giản là minh họa những thay đổi có thể phát sinh do sự biến thiên trong quá trình tạo ra bằng chứng <span class="co">[</span><span class="ot">@Menkveld2022</span><span class="co">]</span>. Thuật ngữ *sai số phi chuẩn* (non-standard errors) chỉ sự biến thiên do các lựa chọn (hợp lý) của nhà nghiên cứu. Thú vị là, trong một nghiên cứu quy mô lớn, @Menkveld2022 phát hiện rằng độ lớn của sai số phi chuẩn tương đương với độ bất định ước lượng dựa trên một mô hình đã chọn. Điều này cho thấy việc điều chỉnh cho những lựa chọn tưởng chừng vô hại trong quy trình chuẩn bị và đánh giá dữ liệu quan trọng đến mức nào. Hơn nữa, có vẻ sự bất định liên quan đến phương pháp luận này nên được đón nhận hơn là che giấu.</span>
 <span id="cb13-269"><a href="#cb13-269" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-270"><a href="#cb13-270" aria-hidden="true" tabindex="-1"></a>From a malicious perspective, these modeling choices give the researcher multiple *chances* to find statistically significant results. Yet this is considered *p-hacking*, which renders the statistical inference invalid due to multiple testing <span class="co">[</span><span class="ot">@Harvey2016</span><span class="co">]</span>.</span>
+<span id="cb13-270"><a href="#cb13-270" aria-hidden="true" tabindex="-1"></a>Từ góc nhìn ác ý, các lựa chọn mô hình hóa này cho nhà nghiên cứu nhiều *cơ hội* để tìm ra kết quả có ý nghĩa thống kê. Tuy nhiên, điều này bị coi là *p-hacking*, làm cho suy luận thống kê mất hiệu lực do kiểm định đa giả thuyết <span class="co">[</span><span class="ot">@Harvey2016</span><span class="co">]</span>.</span>
 <span id="cb13-271"><a href="#cb13-271" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-272"><a href="#cb13-272" aria-hidden="true" tabindex="-1"></a>Nevertheless, the multitude of options creates a problem since there is no single correct way of sorting portfolios. How should a researcher convince a reader that their results do not come from a p-hacking exercise? To circumvent this dilemma, academics are encouraged to present evidence from different sorting schemes as *robustness tests* and report multiple approaches to show that a result does not depend on a single choice. Thus, the robustness of premiums is a key feature.</span>
+<span id="cb13-272"><a href="#cb13-272" aria-hidden="true" tabindex="-1"></a>Tuy vậy, vô số lựa chọn tạo ra một vấn đề vì không có cách phân loại danh mục nào duy nhất đúng. Làm thế nào một nhà nghiên cứu thuyết phục người đọc rằng kết quả của mình không phải do p-hacking? Để tránh thế tiến thoái lưỡng nan này, giới học thuật được khuyến khích trình bày bằng chứng từ các cách phân loại khác nhau dưới dạng *kiểm định độ vững* và báo cáo nhiều cách tiếp cận để cho thấy kết quả không phụ thuộc vào một lựa chọn duy nhất. Do đó, độ vững của các phần bù là một đặc điểm then chốt.</span>
 <span id="cb13-273"><a href="#cb13-273" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-274"><a href="#cb13-274" aria-hidden="true" tabindex="-1"></a>Below, we conduct a series of robustness tests, which could also be interpreted as a p-hacking exercise. To do so, we examine the size premium in different specifications presented in the table <span class="in">`p_hacking_setup`</span>. The function <span class="in">`itertools.product()`</span> produces all possible permutations of its arguments. Note that we use the argument <span class="in">`data`</span> to exclude financial firms and truncate the time series.</span>
+<span id="cb13-274"><a href="#cb13-274" aria-hidden="true" tabindex="-1"></a>Dưới đây, chúng ta thực hiện một loạt kiểm định độ vững, cũng có thể được diễn giải như một bài tập p-hacking. Để làm vậy, chúng ta khảo sát phần bù quy mô trong các đặc tả khác nhau được trình bày trong bảng <span class="in">`p_hacking_setup`</span>. Hàm <span class="in">`itertools.product()`</span> tạo ra mọi hoán vị có thể của các đối số. Lưu ý rằng chúng ta dùng đối số <span class="in">`data`</span> để loại các doanh nghiệp tài chính và cắt ngắn chuỗi thời gian.</span>
 <span id="cb13-275"><a href="#cb13-275" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-278"><a href="#cb13-278" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-279"><a href="#cb13-279" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1987,7 +2024,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-291"><a href="#cb13-291" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb13-292"><a href="#cb13-292" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-293"><a href="#cb13-293" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-294"><a href="#cb13-294" aria-hidden="true" tabindex="-1"></a>To speed the computation up, we parallelize the (many) different sorting procedures. Finally, we report the resulting size premiums in descending order. There are indeed substantial size premiums possible in our data, in particular when we use equal-weighted portfolios.</span>
+<span id="cb13-294"><a href="#cb13-294" aria-hidden="true" tabindex="-1"></a>Để tăng tốc tính toán, chúng ta song song hóa (rất nhiều) quy trình phân loại khác nhau. Cuối cùng, chúng ta báo cáo các phần bù quy mô thu được theo thứ tự giảm dần. Quả thật có thể có những phần bù quy mô đáng kể trong dữ liệu của chúng ta, đặc biệt khi dùng các danh mục trọng số bằng nhau.</span>
 <span id="cb13-295"><a href="#cb13-295" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-298"><a href="#cb13-298" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-299"><a href="#cb13-299" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -2001,15 +2038,15 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-307"><a href="#cb13-307" aria-hidden="true" tabindex="-1"></a>p_hacking_results <span class="op">=</span> p_hacking_results.reset_index(name<span class="op">=</span><span class="st">"size_premium"</span>)</span>
 <span id="cb13-308"><a href="#cb13-308" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-309"><a href="#cb13-309" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-310"><a href="#cb13-310" aria-hidden="true" tabindex="-1"></a><span class="fu">## Size-Premium Variation</span></span>
+<span id="cb13-310"><a href="#cb13-310" aria-hidden="true" tabindex="-1"></a><span class="fu">## Biến thiên của phần bù quy mô</span></span>
 <span id="cb13-311"><a href="#cb13-311" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-312"><a href="#cb13-312" aria-hidden="true" tabindex="-1"></a>We provide a graph in @fig-803 that shows the different premiums. The figure also shows the relation to the average Fama-French SMB (small minus big) premium used in the literature, which we include as a dotted vertical line.</span>
+<span id="cb13-312"><a href="#cb13-312" aria-hidden="true" tabindex="-1"></a>Chúng ta cung cấp một biểu đồ trong @fig-803 cho thấy các phần bù khác nhau. Hình cũng cho thấy mối quan hệ với phần bù SMB (small minus big) trung bình của Fama-French được dùng trong tài liệu, mà chúng ta đưa vào dưới dạng đường thẳng đứng chấm chấm.</span>
 <span id="cb13-313"><a href="#cb13-313" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-316"><a href="#cb13-316" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-317"><a href="#cb13-317" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-803</span></span>
 <span id="cb13-318"><a href="#cb13-318" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
-<span id="cb13-319"><a href="#cb13-319" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "The figure shows the distribution of size premiums for various sorting choices. The dashed vertical line indicates the average Fama-French SMB premium."</span></span>
-<span id="cb13-320"><a href="#cb13-320" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-alt: "Title: Distribution of size premiums for different sorting choices. The figure shows a histogram of size premiums based on different sorting choices. The variation is huge, but the estimated coefficients are positive for all choices."</span></span>
+<span id="cb13-319"><a href="#cb13-319" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Hình cho thấy phân phối của các phần bù quy mô theo nhiều lựa chọn phân loại khác nhau. Đường thẳng đứng nét đứt biểu thị phần bù SMB trung bình của Fama-French."</span></span>
+<span id="cb13-320"><a href="#cb13-320" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-alt: "Tiêu đề: Phân phối của các phần bù quy mô theo các lựa chọn phân loại khác nhau. Hình cho thấy biểu đồ tần suất của các phần bù quy mô dựa trên các lựa chọn phân loại khác nhau. Biến thiên rất lớn, nhưng các hệ số ước lượng đều dương với mọi lựa chọn."</span></span>
 <span id="cb13-321"><a href="#cb13-321" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-pos: "htb"</span></span>
 <span id="cb13-322"><a href="#cb13-322" aria-hidden="true" tabindex="-1"></a>p_hacking_results_figure <span class="op">=</span> (</span>
 <span id="cb13-323"><a href="#cb13-323" aria-hidden="true" tabindex="-1"></a>  ggplot(</span>
@@ -2029,21 +2066,21 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-337"><a href="#cb13-337" aria-hidden="true" tabindex="-1"></a>p_hacking_results_figure.show()</span>
 <span id="cb13-338"><a href="#cb13-338" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-339"><a href="#cb13-339" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-340"><a href="#cb13-340" aria-hidden="true" tabindex="-1"></a><span class="fu">## Key Takeaways</span></span>
+<span id="cb13-340"><a href="#cb13-340" aria-hidden="true" tabindex="-1"></a><span class="fu">## Những điểm chính</span></span>
 <span id="cb13-341"><a href="#cb13-341" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-342"><a href="#cb13-342" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Firm size is a crucial factor in asset pricing, and sorting stocks by size reveals the size premium, where small-cap stocks tend to outperform large-cap stocks.</span>
-<span id="cb13-343"><a href="#cb13-343" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Portfolio returns are sensitive to research design choices like exchange filters, weighting schemes, and the number of portfolios—decisions that can meaningfully shift results.</span>
-<span id="cb13-344"><a href="#cb13-344" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Methodological flexibility can lead to non-standard errors and potential p-hacking.</span>
-<span id="cb13-345"><a href="#cb13-345" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Validate results by varying assumptions and show that findings hold across multiple specifications.</span>
+<span id="cb13-342"><a href="#cb13-342" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Quy mô doanh nghiệp là một nhân tố quan trọng trong định giá tài sản, và việc phân loại cổ phiếu theo quy mô cho thấy phần bù quy mô, trong đó cổ phiếu vốn hóa nhỏ có xu hướng vượt trội so với cổ phiếu vốn hóa lớn.</span>
+<span id="cb13-343"><a href="#cb13-343" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Lợi nhuận danh mục nhạy cảm với các lựa chọn thiết kế nghiên cứu như bộ lọc sàn niêm yết, cách đặt trọng số và số lượng danh mục, những quyết định có thể làm thay đổi kết quả đáng kể.</span>
+<span id="cb13-344"><a href="#cb13-344" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Sự linh hoạt về phương pháp luận có thể dẫn đến sai số phi chuẩn và nguy cơ p-hacking.</span>
+<span id="cb13-345"><a href="#cb13-345" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Hãy kiểm chứng kết quả bằng cách thay đổi các giả định và cho thấy các phát hiện đứng vững qua nhiều đặc tả.</span>
 <span id="cb13-346"><a href="#cb13-346" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-347"><a href="#cb13-347" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- ## Exercises</span></span>
+<span id="cb13-347"><a href="#cb13-347" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- ## Bài tập</span></span>
 <span id="cb13-348"><a href="#cb13-348" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-349"><a href="#cb13-349" aria-hidden="true" tabindex="-1"></a><span class="co">1.  We gained several insights on the size distribution above. However, we did not analyze the average size across listing exchanges and industries. Which listing exchanges/industries have the largest firms? Plot the average firm size for the three listing exchanges over time. What do you conclude?</span></span>
-<span id="cb13-350"><a href="#cb13-350" aria-hidden="true" tabindex="-1"></a><span class="co">2.  We compute breakpoints but do not take a look at them in the exposition above. This might cover potential data errors. Plot the breakpoints for ten size portfolios over time. Then, take the difference between the two extreme portfolios and plot it. Describe your results.</span></span>
-<span id="cb13-351"><a href="#cb13-351" aria-hidden="true" tabindex="-1"></a><span class="co">3.  The returns that we analyze above do not account for differences in the exposure to market risk, i.e., the CAPM beta. Change the function `compute_portfolio_returns()` to output the CAPM alpha or beta instead of the average excess return.</span></span>
-<span id="cb13-352"><a href="#cb13-352" aria-hidden="true" tabindex="-1"></a><span class="co">4.  While you saw the spread in returns from the p-hacking exercise, we did not show which choices led to the largest effects. Find a way to investigate which choice variable has the largest impact on the estimated size premium.</span></span>
-<span id="cb13-353"><a href="#cb13-353" aria-hidden="true" tabindex="-1"></a><span class="co">5.  We computed several size premiums, but they do not follow the definition of @Fama1993. Which of our approaches comes closest to their SMB premium? --&gt;</span></span>
-</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb13-349"><a href="#cb13-349" aria-hidden="true" tabindex="-1"></a><span class="co">1.  Chúng ta đã có một số hiểu biết về phân phối quy mô ở trên. Tuy nhiên, chúng ta chưa phân tích quy mô trung bình giữa các sàn niêm yết và các ngành. Sàn niêm yết/ngành nào có các doanh nghiệp lớn nhất? Vẽ biểu đồ quy mô doanh nghiệp trung bình của ba sàn niêm yết theo thời gian. Bạn rút ra kết luận gì?</span></span>
+<span id="cb13-350"><a href="#cb13-350" aria-hidden="true" tabindex="-1"></a><span class="co">2.  Chúng ta tính các điểm cắt nhưng không xem xét chúng trong phần trình bày ở trên. Điều này có thể che giấu các lỗi dữ liệu tiềm tàng. Vẽ biểu đồ các điểm cắt cho mười danh mục quy mô theo thời gian. Sau đó, lấy chênh lệch giữa hai danh mục cực trị và vẽ biểu đồ. Mô tả kết quả của bạn.</span></span>
+<span id="cb13-351"><a href="#cb13-351" aria-hidden="true" tabindex="-1"></a><span class="co">3.  Lợi nhuận mà chúng ta phân tích ở trên không tính đến sự khác biệt về mức phơi nhiễm với rủi ro thị trường, tức là beta CAPM. Hãy thay đổi hàm `compute_portfolio_returns()` để xuất ra alpha hoặc beta CAPM thay cho lợi nhuận vượt mức trung bình.</span></span>
+<span id="cb13-352"><a href="#cb13-352" aria-hidden="true" tabindex="-1"></a><span class="co">4.  Dù bạn đã thấy độ chênh lệch lợi nhuận từ bài tập p-hacking, chúng ta chưa chỉ ra những lựa chọn nào dẫn đến tác động lớn nhất. Hãy tìm cách khảo sát biến lựa chọn nào có tác động lớn nhất lên phần bù quy mô ước lượng.</span></span>
+<span id="cb13-353"><a href="#cb13-353" aria-hidden="true" tabindex="-1"></a><span class="co">5.  Chúng ta đã tính nhiều phần bù quy mô, nhưng chúng không tuân theo định nghĩa của @Fama1993. Cách tiếp cận nào của chúng ta gần nhất với phần bù SMB của họ? --&gt;</span></span>
+</code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
@@ -2053,7 +2090,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/12_size_sorts.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/12_size_sorts.qmd" class="toc-action"><i class="bi bi-github"></i>Chỉnh sửa trang này</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Báo lỗi</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>

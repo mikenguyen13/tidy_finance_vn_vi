@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi" xml:lang="vi"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.26">
+<meta name="generator" content="quarto-1.7.33">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 
-<title>28&nbsp; P/E Ratio – Tài Chính Ứng Dụng với Python</title>
+<title>28&nbsp; Tỷ số P/E – Tài Chính Ứng Dụng với Python</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -90,19 +91,18 @@ div.csl-indent {
 <link href="./favicon.ico" rel="icon">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-bc185b5c5bdbcb35c2eb49d8a876ef70.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-72097b8a1e3a3da1d7b8bbfaaf81c3d8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-5ee5e5a16e06a4aa31defda297eed821.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -117,19 +117,43 @@ div.csl-indent {
   ],
   "show-item-context": false,
   "language": {
-    "search-no-results-text": "No results",
-    "search-matching-documents-text": "matching documents",
-    "search-copy-link-title": "Copy link to search",
-    "search-hide-matches-text": "Hide additional matches",
-    "search-more-match-text": "more match in this document",
-    "search-more-matches-text": "more matches in this document",
-    "search-clear-button-title": "Clear",
+    "search-no-results-text": "Không có kết quả",
+    "search-matching-documents-text": "tài liệu phù hợp",
+    "search-copy-link-title": "Sao chép liên kết tìm kiếm",
+    "search-hide-matches-text": "Ẩn các kết quả khớp khác",
+    "search-more-match-text": "kết quả khớp khác trong tài liệu này",
+    "search-more-matches-text": "kết quả khớp khác trong tài liệu này",
+    "search-clear-button-title": "Xóa",
     "search-text-placeholder": "",
-    "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit",
-    "search-label": "Search"
+    "search-detached-cancel-button-title": "Hủy",
+    "search-submit-button-title": "Gửi",
+    "search-label": "Tìm kiếm"
   }
 }</script>
+<!-- =====================================================================
+     SEO: schema.org Book JSON-LD, injected into the <head> of every page
+     via format.html include-in-header. The plain meta description and the
+     og:/twitter: descriptions come from the book `description:` key in
+     _quarto.yml - don't repeat them here (duplicate meta description).
+     ===================================================================== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": "Tài Chính Ứng Dụng với Python",
+  "url": "https://mikenguyen13.github.io/tidy_finance_vn_vi/",
+  "inLanguage": "vi",
+  "bookFormat": "https://schema.org/EBook",
+  "genre": "Empirical Finance",
+  "description": "Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: truy cập và quản lý dữ liệu tài chính, xây dựng danh mục đầu tư, mô hình định giá tài sản, kiểm định chéo, phân tích cơ bản và định giá doanh nghiệp.",
+  "keywords": "tài chính định lượng, thị trường chứng khoán Việt Nam, tài chính thực nghiệm, định giá tài sản, Fama-French, danh mục đầu tư, Python, VN30, HOSE",
+  "author": {
+    "@type": "Person",
+    "name": "Mike Nguyen"
+  },
+  "isAccessibleForFree": true
+}
+</script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -145,7 +169,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+      if (mathElements[i].tagName == "SPAN") {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -162,11 +186,11 @@ window.Quarto = {
 </script>
 
 <link rel="stylesheet" href="styles.css">
-<meta property="og:title" content="28&nbsp; P/E Ratio – Tài Chính Ứng Dụng với Python">
-<meta property="og:description" content="">
+<meta property="og:title" content="28&nbsp; Tỷ số P/E – Tài Chính Ứng Dụng với Python">
+<meta property="og:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta property="og:site_name" content="Tài Chính Ứng Dụng với Python">
-<meta name="twitter:title" content="28&nbsp; P/E Ratio – Tài Chính Ứng Dụng với Python">
-<meta name="twitter:description" content="">
+<meta name="twitter:title" content="28&nbsp; Tỷ số P/E – Tài Chính Ứng Dụng với Python">
+<meta name="twitter:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta name="twitter:card" content="summary">
 </head>
 
@@ -343,8 +367,8 @@ window.Quarto = {
     <span class="navbar-title">Tài Chính Ứng Dụng với Python</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+            <div id="quarto-search" class="" title="Tìm kiếm"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Bật/tắt điều hướng" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -364,18 +388,18 @@ window.Quarto = {
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Mã nguồn" class="quarto-navigation-tool px-1" aria-label="Mã nguồn"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Bật/tắt chế độ tối"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
   <nav class="quarto-secondary-nav">
     <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./30_financial_statement_analysis.html">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</a></li><li class="breadcrumb-item"><a href="./35_pe_ratio.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">P/E Ratio</span></a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./30_financial_statement_analysis.html">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</a></li><li class="breadcrumb-item"><a href="./35_pe_ratio.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Tỷ số P/E</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
   </nav>
@@ -396,7 +420,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
  <span class="menu-text">Thị trường tài chính, thể chế và dữ liệu Việt Nam</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -404,7 +428,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./00_institutional_background.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Nền tảng thể chế và cấu trúc thị trường của thị trường chứng khoán Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Bối cảnh thể chế và cấu trúc thị trường cổ phiếu Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -422,7 +446,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./03_market_microstructure.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Cấu trúc thị trường vi mô tại Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Vi cấu trúc thị trường tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -434,7 +458,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05_working_with_stock_returns.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận vốn chủ sở hữu</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận cổ phiếu</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -449,7 +473,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
  <span class="menu-text">Xây dựng danh mục đầu tư, rủi ro và cơ học thực nghiệm</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -457,7 +481,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./10_modern_portfolio_theory.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Lý thuyết danh mục đầu tư hiện đại</span></span></a>
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -469,7 +493,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./12_size_sorts.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Size Sorts</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phân loại theo quy mô</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -481,19 +505,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./14_portfolio_weighting_and_rebalancing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Portfolio Weighting and Rebalancing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Trọng số danh mục đầu tư và tái cân bằng danh mục</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./15_missing_data_and_survivorship.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Missing Data and Survivorship Bias</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Dữ liệu bị thiếu và thiên kiến sống sót</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./16_liquidity_and_turnover_measures.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Liquidity and Turnover Measures</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Các thước đo Thanh khoản và Vòng quay Giao dịch</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -508,7 +532,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình định giá tài sản</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -522,19 +546,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./21_fama_french.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Các nhân tố Fama-French</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./22_momentum.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Momentum Strategies</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Chiến lược động lượng</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./23_factor_construction_principles.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Factor Construction Principles</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Nguyên tắc xây dựng nhân tố</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -546,13 +570,13 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./25_factor_zoo_and_multiple_testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Factor Zoo and Multiple Testing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Vườn thú nhân tố và kiểm định đa giả thuyết</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./26_time_series_vs_cross_section.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Time-Series vs.&nbsp;Cross-Sectional Factor Tests</span></span></a>
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Kiểm định nhân tố theo chuỗi thời gian và theo mặt cắt ngang</span></span></a>
   </div>
 </li>
       </ul>
@@ -561,7 +585,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
  <span class="menu-text">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -581,49 +605,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./32_info_earnings.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Information Content of Earnings Announcements</span></span></a>
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Hàm lượng thông tin của các thông báo lợi nhuận</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./33_accruals.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Accruals, Earnings Persistence, and Market Efficiency</span></span></a>
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Các khoản dồn tích, tính bền vững của lợi nhuận và hiệu quả thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./34_earning_management.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Earnings Management: Detection and Measurement</span></span></a>
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Quản trị lợi nhuận: Phát hiện và đo lường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./35_pe_ratio.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">P/E Ratio</span></span></a>
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Tỷ số P/E</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./36_valuation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Firm Valuation, Financial Distress, and Company Maturity</span></span></a>
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Định giá doanh nghiệp, kiệt quệ tài chính và mức độ trưởng thành của công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./37_disclosure_quality_and_timing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Disclosure Quality and Timing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Chất lượng và thời điểm công bố thông tin</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./38_sue.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></span></a>
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Bất ngờ lợi nhuận chuẩn hóa (SUE)</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./39_divop.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Measuring Divergence of Investor Opinion</span></span></a>
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Đo lường sự phân kỳ quan điểm của nhà đầu tư</span></span></a>
   </div>
 </li>
       </ul>
@@ -632,7 +656,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
  <span class="menu-text">Quyền sở hữu, ma sát thị trường và rủi ro quốc tế</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -640,43 +664,43 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./50_institutional_ownership.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Institutional Ownership Analytics in Vietnam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Phân tích sở hữu tổ chức tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./52_institutional_trade_flow.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Institutional Trades, Flows, and Turnover Ratios</span></span></a>
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Giao dịch, dòng vốn và tỷ lệ vòng quay của nhà đầu tư tổ chức</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./53_governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Corporate Governance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Quản trị công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./54_return_gaps.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Return Gap: Measuring Unobserved Actions of Fund Managers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Chênh lệch lợi nhuận (Return Gap): Đo lường các hành động không quan sát được của nhà quản lý quỹ</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./55_price_limits_and_volatility.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Price Limits and Volatility</span></span></a>
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Biên độ giá và biến động</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./56_market_integration_and_segmentation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Market Integration and Segmentation</span></span></a>
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Hội nhập và phân khúc thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./57_exchange_rate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Exchange Rate Dynamics</span></span></a>
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Động lực của tỷ giá hối đoái</span></span></a>
   </div>
 </li>
       </ul>
@@ -685,7 +709,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình tài chính nâng cao</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -693,25 +717,25 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./60_event_studies.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Event Studies in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Nghiên cứu sự kiện trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./61_tail_risk_extreme_events.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Tail Risk and Extreme Events</span></span></a>
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Rủi ro đuôi và các sự kiện cực đoan</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./62_corporate_finance_estimators.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Corporate Finance Estimators and Identification</span></span></a>
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Các công cụ ước lượng và nhận dạng trong tài chính doanh nghiệp</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./63_structural_models_finance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Structural Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Các mô hình cấu trúc trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -720,7 +744,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
  <span class="menu-text">Dữ liệu thay thế và Trí tuệ nhân tạo trong tài chính</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -728,25 +752,25 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./70_textual.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Textual Analysis</span></span></a>
+ <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Phân tích văn bản</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./71_image.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Image and Visual Data in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Dữ liệu hình ảnh và dữ liệu thị giác trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./73_networks_graphs.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Networks and Graphs in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Mạng lưới và đồ thị trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./74_multimodel.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Multimodal Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Các mô hình đa phương thức trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -770,45 +794,45 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="-1">
-    <h2 id="toc-title">Table of contents</h2>
+    <h2 id="toc-title">Mục lục</h2>
    
   <ul>
-  <li><a href="#technical-schema-and-variable-engineering" id="toc-technical-schema-and-variable-engineering" class="nav-link active" data-scroll-target="#technical-schema-and-variable-engineering"><span class="header-section-number">28.0.1</span> Technical Schema and Variable Engineering</a></li>
-  <li><a href="#firm-specific-pe-valuation-metrics" id="toc-firm-specific-pe-valuation-metrics" class="nav-link" data-scroll-target="#firm-specific-pe-valuation-metrics"><span class="header-section-number">28.1</span> Firm-Specific P/E Valuation Metrics</a>
+  <li><a href="#lược-đồ-kỹ-thuật-và-xây-dựng-biến" id="toc-lược-đồ-kỹ-thuật-và-xây-dựng-biến" class="nav-link active" data-scroll-target="#lược-đồ-kỹ-thuật-và-xây-dựng-biến"><span class="header-section-number">28.0.1</span> Lược đồ kỹ thuật và xây dựng biến</a></li>
+  <li><a href="#các-thước-đo-định-giá-pe-theo-từng-doanh-nghiệp" id="toc-các-thước-đo-định-giá-pe-theo-từng-doanh-nghiệp" class="nav-link" data-scroll-target="#các-thước-đo-định-giá-pe-theo-từng-doanh-nghiệp"><span class="header-section-number">28.1</span> Các thước đo định giá P/E theo từng doanh nghiệp</a>
   <ul class="collapse">
-  <li><a href="#trailing-pe-and-the-ttm-methodology" id="toc-trailing-pe-and-the-ttm-methodology" class="nav-link" data-scroll-target="#trailing-pe-and-the-ttm-methodology"><span class="header-section-number">28.1.1</span> Trailing P/E and the TTM Methodology</a></li>
-  <li><a href="#forward-pe-and-analyst-forecast-reliability" id="toc-forward-pe-and-analyst-forecast-reliability" class="nav-link" data-scroll-target="#forward-pe-and-analyst-forecast-reliability"><span class="header-section-number">28.1.2</span> Forward P/E and Analyst Forecast Reliability</a></li>
-  <li><a href="#cyclically-adjusted-price-earnings-cape-ratio" id="toc-cyclically-adjusted-price-earnings-cape-ratio" class="nav-link" data-scroll-target="#cyclically-adjusted-price-earnings-cape-ratio"><span class="header-section-number">28.1.3</span> Cyclically Adjusted Price-Earnings (CAPE) Ratio</a></li>
-  <li><a href="#unlevered-pe-and-the-leibowitz-framework" id="toc-unlevered-pe-and-the-leibowitz-framework" class="nav-link" data-scroll-target="#unlevered-pe-and-the-leibowitz-framework"><span class="header-section-number">28.1.4</span> Unlevered P/E and the Leibowitz Framework</a></li>
+  <li><a href="#pe-trailing-và-phương-pháp-ttm" id="toc-pe-trailing-và-phương-pháp-ttm" class="nav-link" data-scroll-target="#pe-trailing-và-phương-pháp-ttm"><span class="header-section-number">28.1.1</span> P/E trailing và phương pháp TTM</a></li>
+  <li><a href="#pe-forward-và-độ-tin-cậy-của-dự-báo-từ-nhà-phân-tích" id="toc-pe-forward-và-độ-tin-cậy-của-dự-báo-từ-nhà-phân-tích" class="nav-link" data-scroll-target="#pe-forward-và-độ-tin-cậy-của-dự-báo-từ-nhà-phân-tích"><span class="header-section-number">28.1.2</span> P/E forward và độ tin cậy của dự báo từ nhà phân tích</a></li>
+  <li><a href="#tỷ-số-giá-trên-thu-nhập-điều-chỉnh-theo-chu-kỳ-cape" id="toc-tỷ-số-giá-trên-thu-nhập-điều-chỉnh-theo-chu-kỳ-cape" class="nav-link" data-scroll-target="#tỷ-số-giá-trên-thu-nhập-điều-chỉnh-theo-chu-kỳ-cape"><span class="header-section-number">28.1.3</span> Tỷ số giá trên thu nhập điều chỉnh theo chu kỳ (CAPE)</a></li>
+  <li><a href="#pe-không-đòn-bẩy-và-khung-leibowitz" id="toc-pe-không-đòn-bẩy-và-khung-leibowitz" class="nav-link" data-scroll-target="#pe-không-đòn-bẩy-và-khung-leibowitz"><span class="header-section-number">28.1.4</span> P/E không đòn bẩy và khung Leibowitz</a></li>
   </ul></li>
-  <li><a href="#market-level-aggregation-techniques" id="toc-market-level-aggregation-techniques" class="nav-link" data-scroll-target="#market-level-aggregation-techniques"><span class="header-section-number">28.2</span> Market-Level Aggregation Techniques</a>
+  <li><a href="#các-kỹ-thuật-tổng-hợp-ở-cấp-thị-trường" id="toc-các-kỹ-thuật-tổng-hợp-ở-cấp-thị-trường" class="nav-link" data-scroll-target="#các-kỹ-thuật-tổng-hợp-ở-cấp-thị-trường"><span class="header-section-number">28.2</span> Các kỹ thuật tổng hợp ở cấp thị trường</a>
   <ul class="collapse">
-  <li><a href="#the-vn-index-capitalization-weighted-aggregation" id="toc-the-vn-index-capitalization-weighted-aggregation" class="nav-link" data-scroll-target="#the-vn-index-capitalization-weighted-aggregation"><span class="header-section-number">28.2.1</span> The VN-Index: Capitalization-Weighted Aggregation</a></li>
-  <li><a href="#the-vn30-and-free-float-adjustments" id="toc-the-vn30-and-free-float-adjustments" class="nav-link" data-scroll-target="#the-vn30-and-free-float-adjustments"><span class="header-section-number">28.2.2</span> The VN30 and Free-Float Adjustments</a></li>
-  <li><a href="#median-vs.-mean-aggregation" id="toc-median-vs.-mean-aggregation" class="nav-link" data-scroll-target="#median-vs.-mean-aggregation"><span class="header-section-number">28.2.3</span> Median vs.&nbsp;Mean Aggregation</a></li>
+  <li><a href="#vn-index-tổng-hợp-theo-trọng-số-vốn-hóa" id="toc-vn-index-tổng-hợp-theo-trọng-số-vốn-hóa" class="nav-link" data-scroll-target="#vn-index-tổng-hợp-theo-trọng-số-vốn-hóa"><span class="header-section-number">28.2.1</span> VN-Index: Tổng hợp theo trọng số vốn hóa</a></li>
+  <li><a href="#vn30-và-điều-chỉnh-tỷ-lệ-tự-do-chuyển-nhượng" id="toc-vn30-và-điều-chỉnh-tỷ-lệ-tự-do-chuyển-nhượng" class="nav-link" data-scroll-target="#vn30-và-điều-chỉnh-tỷ-lệ-tự-do-chuyển-nhượng"><span class="header-section-number">28.2.2</span> VN30 và điều chỉnh tỷ lệ tự do chuyển nhượng</a></li>
+  <li><a href="#tổng-hợp-theo-trung-vị-so-với-trung-bình" id="toc-tổng-hợp-theo-trung-vị-so-với-trung-bình" class="nav-link" data-scroll-target="#tổng-hợp-theo-trung-vị-so-với-trung-bình"><span class="header-section-number">28.2.3</span> Tổng hợp theo trung vị so với trung bình</a></li>
   </ul></li>
-  <li><a href="#implementation" id="toc-implementation" class="nav-link" data-scroll-target="#implementation"><span class="header-section-number">28.3</span> Implementation</a>
+  <li><a href="#triển-khai" id="toc-triển-khai" class="nav-link" data-scroll-target="#triển-khai"><span class="header-section-number">28.3</span> Triển khai</a>
   <ul class="collapse">
-  <li><a href="#data-ingestion-and-processing" id="toc-data-ingestion-and-processing" class="nav-link" data-scroll-target="#data-ingestion-and-processing"><span class="header-section-number">28.3.1</span> Data Ingestion and Processing</a></li>
+  <li><a href="#nạp-và-xử-lý-dữ-liệu" id="toc-nạp-và-xử-lý-dữ-liệu" class="nav-link" data-scroll-target="#nạp-và-xử-lý-dữ-liệu"><span class="header-section-number">28.3.1</span> Nạp và xử lý dữ liệu</a></li>
   <li><a href="#shiller-cape" id="toc-shiller-cape" class="nav-link" data-scroll-target="#shiller-cape"><span class="header-section-number">28.3.2</span> Shiller CAPE</a></li>
   </ul></li>
-  <li><a href="#macroeconomic-and-regulatory-factors-in-valuation" id="toc-macroeconomic-and-regulatory-factors-in-valuation" class="nav-link" data-scroll-target="#macroeconomic-and-regulatory-factors-in-valuation"><span class="header-section-number">28.4</span> Macroeconomic and Regulatory Factors in Valuation</a>
+  <li><a href="#các-yếu-tố-vĩ-mô-và-quy-định-trong-định-giá" id="toc-các-yếu-tố-vĩ-mô-và-quy-định-trong-định-giá" class="nav-link" data-scroll-target="#các-yếu-tố-vĩ-mô-và-quy-định-trong-định-giá"><span class="header-section-number">28.4</span> Các yếu tố vĩ mô và quy định trong định giá</a>
   <ul class="collapse">
-  <li><a href="#the-role-of-corporate-income-tax-cit" id="toc-the-role-of-corporate-income-tax-cit" class="nav-link" data-scroll-target="#the-role-of-corporate-income-tax-cit"><span class="header-section-number">28.4.1</span> The Role of Corporate Income Tax (CIT)</a></li>
-  <li><a href="#macroeconomic-determinants-inflation-and-interest-rates" id="toc-macroeconomic-determinants-inflation-and-interest-rates" class="nav-link" data-scroll-target="#macroeconomic-determinants-inflation-and-interest-rates"><span class="header-section-number">28.4.2</span> Macroeconomic Determinants: Inflation and Interest Rates</a></li>
+  <li><a href="#vai-trò-của-thuế-thu-nhập-doanh-nghiệp-cit" id="toc-vai-trò-của-thuế-thu-nhập-doanh-nghiệp-cit" class="nav-link" data-scroll-target="#vai-trò-của-thuế-thu-nhập-doanh-nghiệp-cit"><span class="header-section-number">28.4.1</span> Vai trò của thuế thu nhập doanh nghiệp (CIT)</a></li>
+  <li><a href="#các-yếu-tố-vĩ-mô-quyết-định-lạm-phát-và-lãi-suất" id="toc-các-yếu-tố-vĩ-mô-quyết-định-lạm-phát-và-lãi-suất" class="nav-link" data-scroll-target="#các-yếu-tố-vĩ-mô-quyết-định-lạm-phát-và-lãi-suất"><span class="header-section-number">28.4.2</span> Các yếu tố vĩ mô quyết định: Lạm phát và lãi suất</a></li>
   </ul></li>
-  <li><a href="#synthesis-of-valuation-dynamics" id="toc-synthesis-of-valuation-dynamics" class="nav-link" data-scroll-target="#synthesis-of-valuation-dynamics"><span class="header-section-number">28.5</span> Synthesis of Valuation Dynamics</a></li>
-  <li><a href="#conclusions" id="toc-conclusions" class="nav-link" data-scroll-target="#conclusions"><span class="header-section-number">28.6</span> Conclusions</a></li>
+  <li><a href="#tổng-hợp-các-động-lực-định-giá" id="toc-tổng-hợp-các-động-lực-định-giá" class="nav-link" data-scroll-target="#tổng-hợp-các-động-lực-định-giá"><span class="header-section-number">28.5</span> Tổng hợp các động lực định giá</a></li>
+  <li><a href="#kết-luận" id="toc-kết-luận" class="nav-link" data-scroll-target="#kết-luận"><span class="header-section-number">28.6</span> Kết luận</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/35_pe_ratio.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/35_pe_ratio.qmd" class="toc-action"><i class="bi bi-github"></i>Chỉnh sửa trang này</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Báo lỗi</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./30_financial_statement_analysis.html">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</a></li><li class="breadcrumb-item"><a href="./35_pe_ratio.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">P/E Ratio</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./30_financial_statement_analysis.html">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</a></li><li class="breadcrumb-item"><a href="./35_pe_ratio.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Tỷ số P/E</span></a></li></ol></nav>
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">P/E Ratio</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Tỷ số P/E</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Mã</button></div></div>
 </div>
 
 
@@ -825,102 +849,102 @@ window.Quarto = {
 </header>
 
 
-<p>The systematic analysis of equity valuations in frontier and emerging markets requires a robust integration of high-fidelity financial data, rigorous mathematical modeling, and an acute understanding of local regulatory frameworks. In the context of the Vietnamese equity market, the Price-Earnings (P/E) ratio serves as a primary instrument for assessing corporate performance and market sentiment. This chapter provides an exploration of P/E valuation methodologies, ranging from firm-specific trailing and forward metrics to cyclically adjusted and unlevered variations.</p>
-<!-- ## The Architecture of Vietnamese Financial Data
+<p>Việc phân tích có hệ thống định giá cổ phiếu ở các thị trường cận biên và mới nổi đòi hỏi sự tích hợp vững chắc giữa dữ liệu tài chính chất lượng cao, mô hình toán học chặt chẽ và hiểu biết sâu sắc về khuôn khổ pháp lý địa phương. Trong bối cảnh thị trường chứng khoán Việt Nam, tỷ số giá trên thu nhập (P/E) là công cụ chính để đánh giá kết quả hoạt động doanh nghiệp và tâm lý thị trường. Chương này trình bày các phương pháp định giá theo P/E, từ các thước đo trailing và forward theo từng doanh nghiệp đến các biến thể điều chỉnh theo chu kỳ và không đòn bẩy.</p>
+<!-- ## Kiến trúc dữ liệu tài chính Việt Nam
 
-The Datacore.vn platform organizes its financial offerings into several specialized products, each serving a distinct role in the valuation pipeline. The "Stock" data product delivers clean, daily trading data for all listed companies, supporting market tracking and strategy development. For fundamental analysis, the "Vietnam Fundamentals" dataset is indispensable, as it provides clean, comparable, and fully reconciled firm-level accounting data for every company listed on HOSE, HNX, and UPCoM from the year 2000 onward.
+Nền tảng Datacore.vn tổ chức các sản phẩm tài chính thành nhiều gói chuyên biệt, mỗi gói đóng một vai trò riêng trong quy trình định giá. Sản phẩm dữ liệu "Stock" cung cấp dữ liệu giao dịch hằng ngày đã được làm sạch cho tất cả công ty niêm yết, hỗ trợ theo dõi thị trường và xây dựng chiến lược. Với phân tích cơ bản, bộ dữ liệu "Vietnam Fundamentals" là không thể thiếu, vì nó cung cấp dữ liệu kế toán cấp doanh nghiệp sạch, có thể so sánh và được đối chiếu đầy đủ cho mọi công ty niêm yết trên HOSE, HNX và UPCoM từ năm 2000 trở đi.
 
 |  |  |  |
 |----|----|----|
-| **Dataset Name** | **Scope** | **Key Variables for P/E Analysis** |
-| Stock Data | Daily Trading | `close_price`, `adjusted_close`, `volume`, `market_cap` |
-| Vietnam Fundamentals | Firm Accounting | `net_income`, `eps`, `shares_outstanding`, `total_debt` |
-| Company Data | Legal Entities | `registration_date`, `industry_code`, `legal_status` |
-| News Data | Market Events | `sentiment_score`, `article_topic`, `entity_linkage` |
-| Bank Data | Financial Sector | `branch_network`, `shareholder_structure`, `regulatory_status` | -->
-<section id="technical-schema-and-variable-engineering" class="level3" data-number="28.0.1">
-<h3 data-number="28.0.1" class="anchored" data-anchor-id="technical-schema-and-variable-engineering"><span class="header-section-number">28.0.1</span> Technical Schema and Variable Engineering</h3>
-<p>The primary identifier for equities is the symbol, typically a three-letter uppercase code, though special indices such as E1VFVN30 (ETF) or market indices like HNX-INDEX and UPCOM-INDEX follow unique naming conventions. Price data is categorized as OHLC type, encompassing ‘open’, ‘high’, ‘low’, and ‘close’. For valuation purposes, the ‘adjusted close’ is preferred to account for corporate actions such as stock splits and dividend payments.</p>
-<p>The accounting variables provided in the Vietnam Fundamentals product follow a standardized classification that reconciles different reporting standards across sectors. This reconciliation is vital because Vietnamese firms may have differing interpretations of revenue and net profit under Vietnamese Accounting Standards (VAS).</p>
+| **Tên bộ dữ liệu** | **Phạm vi** | **Biến chính cho phân tích P/E** |
+| Stock Data | Giao dịch hằng ngày | `close_price`, `adjusted_close`, `volume`, `market_cap` |
+| Vietnam Fundamentals | Kế toán doanh nghiệp | `net_income`, `eps`, `shares_outstanding`, `total_debt` |
+| Company Data | Pháp nhân | `registration_date`, `industry_code`, `legal_status` |
+| News Data | Sự kiện thị trường | `sentiment_score`, `article_topic`, `entity_linkage` |
+| Bank Data | Khu vực tài chính | `branch_network`, `shareholder_structure`, `regulatory_status` | -->
+<section id="lược-đồ-kỹ-thuật-và-xây-dựng-biến" class="level3" data-number="28.0.1">
+<h3 data-number="28.0.1" class="anchored" data-anchor-id="lược-đồ-kỹ-thuật-và-xây-dựng-biến"><span class="header-section-number">28.0.1</span> Lược đồ kỹ thuật và xây dựng biến</h3>
+<p>Mã định danh chính của cổ phiếu là symbol, thường là mã ba chữ cái viết hoa, tuy các chỉ số đặc biệt như E1VFVN30 (ETF) hay các chỉ số thị trường như HNX-INDEX và UPCOM-INDEX theo quy ước đặt tên riêng. Dữ liệu giá được phân loại theo kiểu OHLC, gồm giá ‘open’ (mở cửa), ‘high’ (cao nhất), ‘low’ (thấp nhất) và ‘close’ (đóng cửa). Cho mục đích định giá, ‘giá đóng cửa điều chỉnh’ được ưu tiên để tính đến các hành động doanh nghiệp như chia tách cổ phiếu và chi trả cổ tức.</p>
+<p>Các biến kế toán trong sản phẩm Vietnam Fundamentals tuân theo một cách phân loại chuẩn hóa nhằm đối chiếu các chuẩn mực báo cáo khác nhau giữa các ngành. Việc đối chiếu này rất quan trọng vì các doanh nghiệp Việt Nam có thể có cách diễn giải khác nhau về doanh thu và lợi nhuận ròng theo Chuẩn mực Kế toán Việt Nam (VAS).</p>
 </section>
-<section id="firm-specific-pe-valuation-metrics" class="level2" data-number="28.1">
-<h2 data-number="28.1" class="anchored" data-anchor-id="firm-specific-pe-valuation-metrics"><span class="header-section-number">28.1</span> Firm-Specific P/E Valuation Metrics</h2>
-<p>At the individual firm level, the P/E ratio is the most fundamental measure of how much an investor is willing to pay for each unit of current or future profit. However, the calculation of “E” (Earnings) can take several forms, each offering a different insight into the company’s value.</p>
-<section id="trailing-pe-and-the-ttm-methodology" class="level3" data-number="28.1.1">
-<h3 data-number="28.1.1" class="anchored" data-anchor-id="trailing-pe-and-the-ttm-methodology"><span class="header-section-number">28.1.1</span> Trailing P/E and the TTM Methodology</h3>
-<p>The Trailing P/E ratio is calculated using the reported earnings from the last four quarters, known as Trailing Twelve Months (TTM). In the Vietnamese market, this is often the default metric reported by exchanges and financial news outlets.</p>
-<p>The mathematical representation is:</p>
+<section id="các-thước-đo-định-giá-pe-theo-từng-doanh-nghiệp" class="level2" data-number="28.1">
+<h2 data-number="28.1" class="anchored" data-anchor-id="các-thước-đo-định-giá-pe-theo-từng-doanh-nghiệp"><span class="header-section-number">28.1</span> Các thước đo định giá P/E theo từng doanh nghiệp</h2>
+<p>Ở cấp độ từng doanh nghiệp, tỷ số P/E là thước đo cơ bản nhất cho biết nhà đầu tư sẵn sàng trả bao nhiêu cho mỗi đơn vị lợi nhuận hiện tại hoặc tương lai. Tuy nhiên, việc tính “E” (thu nhập) có thể có nhiều dạng, mỗi dạng cho một góc nhìn khác nhau về giá trị doanh nghiệp.</p>
+<section id="pe-trailing-và-phương-pháp-ttm" class="level3" data-number="28.1.1">
+<h3 data-number="28.1.1" class="anchored" data-anchor-id="pe-trailing-và-phương-pháp-ttm"><span class="header-section-number">28.1.1</span> P/E trailing và phương pháp TTM</h3>
+<p>Tỷ số P/E trailing được tính bằng thu nhập đã báo cáo của bốn quý gần nhất, gọi là mười hai tháng gần nhất (Trailing Twelve Months, TTM). Trên thị trường Việt Nam, đây thường là thước đo mặc định do các sở giao dịch và báo chí tài chính công bố.</p>
+<p>Biểu diễn toán học là:</p>
 <p><span class="math display">\[
 P/E_{Trailing} = \frac{P_t}{\sum_{i=0}^{3} EPS_{q-i}}
 \]</span></p>
-<p>Where <span class="math inline">\(P_t\)</span> is the current market price and <span class="math inline">\(EPS_{q-i}\)</span> represents the earnings per share for each of the four most recent quarters.</p>
+<p>Trong đó <span class="math inline">\(P_t\)</span> là giá thị trường hiện tại và <span class="math inline">\(EPS_{q-i}\)</span> là thu nhập trên mỗi cổ phiếu của từng quý trong bốn quý gần nhất.</p>
 </section>
-<section id="forward-pe-and-analyst-forecast-reliability" class="level3" data-number="28.1.2">
-<h3 data-number="28.1.2" class="anchored" data-anchor-id="forward-pe-and-analyst-forecast-reliability"><span class="header-section-number">28.1.2</span> Forward P/E and Analyst Forecast Reliability</h3>
-<p>Forward P/E shifts the focus from historical performance to future expectations by using consensus earnings forecasts for the next fiscal year.</p>
+<section id="pe-forward-và-độ-tin-cậy-của-dự-báo-từ-nhà-phân-tích" class="level3" data-number="28.1.2">
+<h3 data-number="28.1.2" class="anchored" data-anchor-id="pe-forward-và-độ-tin-cậy-của-dự-báo-từ-nhà-phân-tích"><span class="header-section-number">28.1.2</span> P/E forward và độ tin cậy của dự báo từ nhà phân tích</h3>
+<p>P/E forward chuyển trọng tâm từ kết quả quá khứ sang kỳ vọng tương lai bằng cách sử dụng dự báo thu nhập đồng thuận cho năm tài chính tới.</p>
 <p><span class="math display">\[
 P/E_{Forward} = \frac{P_t}{EPS_{forecasted, t+1}}
 \]</span></p>
-<p>In Vietnam, these forecasts are typically generated by research departments within major securities firms such as SSI, VCSC, MBS, and FPTS. These analysts rely on financial statements, projections, models, and subjective evaluations of market sentiment to generate their estimates. However, the accuracy of these forecasts is a significant area of research. However, analysts in Vietnam are often influenced by anchoring and adjustment bias, where they base future predictions heavily on past records and then make insufficient adjustments.</p>
-<p>The accuracy of analyst earnings forecasts in Vietnam is significantly impacted by corporate governance characteristics. Specifically, state ownership has been found to have a negative impact on forecast accuracy, while institutional ownership has a positive effect. This implies that for firms with high state-controlled stakes, which are common in Vietnam’s strategic industries, researchers should apply a higher discount or “fudge factor” to forward P/E estimates provided by consensus sources.</p>
+<p>Ở Việt Nam, các dự báo này thường do bộ phận nghiên cứu của các công ty chứng khoán lớn như SSI, VCSC, MBS và FPTS lập ra. Các nhà phân tích này dựa vào báo cáo tài chính, các dự phóng, mô hình và đánh giá chủ quan về tâm lý thị trường để đưa ra ước tính. Tuy nhiên, độ chính xác của các dự báo này là một lĩnh vực nghiên cứu quan trọng. Đặc biệt, các nhà phân tích ở Việt Nam thường chịu ảnh hưởng của thiên lệch neo và điều chỉnh (anchoring and adjustment), trong đó họ dựa phần lớn vào số liệu quá khứ để dự báo tương lai rồi điều chỉnh không đủ.</p>
+<p>Độ chính xác của dự báo thu nhập từ nhà phân tích ở Việt Nam chịu tác động đáng kể từ các đặc điểm quản trị công ty. Cụ thể, sở hữu nhà nước được phát hiện có tác động tiêu cực đến độ chính xác dự báo, trong khi sở hữu tổ chức có tác động tích cực. Điều này hàm ý rằng với các doanh nghiệp có tỷ lệ sở hữu nhà nước chi phối cao, vốn phổ biến trong các ngành chiến lược của Việt Nam, nhà nghiên cứu nên áp dụng mức chiết khấu cao hơn hoặc “hệ số điều chỉnh tùy ý” (fudge factor) cho các ước tính P/E forward từ nguồn đồng thuận.</p>
 </section>
-<section id="cyclically-adjusted-price-earnings-cape-ratio" class="level3" data-number="28.1.3">
-<h3 data-number="28.1.3" class="anchored" data-anchor-id="cyclically-adjusted-price-earnings-cape-ratio"><span class="header-section-number">28.1.3</span> Cyclically Adjusted Price-Earnings (CAPE) Ratio</h3>
-<p>The Shiller P/E, or CAPE ratio, is designed to smooth out the volatility of the business cycle by using a 10-year average of inflation-adjusted earnings. For a market like Vietnam, which has seen periods of extreme growth followed by stabilization, the CAPE ratio provides a more tempered view of valuation than trailing metrics.</p>
-<p>The calculation requires adjusting historical earnings by the Consumer Price Index (CPI). Vietnam’s CPI data is updated monthly and is available from January 1996 through early 2026, with an average year-on-year growth rate of approximately 12.2%.</p>
+<section id="tỷ-số-giá-trên-thu-nhập-điều-chỉnh-theo-chu-kỳ-cape" class="level3" data-number="28.1.3">
+<h3 data-number="28.1.3" class="anchored" data-anchor-id="tỷ-số-giá-trên-thu-nhập-điều-chỉnh-theo-chu-kỳ-cape"><span class="header-section-number">28.1.3</span> Tỷ số giá trên thu nhập điều chỉnh theo chu kỳ (CAPE)</h3>
+<p>P/E Shiller, hay tỷ số CAPE, được thiết kế để làm mượt biến động của chu kỳ kinh doanh bằng cách dùng trung bình 10 năm của thu nhập đã điều chỉnh lạm phát. Với một thị trường như Việt Nam, từng trải qua những giai đoạn tăng trưởng cực mạnh rồi ổn định, tỷ số CAPE cho một cái nhìn về định giá ôn hòa hơn các thước đo trailing.</p>
+<p>Việc tính toán đòi hỏi điều chỉnh thu nhập lịch sử theo Chỉ số giá tiêu dùng (CPI). Dữ liệu CPI của Việt Nam được cập nhật hằng tháng và có từ tháng 1 năm 1996 đến đầu năm 2026, với tốc độ tăng trưởng trung bình theo năm xấp xỉ 12.2%.</p>
 <p><span class="math display">\[
 EPS_{real, t} = EPS_{nominal, t} \times \frac{CPI_{current}}{CPI_t}
 \]</span></p>
 <p><span class="math display">\[
 CAPE = \frac{P_t}{\frac{1}{10} \sum_{i=0}^{9} EPS_{real, t-i}}
 \]</span></p>
-<p>Historically, Vietnam’s CPI has reached an all-time high of 28.3% YoY in August 2008 and a record low of -2.6% in July 2000. These extreme swings mean that nominal earnings in the mid-2000s are not comparable to earnings today without the Shiller adjustment. Researchers must be mindful of the different base years used by the National Statistics Office (GSO), such as 2024=100, 2019=100, and 2014=100.</p>
+<p>Trong lịch sử, CPI của Việt Nam đạt mức cao nhất mọi thời đại là 28.3% so với cùng kỳ vào tháng 8 năm 2008 và mức thấp kỷ lục là -2.6% vào tháng 7 năm 2000. Những biến động cực đoan này có nghĩa là thu nhập danh nghĩa giữa thập niên 2000 không thể so sánh với thu nhập ngày nay nếu không có điều chỉnh Shiller. Nhà nghiên cứu phải lưu ý các năm gốc khác nhau mà Tổng cục Thống kê (GSO) sử dụng, như 2024=100, 2019=100 và 2014=100.</p>
 </section>
-<section id="unlevered-pe-and-the-leibowitz-framework" class="level3" data-number="28.1.4">
-<h3 data-number="28.1.4" class="anchored" data-anchor-id="unlevered-pe-and-the-leibowitz-framework"><span class="header-section-number">28.1.4</span> Unlevered P/E and the Leibowitz Framework</h3>
-<p>The concept of the “Unlevered P/E” ratio attempts to view a company’s valuation independent of its capital structure. This is particularly relevant in the Vietnamese market, where debt loads vary significantly between state-owned enterprises (SOEs) and private firms. Research by <span class="citation" data-cites="leibowitz2002levered">Leibowitz (<a href="references.html#ref-leibowitz2002levered" role="doc-biblioref">2002</a>)</span> highlights that for the investment analyst, a company is already levered, and the task is to estimate its theoretical value by inferring the underlying structure of returns.</p>
-<p>According to Leibowitz, leverage always moves the P/E toward a lower value than what would be obtained from a standard Gordon growth formula. As a company adds debt, the market discount rate for equity increases to compensate for the additional risk, which in turn compresses the P/E multiple. For example, a debt-free company with a theoretical P/E of 30 might see its P/E drop to 23 with a 40% debt ratio, and down to 20 with a 50% debt ratio.</p>
-<p>The Unlevered P/E (often proxied by Enterprise Value to EBIT or EBITDA) can be calculated using fundamental variables:</p>
+<section id="pe-không-đòn-bẩy-và-khung-leibowitz" class="level3" data-number="28.1.4">
+<h3 data-number="28.1.4" class="anchored" data-anchor-id="pe-không-đòn-bẩy-và-khung-leibowitz"><span class="header-section-number">28.1.4</span> P/E không đòn bẩy và khung Leibowitz</h3>
+<p>Khái niệm tỷ số “P/E không đòn bẩy” cố gắng nhìn nhận định giá của một công ty độc lập với cơ cấu vốn của nó. Điều này đặc biệt phù hợp với thị trường Việt Nam, nơi mức nợ khác nhau đáng kể giữa các doanh nghiệp nhà nước (DNNN) và doanh nghiệp tư nhân. Nghiên cứu của <span class="citation" data-cites="leibowitz2002levered">Leibowitz (<a href="references.html#ref-leibowitz2002levered" role="doc-biblioref">2002</a>)</span> nhấn mạnh rằng với nhà phân tích đầu tư, một công ty vốn đã có đòn bẩy, và nhiệm vụ là ước tính giá trị lý thuyết của nó bằng cách suy ra cấu trúc lợi nhuận cơ bản.</p>
+<p>Theo Leibowitz, đòn bẩy luôn đẩy P/E về mức thấp hơn so với mức thu được từ công thức tăng trưởng Gordon tiêu chuẩn. Khi công ty vay thêm nợ, tỷ lệ chiết khấu thị trường dành cho vốn chủ sở hữu tăng lên để bù đắp rủi ro tăng thêm, và điều này làm nén bội số P/E. Ví dụ, một công ty không nợ có P/E lý thuyết bằng 30 có thể thấy P/E giảm xuống 23 khi tỷ lệ nợ là 40%, và xuống 20 khi tỷ lệ nợ là 50%.</p>
+<p>P/E không đòn bẩy (thường được xấp xỉ bằng Giá trị doanh nghiệp trên EBIT hoặc EBITDA) có thể được tính từ các biến cơ bản:</p>
 <p><span class="math display">\[
 EV = (\text{Shares Outstanding} \times \text{Price}) + \text{Total Debt} - \text{Cash}
 \]</span></p>
 <p><span class="math display">\[
 P/E_{\text{Unlevered}} \approx \frac{EV}{EBIT \times (1 - \tau)}
 \]</span></p>
-<p>Where <span class="math inline">\(\tau\)</span> is the corporate income tax rate. The standard CIT rate in Vietnam is 20%, which has been stable since the mid-2010s but is subject to new revisions under the Law on CIT ratified in June 2025.</p>
+<p>Trong đó <span class="math inline">\(\tau\)</span> là thuế suất thuế thu nhập doanh nghiệp. Thuế suất CIT tiêu chuẩn ở Việt Nam là 20%, ổn định từ giữa thập niên 2010 nhưng sẽ chịu những sửa đổi mới theo Luật Thuế thu nhập doanh nghiệp được thông qua vào tháng 6 năm 2025.</p>
 </section>
 </section>
-<section id="market-level-aggregation-techniques" class="level2" data-number="28.2">
-<h2 data-number="28.2" class="anchored" data-anchor-id="market-level-aggregation-techniques"><span class="header-section-number">28.2</span> Market-Level Aggregation Techniques</h2>
-<p>Aggregating firm-specific metrics into a single market-level index P/E is a complex task that requires careful consideration of weighting and the inclusion of loss-making entities. In the Vietnamese market, two primary indices (i.e., the VN-Index and the VN30), provide the benchmarks for performance and valuation.</p>
-<section id="the-vn-index-capitalization-weighted-aggregation" class="level3" data-number="28.2.1">
-<h3 data-number="28.2.1" class="anchored" data-anchor-id="the-vn-index-capitalization-weighted-aggregation"><span class="header-section-number">28.2.1</span> The VN-Index: Capitalization-Weighted Aggregation</h3>
-<p>The VN-Index is a capitalization-weighted index of all companies listed on HOSE. It serves as a broad indicator of market health, where an increase in the index reflects a general rise in the stock prices of listed companies.</p>
-<p>The index value is calculated as:</p>
+<section id="các-kỹ-thuật-tổng-hợp-ở-cấp-thị-trường" class="level2" data-number="28.2">
+<h2 data-number="28.2" class="anchored" data-anchor-id="các-kỹ-thuật-tổng-hợp-ở-cấp-thị-trường"><span class="header-section-number">28.2</span> Các kỹ thuật tổng hợp ở cấp thị trường</h2>
+<p>Tổng hợp các thước đo theo từng doanh nghiệp thành một P/E chỉ số cấp thị trường duy nhất là một việc phức tạp, đòi hỏi cân nhắc cẩn thận về trọng số và việc đưa vào các doanh nghiệp thua lỗ. Trên thị trường Việt Nam, hai chỉ số chính (tức là VN-Index và VN30) cung cấp các chuẩn tham chiếu cho kết quả hoạt động và định giá.</p>
+<section id="vn-index-tổng-hợp-theo-trọng-số-vốn-hóa" class="level3" data-number="28.2.1">
+<h3 data-number="28.2.1" class="anchored" data-anchor-id="vn-index-tổng-hợp-theo-trọng-số-vốn-hóa"><span class="header-section-number">28.2.1</span> VN-Index: Tổng hợp theo trọng số vốn hóa</h3>
+<p>VN-Index là chỉ số trọng số theo vốn hóa của tất cả công ty niêm yết trên HOSE. Nó đóng vai trò chỉ báo rộng về sức khỏe thị trường, trong đó chỉ số tăng phản ánh sự tăng chung của giá cổ phiếu các công ty niêm yết.</p>
+<p>Giá trị chỉ số được tính như sau:</p>
 <p><span class="math display">\[
 \text{VN-Index} = \frac{\sum (Price_i \times Shares_i)}{\text{Base Factor}} \times \text{Adjustment Factor}
 \]</span></p>
-<p>Similarly, the index-level P/E is typically calculated as the sum of all market capitalizations divided by the sum of all net incomes (earnings) of the constituents.</p>
+<p>Tương tự, P/E cấp chỉ số thường được tính bằng tổng vốn hóa thị trường chia cho tổng lợi nhuận ròng (thu nhập) của các thành phần.</p>
 <p><span class="math display">\[
 P/E_{Market} = \frac{\sum MarketCap_i}{\sum Earnings_i}
 \]</span></p>
-<p>As of early 2026, the total market capitalization for 701 tracked companies was approximately 8,629.8 trillion VND, with total earnings of 588.9 trillion VND, yielding a median P/E of approximately 14.7x.</p>
+<p>Tính đến đầu năm 2026, tổng vốn hóa thị trường của 701 công ty được theo dõi vào khoảng 8,629.8 nghìn tỷ VND, với tổng thu nhập là 588.9 nghìn tỷ VND, cho P/E trung vị xấp xỉ 14.7x.</p>
 </section>
-<section id="the-vn30-and-free-float-adjustments" class="level3" data-number="28.2.2">
-<h3 data-number="28.2.2" class="anchored" data-anchor-id="the-vn30-and-free-float-adjustments"><span class="header-section-number">28.2.2</span> The VN30 and Free-Float Adjustments</h3>
-<p>The VN30 Index represents a basket of the 30 largest and most liquid stocks on HOSE, screened through layers of capitalization, free-float ratio, and transactional volume. Unlike the broad VN-Index, the VN30 applies a free-float adjustment to its capitalization weighting to ensure that only shares available for public trading affect the index movement.</p>
-<p>The free-float ratio (<span class="math inline">\(f\)</span>) is calculated as:</p>
+<section id="vn30-và-điều-chỉnh-tỷ-lệ-tự-do-chuyển-nhượng" class="level3" data-number="28.2.2">
+<h3 data-number="28.2.2" class="anchored" data-anchor-id="vn30-và-điều-chỉnh-tỷ-lệ-tự-do-chuyển-nhượng"><span class="header-section-number">28.2.2</span> VN30 và điều chỉnh tỷ lệ tự do chuyển nhượng</h3>
+<p>Chỉ số VN30 đại diện cho rổ 30 cổ phiếu lớn nhất và thanh khoản nhất trên HOSE, được sàng lọc qua các lớp tiêu chí về vốn hóa, tỷ lệ tự do chuyển nhượng (free-float) và khối lượng giao dịch. Khác với VN-Index rộng, VN30 áp dụng điều chỉnh free-float lên trọng số vốn hóa để bảo đảm chỉ những cổ phiếu có thể giao dịch tự do trên thị trường mới ảnh hưởng đến biến động của chỉ số.</p>
+<p>Tỷ lệ free-float (<span class="math inline">\(f\)</span>) được tính như sau:</p>
 <p><span class="math inline">\(f = \frac{N - N_l}{N}\)</span></p>
-<p>Where <span class="math inline">\(N\)</span> is the total number of outstanding shares and <span class="math inline">\(N_l\)</span> is the number of limited trading shares (held by founders, state, or strategic partners).</p>
-<p>When aggregating P/E for the VN30, researchers must account for this adjustment, as it more accurately reflects the valuation of the investable universe. In the Vietnamese market, a handful of large-cap stocks can significantly skew the broad index. For instance, Vingroup (VIC) and its related companies have at times represented nearly a quarter of the VN-Index’s total weighting, creating a “closet indexing” dilemma for fund managers. Removing these high-impact stocks can reveal a much different valuation profile; while the VN-Index might trade at 13x, the market excluding VIC-related stocks could be closer to 11x.</p>
+<p>Trong đó <span class="math inline">\(N\)</span> là tổng số cổ phiếu đang lưu hành và <span class="math inline">\(N_l\)</span> là số cổ phiếu bị hạn chế giao dịch (do nhà sáng lập, nhà nước hoặc đối tác chiến lược nắm giữ).</p>
+<p>Khi tổng hợp P/E cho VN30, nhà nghiên cứu phải tính đến điều chỉnh này, vì nó phản ánh chính xác hơn định giá của tập hợp có thể đầu tư. Trên thị trường Việt Nam, một số ít cổ phiếu vốn hóa lớn có thể làm lệch đáng kể chỉ số rộng. Chẳng hạn, Vingroup (VIC) và các công ty liên quan đã có lúc chiếm gần một phần tư tổng trọng số của VN-Index, tạo ra thế lưỡng nan “closet indexing” cho các nhà quản lý quỹ. Loại bỏ các cổ phiếu có tác động lớn này có thể cho thấy một hồ sơ định giá khác hẳn; trong khi VN-Index có thể giao dịch ở mức 13x, thị trường không tính nhóm cổ phiếu liên quan đến VIC có thể gần 11x hơn.</p>
 </section>
-<section id="median-vs.-mean-aggregation" class="level3" data-number="28.2.3">
-<h3 data-number="28.2.3" class="anchored" data-anchor-id="median-vs.-mean-aggregation"><span class="header-section-number">28.2.3</span> Median vs.&nbsp;Mean Aggregation</h3>
-<p>Quantitative researchers often prefer median P/E ratios over mean P/E ratios to mitigate the influence of extreme outliers (i.e., companies with either exceptionally high P/E ratios due to temporarily low earnings or those that are technically “expensive” because of high growth expectations). <a href="#tbl-valuation-median-vs-mean-agg" class="quarto-xref">Table&nbsp;<span>28.1</span></a> shows different aggregation methods.</p>
+<section id="tổng-hợp-theo-trung-vị-so-với-trung-bình" class="level3" data-number="28.2.3">
+<h3 data-number="28.2.3" class="anchored" data-anchor-id="tổng-hợp-theo-trung-vị-so-với-trung-bình"><span class="header-section-number">28.2.3</span> Tổng hợp theo trung vị so với trung bình</h3>
+<p>Các nhà nghiên cứu định lượng thường ưu tiên P/E trung vị hơn P/E trung bình để giảm ảnh hưởng của các giá trị ngoại lai cực đoan (tức là các công ty có P/E cao bất thường do thu nhập thấp tạm thời hoặc các công ty “đắt” về mặt kỹ thuật vì kỳ vọng tăng trưởng cao). <a href="#tbl-valuation-median-vs-mean-agg" class="quarto-xref">Bảng&nbsp;<span>28.1</span></a> trình bày các phương pháp tổng hợp khác nhau.</p>
 <div id="tbl-valuation-median-vs-mean-agg" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-valuation-median-vs-mean-agg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;28.1: Median vs.&nbsp;Mean Aggregation
+Bảng&nbsp;28.1: Tổng hợp theo trung vị so với trung bình
 </figcaption>
 <div aria-describedby="tbl-valuation-median-vs-mean-agg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -931,103 +955,117 @@ Table&nbsp;28.1: Median vs.&nbsp;Mean Aggregation
 </colgroup>
 <tbody>
 <tr class="odd">
-<td><strong>Aggregation Method</strong></td>
-<td><strong>Mathematical Definition</strong></td>
-<td><strong>Resilience to Outliers</strong></td>
+<td><strong>Phương pháp tổng hợp</strong></td>
+<td><strong>Định nghĩa toán học</strong></td>
+<td><strong>Độ bền với giá trị ngoại lai</strong></td>
 </tr>
 <tr class="even">
-<td>Simple Mean</td>
+<td>Trung bình đơn giản</td>
 <td><span class="math inline">\(\frac{1}{n} \sum (P/E)_i\)</span></td>
-<td>Low (highly skewed by extreme values)</td>
+<td>Thấp (bị lệch mạnh bởi giá trị cực đoan)</td>
 </tr>
 <tr class="odd">
-<td>Weighted Mean</td>
+<td>Trung bình có trọng số</td>
 <td><span class="math inline">\(\frac{\sum (Cap_i \times (P/E)_i)}{\sum Cap_i}\)</span></td>
-<td>Medium (skewed by large-cap valuation)</td>
+<td>Trung bình (bị lệch bởi định giá của cổ phiếu vốn hóa lớn)</td>
 </tr>
 <tr class="even">
-<td>Median</td>
+<td>Trung vị</td>
 <td><span class="math inline">\(\text{Median}((P/E)_1, \dots, (P/E)_n)\)</span></td>
-<td>High (most robust for market sentiment)</td>
+<td>Cao (vững nhất cho tâm lý thị trường)</td>
 </tr>
 <tr class="odd">
-<td>Total-to-Total</td>
+<td>Tổng trên tổng</td>
 <td><span class="math inline">\(\frac{\sum MarketCap_i}{\sum Earnings_i}\)</span></td>
-<td>High (standard for index providers)</td>
+<td>Cao (chuẩn của các nhà cung cấp chỉ số)</td>
 </tr>
 </tbody>
 </table>
 </div>
 </figure>
 </div>
-<p>The Vietnamese market currently trades near its 3-year average P/E of 14.8x, suggesting that investors are relatively neutral on current valuations, expecting earnings to grow in line with historical rates.</p>
+<p>Thị trường Việt Nam hiện đang giao dịch gần mức P/E trung bình 3 năm là 14.8x, cho thấy nhà đầu tư tương đối trung lập về các mức định giá hiện tại, kỳ vọng thu nhập tăng trưởng theo đúng tốc độ lịch sử.</p>
 </section>
 </section>
-<section id="implementation" class="level2" data-number="28.3">
-<h2 data-number="28.3" class="anchored" data-anchor-id="implementation"><span class="header-section-number">28.3</span> Implementation</h2>
-<section id="data-ingestion-and-processing" class="level3" data-number="28.3.1">
-<h3 data-number="28.3.1" class="anchored" data-anchor-id="data-ingestion-and-processing"><span class="header-section-number">28.3.1</span> Data Ingestion and Processing</h3>
+<section id="triển-khai" class="level2" data-number="28.3">
+<h2 data-number="28.3" class="anchored" data-anchor-id="triển-khai"><span class="header-section-number">28.3</span> Triển khai</h2>
+<section id="nạp-và-xử-lý-dữ-liệu" class="level3" data-number="28.3.1">
+<h3 data-number="28.3.1" class="anchored" data-anchor-id="nạp-và-xử-lý-dữ-liệu"><span class="header-section-number">28.3.1</span> Nạp và xử lý dữ liệu</h3>
 </section>
 <section id="shiller-cape" class="level3" data-number="28.3.2">
 <h3 data-number="28.3.2" class="anchored" data-anchor-id="shiller-cape"><span class="header-section-number">28.3.2</span> Shiller CAPE</h3>
-<p>The Shiller CAPE requires a more sophisticated approach, involving the merging of earnings data with monthly CPI series.</p>
+<p>Shiller CAPE đòi hỏi một cách tiếp cận tinh vi hơn, bao gồm việc gộp dữ liệu thu nhập với chuỗi CPI hằng tháng.</p>
 </section>
 </section>
-<section id="macroeconomic-and-regulatory-factors-in-valuation" class="level2" data-number="28.4">
-<h2 data-number="28.4" class="anchored" data-anchor-id="macroeconomic-and-regulatory-factors-in-valuation"><span class="header-section-number">28.4</span> Macroeconomic and Regulatory Factors in Valuation</h2>
-<p>The P/E ratio does not exist in a vacuum; it is deeply influenced by the macroeconomic environment and the regulatory framework within which companies operate.</p>
-<section id="the-role-of-corporate-income-tax-cit" class="level3" data-number="28.4.1">
-<h3 data-number="28.4.1" class="anchored" data-anchor-id="the-role-of-corporate-income-tax-cit"><span class="header-section-number">28.4.1</span> The Role of Corporate Income Tax (CIT)</h3>
-<p>The earnings component of the P/E ratio is a post-tax metric. In Vietnam, the standard CIT rate is 20%. However, there is a significant shift occurring with the ratification of the new Law on CIT in June 2025, taking effect on October 1, 2025. This law introduces:</p>
+<section id="các-yếu-tố-vĩ-mô-và-quy-định-trong-định-giá" class="level2" data-number="28.4">
+<h2 data-number="28.4" class="anchored" data-anchor-id="các-yếu-tố-vĩ-mô-và-quy-định-trong-định-giá"><span class="header-section-number">28.4</span> Các yếu tố vĩ mô và quy định trong định giá</h2>
+<p>Tỷ số P/E không tồn tại trong chân không; nó chịu ảnh hưởng sâu sắc của môi trường kinh tế vĩ mô và khuôn khổ pháp lý mà các công ty hoạt động trong đó.</p>
+<section id="vai-trò-của-thuế-thu-nhập-doanh-nghiệp-cit" class="level3" data-number="28.4.1">
+<h3 data-number="28.4.1" class="anchored" data-anchor-id="vai-trò-của-thuế-thu-nhập-doanh-nghiệp-cit"><span class="header-section-number">28.4.1</span> Vai trò của thuế thu nhập doanh nghiệp (CIT)</h3>
+<p>Thành phần thu nhập của tỷ số P/E là thước đo sau thuế. Ở Việt Nam, thuế suất CIT tiêu chuẩn là 20%. Tuy nhiên, đang có một thay đổi đáng kể với việc thông qua Luật Thuế thu nhập doanh nghiệp mới vào tháng 6 năm 2025, có hiệu lực từ ngày 1 tháng 10 năm 2025. Luật này đưa ra:</p>
 <ul>
-<li><p>A 15% rate for enterprises with annual revenue not exceeding 3 billion VND.</p></li>
-<li><p>A 17% rate for enterprises with revenue between 3 and 50 billion VND.</p></li>
-<li><p>The maintenance of higher rates (up to 50%) for the oil, gas, and mineral resource sectors.</p></li>
+<li><p>Mức thuế suất 15% cho doanh nghiệp có doanh thu hằng năm không quá 3 tỷ VND.</p></li>
+<li><p>Mức thuế suất 17% cho doanh nghiệp có doanh thu từ 3 đến 50 tỷ VND.</p></li>
+<li><p>Duy trì các mức thuế suất cao hơn (lên đến 50%) cho các ngành dầu khí và tài nguyên khoáng sản.</p></li>
 </ul>
-<p>Furthermore, Vietnam has adopted the Global Minimum Tax (GMT) rules under Pillar Two, effective January 1, 2024, to protect its tax revenue from inbound and outbound investments. These changes mean that historical P/E ratios may not be directly comparable to future ratios for companies that previously benefited from generous tax incentives, as the effective tax rate is likely to rise for large multinational subsidiaries operating in Vietnam.</p>
+<p>Hơn nữa, Việt Nam đã áp dụng quy tắc Thuế tối thiểu toàn cầu (GMT) theo Trụ cột 2, có hiệu lực từ ngày 1 tháng 1 năm 2024, nhằm bảo vệ nguồn thu thuế khỏi các khoản đầu tư vào và ra nước ngoài. Những thay đổi này có nghĩa là P/E lịch sử có thể không so sánh trực tiếp được với các tỷ số trong tương lai đối với những công ty trước đây hưởng ưu đãi thuế hào phóng, vì thuế suất hiệu dụng có khả năng tăng đối với các công ty con đa quốc gia lớn hoạt động tại Việt Nam.</p>
 </section>
-<section id="macroeconomic-determinants-inflation-and-interest-rates" class="level3" data-number="28.4.2">
-<h3 data-number="28.4.2" class="anchored" data-anchor-id="macroeconomic-determinants-inflation-and-interest-rates"><span class="header-section-number">28.4.2</span> Macroeconomic Determinants: Inflation and Interest Rates</h3>
-<p>Stock price indices, and by extension P/E ratios, are heavily influenced by fundamental macroeconomic factors such as inflation, exchange rates, and interest rates. The interest rate serves as the cost of capital for enterprises. When interest rates fall, the cost of borrowing drops, increasing corporate profits and potentially raising the P/E that investors are willing to pay.</p>
-<p>The Vietnamese dong (VND) exchange rate also plays a crucial role. In early 2025, the VND depreciated by 1.33% YTD, reflecting volatility in the timeline for Federal Reserve rate cuts. Exchange rate depreciation can be inflationary by default, which may prompt the State Bank of Vietnam to tighten monetary policy, thereby putting downward pressure on equity valuations.</p>
+<section id="các-yếu-tố-vĩ-mô-quyết-định-lạm-phát-và-lãi-suất" class="level3" data-number="28.4.2">
+<h3 data-number="28.4.2" class="anchored" data-anchor-id="các-yếu-tố-vĩ-mô-quyết-định-lạm-phát-và-lãi-suất"><span class="header-section-number">28.4.2</span> Các yếu tố vĩ mô quyết định: Lạm phát và lãi suất</h3>
+<p>Các chỉ số giá cổ phiếu, và mở rộng ra là tỷ số P/E, chịu ảnh hưởng mạnh của các yếu tố kinh tế vĩ mô cơ bản như lạm phát, tỷ giá hối đoái và lãi suất. Lãi suất đóng vai trò chi phí vốn của doanh nghiệp. Khi lãi suất giảm, chi phí vay giảm, làm tăng lợi nhuận doanh nghiệp và có thể nâng mức P/E mà nhà đầu tư sẵn sàng trả.</p>
+<p>Tỷ giá hối đoái của đồng Việt Nam (VND) cũng đóng vai trò quan trọng. Đầu năm 2025, VND mất giá 1.33% từ đầu năm đến nay (YTD), phản ánh sự biến động về lộ trình cắt giảm lãi suất của Cục Dự trữ Liên bang. Đồng nội tệ mất giá về bản chất có thể gây lạm phát, điều này có thể khiến Ngân hàng Nhà nước Việt Nam thắt chặt chính sách tiền tệ, từ đó tạo áp lực giảm lên định giá cổ phiếu.</p>
 </section>
 </section>
-<section id="synthesis-of-valuation-dynamics" class="level2" data-number="28.5">
-<h2 data-number="28.5" class="anchored" data-anchor-id="synthesis-of-valuation-dynamics"><span class="header-section-number">28.5</span> Synthesis of Valuation Dynamics</h2>
-<p>The Vietnamese equity market is currently in a state of transition. While the market has seen robust growth—the VN-Index rose 38% in the year leading up to early 2026—investors remain neutral on overall valuations, as reflected by the market’s alignment with its 3-year average P/E of 14.8x. This neutrality suggests that investors expect earnings growth (forecast at 14% annually) to keep pace with price appreciation.</p>
-<p>The reliability of these valuations, however, remains dependent on the quality of non-financial disclosure. While companies are increasingly required by law to provide non-financial information, the level of transparency remains at a medium level (approximately 58.5% of required disclosures). Researchers must therefore balance quantitative P/E analysis with qualitative assessments of corporate governance and sustainability strategies. Companies that effectively integrate ESG principles have been shown to experience fewer negative impacts on abnormal stock returns during uncertain periods, such as the COVID-19 pandemic.</p>
+<section id="tổng-hợp-các-động-lực-định-giá" class="level2" data-number="28.5">
+<h2 data-number="28.5" class="anchored" data-anchor-id="tổng-hợp-các-động-lực-định-giá"><span class="header-section-number">28.5</span> Tổng hợp các động lực định giá</h2>
+<p>Thị trường chứng khoán Việt Nam hiện đang trong trạng thái chuyển tiếp. Dù thị trường tăng trưởng mạnh mẽ—VN-Index tăng 38% trong một năm tính đến đầu năm 2026—nhà đầu tư vẫn trung lập về định giá chung, thể hiện qua việc thị trường tiệm cận mức P/E trung bình 3 năm là 14.8x. Sự trung lập này cho thấy nhà đầu tư kỳ vọng tăng trưởng thu nhập (dự báo 14% mỗi năm) theo kịp mức tăng giá.</p>
+<p>Tuy nhiên, độ tin cậy của các định giá này vẫn phụ thuộc vào chất lượng công bố thông tin phi tài chính. Dù các công ty ngày càng bị luật pháp yêu cầu cung cấp thông tin phi tài chính, mức độ minh bạch vẫn ở mức trung bình (khoảng 58.5% các nội dung công bố bắt buộc). Do đó, nhà nghiên cứu phải cân bằng phân tích định lượng P/E với đánh giá định tính về quản trị công ty và các chiến lược bền vững. Các công ty tích hợp hiệu quả các nguyên tắc ESG được chỉ ra là chịu ít tác động tiêu cực hơn lên lợi nhuận bất thường của cổ phiếu trong những giai đoạn bất định, như đại dịch COVID-19.</p>
 </section>
-<section id="conclusions" class="level2" data-number="28.6">
-<h2 data-number="28.6" class="anchored" data-anchor-id="conclusions"><span class="header-section-number">28.6</span> Conclusions</h2>
-<p>The exploration of P/E ratio valuation and aggregation within the Vietnamese equity market reveals a sophisticated landscape where traditional metrics must be adapted to local realities. The reliance on trailing metrics, while common, fails to account for the cyclicality and high inflation history of the Vietnamese economy, a gap that the Shiller CAPE ratio effectively bridges through CPI-adjusted normalization. Furthermore, the sensitivity of P/E to capital structure, as defined in the Leibowitz framework, highlights the necessity of unlevered valuation metrics in a market with diverse corporate funding models.</p>
-<p>The aggregation of these metrics into market-level indices like the VN-Index and VN30 requires an awareness of concentration risks and the importance of free-float adjustments. The “Vingroup Effect” demonstrates how a single corporate ecosystem can skew index-wide valuations, necessitating a “closet indexing” awareness for fund managers and researchers.</p>
-<p>Looking forward, the evolution of the regulatory environment—specifically the CIT law of 2025 and the Global Minimum Tax—will introduce new variables into the valuation equation. The shift toward higher-quality non-financial disclosures and the increasing accuracy of analyst forecasts in institutionalized firms suggest that the Vietnamese equity market is steadily maturing, offering a more transparent and predictable environment for the application of advanced quantitative valuation techniques.</p>
+<section id="kết-luận" class="level2" data-number="28.6">
+<h2 data-number="28.6" class="anchored" data-anchor-id="kết-luận"><span class="header-section-number">28.6</span> Kết luận</h2>
+<p>Việc khảo sát định giá theo tỷ số P/E và cách tổng hợp trên thị trường chứng khoán Việt Nam cho thấy một bức tranh phức tạp, trong đó các thước đo truyền thống phải được điều chỉnh cho phù hợp với thực tế địa phương. Việc dựa vào các thước đo trailing, dù phổ biến, không tính đến tính chu kỳ và lịch sử lạm phát cao của nền kinh tế Việt Nam, một khoảng trống mà tỷ số Shiller CAPE lấp đầy hiệu quả thông qua chuẩn hóa điều chỉnh theo CPI. Hơn nữa, độ nhạy của P/E với cơ cấu vốn, như được xác định trong khung Leibowitz, nhấn mạnh sự cần thiết của các thước đo định giá không đòn bẩy trong một thị trường có các mô hình tài trợ doanh nghiệp đa dạng.</p>
+<p>Việc tổng hợp các thước đo này thành các chỉ số cấp thị trường như VN-Index và VN30 đòi hỏi nhận thức về rủi ro tập trung và tầm quan trọng của điều chỉnh free-float. “Hiệu ứng Vingroup” cho thấy một hệ sinh thái doanh nghiệp đơn lẻ có thể làm lệch định giá toàn chỉ số như thế nào, đòi hỏi các nhà quản lý quỹ và nhà nghiên cứu phải có nhận thức về “closet indexing”.</p>
+<p>Nhìn về phía trước, sự phát triển của môi trường pháp lý—cụ thể là luật CIT năm 2025 và Thuế tối thiểu toàn cầu—sẽ đưa thêm các biến số mới vào phương trình định giá. Xu hướng công bố thông tin phi tài chính chất lượng cao hơn và độ chính xác ngày càng tăng của dự báo từ nhà phân tích ở các doanh nghiệp có sở hữu tổ chức cho thấy thị trường chứng khoán Việt Nam đang dần trưởng thành, mang lại một môi trường minh bạch và dễ dự đoán hơn để áp dụng các kỹ thuật định giá định lượng nâng cao.</p>
 
 
 <!-- -->
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
 <div id="ref-leibowitz2002levered" class="csl-entry" role="listitem">
-Leibowitz, Martin L. 2002. <span>“The Levered p/e Ratio.”</span> <em>Financial Analysts Journal</em> 58 (6): 68–77.
+Leibowitz, Martin L. 2002. <span>“The levered P/E ratio”</span>. <em>Financial Analysts Journal</em> 58 (6): 68–77.
 </div>
 </div>
 </section>
 
 </main> <!-- /main -->
 <script>
+
 document.addEventListener("DOMContentLoaded", function () {
+
   const year = new Date().getFullYear();
+
   document.getElementById("copyright").textContent = "© " + year;
+
 });
+
 </script>
+
 <!-- Google tag (gtag.js) -->
+
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-LG91D0C6RB"></script>
+
 <script>
+
   window.dataLayer = window.dataLayer || [];
+
   function gtag(){dataLayer.push(arguments);}
+
   gtag('js', new Date());
 
+
+
   gtag('config', 'G-LG91D0C6RB');
+
 </script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
@@ -1067,12 +1105,12 @@ document.addEventListener("DOMContentLoaded", function () {
       // flash "checked"
       button.classList.add('code-copy-button-checked');
       var currentTitle = button.getAttribute("title");
-      button.setAttribute("title", "Copied!");
+      button.setAttribute("title", "Đã sao chép!");
       let tooltip;
       if (window.bootstrap) {
         button.setAttribute("data-bs-toggle", "tooltip");
         button.setAttribute("data-bs-placement", "left");
-        button.setAttribute("data-bs-title", "Copied!");
+        button.setAttribute("data-bs-title", "Đã sao chép!");
         tooltip = new bootstrap.Tooltip(button, 
           { trigger: "manual", 
             customClass: "code-copy-button-tooltip",
@@ -1093,14 +1131,13 @@ document.addEventListener("DOMContentLoaded", function () {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-      const outerScaffold = trigger.parentElement.cloneNode(true);
-      const codeEl = outerScaffold.querySelector('code');
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
         }
-      }
-      return codeEl.innerText;
+        return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
@@ -1495,72 +1532,72 @@ document.addEventListener("DOMContentLoaded", function () {
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./34_earning_management.html" class="pagination-link" aria-label="Earnings Management: Detection and Measurement">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Earnings Management: Detection and Measurement</span></span>
+      <a href="./34_earning_management.html" class="pagination-link" aria-label="Quản trị lợi nhuận: Phát hiện và đo lường">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Quản trị lợi nhuận: Phát hiện và đo lường</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./36_valuation.html" class="pagination-link" aria-label="Firm Valuation, Financial Distress, and Company Maturity">
-        <span class="nav-page-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Firm Valuation, Financial Distress, and Company Maturity</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./36_valuation.html" class="pagination-link" aria-label="Định giá doanh nghiệp, kiệt quệ tài chính và mức độ trưởng thành của công ty">
+        <span class="nav-page-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Định giá doanh nghiệp, kiệt quệ tài chính và mức độ trưởng thành của công ty</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
-</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># P/E Ratio</span></span>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Mã nguồn</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Tỷ số P/E</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>The systematic analysis of equity valuations in frontier and emerging markets requires a robust integration of high-fidelity financial data, rigorous mathematical modeling, and an acute understanding of local regulatory frameworks. In the context of the Vietnamese equity market, the Price-Earnings (P/E) ratio serves as a primary instrument for assessing corporate performance and market sentiment. This chapter provides an exploration of P/E valuation methodologies, ranging from firm-specific trailing and forward metrics to cyclically adjusted and unlevered variations.</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>Việc phân tích có hệ thống định giá cổ phiếu ở các thị trường cận biên và mới nổi đòi hỏi sự tích hợp vững chắc giữa dữ liệu tài chính chất lượng cao, mô hình toán học chặt chẽ và hiểu biết sâu sắc về khuôn khổ pháp lý địa phương. Trong bối cảnh thị trường chứng khoán Việt Nam, tỷ số giá trên thu nhập (P/E) là công cụ chính để đánh giá kết quả hoạt động doanh nghiệp và tâm lý thị trường. Chương này trình bày các phương pháp định giá theo P/E, từ các thước đo trailing và forward theo từng doanh nghiệp đến các biến thể điều chỉnh theo chu kỳ và không đòn bẩy.</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- ## The Architecture of Vietnamese Financial Data</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- ## Kiến trúc dữ liệu tài chính Việt Nam</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">The Datacore.vn platform organizes its financial offerings into several specialized products, each serving a distinct role in the valuation pipeline. The "Stock" data product delivers clean, daily trading data for all listed companies, supporting market tracking and strategy development. For fundamental analysis, the "Vietnam Fundamentals" dataset is indispensable, as it provides clean, comparable, and fully reconciled firm-level accounting data for every company listed on HOSE, HNX, and UPCoM from the year 2000 onward.</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">Nền tảng Datacore.vn tổ chức các sản phẩm tài chính thành nhiều gói chuyên biệt, mỗi gói đóng một vai trò riêng trong quy trình định giá. Sản phẩm dữ liệu "Stock" cung cấp dữ liệu giao dịch hằng ngày đã được làm sạch cho tất cả công ty niêm yết, hỗ trợ theo dõi thị trường và xây dựng chiến lược. Với phân tích cơ bản, bộ dữ liệu "Vietnam Fundamentals" là không thể thiếu, vì nó cung cấp dữ liệu kế toán cấp doanh nghiệp sạch, có thể so sánh và được đối chiếu đầy đủ cho mọi công ty niêm yết trên HOSE, HNX và UPCoM từ năm 2000 trở đi.</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">|  |  |  |</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">|----|----|----|</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">| **Dataset Name** | **Scope** | **Key Variables for P/E Analysis** |</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">| Stock Data | Daily Trading | `close_price`, `adjusted_close`, `volume`, `market_cap` |</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">| Vietnam Fundamentals | Firm Accounting | `net_income`, `eps`, `shares_outstanding`, `total_debt` |</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">| Company Data | Legal Entities | `registration_date`, `industry_code`, `legal_status` |</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">| News Data | Market Events | `sentiment_score`, `article_topic`, `entity_linkage` |</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">| Bank Data | Financial Sector | `branch_network`, `shareholder_structure`, `regulatory_status` | --&gt;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">| **Tên bộ dữ liệu** | **Phạm vi** | **Biến chính cho phân tích P/E** |</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">| Stock Data | Giao dịch hằng ngày | `close_price`, `adjusted_close`, `volume`, `market_cap` |</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">| Vietnam Fundamentals | Kế toán doanh nghiệp | `net_income`, `eps`, `shares_outstanding`, `total_debt` |</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">| Company Data | Pháp nhân | `registration_date`, `industry_code`, `legal_status` |</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">| News Data | Sự kiện thị trường | `sentiment_score`, `article_topic`, `entity_linkage` |</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">| Bank Data | Khu vực tài chính | `branch_network`, `shareholder_structure`, `regulatory_status` | --&gt;</span></span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">### Technical Schema and Variable Engineering</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">### Lược đồ kỹ thuật và xây dựng biến</span></span>
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>The primary identifier for equities is the symbol, typically a three-letter uppercase code, though special indices such as E1VFVN30 (ETF) or market indices like HNX-INDEX and UPCOM-INDEX follow unique naming conventions. Price data is categorized as OHLC type, encompassing 'open', 'high', 'low', and 'close'. For valuation purposes, the 'adjusted close' is preferred to account for corporate actions such as stock splits and dividend payments.</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>Mã định danh chính của cổ phiếu là symbol, thường là mã ba chữ cái viết hoa, tuy các chỉ số đặc biệt như E1VFVN30 (ETF) hay các chỉ số thị trường như HNX-INDEX và UPCOM-INDEX theo quy ước đặt tên riêng. Dữ liệu giá được phân loại theo kiểu OHLC, gồm giá 'open' (mở cửa), 'high' (cao nhất), 'low' (thấp nhất) và 'close' (đóng cửa). Cho mục đích định giá, 'giá đóng cửa điều chỉnh' được ưu tiên để tính đến các hành động doanh nghiệp như chia tách cổ phiếu và chi trả cổ tức.</span>
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>The accounting variables provided in the Vietnam Fundamentals product follow a standardized classification that reconciles different reporting standards across sectors. This reconciliation is vital because Vietnamese firms may have differing interpretations of revenue and net profit under Vietnamese Accounting Standards (VAS).</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>Các biến kế toán trong sản phẩm Vietnam Fundamentals tuân theo một cách phân loại chuẩn hóa nhằm đối chiếu các chuẩn mực báo cáo khác nhau giữa các ngành. Việc đối chiếu này rất quan trọng vì các doanh nghiệp Việt Nam có thể có cách diễn giải khác nhau về doanh thu và lợi nhuận ròng theo Chuẩn mực Kế toán Việt Nam (VAS).</span>
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">## Firm-Specific P/E Valuation Metrics</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">## Các thước đo định giá P/E theo từng doanh nghiệp</span></span>
 <span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>At the individual firm level, the P/E ratio is the most fundamental measure of how much an investor is willing to pay for each unit of current or future profit. However, the calculation of "E" (Earnings) can take several forms, each offering a different insight into the company’s value.</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>Ở cấp độ từng doanh nghiệp, tỷ số P/E là thước đo cơ bản nhất cho biết nhà đầu tư sẵn sàng trả bao nhiêu cho mỗi đơn vị lợi nhuận hiện tại hoặc tương lai. Tuy nhiên, việc tính "E" (thu nhập) có thể có nhiều dạng, mỗi dạng cho một góc nhìn khác nhau về giá trị doanh nghiệp.</span>
 <span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="fu">### Trailing P/E and the TTM Methodology</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="fu">### P/E trailing và phương pháp TTM</span></span>
 <span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>The Trailing P/E ratio is calculated using the reported earnings from the last four quarters, known as Trailing Twelve Months (TTM). In the Vietnamese market, this is often the default metric reported by exchanges and financial news outlets.</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>Tỷ số P/E trailing được tính bằng thu nhập đã báo cáo của bốn quý gần nhất, gọi là mười hai tháng gần nhất (Trailing Twelve Months, TTM). Trên thị trường Việt Nam, đây thường là thước đo mặc định do các sở giao dịch và báo chí tài chính công bố.</span>
 <span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>The mathematical representation is:</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>Biểu diễn toán học là:</span>
 <span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>P/E_{Trailing} = \frac{P_t}{\sum_{i=0}^{3} EPS_{q-i}}</span>
 <span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>Where $P_t$ is the current market price and $EPS_{q-i}$ represents the earnings per share for each of the four most recent quarters.</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>Trong đó $P_t$ là giá thị trường hiện tại và $EPS_{q-i}$ là thu nhập trên mỗi cổ phiếu của từng quý trong bốn quý gần nhất.</span>
 <span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="fu">### Forward P/E and Analyst Forecast Reliability</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="fu">### P/E forward và độ tin cậy của dự báo từ nhà phân tích</span></span>
 <span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>Forward P/E shifts the focus from historical performance to future expectations by using consensus earnings forecasts for the next fiscal year.</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>P/E forward chuyển trọng tâm từ kết quả quá khứ sang kỳ vọng tương lai bằng cách sử dụng dự báo thu nhập đồng thuận cho năm tài chính tới.</span>
 <span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>P/E_{Forward} = \frac{P_t}{EPS_{forecasted, t+1}}</span>
 <span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>In Vietnam, these forecasts are typically generated by research departments within major securities firms such as SSI, VCSC, MBS, and FPTS. These analysts rely on financial statements, projections, models, and subjective evaluations of market sentiment to generate their estimates. However, the accuracy of these forecasts is a significant area of research. However, analysts in Vietnam are often influenced by anchoring and adjustment bias, where they base future predictions heavily on past records and then make insufficient adjustments.</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>Ở Việt Nam, các dự báo này thường do bộ phận nghiên cứu của các công ty chứng khoán lớn như SSI, VCSC, MBS và FPTS lập ra. Các nhà phân tích này dựa vào báo cáo tài chính, các dự phóng, mô hình và đánh giá chủ quan về tâm lý thị trường để đưa ra ước tính. Tuy nhiên, độ chính xác của các dự báo này là một lĩnh vực nghiên cứu quan trọng. Đặc biệt, các nhà phân tích ở Việt Nam thường chịu ảnh hưởng của thiên lệch neo và điều chỉnh (anchoring and adjustment), trong đó họ dựa phần lớn vào số liệu quá khứ để dự báo tương lai rồi điều chỉnh không đủ.</span>
 <span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>The accuracy of analyst earnings forecasts in Vietnam is significantly impacted by corporate governance characteristics. Specifically, state ownership has been found to have a negative impact on forecast accuracy, while institutional ownership has a positive effect. This implies that for firms with high state-controlled stakes, which are common in Vietnam’s strategic industries, researchers should apply a higher discount or "fudge factor" to forward P/E estimates provided by consensus sources.</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>Độ chính xác của dự báo thu nhập từ nhà phân tích ở Việt Nam chịu tác động đáng kể từ các đặc điểm quản trị công ty. Cụ thể, sở hữu nhà nước được phát hiện có tác động tiêu cực đến độ chính xác dự báo, trong khi sở hữu tổ chức có tác động tích cực. Điều này hàm ý rằng với các doanh nghiệp có tỷ lệ sở hữu nhà nước chi phối cao, vốn phổ biến trong các ngành chiến lược của Việt Nam, nhà nghiên cứu nên áp dụng mức chiết khấu cao hơn hoặc "hệ số điều chỉnh tùy ý" (fudge factor) cho các ước tính P/E forward từ nguồn đồng thuận.</span>
 <span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="fu">### Cyclically Adjusted Price-Earnings (CAPE) Ratio</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="fu">### Tỷ số giá trên thu nhập điều chỉnh theo chu kỳ (CAPE)</span></span>
 <span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>The Shiller P/E, or CAPE ratio, is designed to smooth out the volatility of the business cycle by using a 10-year average of inflation-adjusted earnings. For a market like Vietnam, which has seen periods of extreme growth followed by stabilization, the CAPE ratio provides a more tempered view of valuation than trailing metrics.</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>P/E Shiller, hay tỷ số CAPE, được thiết kế để làm mượt biến động của chu kỳ kinh doanh bằng cách dùng trung bình 10 năm của thu nhập đã điều chỉnh lạm phát. Với một thị trường như Việt Nam, từng trải qua những giai đoạn tăng trưởng cực mạnh rồi ổn định, tỷ số CAPE cho một cái nhìn về định giá ôn hòa hơn các thước đo trailing.</span>
 <span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>The calculation requires adjusting historical earnings by the Consumer Price Index (CPI). Vietnam's CPI data is updated monthly and is available from January 1996 through early 2026, with an average year-on-year growth rate of approximately 12.2%.</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>Việc tính toán đòi hỏi điều chỉnh thu nhập lịch sử theo Chỉ số giá tiêu dùng (CPI). Dữ liệu CPI của Việt Nam được cập nhật hằng tháng và có từ tháng 1 năm 1996 đến đầu năm 2026, với tốc độ tăng trưởng trung bình theo năm xấp xỉ 12.2%.</span>
 <span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>EPS_{real, t} = EPS_{nominal, t} \times \frac{CPI_{current}}{CPI_t}</span>
@@ -1570,15 +1607,15 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>CAPE = \frac{P_t}{\frac{1}{10} \sum_{i=0}^{9} EPS_{real, t-i}}</span>
 <span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>Historically, Vietnam’s CPI has reached an all-time high of 28.3% YoY in August 2008 and a record low of -2.6% in July 2000. These extreme swings mean that nominal earnings in the mid-2000s are not comparable to earnings today without the Shiller adjustment. Researchers must be mindful of the different base years used by the National Statistics Office (GSO), such as 2024=100, 2019=100, and 2014=100.</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>Trong lịch sử, CPI của Việt Nam đạt mức cao nhất mọi thời đại là 28.3% so với cùng kỳ vào tháng 8 năm 2008 và mức thấp kỷ lục là -2.6% vào tháng 7 năm 2000. Những biến động cực đoan này có nghĩa là thu nhập danh nghĩa giữa thập niên 2000 không thể so sánh với thu nhập ngày nay nếu không có điều chỉnh Shiller. Nhà nghiên cứu phải lưu ý các năm gốc khác nhau mà Tổng cục Thống kê (GSO) sử dụng, như 2024=100, 2019=100 và 2014=100.</span>
 <span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a><span class="fu">### Unlevered P/E and the Leibowitz Framework</span></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a><span class="fu">### P/E không đòn bẩy và khung Leibowitz</span></span>
 <span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>The concept of the "Unlevered P/E" ratio attempts to view a company's valuation independent of its capital structure. This is particularly relevant in the Vietnamese market, where debt loads vary significantly between state-owned enterprises (SOEs) and private firms. Research by @leibowitz2002levered highlights that for the investment analyst, a company is already levered, and the task is to estimate its theoretical value by inferring the underlying structure of returns.</span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>Khái niệm tỷ số "P/E không đòn bẩy" cố gắng nhìn nhận định giá của một công ty độc lập với cơ cấu vốn của nó. Điều này đặc biệt phù hợp với thị trường Việt Nam, nơi mức nợ khác nhau đáng kể giữa các doanh nghiệp nhà nước (DNNN) và doanh nghiệp tư nhân. Nghiên cứu của @leibowitz2002levered nhấn mạnh rằng với nhà phân tích đầu tư, một công ty vốn đã có đòn bẩy, và nhiệm vụ là ước tính giá trị lý thuyết của nó bằng cách suy ra cấu trúc lợi nhuận cơ bản.</span>
 <span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>According to Leibowitz, leverage always moves the P/E toward a lower value than what would be obtained from a standard Gordon growth formula. As a company adds debt, the market discount rate for equity increases to compensate for the additional risk, which in turn compresses the P/E multiple. For example, a debt-free company with a theoretical P/E of 30 might see its P/E drop to 23 with a 40% debt ratio, and down to 20 with a 50% debt ratio.</span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>Theo Leibowitz, đòn bẩy luôn đẩy P/E về mức thấp hơn so với mức thu được từ công thức tăng trưởng Gordon tiêu chuẩn. Khi công ty vay thêm nợ, tỷ lệ chiết khấu thị trường dành cho vốn chủ sở hữu tăng lên để bù đắp rủi ro tăng thêm, và điều này làm nén bội số P/E. Ví dụ, một công ty không nợ có P/E lý thuyết bằng 30 có thể thấy P/E giảm xuống 23 khi tỷ lệ nợ là 40%, và xuống 20 khi tỷ lệ nợ là 50%.</span>
 <span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>The Unlevered P/E (often proxied by Enterprise Value to EBIT or EBITDA) can be calculated using fundamental variables:</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>P/E không đòn bẩy (thường được xấp xỉ bằng Giá trị doanh nghiệp trên EBIT hoặc EBITDA) có thể được tính từ các biến cơ bản:</span>
 <span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>EV = (\text{Shares Outstanding} \times \text{Price}) + \text{Total Debt} - \text{Cash}</span>
@@ -1588,61 +1625,61 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>P/E_{\text{Unlevered}} \approx \frac{EV}{EBIT \times (1 - \tau)}</span>
 <span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>Where $\tau$ is the corporate income tax rate. The standard CIT rate in Vietnam is 20%, which has been stable since the mid-2010s but is subject to new revisions under the Law on CIT ratified in June 2025.</span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>Trong đó $\tau$ là thuế suất thuế thu nhập doanh nghiệp. Thuế suất CIT tiêu chuẩn ở Việt Nam là 20%, ổn định từ giữa thập niên 2010 nhưng sẽ chịu những sửa đổi mới theo Luật Thuế thu nhập doanh nghiệp được thông qua vào tháng 6 năm 2025.</span>
 <span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a><span class="fu">## Market-Level Aggregation Techniques</span></span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a><span class="fu">## Các kỹ thuật tổng hợp ở cấp thị trường</span></span>
 <span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a>Aggregating firm-specific metrics into a single market-level index P/E is a complex task that requires careful consideration of weighting and the inclusion of loss-making entities. In the Vietnamese market, two primary indices (i.e., the VN-Index and the VN30), provide the benchmarks for performance and valuation.</span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a>Tổng hợp các thước đo theo từng doanh nghiệp thành một P/E chỉ số cấp thị trường duy nhất là một việc phức tạp, đòi hỏi cân nhắc cẩn thận về trọng số và việc đưa vào các doanh nghiệp thua lỗ. Trên thị trường Việt Nam, hai chỉ số chính (tức là VN-Index và VN30) cung cấp các chuẩn tham chiếu cho kết quả hoạt động và định giá.</span>
 <span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a><span class="fu">### The VN-Index: Capitalization-Weighted Aggregation</span></span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a><span class="fu">### VN-Index: Tổng hợp theo trọng số vốn hóa</span></span>
 <span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>The VN-Index is a capitalization-weighted index of all companies listed on HOSE. It serves as a broad indicator of market health, where an increase in the index reflects a general rise in the stock prices of listed companies.</span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>VN-Index là chỉ số trọng số theo vốn hóa của tất cả công ty niêm yết trên HOSE. Nó đóng vai trò chỉ báo rộng về sức khỏe thị trường, trong đó chỉ số tăng phản ánh sự tăng chung của giá cổ phiếu các công ty niêm yết.</span>
 <span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>The index value is calculated as:</span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>Giá trị chỉ số được tính như sau:</span>
 <span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>\text{VN-Index} = \frac{\sum (Price_i \times Shares_i)}{\text{Base Factor}} \times \text{Adjustment Factor}</span>
 <span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>Similarly, the index-level P/E is typically calculated as the sum of all market capitalizations divided by the sum of all net incomes (earnings) of the constituents.</span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>Tương tự, P/E cấp chỉ số thường được tính bằng tổng vốn hóa thị trường chia cho tổng lợi nhuận ròng (thu nhập) của các thành phần.</span>
 <span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>P/E_{Market} = \frac{\sum MarketCap_i}{\sum Earnings_i}</span>
 <span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>As of early 2026, the total market capitalization for 701 tracked companies was approximately 8,629.8 trillion VND, with total earnings of 588.9 trillion VND, yielding a median P/E of approximately 14.7x.</span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>Tính đến đầu năm 2026, tổng vốn hóa thị trường của 701 công ty được theo dõi vào khoảng 8,629.8 nghìn tỷ VND, với tổng thu nhập là 588.9 nghìn tỷ VND, cho P/E trung vị xấp xỉ 14.7x.</span>
 <span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a><span class="fu">### The VN30 and Free-Float Adjustments</span></span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a><span class="fu">### VN30 và điều chỉnh tỷ lệ tự do chuyển nhượng</span></span>
 <span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a>The VN30 Index represents a basket of the 30 largest and most liquid stocks on HOSE, screened through layers of capitalization, free-float ratio, and transactional volume. Unlike the broad VN-Index, the VN30 applies a free-float adjustment to its capitalization weighting to ensure that only shares available for public trading affect the index movement.</span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a>Chỉ số VN30 đại diện cho rổ 30 cổ phiếu lớn nhất và thanh khoản nhất trên HOSE, được sàng lọc qua các lớp tiêu chí về vốn hóa, tỷ lệ tự do chuyển nhượng (free-float) và khối lượng giao dịch. Khác với VN-Index rộng, VN30 áp dụng điều chỉnh free-float lên trọng số vốn hóa để bảo đảm chỉ những cổ phiếu có thể giao dịch tự do trên thị trường mới ảnh hưởng đến biến động của chỉ số.</span>
 <span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>The free-float ratio ($f$) is calculated as:</span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>Tỷ lệ free-float ($f$) được tính như sau:</span>
 <span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a>$f = \frac{N - N_l}{N}$</span>
 <span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a>Where $N$ is the total number of outstanding shares and $N_l$ is the number of limited trading shares (held by founders, state, or strategic partners).</span>
+<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a>Trong đó $N$ là tổng số cổ phiếu đang lưu hành và $N_l$ là số cổ phiếu bị hạn chế giao dịch (do nhà sáng lập, nhà nước hoặc đối tác chiến lược nắm giữ).</span>
 <span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a>When aggregating P/E for the VN30, researchers must account for this adjustment, as it more accurately reflects the valuation of the investable universe. In the Vietnamese market, a handful of large-cap stocks can significantly skew the broad index. For instance, Vingroup (VIC) and its related companies have at times represented nearly a quarter of the VN-Index's total weighting, creating a "closet indexing" dilemma for fund managers. Removing these high-impact stocks can reveal a much different valuation profile; while the VN-Index might trade at 13x, the market excluding VIC-related stocks could be closer to 11x.</span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a>Khi tổng hợp P/E cho VN30, nhà nghiên cứu phải tính đến điều chỉnh này, vì nó phản ánh chính xác hơn định giá của tập hợp có thể đầu tư. Trên thị trường Việt Nam, một số ít cổ phiếu vốn hóa lớn có thể làm lệch đáng kể chỉ số rộng. Chẳng hạn, Vingroup (VIC) và các công ty liên quan đã có lúc chiếm gần một phần tư tổng trọng số của VN-Index, tạo ra thế lưỡng nan "closet indexing" cho các nhà quản lý quỹ. Loại bỏ các cổ phiếu có tác động lớn này có thể cho thấy một hồ sơ định giá khác hẳn; trong khi VN-Index có thể giao dịch ở mức 13x, thị trường không tính nhóm cổ phiếu liên quan đến VIC có thể gần 11x hơn.</span>
 <span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a><span class="fu">### Median vs. Mean Aggregation</span></span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a><span class="fu">### Tổng hợp theo trung vị so với trung bình</span></span>
 <span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a>Quantitative researchers often prefer median P/E ratios over mean P/E ratios to mitigate the influence of extreme outliers (i.e., companies with either exceptionally high P/E ratios due to temporarily low earnings or those that are technically "expensive" because of high growth expectations). @tbl-valuation-median-vs-mean-agg shows different aggregation methods.</span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a>Các nhà nghiên cứu định lượng thường ưu tiên P/E trung vị hơn P/E trung bình để giảm ảnh hưởng của các giá trị ngoại lai cực đoan (tức là các công ty có P/E cao bất thường do thu nhập thấp tạm thời hoặc các công ty "đắt" về mặt kỹ thuật vì kỳ vọng tăng trưởng cao). @tbl-valuation-median-vs-mean-agg trình bày các phương pháp tổng hợp khác nhau.</span>
 <span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span>  <span class="pp">|</span>  <span class="pp">|</span>  <span class="pp">|</span></span>
 <span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a><span class="pp">|---------------------|--------------------------|--------------------------|</span></span>
-<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Aggregation Method** | **Mathematical Definition** | **Resilience to Outliers** <span class="pp">|</span></span>
-<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Simple Mean <span class="pp">|</span> $\frac{1}{n} \sum (P/E)_i$ <span class="pp">|</span> Low (highly skewed by extreme values) <span class="pp">|</span></span>
-<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Weighted Mean <span class="pp">|</span> $\frac{\sum (Cap_i \times (P/E)_i)}{\sum Cap_i}$ <span class="pp">|</span> Medium (skewed by large-cap valuation) <span class="pp">|</span></span>
-<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Median <span class="pp">|</span> $\text{Median}((P/E)_1, \dots, (P/E)_n)$ <span class="pp">|</span> High (most robust for market sentiment) <span class="pp">|</span></span>
-<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Total-to-Total <span class="pp">|</span> $\frac{\sum MarketCap_i}{\sum Earnings_i}$ <span class="pp">|</span> High (standard for index providers) <span class="pp">|</span></span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Phương pháp tổng hợp** | **Định nghĩa toán học** | **Độ bền với giá trị ngoại lai** <span class="pp">|</span></span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Trung bình đơn giản <span class="pp">|</span> $\frac{1}{n} \sum (P/E)_i$ <span class="pp">|</span> Thấp (bị lệch mạnh bởi giá trị cực đoan) <span class="pp">|</span></span>
+<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Trung bình có trọng số <span class="pp">|</span> $\frac{\sum (Cap_i \times (P/E)_i)}{\sum Cap_i}$ <span class="pp">|</span> Trung bình (bị lệch bởi định giá của cổ phiếu vốn hóa lớn) <span class="pp">|</span></span>
+<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Trung vị <span class="pp">|</span> $\text{Median}((P/E)_1, \dots, (P/E)_n)$ <span class="pp">|</span> Cao (vững nhất cho tâm lý thị trường) <span class="pp">|</span></span>
+<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Tổng trên tổng <span class="pp">|</span> $\frac{\sum MarketCap_i}{\sum Earnings_i}$ <span class="pp">|</span> Cao (chuẩn của các nhà cung cấp chỉ số) <span class="pp">|</span></span>
 <span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>: Median vs. Mean Aggregation {#tbl-valuation-median-vs-mean-agg}</span>
+<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>: Tổng hợp theo trung vị so với trung bình {#tbl-valuation-median-vs-mean-agg}</span>
 <span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a>The Vietnamese market currently trades near its 3-year average P/E of 14.8x, suggesting that investors are relatively neutral on current valuations, expecting earnings to grow in line with historical rates.</span>
+<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a>Thị trường Việt Nam hiện đang giao dịch gần mức P/E trung bình 3 năm là 14.8x, cho thấy nhà đầu tư tương đối trung lập về các mức định giá hiện tại, kỳ vọng thu nhập tăng trưởng theo đúng tốc độ lịch sử.</span>
 <span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a><span class="fu">## Implementation</span></span>
+<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a><span class="fu">## Triển khai</span></span>
 <span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a><span class="fu">### Data Ingestion and Processing</span></span>
+<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a><span class="fu">### Nạp và xử lý dữ liệu</span></span>
 <span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1661,9 +1698,9 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'trailing_pe'</span>] <span class="op">=</span> df[<span class="st">'close'</span>] <span class="op">/</span> df[<span class="st">'eps_ttm'</span>]</span>
 <span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a><span class="fu">### Shiller CAPE </span></span>
+<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a><span class="fu">### Shiller CAPE</span></span>
 <span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>The Shiller CAPE requires a more sophisticated approach, involving the merging of earnings data with monthly CPI series.</span>
+<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>Shiller CAPE đòi hỏi một cách tiếp cận tinh vi hơn, bao gồm việc gộp dữ liệu thu nhập với chuỗi CPI hằng tháng.</span>
 <span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
@@ -1833,45 +1870,45 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb1-332"><a href="#cb1-332" aria-hidden="true" tabindex="-1"></a><span class="co"># df_pe['pe_trailing_12m'] = calculate_pe_filtering_negatives(df_pe, 'vni_price', 'vni_earnings_12m')</span></span>
 <span id="cb1-333"><a href="#cb1-333" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb1-334"><a href="#cb1-334" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-335"><a href="#cb1-335" aria-hidden="true" tabindex="-1"></a><span class="fu">## Macroeconomic and Regulatory Factors in Valuation</span></span>
+<span id="cb1-335"><a href="#cb1-335" aria-hidden="true" tabindex="-1"></a><span class="fu">## Các yếu tố vĩ mô và quy định trong định giá</span></span>
 <span id="cb1-336"><a href="#cb1-336" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-337"><a href="#cb1-337" aria-hidden="true" tabindex="-1"></a>The P/E ratio does not exist in a vacuum; it is deeply influenced by the macroeconomic environment and the regulatory framework within which companies operate.</span>
+<span id="cb1-337"><a href="#cb1-337" aria-hidden="true" tabindex="-1"></a>Tỷ số P/E không tồn tại trong chân không; nó chịu ảnh hưởng sâu sắc của môi trường kinh tế vĩ mô và khuôn khổ pháp lý mà các công ty hoạt động trong đó.</span>
 <span id="cb1-338"><a href="#cb1-338" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-339"><a href="#cb1-339" aria-hidden="true" tabindex="-1"></a><span class="fu">### The Role of Corporate Income Tax (CIT)</span></span>
+<span id="cb1-339"><a href="#cb1-339" aria-hidden="true" tabindex="-1"></a><span class="fu">### Vai trò của thuế thu nhập doanh nghiệp (CIT)</span></span>
 <span id="cb1-340"><a href="#cb1-340" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-341"><a href="#cb1-341" aria-hidden="true" tabindex="-1"></a>The earnings component of the P/E ratio is a post-tax metric. In Vietnam, the standard CIT rate is 20%. However, there is a significant shift occurring with the ratification of the new Law on CIT in June 2025, taking effect on October 1, 2025. This law introduces:</span>
+<span id="cb1-341"><a href="#cb1-341" aria-hidden="true" tabindex="-1"></a>Thành phần thu nhập của tỷ số P/E là thước đo sau thuế. Ở Việt Nam, thuế suất CIT tiêu chuẩn là 20%. Tuy nhiên, đang có một thay đổi đáng kể với việc thông qua Luật Thuế thu nhập doanh nghiệp mới vào tháng 6 năm 2025, có hiệu lực từ ngày 1 tháng 10 năm 2025. Luật này đưa ra:</span>
 <span id="cb1-342"><a href="#cb1-342" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>A 15% rate for enterprises with annual revenue not exceeding 3 billion VND.</span>
+<span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Mức thuế suất 15% cho doanh nghiệp có doanh thu hằng năm không quá 3 tỷ VND.</span>
 <span id="cb1-344"><a href="#cb1-344" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-345"><a href="#cb1-345" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>A 17% rate for enterprises with revenue between 3 and 50 billion VND.</span>
+<span id="cb1-345"><a href="#cb1-345" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Mức thuế suất 17% cho doanh nghiệp có doanh thu từ 3 đến 50 tỷ VND.</span>
 <span id="cb1-346"><a href="#cb1-346" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-347"><a href="#cb1-347" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>The maintenance of higher rates (up to 50%) for the oil, gas, and mineral resource sectors.</span>
+<span id="cb1-347"><a href="#cb1-347" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Duy trì các mức thuế suất cao hơn (lên đến 50%) cho các ngành dầu khí và tài nguyên khoáng sản.</span>
 <span id="cb1-348"><a href="#cb1-348" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-349"><a href="#cb1-349" aria-hidden="true" tabindex="-1"></a>Furthermore, Vietnam has adopted the Global Minimum Tax (GMT) rules under Pillar Two, effective January 1, 2024, to protect its tax revenue from inbound and outbound investments. These changes mean that historical P/E ratios may not be directly comparable to future ratios for companies that previously benefited from generous tax incentives, as the effective tax rate is likely to rise for large multinational subsidiaries operating in Vietnam.</span>
+<span id="cb1-349"><a href="#cb1-349" aria-hidden="true" tabindex="-1"></a>Hơn nữa, Việt Nam đã áp dụng quy tắc Thuế tối thiểu toàn cầu (GMT) theo Trụ cột 2, có hiệu lực từ ngày 1 tháng 1 năm 2024, nhằm bảo vệ nguồn thu thuế khỏi các khoản đầu tư vào và ra nước ngoài. Những thay đổi này có nghĩa là P/E lịch sử có thể không so sánh trực tiếp được với các tỷ số trong tương lai đối với những công ty trước đây hưởng ưu đãi thuế hào phóng, vì thuế suất hiệu dụng có khả năng tăng đối với các công ty con đa quốc gia lớn hoạt động tại Việt Nam.</span>
 <span id="cb1-350"><a href="#cb1-350" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-351"><a href="#cb1-351" aria-hidden="true" tabindex="-1"></a><span class="fu">### Macroeconomic Determinants: Inflation and Interest Rates</span></span>
+<span id="cb1-351"><a href="#cb1-351" aria-hidden="true" tabindex="-1"></a><span class="fu">### Các yếu tố vĩ mô quyết định: Lạm phát và lãi suất</span></span>
 <span id="cb1-352"><a href="#cb1-352" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-353"><a href="#cb1-353" aria-hidden="true" tabindex="-1"></a>Stock price indices, and by extension P/E ratios, are heavily influenced by fundamental macroeconomic factors such as inflation, exchange rates, and interest rates. The interest rate serves as the cost of capital for enterprises. When interest rates fall, the cost of borrowing drops, increasing corporate profits and potentially raising the P/E that investors are willing to pay.</span>
+<span id="cb1-353"><a href="#cb1-353" aria-hidden="true" tabindex="-1"></a>Các chỉ số giá cổ phiếu, và mở rộng ra là tỷ số P/E, chịu ảnh hưởng mạnh của các yếu tố kinh tế vĩ mô cơ bản như lạm phát, tỷ giá hối đoái và lãi suất. Lãi suất đóng vai trò chi phí vốn của doanh nghiệp. Khi lãi suất giảm, chi phí vay giảm, làm tăng lợi nhuận doanh nghiệp và có thể nâng mức P/E mà nhà đầu tư sẵn sàng trả.</span>
 <span id="cb1-354"><a href="#cb1-354" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-355"><a href="#cb1-355" aria-hidden="true" tabindex="-1"></a>The Vietnamese dong (VND) exchange rate also plays a crucial role. In early 2025, the VND depreciated by 1.33% YTD, reflecting volatility in the timeline for Federal Reserve rate cuts. Exchange rate depreciation can be inflationary by default, which may prompt the State Bank of Vietnam to tighten monetary policy, thereby putting downward pressure on equity valuations.</span>
+<span id="cb1-355"><a href="#cb1-355" aria-hidden="true" tabindex="-1"></a>Tỷ giá hối đoái của đồng Việt Nam (VND) cũng đóng vai trò quan trọng. Đầu năm 2025, VND mất giá 1.33% từ đầu năm đến nay (YTD), phản ánh sự biến động về lộ trình cắt giảm lãi suất của Cục Dự trữ Liên bang. Đồng nội tệ mất giá về bản chất có thể gây lạm phát, điều này có thể khiến Ngân hàng Nhà nước Việt Nam thắt chặt chính sách tiền tệ, từ đó tạo áp lực giảm lên định giá cổ phiếu.</span>
 <span id="cb1-356"><a href="#cb1-356" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-357"><a href="#cb1-357" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-358"><a href="#cb1-358" aria-hidden="true" tabindex="-1"></a><span class="fu">## Synthesis of Valuation Dynamics</span></span>
+<span id="cb1-358"><a href="#cb1-358" aria-hidden="true" tabindex="-1"></a><span class="fu">## Tổng hợp các động lực định giá</span></span>
 <span id="cb1-359"><a href="#cb1-359" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-360"><a href="#cb1-360" aria-hidden="true" tabindex="-1"></a>The Vietnamese equity market is currently in a state of transition. While the market has seen robust growth—the VN-Index rose 38% in the year leading up to early 2026—investors remain neutral on overall valuations, as reflected by the market's alignment with its 3-year average P/E of 14.8x. This neutrality suggests that investors expect earnings growth (forecast at 14% annually) to keep pace with price appreciation.</span>
+<span id="cb1-360"><a href="#cb1-360" aria-hidden="true" tabindex="-1"></a>Thị trường chứng khoán Việt Nam hiện đang trong trạng thái chuyển tiếp. Dù thị trường tăng trưởng mạnh mẽ—VN-Index tăng 38% trong một năm tính đến đầu năm 2026—nhà đầu tư vẫn trung lập về định giá chung, thể hiện qua việc thị trường tiệm cận mức P/E trung bình 3 năm là 14.8x. Sự trung lập này cho thấy nhà đầu tư kỳ vọng tăng trưởng thu nhập (dự báo 14% mỗi năm) theo kịp mức tăng giá.</span>
 <span id="cb1-361"><a href="#cb1-361" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-362"><a href="#cb1-362" aria-hidden="true" tabindex="-1"></a>The reliability of these valuations, however, remains dependent on the quality of non-financial disclosure. While companies are increasingly required by law to provide non-financial information, the level of transparency remains at a medium level (approximately 58.5% of required disclosures). Researchers must therefore balance quantitative P/E analysis with qualitative assessments of corporate governance and sustainability strategies. Companies that effectively integrate ESG principles have been shown to experience fewer negative impacts on abnormal stock returns during uncertain periods, such as the COVID-19 pandemic.</span>
+<span id="cb1-362"><a href="#cb1-362" aria-hidden="true" tabindex="-1"></a>Tuy nhiên, độ tin cậy của các định giá này vẫn phụ thuộc vào chất lượng công bố thông tin phi tài chính. Dù các công ty ngày càng bị luật pháp yêu cầu cung cấp thông tin phi tài chính, mức độ minh bạch vẫn ở mức trung bình (khoảng 58.5% các nội dung công bố bắt buộc). Do đó, nhà nghiên cứu phải cân bằng phân tích định lượng P/E với đánh giá định tính về quản trị công ty và các chiến lược bền vững. Các công ty tích hợp hiệu quả các nguyên tắc ESG được chỉ ra là chịu ít tác động tiêu cực hơn lên lợi nhuận bất thường của cổ phiếu trong những giai đoạn bất định, như đại dịch COVID-19.</span>
 <span id="cb1-363"><a href="#cb1-363" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-364"><a href="#cb1-364" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-365"><a href="#cb1-365" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-366"><a href="#cb1-366" aria-hidden="true" tabindex="-1"></a><span class="fu">## Conclusions </span></span>
+<span id="cb1-366"><a href="#cb1-366" aria-hidden="true" tabindex="-1"></a><span class="fu">## Kết luận</span></span>
 <span id="cb1-367"><a href="#cb1-367" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-368"><a href="#cb1-368" aria-hidden="true" tabindex="-1"></a>The exploration of P/E ratio valuation and aggregation within the Vietnamese equity market reveals a sophisticated landscape where traditional metrics must be adapted to local realities. The reliance on trailing metrics, while common, fails to account for the cyclicality and high inflation history of the Vietnamese economy, a gap that the Shiller CAPE ratio effectively bridges through CPI-adjusted normalization. Furthermore, the sensitivity of P/E to capital structure, as defined in the Leibowitz framework, highlights the necessity of unlevered valuation metrics in a market with diverse corporate funding models.</span>
+<span id="cb1-368"><a href="#cb1-368" aria-hidden="true" tabindex="-1"></a>Việc khảo sát định giá theo tỷ số P/E và cách tổng hợp trên thị trường chứng khoán Việt Nam cho thấy một bức tranh phức tạp, trong đó các thước đo truyền thống phải được điều chỉnh cho phù hợp với thực tế địa phương. Việc dựa vào các thước đo trailing, dù phổ biến, không tính đến tính chu kỳ và lịch sử lạm phát cao của nền kinh tế Việt Nam, một khoảng trống mà tỷ số Shiller CAPE lấp đầy hiệu quả thông qua chuẩn hóa điều chỉnh theo CPI. Hơn nữa, độ nhạy của P/E với cơ cấu vốn, như được xác định trong khung Leibowitz, nhấn mạnh sự cần thiết của các thước đo định giá không đòn bẩy trong một thị trường có các mô hình tài trợ doanh nghiệp đa dạng.</span>
 <span id="cb1-369"><a href="#cb1-369" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-370"><a href="#cb1-370" aria-hidden="true" tabindex="-1"></a>The aggregation of these metrics into market-level indices like the VN-Index and VN30 requires an awareness of concentration risks and the importance of free-float adjustments. The "Vingroup Effect" demonstrates how a single corporate ecosystem can skew index-wide valuations, necessitating a "closet indexing" awareness for fund managers and researchers.</span>
+<span id="cb1-370"><a href="#cb1-370" aria-hidden="true" tabindex="-1"></a>Việc tổng hợp các thước đo này thành các chỉ số cấp thị trường như VN-Index và VN30 đòi hỏi nhận thức về rủi ro tập trung và tầm quan trọng của điều chỉnh free-float. "Hiệu ứng Vingroup" cho thấy một hệ sinh thái doanh nghiệp đơn lẻ có thể làm lệch định giá toàn chỉ số như thế nào, đòi hỏi các nhà quản lý quỹ và nhà nghiên cứu phải có nhận thức về "closet indexing".</span>
 <span id="cb1-371"><a href="#cb1-371" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-372"><a href="#cb1-372" aria-hidden="true" tabindex="-1"></a>Looking forward, the evolution of the regulatory environment—specifically the CIT law of 2025 and the Global Minimum Tax—will introduce new variables into the valuation equation. The shift toward higher-quality non-financial disclosures and the increasing accuracy of analyst forecasts in institutionalized firms suggest that the Vietnamese equity market is steadily maturing, offering a more transparent and predictable environment for the application of advanced quantitative valuation techniques.</span>
-</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb1-372"><a href="#cb1-372" aria-hidden="true" tabindex="-1"></a>Nhìn về phía trước, sự phát triển của môi trường pháp lý—cụ thể là luật CIT năm 2025 và Thuế tối thiểu toàn cầu—sẽ đưa thêm các biến số mới vào phương trình định giá. Xu hướng công bố thông tin phi tài chính chất lượng cao hơn và độ chính xác ngày càng tăng của dự báo từ nhà phân tích ở các doanh nghiệp có sở hữu tổ chức cho thấy thị trường chứng khoán Việt Nam đang dần trưởng thành, mang lại một môi trường minh bạch và dễ dự đoán hơn để áp dụng các kỹ thuật định giá định lượng nâng cao.</span>
+</code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
@@ -1881,7 +1918,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/35_pe_ratio.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/35_pe_ratio.qmd" class="toc-action"><i class="bi bi-github"></i>Chỉnh sửa trang này</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Báo lỗi</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>

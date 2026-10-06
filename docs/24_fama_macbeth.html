@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi" xml:lang="vi"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.26">
+<meta name="generator" content="quarto-1.7.33">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 
 <title>20&nbsp; Fama-MacBeth Regressions – Tài Chính Ứng Dụng với Python</title>
 <style>
@@ -90,19 +91,18 @@ div.csl-indent {
 <link href="./favicon.ico" rel="icon">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-bc185b5c5bdbcb35c2eb49d8a876ef70.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-72097b8a1e3a3da1d7b8bbfaaf81c3d8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-ed993afc62d41eaa40b4794cd0abf8eb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-5ee5e5a16e06a4aa31defda297eed821.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-1776ed5e610a858552a3b6811fac5435.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -117,22 +117,49 @@ div.csl-indent {
   ],
   "show-item-context": false,
   "language": {
-    "search-no-results-text": "No results",
-    "search-matching-documents-text": "matching documents",
-    "search-copy-link-title": "Copy link to search",
-    "search-hide-matches-text": "Hide additional matches",
-    "search-more-match-text": "more match in this document",
-    "search-more-matches-text": "more matches in this document",
-    "search-clear-button-title": "Clear",
+    "search-no-results-text": "Không có kết quả",
+    "search-matching-documents-text": "tài liệu phù hợp",
+    "search-copy-link-title": "Sao chép liên kết tìm kiếm",
+    "search-hide-matches-text": "Ẩn các kết quả khớp khác",
+    "search-more-match-text": "kết quả khớp khác trong tài liệu này",
+    "search-more-matches-text": "kết quả khớp khác trong tài liệu này",
+    "search-clear-button-title": "Xóa",
     "search-text-placeholder": "",
-    "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit",
-    "search-label": "Search"
+    "search-detached-cancel-button-title": "Hủy",
+    "search-submit-button-title": "Gửi",
+    "search-label": "Tìm kiếm"
   }
 }</script>
+<!-- =====================================================================
+     SEO: schema.org Book JSON-LD, injected into the <head> of every page
+     via format.html include-in-header. The plain meta description and the
+     og:/twitter: descriptions come from the book `description:` key in
+     _quarto.yml - don't repeat them here (duplicate meta description).
+     ===================================================================== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": "Tài Chính Ứng Dụng với Python",
+  "url": "https://mikenguyen13.github.io/tidy_finance_vn_vi/",
+  "inLanguage": "vi",
+  "bookFormat": "https://schema.org/EBook",
+  "genre": "Empirical Finance",
+  "description": "Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: truy cập và quản lý dữ liệu tài chính, xây dựng danh mục đầu tư, mô hình định giá tài sản, kiểm định chéo, phân tích cơ bản và định giá doanh nghiệp.",
+  "keywords": "tài chính định lượng, thị trường chứng khoán Việt Nam, tài chính thực nghiệm, định giá tài sản, Fama-French, danh mục đầu tư, Python, VN30, HOSE",
+  "author": {
+    "@type": "Person",
+    "name": "Mike Nguyen"
+  },
+  "isAccessibleForFree": true
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
 
+
+
 <script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -148,7 +175,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+      if (mathElements[i].tagName == "SPAN") {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -166,16 +193,16 @@ window.Quarto = {
 
 <link rel="stylesheet" href="styles.css">
 <meta property="og:title" content="20&nbsp; Fama-MacBeth Regressions – Tài Chính Ứng Dụng với Python">
-<meta property="og:description" content="">
+<meta property="og:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta property="og:image" content="https://mikenguyen13.github.io/tidy_finance_vn_vi/24_fama_macbeth_files/figure-html/fig-cumulative-premiums-output-1.png">
 <meta property="og:site_name" content="Tài Chính Ứng Dụng với Python">
-<meta property="og:image:alt" content="A line plot displaying the time series of cumulative risk premiums for three factors: beta, log_mktcap, and bm in the Vietnamese market. The x-axis represents time, and the y-axis represents the cumulative coefficient returns.">
+<meta property="og:image:alt" content="Biểu đồ đường thể hiện chuỗi thời gian của các phần bù rủi ro tích lũy cho ba nhân tố: beta, log_mktcap và bm trên thị trường Việt Nam. Trục hoành biểu diễn thời gian, trục tung biểu diễn lợi nhuận tích lũy của các hệ số.">
 <meta property="og:image:height" content="1051">
 <meta property="og:image:width" content="1714">
 <meta name="twitter:title" content="20&nbsp; Fama-MacBeth Regressions – Tài Chính Ứng Dụng với Python">
-<meta name="twitter:description" content="">
+<meta name="twitter:description" content="Hướng dẫn mã nguồn mở về tài chính thực nghiệm trên dữ liệu thị trường Việt Nam bằng Python: sắp xếp danh mục, mô hình nhân tố, định giá tài sản và học máy.">
 <meta name="twitter:image" content="https://mikenguyen13.github.io/tidy_finance_vn_vi/24_fama_macbeth_files/figure-html/fig-cumulative-premiums-output-1.png">
-<meta name="twitter:image:alt" content="A line plot displaying the time series of cumulative risk premiums for three factors: beta, log_mktcap, and bm in the Vietnamese market. The x-axis represents time, and the y-axis represents the cumulative coefficient returns.">
+<meta name="twitter:image:alt" content="Biểu đồ đường thể hiện chuỗi thời gian của các phần bù rủi ro tích lũy cho ba nhân tố: beta, log_mktcap và bm trên thị trường Việt Nam. Trục hoành biểu diễn thời gian, trục tung biểu diễn lợi nhuận tích lũy của các hệ số.">
 <meta name="twitter:image-height" content="1051">
 <meta name="twitter:image-width" content="1714">
 <meta name="twitter:card" content="summary_large_image">
@@ -354,8 +381,8 @@ window.Quarto = {
     <span class="navbar-title">Tài Chính Ứng Dụng với Python</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+            <div id="quarto-search" class="" title="Tìm kiếm"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Bật/tắt điều hướng" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -375,18 +402,18 @@ window.Quarto = {
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+    <a href="https://github.com/mikenguyen13/tidy_finance_vn_vi" title="Mã nguồn" class="quarto-navigation-tool px-1" aria-label="Mã nguồn"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Bật/tắt chế độ tối"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
   <nav class="quarto-secondary-nav">
     <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
         <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./20_capm.html">Mô hình định giá tài sản</a></li><li class="breadcrumb-item"><a href="./24_fama_macbeth.html"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Fama-MacBeth Regressions</span></a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Bật/tắt thanh bên" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
   </nav>
@@ -407,7 +434,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
  <span class="menu-text">Thị trường tài chính, thể chế và dữ liệu Việt Nam</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -415,7 +442,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./00_institutional_background.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Nền tảng thể chế và cấu trúc thị trường của thị trường chứng khoán Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Bối cảnh thể chế và cấu trúc thị trường cổ phiếu Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -433,7 +460,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./03_market_microstructure.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Cấu trúc thị trường vi mô tại Việt Nam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Vi cấu trúc thị trường tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -445,7 +472,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05_working_with_stock_returns.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận vốn chủ sở hữu</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Xây dựng và phân tích chuỗi lợi nhuận cổ phiếu</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -460,7 +487,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
  <span class="menu-text">Xây dựng danh mục đầu tư, rủi ro và cơ học thực nghiệm</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -468,7 +495,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./10_modern_portfolio_theory.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Lý thuyết danh mục đầu tư hiện đại</span></span></a>
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Modern Portfolio Theory</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -480,7 +507,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./12_size_sorts.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Size Sorts</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phân loại theo quy mô</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -492,19 +519,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./14_portfolio_weighting_and_rebalancing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Portfolio Weighting and Rebalancing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Trọng số danh mục đầu tư và tái cân bằng danh mục</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./15_missing_data_and_survivorship.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Missing Data and Survivorship Bias</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Dữ liệu bị thiếu và thiên kiến sống sót</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./16_liquidity_and_turnover_measures.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Liquidity and Turnover Measures</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Các thước đo Thanh khoản và Vòng quay Giao dịch</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -519,7 +546,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình định giá tài sản</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -533,19 +560,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./21_fama_french.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Fama-French Factors</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Các nhân tố Fama-French</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./22_momentum.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Momentum Strategies</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Chiến lược động lượng</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./23_factor_construction_principles.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Factor Construction Principles</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Nguyên tắc xây dựng nhân tố</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -557,13 +584,13 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./25_factor_zoo_and_multiple_testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Factor Zoo and Multiple Testing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Vườn thú nhân tố và kiểm định đa giả thuyết</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./26_time_series_vs_cross_section.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Time-Series vs.&nbsp;Cross-Sectional Factor Tests</span></span></a>
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Kiểm định nhân tố theo chuỗi thời gian và theo mặt cắt ngang</span></span></a>
   </div>
 </li>
       </ul>
@@ -572,7 +599,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
  <span class="menu-text">Các yếu tố cơ bản của công ty, định giá và tín hiệu doanh nghiệp</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -592,49 +619,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./32_info_earnings.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Information Content of Earnings Announcements</span></span></a>
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Hàm lượng thông tin của các thông báo lợi nhuận</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./33_accruals.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Accruals, Earnings Persistence, and Market Efficiency</span></span></a>
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Các khoản dồn tích, tính bền vững của lợi nhuận và hiệu quả thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./34_earning_management.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Earnings Management: Detection and Measurement</span></span></a>
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Quản trị lợi nhuận: Phát hiện và đo lường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./35_pe_ratio.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">P/E Ratio</span></span></a>
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Tỷ số P/E</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./36_valuation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Firm Valuation, Financial Distress, and Company Maturity</span></span></a>
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Định giá doanh nghiệp, kiệt quệ tài chính và mức độ trưởng thành của công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./37_disclosure_quality_and_timing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Disclosure Quality and Timing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Chất lượng và thời điểm công bố thông tin</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./38_sue.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Standardized Earnings Surprises (SUE)</span></span></a>
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Bất ngờ lợi nhuận chuẩn hóa (SUE)</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./39_divop.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Measuring Divergence of Investor Opinion</span></span></a>
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Đo lường sự phân kỳ quan điểm của nhà đầu tư</span></span></a>
   </div>
 </li>
       </ul>
@@ -643,7 +670,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
  <span class="menu-text">Quyền sở hữu, ma sát thị trường và rủi ro quốc tế</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -651,43 +678,43 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./50_institutional_ownership.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Institutional Ownership Analytics in Vietnam</span></span></a>
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Phân tích sở hữu tổ chức tại Việt Nam</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./52_institutional_trade_flow.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Institutional Trades, Flows, and Turnover Ratios</span></span></a>
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Giao dịch, dòng vốn và tỷ lệ vòng quay của nhà đầu tư tổ chức</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./53_governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Corporate Governance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Quản trị công ty</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./54_return_gaps.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Return Gap: Measuring Unobserved Actions of Fund Managers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Chênh lệch lợi nhuận (Return Gap): Đo lường các hành động không quan sát được của nhà quản lý quỹ</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./55_price_limits_and_volatility.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Price Limits and Volatility</span></span></a>
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Biên độ giá và biến động</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./56_market_integration_and_segmentation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Market Integration and Segmentation</span></span></a>
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Hội nhập và phân khúc thị trường</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./57_exchange_rate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Exchange Rate Dynamics</span></span></a>
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Động lực của tỷ giá hối đoái</span></span></a>
   </div>
 </li>
       </ul>
@@ -696,7 +723,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
  <span class="menu-text">Mô hình tài chính nâng cao</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -704,25 +731,25 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./60_event_studies.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Event Studies in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Nghiên cứu sự kiện trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./61_tail_risk_extreme_events.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Tail Risk and Extreme Events</span></span></a>
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Rủi ro đuôi và các sự kiện cực đoan</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./62_corporate_finance_estimators.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Corporate Finance Estimators and Identification</span></span></a>
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Các công cụ ước lượng và nhận dạng trong tài chính doanh nghiệp</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./63_structural_models_finance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Structural Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Các mô hình cấu trúc trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -731,7 +758,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
  <span class="menu-text">Dữ liệu thay thế và Trí tuệ nhân tạo trong tài chính</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Bật/tắt mục">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -739,25 +766,25 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./70_textual.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Textual Analysis</span></span></a>
+ <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Phân tích văn bản</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./71_image.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Image and Visual Data in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Dữ liệu hình ảnh và dữ liệu thị giác trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./73_networks_graphs.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Networks and Graphs in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Mạng lưới và đồ thị trong tài chính</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./74_multimodel.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Multimodal Models in Finance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Các mô hình đa phương thức trong tài chính</span></span></a>
   </div>
 </li>
       </ul>
@@ -781,27 +808,27 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="-1">
-    <h2 id="toc-title">Table of contents</h2>
+    <h2 id="toc-title">Mục lục</h2>
    
   <ul>
-  <li><a href="#the-econometric-framework" id="toc-the-econometric-framework" class="nav-link active" data-scroll-target="#the-econometric-framework"><span class="header-section-number">20.1</span> The Econometric Framework</a>
+  <li><a href="#khung-kinh-tế-lượng" id="toc-khung-kinh-tế-lượng" class="nav-link active" data-scroll-target="#khung-kinh-tế-lượng"><span class="header-section-number">20.1</span> Khung kinh tế lượng</a>
   <ul class="collapse">
-  <li><a href="#intuition-why-not-panel-ols" id="toc-intuition-why-not-panel-ols" class="nav-link" data-scroll-target="#intuition-why-not-panel-ols"><span class="header-section-number">20.1.1</span> Intuition: Why not Panel OLS?</a></li>
-  <li><a href="#mathematical-derivation" id="toc-mathematical-derivation" class="nav-link" data-scroll-target="#mathematical-derivation"><span class="header-section-number">20.1.2</span> Mathematical Derivation</a></li>
+  <li><a href="#trực-giác-vì-sao-không-dùng-ols-dữ-liệu-bảng" id="toc-trực-giác-vì-sao-không-dùng-ols-dữ-liệu-bảng" class="nav-link" data-scroll-target="#trực-giác-vì-sao-không-dùng-ols-dữ-liệu-bảng"><span class="header-section-number">20.1.1</span> Trực giác: Vì sao không dùng OLS dữ liệu bảng?</a></li>
+  <li><a href="#suy-diễn-toán-học" id="toc-suy-diễn-toán-học" class="nav-link" data-scroll-target="#suy-diễn-toán-học"><span class="header-section-number">20.1.2</span> Suy diễn toán học</a></li>
   </ul></li>
-  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation"><span class="header-section-number">20.2</span> Data Preparation</a></li>
-  <li><a href="#step-1-cross-sectional-regressions-with-wls" id="toc-step-1-cross-sectional-regressions-with-wls" class="nav-link" data-scroll-target="#step-1-cross-sectional-regressions-with-wls"><span class="header-section-number">20.3</span> Step 1: Cross-Sectional Regressions with WLS</a></li>
-  <li><a href="#step-2-time-series-aggregation-hypothesis-testing" id="toc-step-2-time-series-aggregation-hypothesis-testing" class="nav-link" data-scroll-target="#step-2-time-series-aggregation-hypothesis-testing"><span class="header-section-number">20.4</span> Step 2: Time-Series Aggregation &amp; Hypothesis Testing</a>
+  <li><a href="#chuẩn-bị-dữ-liệu" id="toc-chuẩn-bị-dữ-liệu" class="nav-link" data-scroll-target="#chuẩn-bị-dữ-liệu"><span class="header-section-number">20.2</span> Chuẩn bị dữ liệu</a></li>
+  <li><a href="#bước-1-hồi-quy-chéo-với-wls" id="toc-bước-1-hồi-quy-chéo-với-wls" class="nav-link" data-scroll-target="#bước-1-hồi-quy-chéo-với-wls"><span class="header-section-number">20.3</span> Bước 1: Hồi quy chéo với WLS</a></li>
+  <li><a href="#bước-2-tổng-hợp-theo-chuỗi-thời-gian-và-kiểm-định-giả-thuyết" id="toc-bước-2-tổng-hợp-theo-chuỗi-thời-gian-và-kiểm-định-giả-thuyết" class="nav-link" data-scroll-target="#bước-2-tổng-hợp-theo-chuỗi-thời-gian-và-kiểm-định-giả-thuyết"><span class="header-section-number">20.4</span> Bước 2: Tổng hợp theo chuỗi thời gian và kiểm định giả thuyết</a>
   <ul class="collapse">
-  <li><a href="#visualizing-the-time-varying-risk-premium" id="toc-visualizing-the-time-varying-risk-premium" class="nav-link" data-scroll-target="#visualizing-the-time-varying-risk-premium"><span class="header-section-number">20.4.1</span> Visualizing the Time-Varying Risk Premium</a></li>
+  <li><a href="#trực-quan-hóa-phần-bù-rủi-ro-biến-thiên-theo-thời-gian" id="toc-trực-quan-hóa-phần-bù-rủi-ro-biến-thiên-theo-thời-gian" class="nav-link" data-scroll-target="#trực-quan-hóa-phần-bù-rủi-ro-biến-thiên-theo-thời-gian"><span class="header-section-number">20.4.1</span> Trực quan hóa phần bù rủi ro biến thiên theo thời gian</a></li>
   </ul></li>
-  <li><a href="#sanity-checks" id="toc-sanity-checks" class="nav-link" data-scroll-target="#sanity-checks"><span class="header-section-number">20.5</span> Sanity Checks</a>
+  <li><a href="#kiểm-tra-tính-hợp-lý" id="toc-kiểm-tra-tính-hợp-lý" class="nav-link" data-scroll-target="#kiểm-tra-tính-hợp-lý"><span class="header-section-number">20.5</span> Kiểm tra tính hợp lý</a>
   <ul class="collapse">
-  <li><a href="#time-series-volatility-check" id="toc-time-series-volatility-check" class="nav-link" data-scroll-target="#time-series-volatility-check"><span class="header-section-number">20.5.1</span> Time-Series Volatility Check</a></li>
-  <li><a href="#correlation-of-characteristics-multicollinearity" id="toc-correlation-of-characteristics-multicollinearity" class="nav-link" data-scroll-target="#correlation-of-characteristics-multicollinearity"><span class="header-section-number">20.5.2</span> Correlation of Characteristics (Multicollinearity)</a></li>
+  <li><a href="#kiểm-tra-biến-động-theo-chuỗi-thời-gian" id="toc-kiểm-tra-biến-động-theo-chuỗi-thời-gian" class="nav-link" data-scroll-target="#kiểm-tra-biến-động-theo-chuỗi-thời-gian"><span class="header-section-number">20.5.1</span> Kiểm tra biến động theo chuỗi thời gian</a></li>
+  <li><a href="#tương-quan-giữa-các-đặc-điểm-đa-cộng-tuyến" id="toc-tương-quan-giữa-các-đặc-điểm-đa-cộng-tuyến" class="nav-link" data-scroll-target="#tương-quan-giữa-các-đặc-điểm-đa-cộng-tuyến"><span class="header-section-number">20.5.2</span> Tương quan giữa các đặc điểm (đa cộng tuyến)</a></li>
   </ul></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/24_fama_macbeth.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/24_fama_macbeth.qmd" class="toc-action"><i class="bi bi-github"></i>Chỉnh sửa trang này</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Báo lỗi</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -809,7 +836,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./20_capm.html">Mô hình định giá tài sản</a></li><li class="breadcrumb-item"><a href="./24_fama_macbeth.html"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Fama-MacBeth Regressions</span></a></li></ol></nav>
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Fama-MacBeth Regressions</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Fama-MacBeth Regressions</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Mã</button></div></div>
 </div>
 
 
@@ -826,57 +853,57 @@ window.Quarto = {
 </header>
 
 
-<p>In this chapter, we delve into the implementation of the <span class="citation" data-cites="Fama1973">Fama and MacBeth (<a href="references.html#ref-Fama1973" role="doc-biblioref">1973</a>)</span> regression approach, a cornerstone of empirical asset pricing. While portfolio sorts provide a robust, non-parametric view of the relationship between characteristics and returns, they struggle when we need to control for multiple factors simultaneously. For instance, in the Vietnamese stock market (HOSE and HNX), small-cap stocks often exhibit high illiquidity. Does the “Size effect” exist because small stocks are risky, or simply because they are illiquid? Fama-MacBeth (FM) regressions allow us to disentangle these effects in a linear framework.</p>
-<p>We will implement a version of the FM procedure, accounting for:</p>
+<p>Trong chương này, chúng ta triển khai phương pháp hồi quy của <span class="citation" data-cites="Fama1973">Fama và MacBeth (<a href="references.html#ref-Fama1973" role="doc-biblioref">1973</a>)</span>, một nền tảng cốt lõi của định giá tài sản thực nghiệm. Trong khi phân loại danh mục cung cấp một cách nhìn vững chắc, phi tham số về mối quan hệ giữa các đặc điểm và lợi nhuận, phương pháp này gặp khó khăn khi chúng ta cần kiểm soát đồng thời nhiều nhân tố. Chẳng hạn, trên thị trường chứng khoán Việt Nam (HOSE và HNX), các cổ phiếu vốn hóa nhỏ thường có mức phi thanh khoản cao. Liệu “hiệu ứng quy mô” tồn tại vì cổ phiếu nhỏ có rủi ro cao, hay đơn giản chỉ vì chúng kém thanh khoản? Hồi quy Fama-MacBeth (FM) cho phép chúng ta tách bạch các tác động này trong một khung tuyến tính.</p>
+<p>Chúng ta sẽ triển khai một phiên bản của thủ tục FM, có tính đến:</p>
 <ol type="1">
-<li><strong>Weighted Least Squares (WLS):</strong> To prevent micro-cap stocks, which are prevalent and volatile in Vietnam, from dominating the estimates.</li>
-<li><strong>Newey-West Adjustments:</strong> To handle the serial correlation often observed in Vietnamese market risk premiums.</li>
+<li><strong>Bình phương tối thiểu có trọng số (WLS):</strong> Nhằm ngăn các cổ phiếu vốn hóa siêu nhỏ, vốn phổ biến và biến động mạnh ở Việt Nam, chi phối các ước lượng.</li>
+<li><strong>Điều chỉnh Newey-West:</strong> Nhằm xử lý tương quan chuỗi thường quan sát được ở các phần bù rủi ro của thị trường Việt Nam.</li>
 </ol>
-<section id="the-econometric-framework" class="level2" data-number="20.1">
-<h2 data-number="20.1" class="anchored" data-anchor-id="the-econometric-framework"><span class="header-section-number">20.1</span> The Econometric Framework</h2>
-<p>The Fama-MacBeth procedure is essentially a two-step filter that separates the cross-sectional variation in returns from the time-series variation.</p>
-<section id="intuition-why-not-panel-ols" class="level3" data-number="20.1.1">
-<h3 data-number="20.1.1" class="anchored" data-anchor-id="intuition-why-not-panel-ols"><span class="header-section-number">20.1.1</span> Intuition: Why not Panel OLS?</h3>
-<p>A naive approach would be to pool all data (<span class="math inline">\(N\)</span> stocks <span class="math inline">\(\times\)</span> <span class="math inline">\(T\)</span> months) and run a single Ordinary Least Squares (OLS) regression:</p>
+<section id="khung-kinh-tế-lượng" class="level2" data-number="20.1">
+<h2 data-number="20.1" class="anchored" data-anchor-id="khung-kinh-tế-lượng"><span class="header-section-number">20.1</span> Khung kinh tế lượng</h2>
+<p>Thủ tục Fama-MacBeth về bản chất là một bộ lọc hai bước, tách biến thiên chéo (cross-section) của lợi nhuận khỏi biến thiên theo chuỗi thời gian.</p>
+<section id="trực-giác-vì-sao-không-dùng-ols-dữ-liệu-bảng" class="level3" data-number="20.1.1">
+<h3 data-number="20.1.1" class="anchored" data-anchor-id="trực-giác-vì-sao-không-dùng-ols-dữ-liệu-bảng"><span class="header-section-number">20.1.1</span> Trực giác: Vì sao không dùng OLS dữ liệu bảng?</h3>
+<p>Một cách tiếp cận ngây thơ là gộp toàn bộ dữ liệu (<span class="math inline">\(N\)</span> cổ phiếu <span class="math inline">\(\times\)</span> <span class="math inline">\(T\)</span> tháng) và chạy một hồi quy bình phương tối thiểu thông thường (OLS) duy nhất:</p>
 <p><span class="math display">\[
 r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1}
 \]</span></p>
-<p>However, this assumes that the error terms <span class="math inline">\(\epsilon_{i,t+1}\)</span> are independent across firms. In reality, stock returns are highly cross-sectionally correlated (if the VN-Index crashes, most stocks fall together). A pooled OLS would underestimate the standard errors, leading to “false positive” discoveries of risk factors. Fama-MacBeth solves this by running <span class="math inline">\(T\)</span> separate cross-sectional regressions, effectively treating each month as a single independent observation of the risk premium.</p>
+<p>Tuy nhiên, cách làm này giả định rằng các số hạng sai số <span class="math inline">\(\epsilon_{i,t+1}\)</span> độc lập giữa các doanh nghiệp. Trên thực tế, lợi nhuận cổ phiếu có tương quan chéo rất cao (nếu VN-Index sụp đổ, hầu hết cổ phiếu cùng giảm). OLS gộp sẽ đánh giá thấp sai số chuẩn, dẫn đến các phát hiện “dương tính giả” về các nhân tố rủi ro. Fama-MacBeth giải quyết vấn đề này bằng cách chạy <span class="math inline">\(T\)</span> hồi quy chéo riêng biệt, qua đó coi mỗi tháng như một quan sát độc lập duy nhất về phần bù rủi ro.</p>
 </section>
-<section id="mathematical-derivation" class="level3" data-number="20.1.2">
-<h3 data-number="20.1.2" class="anchored" data-anchor-id="mathematical-derivation"><span class="header-section-number">20.1.2</span> Mathematical Derivation</h3>
-<section id="step-1-cross-sectional-regressions" class="level4" data-number="20.1.2.1">
-<h4 data-number="20.1.2.1" class="anchored" data-anchor-id="step-1-cross-sectional-regressions"><span class="header-section-number">20.1.2.1</span> Step 1: Cross-Sectional Regressions</h4>
-<p>For each month <span class="math inline">\(t\)</span>, we estimate the premium <span class="math inline">\(\lambda_{k,t}\)</span> for <span class="math inline">\(K\)</span> factors. Let <span class="math inline">\(r_{i,t+1}\)</span> be the excess return of asset <span class="math inline">\(i\)</span> at time <span class="math inline">\(t+1\)</span>. Let <span class="math inline">\(\boldsymbol{\beta}_{i,t}\)</span> be a vector of <span class="math inline">\(K\)</span> characteristics (e.g., Market Beta, Book-to-Market, Size) known at time <span class="math inline">\(t\)</span>.</p>
-<p>The model for a specific month <span class="math inline">\(t\)</span> is: <span class="math display">\[
+<section id="suy-diễn-toán-học" class="level3" data-number="20.1.2">
+<h3 data-number="20.1.2" class="anchored" data-anchor-id="suy-diễn-toán-học"><span class="header-section-number">20.1.2</span> Suy diễn toán học</h3>
+<section id="bước-1-hồi-quy-chéo" class="level4" data-number="20.1.2.1">
+<h4 data-number="20.1.2.1" class="anchored" data-anchor-id="bước-1-hồi-quy-chéo"><span class="header-section-number">20.1.2.1</span> Bước 1: Hồi quy chéo</h4>
+<p>Với mỗi tháng <span class="math inline">\(t\)</span>, chúng ta ước lượng phần bù <span class="math inline">\(\lambda_{k,t}\)</span> cho <span class="math inline">\(K\)</span> nhân tố. Gọi <span class="math inline">\(r_{i,t+1}\)</span> là lợi nhuận vượt mức của tài sản <span class="math inline">\(i\)</span> tại thời điểm <span class="math inline">\(t+1\)</span>. Gọi <span class="math inline">\(\boldsymbol{\beta}_{i,t}\)</span> là vector gồm <span class="math inline">\(K\)</span> đặc điểm (ví dụ: beta thị trường, tỷ số giá trị sổ sách trên giá trị thị trường, quy mô) đã biết tại thời điểm <span class="math inline">\(t\)</span>.</p>
+<p>Mô hình cho một tháng <span class="math inline">\(t\)</span> cụ thể là: <span class="math display">\[
 \mathbf{r}_{t+1} = \mathbf{X}_t \boldsymbol{\lambda}_{t+1} + \boldsymbol{\alpha}_{t+1} + \boldsymbol{\epsilon}_{t+1}
 \]</span></p>
-<p>Where:</p>
+<p>Trong đó:</p>
 <ul>
-<li><span class="math inline">\(\mathbf{r}_{t+1}\)</span> is an <span class="math inline">\(N \times 1\)</span> vector of returns.</li>
-<li><span class="math inline">\(\mathbf{X}_t\)</span> is an <span class="math inline">\(N \times (K+1)\)</span> matrix of factor exposures (including a column of ones for the intercept).</li>
-<li><span class="math inline">\(\boldsymbol{\lambda}_{t+1}\)</span> is the vector of risk premiums realized in month <span class="math inline">\(t+1\)</span>.</li>
+<li><span class="math inline">\(\mathbf{r}_{t+1}\)</span> là vector <span class="math inline">\(N \times 1\)</span> các lợi nhuận.</li>
+<li><span class="math inline">\(\mathbf{X}_t\)</span> là ma trận <span class="math inline">\(N \times (K+1)\)</span> các mức độ phơi nhiễm nhân tố (bao gồm một cột toàn số một cho hệ số chặn).</li>
+<li><span class="math inline">\(\boldsymbol{\lambda}_{t+1}\)</span> là vector các phần bù rủi ro thực hiện trong tháng <span class="math inline">\(t+1\)</span>.</li>
 </ul>
-<p>To use <strong>Weighted Least Squares (WLS)</strong>, We define a weighting matrix <span class="math inline">\(\mathbf{W}_t\)</span> (typically diagonal with market capitalizations). The estimator for month <span class="math inline">\(t\)</span> is: <span class="math display">\[
+<p>Để dùng <strong>bình phương tối thiểu có trọng số (WLS)</strong>, chúng ta định nghĩa một ma trận trọng số <span class="math inline">\(\mathbf{W}_t\)</span> (thường là ma trận đường chéo chứa vốn hóa thị trường). Ước lượng cho tháng <span class="math inline">\(t\)</span> là: <span class="math display">\[
 \hat{\boldsymbol{\lambda}}_{t+1} = (\mathbf{X}_t^\top \mathbf{W}_t \mathbf{X}_t)^{-1} \mathbf{X}_t^\top \mathbf{W}_t \mathbf{r}_{t+1}
 \]</span></p>
 </section>
-<section id="step-2-time-series-aggregation" class="level4" data-number="20.1.2.2">
-<h4 data-number="20.1.2.2" class="anchored" data-anchor-id="step-2-time-series-aggregation"><span class="header-section-number">20.1.2.2</span> Step 2: Time-Series Aggregation</h4>
-<p>We now have a time-series of <span class="math inline">\(T\)</span> estimates: <span class="math inline">\(\hat{\lambda}_1, \hat{\lambda}_2, \dots, \hat{\lambda}_T\)</span>. The final estimate of the risk premium is the time-series average: <span class="math display">\[
+<section id="bước-2-tổng-hợp-theo-chuỗi-thời-gian" class="level4" data-number="20.1.2.2">
+<h4 data-number="20.1.2.2" class="anchored" data-anchor-id="bước-2-tổng-hợp-theo-chuỗi-thời-gian"><span class="header-section-number">20.1.2.2</span> Bước 2: Tổng hợp theo chuỗi thời gian</h4>
+<p>Bây giờ chúng ta có một chuỗi thời gian gồm <span class="math inline">\(T\)</span> ước lượng: <span class="math inline">\(\hat{\lambda}_1, \hat{\lambda}_2, \dots, \hat{\lambda}_T\)</span>. Ước lượng cuối cùng của phần bù rủi ro là trung bình theo chuỗi thời gian: <span class="math display">\[
 \hat{\lambda}_k = \frac{1}{T} \sum_{t=1}^T \hat{\lambda}_{k,t}
 \]</span></p>
-<p>The standard error is derived from the standard deviation of these monthly estimates: <span class="math display">\[
+<p>Sai số chuẩn được suy ra từ độ lệch chuẩn của các ước lượng hằng tháng này: <span class="math display">\[
 \sigma(\hat{\lambda}_k) = \sqrt{\frac{1}{T^2} \sum_{t=1}^T (\hat{\lambda}_{k,t} - \hat{\lambda}_k)^2}
 \]</span></p>
 </section>
 </section>
 </section>
-<section id="data-preparation" class="level2" data-number="20.2">
-<h2 data-number="20.2" class="anchored" data-anchor-id="data-preparation"><span class="header-section-number">20.2</span> Data Preparation</h2>
-<p>We utilize data from our local SQLite database. In Vietnam, the fiscal year typically ends in December, and audited reports are required by April. To ensure no look-ahead bias, we lag accounting data (Book Equity) to match returns starting in July (a 6-month conservative lag, similar to Fama-French, but adapted for Vietnamese reporting delays).</p>
+<section id="chuẩn-bị-dữ-liệu" class="level2" data-number="20.2">
+<h2 data-number="20.2" class="anchored" data-anchor-id="chuẩn-bị-dữ-liệu"><span class="header-section-number">20.2</span> Chuẩn bị dữ liệu</h2>
+<p>Chúng ta sử dụng dữ liệu từ cơ sở dữ liệu SQLite cục bộ. Ở Việt Nam, năm tài chính thường kết thúc vào tháng 12 và báo cáo đã kiểm toán phải được nộp chậm nhất trong tháng 4. Để bảo đảm không có thiên lệch nhìn trước, chúng ta làm trễ dữ liệu kế toán (vốn chủ sở hữu sổ sách) để khớp với lợi nhuận bắt đầu từ tháng 7 (độ trễ thận trọng 6 tháng, tương tự Fama-French nhưng điều chỉnh theo độ trễ công bố thông tin của Việt Nam).</p>
 <div id="b62768ac" class="cell" data-execution_count="2">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sqlite3</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
@@ -905,16 +932,16 @@ r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1}
 <span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  sql<span class="op">=</span><span class="st">"SELECT symbol, date, beta FROM beta_monthly"</span>,</span>
 <span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  con<span class="op">=</span>tidy_finance,</span>
 <span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  parse_dates<span class="op">=</span>{<span class="st">"date"</span>}</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>We construct our testing characteristics:</p>
+<p>Chúng ta xây dựng các đặc điểm dùng để kiểm định:</p>
 <ol type="1">
-<li><strong>(Market Beta):</strong> The sensitivity to the VN-Index.</li>
-<li><strong>Size (ln(ME)):</strong> The natural log of market capitalization.</li>
-<li><strong>Value (BM):</strong> The ratio of Book Equity to Market Equity.</li>
+<li><strong>(Beta thị trường):</strong> Độ nhạy đối với VN-Index.</li>
+<li><strong>Quy mô (ln(ME)):</strong> Logarit tự nhiên của vốn hóa thị trường.</li>
+<li><strong>Giá trị (BM):</strong> Tỷ số giữa giá trị sổ sách của vốn chủ sở hữu và giá trị thị trường của vốn chủ sở hữu.</li>
 </ol>
 <div id="50f5afd3" class="cell" data-execution_count="3">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare Characteristics</span></span>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare Characteristics</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>characteristics <span class="op">=</span> (</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    comp_vn</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Align reporting date to month end</span></span>
@@ -933,12 +960,12 @@ r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1}
 <span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    .dropna()</span>
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>characteristics.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>characteristics.head()</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <div>
 
 
-<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
@@ -950,35 +977,35 @@ r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1}
 </thead>
 <tbody>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">8729</th>
+<td data-quarto-table-cell-role="th">8729</td>
 <td>VTV</td>
 <td>7.034945e+08</td>
 <td>0.847809</td>
 <td>2017-06-30</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">8732</th>
+<td data-quarto-table-cell-role="th">8732</td>
 <td>MTG</td>
 <td>2.670306e+09</td>
 <td>1.140066</td>
 <td>2017-06-30</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">8739</th>
+<td data-quarto-table-cell-role="th">8739</td>
 <td>MKV</td>
 <td>6.505031e+08</td>
 <td>-0.448319</td>
 <td>2017-06-30</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">8740</th>
+<td data-quarto-table-cell-role="th">8740</td>
 <td>MIC</td>
 <td>1.243127e+09</td>
 <td>0.772140</td>
 <td>2017-06-30</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">8742</th>
+<td data-quarto-table-cell-role="th">8742</td>
 <td>MCP</td>
 <td>6.657350e+08</td>
 <td>0.348139</td>
@@ -991,7 +1018,7 @@ r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1}
 </div>
 </div>
 <div id="e38a09d1" class="cell" data-execution_count="4">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge back to monthly return panel</span></span>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge back to monthly return panel</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>data_fm <span class="op">=</span> (prices_monthly</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  .merge(characteristics, </span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>         left_on<span class="op">=</span>[<span class="st">"symbol"</span>, <span class="st">"date"</span>], </span>
@@ -1015,7 +1042,7 @@ r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1}
 <span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(data_fm.head())</span>
 <span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Data ready: </span><span class="sc">{</span><span class="bu">len</span>(data_fm)<span class="sc">:,}</span><span class="ss"> observations from </span><span class="sc">{</span>data_fm<span class="sc">.</span>date<span class="sc">.</span><span class="bu">min</span>()<span class="sc">.</span>date()<span class="sc">}</span><span class="ss"> to </span><span class="sc">{</span>data_fm<span class="sc">.</span>date<span class="sc">.</span><span class="bu">max</span>()<span class="sc">.</span>date()<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Data ready: </span><span class="sc">{</span><span class="bu">len</span>(data_fm)<span class="sc">:,}</span><span class="ss"> observations from </span><span class="sc">{</span>data_fm<span class="sc">.</span>date<span class="sc">.</span><span class="bu">min</span>()<span class="sc">.</span>date()<span class="sc">}</span><span class="ss"> to </span><span class="sc">{</span>data_fm<span class="sc">.</span>date<span class="sc">.</span><span class="bu">max</span>()<span class="sc">.</span>date()<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>    symbol       date  ret_excess       mktcap   mktcap_lag            bm  \
 163    AAA 2017-06-30    0.129454  2078.455619  1834.816104  7.929854e+08   
@@ -1034,12 +1061,12 @@ Data ready: 5,075 observations from 2017-06-30 to 2023-06-30</code></pre>
 </div>
 </div>
 </section>
-<section id="step-1-cross-sectional-regressions-with-wls" class="level2" data-number="20.3">
-<h2 data-number="20.3" class="anchored" data-anchor-id="step-1-cross-sectional-regressions-with-wls"><span class="header-section-number">20.3</span> Step 1: Cross-Sectional Regressions with WLS</h2>
-<p><span class="citation" data-cites="Hou2020">Hou, Xue, and Zhang (<a href="references.html#ref-Hou2020" role="doc-biblioref">2020</a>)</span> argue that micro-cap stocks distorts inference because they have high transaction costs and idiosyncratic volatility. In Vietnam, this is exacerbated by “penny stock” speculation.</p>
-<p>We implement <strong>Weighted Least Squares (WLS)</strong> where weights are the market capitalization of the prior month. This tests if the factors are priced in the <em>investable</em> universe, not just the equal-weighted average of tiny stocks.</p>
+<section id="bước-1-hồi-quy-chéo-với-wls" class="level2" data-number="20.3">
+<h2 data-number="20.3" class="anchored" data-anchor-id="bước-1-hồi-quy-chéo-với-wls"><span class="header-section-number">20.3</span> Bước 1: Hồi quy chéo với WLS</h2>
+<p><span class="citation" data-cites="Hou2020">Hou, Xue, và Zhang (<a href="references.html#ref-Hou2020" role="doc-biblioref">2020</a>)</span> lập luận rằng các cổ phiếu vốn hóa siêu nhỏ làm sai lệch suy luận thống kê vì chúng có chi phí giao dịch cao và biến động đặc thù lớn. Ở Việt Nam, tình trạng này càng trầm trọng do hoạt động đầu cơ “cổ phiếu penny”.</p>
+<p>Chúng ta triển khai <strong>bình phương tối thiểu có trọng số (WLS)</strong> với trọng số là vốn hóa thị trường của tháng trước. Cách làm này kiểm tra xem các nhân tố có được định giá trong tập hợp cổ phiếu <em>có thể đầu tư</em> hay không, chứ không chỉ trong mức trung bình trọng số bằng nhau của các cổ phiếu nhỏ.</p>
 <div id="fb41cdbe" class="cell" data-execution_count="5">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_cross_section(df):</span>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_cross_section(df):</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Standardize inputs for numerical stability</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Note: We do NOT standardize the dependent variable (returns)</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># We standardize regressors to interpret coefficients as "per 1 SD change" if desired,</span></span>
@@ -1063,7 +1090,7 @@ Data ready: 5,075 observations from 2017-06-30 to 2023-06-30</code></pre>
 <span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  .reset_index()</span>
 <span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(risk_premiums.head())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(risk_premiums.head())</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>        date  Intercept      beta  log_mktcap            bm
 0 2017-06-30  -0.089116 -0.063799    0.010284  2.897813e-11
@@ -1074,12 +1101,12 @@ Data ready: 5,075 observations from 2017-06-30 to 2023-06-30</code></pre>
 </div>
 </div>
 </section>
-<section id="step-2-time-series-aggregation-hypothesis-testing" class="level2" data-number="20.4">
-<h2 data-number="20.4" class="anchored" data-anchor-id="step-2-time-series-aggregation-hypothesis-testing"><span class="header-section-number">20.4</span> Step 2: Time-Series Aggregation &amp; Hypothesis Testing</h2>
-<p>We now possess the time-series of risk premiums. We calculate the arithmetic mean and the -statistics.</p>
-<p>Crucially, we use <strong>Newey-West (HAC)</strong> standard errors. Risk premiums in Vietnam often exhibit autocorrelation (momentum in factor performance). A simple standard error formula would be invalid.</p>
+<section id="bước-2-tổng-hợp-theo-chuỗi-thời-gian-và-kiểm-định-giả-thuyết" class="level2" data-number="20.4">
+<h2 data-number="20.4" class="anchored" data-anchor-id="bước-2-tổng-hợp-theo-chuỗi-thời-gian-và-kiểm-định-giả-thuyết"><span class="header-section-number">20.4</span> Bước 2: Tổng hợp theo chuỗi thời gian và kiểm định giả thuyết</h2>
+<p>Bây giờ chúng ta đã có chuỗi thời gian của các phần bù rủi ro. Chúng ta tính trung bình số học và các thống kê t.</p>
+<p>Điều quan trọng là chúng ta dùng sai số chuẩn <strong>Newey-West (HAC)</strong>. Các phần bù rủi ro ở Việt Nam thường có tự tương quan (động lượng trong hiệu quả của nhân tố). Công thức sai số chuẩn đơn giản sẽ không hợp lệ.</p>
 <div id="e8b89a88" class="cell" data-execution_count="6">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calculate_fama_macbeth_stats(df, lags<span class="op">=</span><span class="dv">6</span>):</span>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calculate_fama_macbeth_stats(df, lags<span class="op">=</span><span class="dv">6</span>):</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    summary <span class="op">=</span> []</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> col <span class="kw">in</span> [<span class="st">"Intercept"</span>, <span class="st">"beta"</span>, <span class="st">"log_mktcap"</span>, <span class="st">"bm"</span>]:</span>
@@ -1109,7 +1136,7 @@ Data ready: 5,075 observations from 2017-06-30 to 2023-06-30</code></pre>
 <span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pd.DataFrame(summary)</span>
 <span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>price_of_risk <span class="op">=</span> calculate_fama_macbeth_stats(risk_premiums)</span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(price_of_risk.<span class="bu">round</span>(<span class="dv">4</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(price_of_risk.<span class="bu">round</span>(<span class="dv">4</span>))</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>       Factor  Premium (%)  Std Error  t-statistic Significance
 0   Intercept      -1.8174     1.9117      -0.9507             
@@ -1118,11 +1145,11 @@ Data ready: 5,075 observations from 2017-06-30 to 2023-06-30</code></pre>
 3          bm      -0.0000     0.0000      -0.0928             </code></pre>
 </div>
 </div>
-<section id="visualizing-the-time-varying-risk-premium" class="level3" data-number="20.4.1">
-<h3 data-number="20.4.1" class="anchored" data-anchor-id="visualizing-the-time-varying-risk-premium"><span class="header-section-number">20.4.1</span> Visualizing the Time-Varying Risk Premium</h3>
-<p>One major advantage of the FM approach is that we can inspect the volatility of the risk premiums over time. In Vietnam, we expect the “Size” premium to be highly volatile during periods of retail liquidity injection (e.g., 2020-2021).</p>
+<section id="trực-quan-hóa-phần-bù-rủi-ro-biến-thiên-theo-thời-gian" class="level3" data-number="20.4.1">
+<h3 data-number="20.4.1" class="anchored" data-anchor-id="trực-quan-hóa-phần-bù-rủi-ro-biến-thiên-theo-thời-gian"><span class="header-section-number">20.4.1</span> Trực quan hóa phần bù rủi ro biến thiên theo thời gian</h3>
+<p>Một ưu điểm lớn của phương pháp FM là chúng ta có thể kiểm tra độ biến động của các phần bù rủi ro theo thời gian. Ở Việt Nam, chúng ta kỳ vọng phần bù “quy mô” biến động rất mạnh trong các giai đoạn dòng tiền nhỏ lẻ đổ vào thị trường (ví dụ: 2020-2021).</p>
 <div id="cell-fig-cumulative-premiums" class="cell" data-execution_count="7">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.ticker <span class="im">as</span> mtick</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate cumulative returns of the factors (as if they were tradable portfolios)</span></span>
@@ -1138,45 +1165,45 @@ Data ready: 5,075 observations from 2017-06-30 to 2023-06-30</code></pre>
 <span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"Cumulative Coefficient Return"</span>)</span>
 <span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>ax.legend(title<span class="op">=</span><span class="st">"Factor"</span>)</span>
 <span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>ax.grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<div id="fig-cumulative-premiums" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A line plot displaying the time series of cumulative risk premiums for three factors: beta, log_mktcap, and bm in the Vietnamese market. The x-axis represents time, and the y-axis represents the cumulative coefficient returns.">
+<div id="fig-cumulative-premiums" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Biểu đồ đường thể hiện chuỗi thời gian của các phần bù rủi ro tích lũy cho ba nhân tố: beta, log_mktcap và bm trên thị trường Việt Nam. Trục hoành biểu diễn thời gian, trục tung biểu diễn lợi nhuận tích lũy của các hệ số.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-cumulative-premiums-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="24_fama_macbeth_files/figure-html/fig-cumulative-premiums-output-1.png" alt="A line plot displaying the time series of cumulative risk premiums for three factors: beta, log_mktcap, and bm in the Vietnamese market. The x-axis represents time, and the y-axis represents the cumulative coefficient returns." width="857" height="526" class="figure-img">
+<img src="24_fama_macbeth_files/figure-html/fig-cumulative-premiums-output-1.png" alt="Biểu đồ đường thể hiện chuỗi thời gian của các phần bù rủi ro tích lũy cho ba nhân tố: beta, log_mktcap và bm trên thị trường Việt Nam. Trục hoành biểu diễn thời gian, trục tung biểu diễn lợi nhuận tích lũy của các hệ số." width="857" height="526" class="figure-img">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cumulative-premiums-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;20.1: Cumulative Risk Premiums in Vietnam.
+Hình&nbsp;20.1: Phần bù rủi ro tích lũy tại Việt Nam.
 </figcaption>
 </figure>
 </div>
 </div>
 </div>
 <ol type="1">
-<li><strong>Market Beta:</strong> In many empirical studies (including the US), the market beta premium is often insignificant or even negative (the “Betting Against Beta” anomaly). In Vietnam, if the -stat is , it implies the CAPM does not explain the cross-section of returns.</li>
-<li><strong>Size (Log Mktcap):</strong> A negative coefficient confirms the “Size Effect”—smaller firms have higher expected returns. However, using WLS often weakens this result compared to OLS, suggesting the size premium is concentrated in micro-caps.</li>
-<li><strong>Value (BM):</strong> A positive coefficient confirms the Value premium. In Vietnam, value stocks (high B/M) often outperform growth stocks, particularly in the manufacturing and banking sectors.</li>
+<li><strong>Beta thị trường:</strong> Trong nhiều nghiên cứu thực nghiệm (kể cả ở Mỹ), phần bù beta thị trường thường không có ý nghĩa thống kê hoặc thậm chí âm (hiện tượng bất thường “Betting Against Beta”). Ở Việt Nam, nếu thống kê t không có ý nghĩa thống kê, điều đó hàm ý CAPM không giải thích được mặt cắt ngang của lợi nhuận.</li>
+<li><strong>Quy mô (Log Mktcap):</strong> Hệ số âm xác nhận “hiệu ứng quy mô”—các doanh nghiệp nhỏ hơn có lợi nhuận kỳ vọng cao hơn. Tuy nhiên, việc dùng WLS thường làm yếu kết quả này so với OLS, cho thấy phần bù quy mô tập trung ở các cổ phiếu vốn hóa siêu nhỏ.</li>
+<li><strong>Giá trị (BM):</strong> Hệ số dương xác nhận phần bù giá trị. Ở Việt Nam, cổ phiếu giá trị (B/M cao) thường vượt trội cổ phiếu tăng trưởng, đặc biệt trong các ngành sản xuất và ngân hàng.</li>
 </ol>
-<p><a href="#fig-cumulative-premiums" class="quarto-xref">Figure&nbsp;<span>20.1</span></a> plots the cumulative sum of the monthly Fama MacBeth risk premium estimates for beta, size, and value. Because these lines cumulate estimated cross sectional prices of risk rather than actual portfolio returns, the figure should be interpreted as showing the time variation and persistence of estimated premia, not investable performance.</p>
-<p>The beta premium displays a clear regime shift around 2020, with a sharp decline that only partially reverses afterward. This pattern suggests that the pricing of systematic risk in Vietnam is unstable over short samples and may be heavily influenced by episodic market conditions such as the post COVID retail trading boom. The size premium is comparatively smoother but small in magnitude, indicating only weak and time varying evidence that firm size is priced in the cross section during this period. The value premium remains close to zero throughout, implying little consistent cross sectional reward to high book to market firms in this sample window.</p>
-<p>Overall, the figure highlights that estimated risk premia in the Vietnamese market are highly time varying and sensitive to specific macro and market regimes, reinforcing the need for caution when drawing conclusions from short samples.</p>
+<p><a href="#fig-cumulative-premiums" class="quarto-xref">Hình&nbsp;<span>20.1</span></a> vẽ tổng tích lũy của các ước lượng phần bù rủi ro Fama MacBeth hằng tháng cho beta, quy mô và giá trị. Vì các đường này tích lũy các mức giá rủi ro ước lượng từ mặt cắt ngang chứ không phải lợi nhuận danh mục thực tế, nên hình cần được diễn giải là thể hiện sự biến thiên theo thời gian và tính bền vững của các phần bù ước lượng, chứ không phải hiệu quả đầu tư có thể thực hiện.</p>
+<p>Phần bù beta cho thấy một sự chuyển chế độ rõ rệt quanh năm 2020, với mức giảm mạnh chỉ đảo chiều một phần về sau. Mô thức này gợi ý rằng việc định giá rủi ro hệ thống ở Việt Nam không ổn định trong các mẫu ngắn và có thể chịu ảnh hưởng lớn của các điều kiện thị trường mang tính giai đoạn, chẳng hạn làn sóng giao dịch nhỏ lẻ sau COVID. Phần bù quy mô tương đối mượt hơn nhưng nhỏ về độ lớn, chỉ cho thấy bằng chứng yếu và biến thiên theo thời gian rằng quy mô doanh nghiệp được định giá trong mặt cắt ngang trong giai đoạn này. Phần bù giá trị luôn ở gần mức không, hàm ý rất ít bằng chứng về phần bù nhất quán trong mặt cắt ngang dành cho các doanh nghiệp có B/M cao trong khoảng mẫu này.</p>
+<p>Nhìn chung, hình cho thấy các phần bù rủi ro ước lượng trên thị trường Việt Nam biến thiên rất mạnh theo thời gian và nhạy với các chế độ vĩ mô và thị trường cụ thể, củng cố sự cần thiết phải thận trọng khi rút ra kết luận từ các mẫu ngắn.</p>
 </section>
 </section>
-<section id="sanity-checks" class="level2" data-number="20.5">
-<h2 data-number="20.5" class="anchored" data-anchor-id="sanity-checks"><span class="header-section-number">20.5</span> Sanity Checks</h2>
-<section id="time-series-volatility-check" class="level3" data-number="20.5.1">
-<h3 data-number="20.5.1" class="anchored" data-anchor-id="time-series-volatility-check"><span class="header-section-number">20.5.1</span> Time-Series Volatility Check</h3>
-<p>Fama-MacBeth relies on the assumption that the risk premium varies over time. If your <code>bm</code> premium is truly near zero every month, the method fails.</p>
-<p><strong>Action:</strong> Plot the time series of the estimated coefficients . You want to see “noise” around a mean. If you see a flat line or a single massive spike, your data is corrupted.</p>
+<section id="kiểm-tra-tính-hợp-lý" class="level2" data-number="20.5">
+<h2 data-number="20.5" class="anchored" data-anchor-id="kiểm-tra-tính-hợp-lý"><span class="header-section-number">20.5</span> Kiểm tra tính hợp lý</h2>
+<section id="kiểm-tra-biến-động-theo-chuỗi-thời-gian" class="level3" data-number="20.5.1">
+<h3 data-number="20.5.1" class="anchored" data-anchor-id="kiểm-tra-biến-động-theo-chuỗi-thời-gian"><span class="header-section-number">20.5.1</span> Kiểm tra biến động theo chuỗi thời gian</h3>
+<p>Fama-MacBeth dựa trên giả định rằng phần bù rủi ro thay đổi theo thời gian. Nếu phần bù <code>bm</code> của bạn thực sự gần bằng không trong mọi tháng, phương pháp sẽ thất bại.</p>
+<p><strong>Hành động:</strong> Vẽ chuỗi thời gian của các hệ số ước lượng. Bạn muốn thấy “nhiễu” quanh một giá trị trung bình. Nếu thấy một đường phẳng hoặc một đỉnh nhọn khổng lồ duy nhất, dữ liệu của bạn đã bị hỏng.</p>
 <div id="4cd6d0af" class="cell" data-execution_count="8">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the time series of the BM risk premium</span></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">5</span>))</span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>risk_premiums[<span class="st">"bm"</span>].plot(ax<span class="op">=</span>ax, title<span class="op">=</span><span class="st">"Monthly Value Premium (BM) Coefficient"</span>)</span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>ax.axhline(<span class="dv">0</span>, color<span class="op">=</span><span class="st">"black"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>)</span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"Slope Coefficient"</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -1186,14 +1213,14 @@ Figure&nbsp;20.1: Cumulative Risk Premiums in Vietnam.
 </div>
 </div>
 </section>
-<section id="correlation-of-characteristics-multicollinearity" class="level3" data-number="20.5.2">
-<h3 data-number="20.5.2" class="anchored" data-anchor-id="correlation-of-characteristics-multicollinearity"><span class="header-section-number">20.5.2</span> Correlation of Characteristics (Multicollinearity)</h3>
-<p>In Vietnam, large-cap stocks (high <code>log_mktcap</code>) are often the ones with high Book-to-Market ratios (banks/utilities) or specific Betas. If your factors are highly correlated, the Fama-MacBeth coefficients will be unstable and insignificant (low t-stats), even if the factors actually matter.</p>
-<p><strong>Action:</strong> Check the cross-sectional correlation.</p>
+<section id="tương-quan-giữa-các-đặc-điểm-đa-cộng-tuyến" class="level3" data-number="20.5.2">
+<h3 data-number="20.5.2" class="anchored" data-anchor-id="tương-quan-giữa-các-đặc-điểm-đa-cộng-tuyến"><span class="header-section-number">20.5.2</span> Tương quan giữa các đặc điểm (đa cộng tuyến)</h3>
+<p>Ở Việt Nam, các cổ phiếu vốn hóa lớn (<code>log_mktcap</code> cao) thường là những cổ phiếu có tỷ số giá trị sổ sách trên giá trị thị trường cao (ngân hàng/công ty tiện ích) hoặc có beta đặc thù. Nếu các nhân tố của bạn có tương quan cao, các hệ số Fama-MacBeth sẽ không ổn định và không có ý nghĩa thống kê (thống kê t thấp), ngay cả khi các nhân tố đó thực sự quan trọng.</p>
+<p><strong>Hành động:</strong> Kiểm tra tương quan chéo.</p>
 <div id="905e5f36" class="cell" data-execution_count="9">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check correlation of the characteristics</span></span>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check correlation of the characteristics</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>corr_matrix <span class="op">=</span> data_fm[[<span class="st">"beta"</span>, <span class="st">"log_mktcap"</span>, <span class="st">"bm"</span>]].corr()</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(corr_matrix)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(corr_matrix)</span></code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                beta  log_mktcap        bm
 beta        1.000000    0.392776 -0.033748
@@ -1201,10 +1228,10 @@ log_mktcap  0.392776    1.000000 -0.203307
 bm         -0.033748   -0.203307  1.000000</code></pre>
 </div>
 </div>
-<p><strong>Interpretation:</strong></p>
+<p><strong>Diễn giải:</strong></p>
 <ul>
-<li>If correlation &gt; 0.7 (absolute value), the regression struggles to distinguish between the two factors.</li>
-<li>For example, if <code>Size</code> and <code>Liquidity</code> are -0.8 correlated, the model cannot tell which one is driving the return, often resulting in both having insignificant t-stats.</li>
+<li>Nếu tương quan &gt; 0.7 (theo giá trị tuyệt đối), hồi quy khó phân biệt giữa hai nhân tố.</li>
+<li>Chẳng hạn, nếu <code>Size</code> và <code>Liquidity</code> có tương quan -0.8, mô hình không thể biết nhân tố nào đang thúc đẩy lợi nhuận, thường dẫn đến việc cả hai đều có thống kê t không có ý nghĩa.</li>
 </ul>
 
 
@@ -1212,10 +1239,10 @@ bm         -0.033748   -0.203307  1.000000</code></pre>
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
 <div id="ref-Fama1973" class="csl-entry" role="listitem">
-Fama, Eugene F., and James D. MacBeth. 1973. <span>“<span class="nocase">Risk, return, and equilibrium: Empirical tests</span>.”</span> <em><span>Journal of Political Economy</span></em> 81 (3): 607–36. <a href="https://doi.org/10.1086/260061">https://doi.org/10.1086/260061</a>.
+Fama, Eugene F., và James D. MacBeth. 1973. <span>“<span>Risk, return, and equilibrium: Empirical tests</span>”</span>. <em><span>Journal of Political Economy</span></em> 81 (3): 607–36. <a href="https://doi.org/10.1086/260061">https://doi.org/10.1086/260061</a>.
 </div>
 <div id="ref-Hou2020" class="csl-entry" role="listitem">
-Hou, Kewei, Chen Xue, and Lu Zhang. 2020. <span>“<span class="nocase">Replicating anomalies</span>.”</span> <em><span>Review of Financial Studies</span></em> 33 (5): 2019–2133. <a href="https://doi.org/10.1093/rfs/hhy131">https://doi.org/10.1093/rfs/hhy131</a>.
+Hou, Kewei, Chen Xue, và Lu Zhang. 2020. <span>“<span>Replicating anomalies</span>”</span>. <em><span>Review of Financial Studies</span></em> 33 (5): 2019–2133. <a href="https://doi.org/10.1093/rfs/hhy131">https://doi.org/10.1093/rfs/hhy131</a>.
 </div>
 </div>
 </section>
@@ -1223,19 +1250,33 @@ Hou, Kewei, Chen Xue, and Lu Zhang. 2020. <span>“<span class="nocase">Replicat
 
 </main> <!-- /main -->
 <script>
+
 document.addEventListener("DOMContentLoaded", function () {
+
   const year = new Date().getFullYear();
+
   document.getElementById("copyright").textContent = "© " + year;
+
 });
+
 </script>
+
 <!-- Google tag (gtag.js) -->
+
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-LG91D0C6RB"></script>
+
 <script>
+
   window.dataLayer = window.dataLayer || [];
+
   function gtag(){dataLayer.push(arguments);}
+
   gtag('js', new Date());
 
+
+
   gtag('config', 'G-LG91D0C6RB');
+
 </script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
@@ -1275,12 +1316,12 @@ document.addEventListener("DOMContentLoaded", function () {
       // flash "checked"
       button.classList.add('code-copy-button-checked');
       var currentTitle = button.getAttribute("title");
-      button.setAttribute("title", "Copied!");
+      button.setAttribute("title", "Đã sao chép!");
       let tooltip;
       if (window.bootstrap) {
         button.setAttribute("data-bs-toggle", "tooltip");
         button.setAttribute("data-bs-placement", "left");
-        button.setAttribute("data-bs-title", "Copied!");
+        button.setAttribute("data-bs-title", "Đã sao chép!");
         tooltip = new bootstrap.Tooltip(button, 
           { trigger: "manual", 
             customClass: "code-copy-button-tooltip",
@@ -1301,14 +1342,13 @@ document.addEventListener("DOMContentLoaded", function () {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-      const outerScaffold = trigger.parentElement.cloneNode(true);
-      const codeEl = outerScaffold.querySelector('code');
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
         }
-      }
-      return codeEl.innerText;
+        return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
@@ -1703,17 +1743,17 @@ document.addEventListener("DOMContentLoaded", function () {
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./23_factor_construction_principles.html" class="pagination-link" aria-label="Factor Construction Principles">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Factor Construction Principles</span></span>
+      <a href="./23_factor_construction_principles.html" class="pagination-link" aria-label="Nguyên tắc xây dựng nhân tố">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Nguyên tắc xây dựng nhân tố</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./25_factor_zoo_and_multiple_testing.html" class="pagination-link" aria-label="Factor Zoo and Multiple Testing">
-        <span class="nav-page-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Factor Zoo and Multiple Testing</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./25_factor_zoo_and_multiple_testing.html" class="pagination-link" aria-label="Vườn thú nhân tố và kiểm định đa giả thuyết">
+        <span class="nav-page-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Vườn thú nhân tố và kiểm định đa giả thuyết</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
-</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Mã nguồn</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb13" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Fama-MacBeth Regressions"</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
@@ -1722,60 +1762,60 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="an">jupyter:</span><span class="co"> python3</span></span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>In this chapter, we delve into the implementation of the @Fama1973 regression approach, a cornerstone of empirical asset pricing. While portfolio sorts provide a robust, non-parametric view of the relationship between characteristics and returns, they struggle when we need to control for multiple factors simultaneously. For instance, in the Vietnamese stock market (HOSE and HNX), small-cap stocks often exhibit high illiquidity. Does the "Size effect" exist because small stocks are risky, or simply because they are illiquid? Fama-MacBeth (FM) regressions allow us to disentangle these effects in a linear framework.</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>Trong chương này, chúng ta triển khai phương pháp hồi quy của @Fama1973, một nền tảng cốt lõi của định giá tài sản thực nghiệm. Trong khi phân loại danh mục cung cấp một cách nhìn vững chắc, phi tham số về mối quan hệ giữa các đặc điểm và lợi nhuận, phương pháp này gặp khó khăn khi chúng ta cần kiểm soát đồng thời nhiều nhân tố. Chẳng hạn, trên thị trường chứng khoán Việt Nam (HOSE và HNX), các cổ phiếu vốn hóa nhỏ thường có mức phi thanh khoản cao. Liệu "hiệu ứng quy mô" tồn tại vì cổ phiếu nhỏ có rủi ro cao, hay đơn giản chỉ vì chúng kém thanh khoản? Hồi quy Fama-MacBeth (FM) cho phép chúng ta tách bạch các tác động này trong một khung tuyến tính.</span>
 <span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>We will implement a version of the FM procedure, accounting for:</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>Chúng ta sẽ triển khai một phiên bản của thủ tục FM, có tính đến:</span>
 <span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>**Weighted Least Squares (WLS):** To prevent micro-cap stocks, which are prevalent and volatile in Vietnam, from dominating the estimates.</span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>**Newey-West Adjustments:** To handle the serial correlation often observed in Vietnamese market risk premiums.</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>**Bình phương tối thiểu có trọng số (WLS):** Nhằm ngăn các cổ phiếu vốn hóa siêu nhỏ, vốn phổ biến và biến động mạnh ở Việt Nam, chi phối các ước lượng.</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>**Điều chỉnh Newey-West:** Nhằm xử lý tương quan chuỗi thường quan sát được ở các phần bù rủi ro của thị trường Việt Nam.</span>
 <span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="fu">## The Econometric Framework</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="fu">## Khung kinh tế lượng</span></span>
 <span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>The Fama-MacBeth procedure is essentially a two-step filter that separates the cross-sectional variation in returns from the time-series variation.</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>Thủ tục Fama-MacBeth về bản chất là một bộ lọc hai bước, tách biến thiên chéo (cross-section) của lợi nhuận khỏi biến thiên theo chuỗi thời gian.</span>
 <span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="fu">### Intuition: Why not Panel OLS?</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="fu">### Trực giác: Vì sao không dùng OLS dữ liệu bảng?</span></span>
 <span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>A naive approach would be to pool all data ($N$ stocks $\times$ $T$ months) and run a single Ordinary Least Squares (OLS) regression:</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>Một cách tiếp cận ngây thơ là gộp toàn bộ dữ liệu ($N$ cổ phiếu $\times$ $T$ tháng) và chạy một hồi quy bình phương tối thiểu thông thường (OLS) duy nhất:</span>
 <span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>$$ </span>
 <span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>r_{i,t+1} = \alpha + \beta_{i,t} \lambda + \epsilon_{i,t+1} </span>
 <span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>However, this assumes that the error terms $\epsilon_{i,t+1}$ are independent across firms. In reality, stock returns are highly cross-sectionally correlated (if the VN-Index crashes, most stocks fall together). A pooled OLS would underestimate the standard errors, leading to "false positive" discoveries of risk factors. Fama-MacBeth solves this by running $T$ separate cross-sectional regressions, effectively treating each month as a single independent observation of the risk premium.</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>Tuy nhiên, cách làm này giả định rằng các số hạng sai số $\epsilon_{i,t+1}$ độc lập giữa các doanh nghiệp. Trên thực tế, lợi nhuận cổ phiếu có tương quan chéo rất cao (nếu VN-Index sụp đổ, hầu hết cổ phiếu cùng giảm). OLS gộp sẽ đánh giá thấp sai số chuẩn, dẫn đến các phát hiện "dương tính giả" về các nhân tố rủi ro. Fama-MacBeth giải quyết vấn đề này bằng cách chạy $T$ hồi quy chéo riêng biệt, qua đó coi mỗi tháng như một quan sát độc lập duy nhất về phần bù rủi ro.</span>
 <span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a><span class="fu">### Mathematical Derivation</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a><span class="fu">### Suy diễn toán học</span></span>
 <span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Step 1: Cross-Sectional Regressions</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Bước 1: Hồi quy chéo</span></span>
 <span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>For each month $t$, we estimate the premium $\lambda_{k,t}$ for $K$ factors. Let $r_{i,t+1}$ be the excess return of asset $i$ at time $t+1$. Let $\boldsymbol{\beta}_{i,t}$ be a vector of $K$ characteristics (e.g., Market Beta, Book-to-Market, Size) known at time $t$.</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>Với mỗi tháng $t$, chúng ta ước lượng phần bù $\lambda_{k,t}$ cho $K$ nhân tố. Gọi $r_{i,t+1}$ là lợi nhuận vượt mức của tài sản $i$ tại thời điểm $t+1$. Gọi $\boldsymbol{\beta}_{i,t}$ là vector gồm $K$ đặc điểm (ví dụ: beta thị trường, tỷ số giá trị sổ sách trên giá trị thị trường, quy mô) đã biết tại thời điểm $t$.</span>
 <span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>The model for a specific month $t$ is: $$ </span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>Mô hình cho một tháng $t$ cụ thể là: $$ </span>
 <span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>\mathbf{r}_{t+1} = \mathbf{X}_t \boldsymbol{\lambda}_{t+1} + \boldsymbol{\alpha}_{t+1} + \boldsymbol{\epsilon}_{t+1} </span>
 <span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>Where:</span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>Trong đó:</span>
 <span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>$\mathbf{r}_{t+1}$ is an $N \times 1$ vector of returns.</span>
-<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>$\mathbf{X}_t$ is an $N \times (K+1)$ matrix of factor exposures (including a column of ones for the intercept).</span>
-<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>$\boldsymbol{\lambda}_{t+1}$ is the vector of risk premiums realized in month $t+1$.</span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>$\mathbf{r}_{t+1}$ là vector $N \times 1$ các lợi nhuận.</span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>$\mathbf{X}_t$ là ma trận $N \times (K+1)$ các mức độ phơi nhiễm nhân tố (bao gồm một cột toàn số một cho hệ số chặn).</span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>$\boldsymbol{\lambda}_{t+1}$ là vector các phần bù rủi ro thực hiện trong tháng $t+1$.</span>
 <span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>To use **Weighted Least Squares (WLS)**, We define a weighting matrix $\mathbf{W}_t$ (typically diagonal with market capitalizations). The estimator for month $t$ is: $$ </span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>Để dùng **bình phương tối thiểu có trọng số (WLS)**, chúng ta định nghĩa một ma trận trọng số $\mathbf{W}_t$ (thường là ma trận đường chéo chứa vốn hóa thị trường). Ước lượng cho tháng $t$ là: $$ </span>
 <span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>\hat{\boldsymbol{\lambda}}_{t+1} = (\mathbf{X}_t^\top \mathbf{W}_t \mathbf{X}_t)^{-1} \mathbf{X}_t^\top \mathbf{W}_t \mathbf{r}_{t+1} </span>
 <span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Step 2: Time-Series Aggregation</span></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Bước 2: Tổng hợp theo chuỗi thời gian</span></span>
 <span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>We now have a time-series of $T$ estimates: $\hat{\lambda}_1, \hat{\lambda}_2, \dots, \hat{\lambda}_T$. The final estimate of the risk premium is the time-series average: $$ </span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>Bây giờ chúng ta có một chuỗi thời gian gồm $T$ ước lượng: $\hat{\lambda}_1, \hat{\lambda}_2, \dots, \hat{\lambda}_T$. Ước lượng cuối cùng của phần bù rủi ro là trung bình theo chuỗi thời gian: $$ </span>
 <span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>\hat{\lambda}_k = \frac{1}{T} \sum_{t=1}^T \hat{\lambda}_{k,t} </span>
-<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>$$ </span>
 <span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a>The standard error is derived from the standard deviation of these monthly estimates: $$ </span>
+<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a>Sai số chuẩn được suy ra từ độ lệch chuẩn của các ước lượng hằng tháng này: $$ </span>
 <span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a>\sigma(\hat{\lambda}_k) = \sqrt{\frac{1}{T^2} \sum_{t=1}^T (\hat{\lambda}_{k,t} - \hat{\lambda}_k)^2} </span>
-<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a>$$ </span>
 <span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a><span class="fu">## Data Preparation</span></span>
+<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a><span class="fu">## Chuẩn bị dữ liệu</span></span>
 <span id="cb13-62"><a href="#cb13-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a>We utilize data from our local SQLite database. In Vietnam, the fiscal year typically ends in December, and audited reports are required by April. To ensure no look-ahead bias, we lag accounting data (Book Equity) to match returns starting in July (a 6-month conservative lag, similar to Fama-French, but adapted for Vietnamese reporting delays).</span>
+<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a>Chúng ta sử dụng dữ liệu từ cơ sở dữ liệu SQLite cục bộ. Ở Việt Nam, năm tài chính thường kết thúc vào tháng 12 và báo cáo đã kiểm toán phải được nộp chậm nhất trong tháng 4. Để bảo đảm không có thiên lệch nhìn trước, chúng ta làm trễ dữ liệu kế toán (vốn chủ sở hữu sổ sách) để khớp với lợi nhuận bắt đầu từ tháng 7 (độ trễ thận trọng 6 tháng, tương tự Fama-French nhưng điều chỉnh theo độ trễ công bố thông tin của Việt Nam).</span>
 <span id="cb13-64"><a href="#cb13-64" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-67"><a href="#cb13-67" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-68"><a href="#cb13-68" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -1810,11 +1850,11 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-97"><a href="#cb13-97" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb13-98"><a href="#cb13-98" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-99"><a href="#cb13-99" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-100"><a href="#cb13-100" aria-hidden="true" tabindex="-1"></a>We construct our testing characteristics:</span>
+<span id="cb13-100"><a href="#cb13-100" aria-hidden="true" tabindex="-1"></a>Chúng ta xây dựng các đặc điểm dùng để kiểm định:</span>
 <span id="cb13-101"><a href="#cb13-101" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-102"><a href="#cb13-102" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>**(Market Beta):** The sensitivity to the VN-Index.</span>
-<span id="cb13-103"><a href="#cb13-103" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>**Size (ln(ME)):** The natural log of market capitalization.</span>
-<span id="cb13-104"><a href="#cb13-104" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>**Value (BM):** The ratio of Book Equity to Market Equity.</span>
+<span id="cb13-102"><a href="#cb13-102" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>**(Beta thị trường):** Độ nhạy đối với VN-Index.</span>
+<span id="cb13-103"><a href="#cb13-103" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>**Quy mô (ln(ME)):** Logarit tự nhiên của vốn hóa thị trường.</span>
+<span id="cb13-104"><a href="#cb13-104" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>**Giá trị (BM):** Tỷ số giữa giá trị sổ sách của vốn chủ sở hữu và giá trị thị trường của vốn chủ sở hữu.</span>
 <span id="cb13-105"><a href="#cb13-105" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-108"><a href="#cb13-108" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-109"><a href="#cb13-109" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare Characteristics</span></span>
@@ -1868,11 +1908,11 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-159"><a href="#cb13-159" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-160"><a href="#cb13-160" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-161"><a href="#cb13-161" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-162"><a href="#cb13-162" aria-hidden="true" tabindex="-1"></a><span class="fu">## Step 1: Cross-Sectional Regressions with WLS</span></span>
+<span id="cb13-162"><a href="#cb13-162" aria-hidden="true" tabindex="-1"></a><span class="fu">## Bước 1: Hồi quy chéo với WLS</span></span>
 <span id="cb13-163"><a href="#cb13-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-164"><a href="#cb13-164" aria-hidden="true" tabindex="-1"></a>@Hou2020 argue that micro-cap stocks distorts inference because they have high transaction costs and idiosyncratic volatility. In Vietnam, this is exacerbated by "penny stock" speculation.</span>
+<span id="cb13-164"><a href="#cb13-164" aria-hidden="true" tabindex="-1"></a>@Hou2020 lập luận rằng các cổ phiếu vốn hóa siêu nhỏ làm sai lệch suy luận thống kê vì chúng có chi phí giao dịch cao và biến động đặc thù lớn. Ở Việt Nam, tình trạng này càng trầm trọng do hoạt động đầu cơ "cổ phiếu penny".</span>
 <span id="cb13-165"><a href="#cb13-165" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-166"><a href="#cb13-166" aria-hidden="true" tabindex="-1"></a>We implement **Weighted Least Squares (WLS)** where weights are the market capitalization of the prior month. This tests if the factors are priced in the *investable* universe, not just the equal-weighted average of tiny stocks.</span>
+<span id="cb13-166"><a href="#cb13-166" aria-hidden="true" tabindex="-1"></a>Chúng ta triển khai **bình phương tối thiểu có trọng số (WLS)** với trọng số là vốn hóa thị trường của tháng trước. Cách làm này kiểm tra xem các nhân tố có được định giá trong tập hợp cổ phiếu *có thể đầu tư* hay không, chứ không chỉ trong mức trung bình trọng số bằng nhau của các cổ phiếu nhỏ.</span>
 <span id="cb13-167"><a href="#cb13-167" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-170"><a href="#cb13-170" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-171"><a href="#cb13-171" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_cross_section(df):</span>
@@ -1903,11 +1943,11 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-196"><a href="#cb13-196" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-197"><a href="#cb13-197" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-198"><a href="#cb13-198" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-199"><a href="#cb13-199" aria-hidden="true" tabindex="-1"></a><span class="fu">## Step 2: Time-Series Aggregation &amp; Hypothesis Testing</span></span>
+<span id="cb13-199"><a href="#cb13-199" aria-hidden="true" tabindex="-1"></a><span class="fu">## Bước 2: Tổng hợp theo chuỗi thời gian và kiểm định giả thuyết</span></span>
 <span id="cb13-200"><a href="#cb13-200" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-201"><a href="#cb13-201" aria-hidden="true" tabindex="-1"></a>We now possess the time-series of risk premiums. We calculate the arithmetic mean and the -statistics.</span>
+<span id="cb13-201"><a href="#cb13-201" aria-hidden="true" tabindex="-1"></a>Bây giờ chúng ta đã có chuỗi thời gian của các phần bù rủi ro. Chúng ta tính trung bình số học và các thống kê t.</span>
 <span id="cb13-202"><a href="#cb13-202" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-203"><a href="#cb13-203" aria-hidden="true" tabindex="-1"></a>Crucially, we use **Newey-West (HAC)** standard errors. Risk premiums in Vietnam often exhibit autocorrelation (momentum in factor performance). A simple standard error formula would be invalid.</span>
+<span id="cb13-203"><a href="#cb13-203" aria-hidden="true" tabindex="-1"></a>Điều quan trọng là chúng ta dùng sai số chuẩn **Newey-West (HAC)**. Các phần bù rủi ro ở Việt Nam thường có tự tương quan (động lượng trong hiệu quả của nhân tố). Công thức sai số chuẩn đơn giản sẽ không hợp lệ.</span>
 <span id="cb13-204"><a href="#cb13-204" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-207"><a href="#cb13-207" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-208"><a href="#cb13-208" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calculate_fama_macbeth_stats(df, lags<span class="op">=</span><span class="dv">6</span>):</span>
@@ -1943,14 +1983,14 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-238"><a href="#cb13-238" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(price_of_risk.<span class="bu">round</span>(<span class="dv">4</span>))</span>
 <span id="cb13-239"><a href="#cb13-239" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-240"><a href="#cb13-240" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-241"><a href="#cb13-241" aria-hidden="true" tabindex="-1"></a><span class="fu">### Visualizing the Time-Varying Risk Premium</span></span>
+<span id="cb13-241"><a href="#cb13-241" aria-hidden="true" tabindex="-1"></a><span class="fu">### Trực quan hóa phần bù rủi ro biến thiên theo thời gian</span></span>
 <span id="cb13-242"><a href="#cb13-242" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-243"><a href="#cb13-243" aria-hidden="true" tabindex="-1"></a>One major advantage of the FM approach is that we can inspect the volatility of the risk premiums over time. In Vietnam, we expect the "Size" premium to be highly volatile during periods of retail liquidity injection (e.g., 2020-2021).</span>
+<span id="cb13-243"><a href="#cb13-243" aria-hidden="true" tabindex="-1"></a>Một ưu điểm lớn của phương pháp FM là chúng ta có thể kiểm tra độ biến động của các phần bù rủi ro theo thời gian. Ở Việt Nam, chúng ta kỳ vọng phần bù "quy mô" biến động rất mạnh trong các giai đoạn dòng tiền nhỏ lẻ đổ vào thị trường (ví dụ: 2020-2021).</span>
 <span id="cb13-244"><a href="#cb13-244" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-247"><a href="#cb13-247" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-248"><a href="#cb13-248" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-cumulative-premiums</span></span>
-<span id="cb13-249"><a href="#cb13-249" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-alt: "A line plot displaying the time series of cumulative risk premiums for three factors: beta, log_mktcap, and bm in the Vietnamese market. The x-axis represents time, and the y-axis represents the cumulative coefficient returns."</span></span>
-<span id="cb13-250"><a href="#cb13-250" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Cumulative Risk Premiums in Vietnam."</span></span>
+<span id="cb13-249"><a href="#cb13-249" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-alt: "Biểu đồ đường thể hiện chuỗi thời gian của các phần bù rủi ro tích lũy cho ba nhân tố: beta, log_mktcap và bm trên thị trường Việt Nam. Trục hoành biểu diễn thời gian, trục tung biểu diễn lợi nhuận tích lũy của các hệ số."</span></span>
+<span id="cb13-250"><a href="#cb13-250" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Phần bù rủi ro tích lũy tại Việt Nam."</span></span>
 <span id="cb13-251"><a href="#cb13-251" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-252"><a href="#cb13-252" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb13-253"><a href="#cb13-253" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.ticker <span class="im">as</span> mtick</span>
@@ -1972,23 +2012,23 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-269"><a href="#cb13-269" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-270"><a href="#cb13-270" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-271"><a href="#cb13-271" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-272"><a href="#cb13-272" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>**Market Beta:** In many empirical studies (including the US), the market beta premium is often insignificant or even negative (the "Betting Against Beta" anomaly). In Vietnam, if the -stat is , it implies the CAPM does not explain the cross-section of returns.</span>
-<span id="cb13-273"><a href="#cb13-273" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>**Size (Log Mktcap):** A negative coefficient confirms the "Size Effect"—smaller firms have higher expected returns. However, using WLS often weakens this result compared to OLS, suggesting the size premium is concentrated in micro-caps.</span>
-<span id="cb13-274"><a href="#cb13-274" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>**Value (BM):** A positive coefficient confirms the Value premium. In Vietnam, value stocks (high B/M) often outperform growth stocks, particularly in the manufacturing and banking sectors.</span>
+<span id="cb13-272"><a href="#cb13-272" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>**Beta thị trường:** Trong nhiều nghiên cứu thực nghiệm (kể cả ở Mỹ), phần bù beta thị trường thường không có ý nghĩa thống kê hoặc thậm chí âm (hiện tượng bất thường "Betting Against Beta"). Ở Việt Nam, nếu thống kê t không có ý nghĩa thống kê, điều đó hàm ý CAPM không giải thích được mặt cắt ngang của lợi nhuận.</span>
+<span id="cb13-273"><a href="#cb13-273" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>**Quy mô (Log Mktcap):** Hệ số âm xác nhận "hiệu ứng quy mô"—các doanh nghiệp nhỏ hơn có lợi nhuận kỳ vọng cao hơn. Tuy nhiên, việc dùng WLS thường làm yếu kết quả này so với OLS, cho thấy phần bù quy mô tập trung ở các cổ phiếu vốn hóa siêu nhỏ.</span>
+<span id="cb13-274"><a href="#cb13-274" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>**Giá trị (BM):** Hệ số dương xác nhận phần bù giá trị. Ở Việt Nam, cổ phiếu giá trị (B/M cao) thường vượt trội cổ phiếu tăng trưởng, đặc biệt trong các ngành sản xuất và ngân hàng.</span>
 <span id="cb13-275"><a href="#cb13-275" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-276"><a href="#cb13-276" aria-hidden="true" tabindex="-1"></a>@fig-cumulative-premiums plots the cumulative sum of the monthly Fama MacBeth risk premium estimates for beta, size, and value. Because these lines cumulate estimated cross sectional prices of risk rather than actual portfolio returns, the figure should be interpreted as showing the time variation and persistence of estimated premia, not investable performance.</span>
+<span id="cb13-276"><a href="#cb13-276" aria-hidden="true" tabindex="-1"></a>@fig-cumulative-premiums vẽ tổng tích lũy của các ước lượng phần bù rủi ro Fama MacBeth hằng tháng cho beta, quy mô và giá trị. Vì các đường này tích lũy các mức giá rủi ro ước lượng từ mặt cắt ngang chứ không phải lợi nhuận danh mục thực tế, nên hình cần được diễn giải là thể hiện sự biến thiên theo thời gian và tính bền vững của các phần bù ước lượng, chứ không phải hiệu quả đầu tư có thể thực hiện.</span>
 <span id="cb13-277"><a href="#cb13-277" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-278"><a href="#cb13-278" aria-hidden="true" tabindex="-1"></a>The beta premium displays a clear regime shift around 2020, with a sharp decline that only partially reverses afterward. This pattern suggests that the pricing of systematic risk in Vietnam is unstable over short samples and may be heavily influenced by episodic market conditions such as the post COVID retail trading boom. The size premium is comparatively smoother but small in magnitude, indicating only weak and time varying evidence that firm size is priced in the cross section during this period. The value premium remains close to zero throughout, implying little consistent cross sectional reward to high book to market firms in this sample window.</span>
+<span id="cb13-278"><a href="#cb13-278" aria-hidden="true" tabindex="-1"></a>Phần bù beta cho thấy một sự chuyển chế độ rõ rệt quanh năm 2020, với mức giảm mạnh chỉ đảo chiều một phần về sau. Mô thức này gợi ý rằng việc định giá rủi ro hệ thống ở Việt Nam không ổn định trong các mẫu ngắn và có thể chịu ảnh hưởng lớn của các điều kiện thị trường mang tính giai đoạn, chẳng hạn làn sóng giao dịch nhỏ lẻ sau COVID. Phần bù quy mô tương đối mượt hơn nhưng nhỏ về độ lớn, chỉ cho thấy bằng chứng yếu và biến thiên theo thời gian rằng quy mô doanh nghiệp được định giá trong mặt cắt ngang trong giai đoạn này. Phần bù giá trị luôn ở gần mức không, hàm ý rất ít bằng chứng về phần bù nhất quán trong mặt cắt ngang dành cho các doanh nghiệp có B/M cao trong khoảng mẫu này.</span>
 <span id="cb13-279"><a href="#cb13-279" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-280"><a href="#cb13-280" aria-hidden="true" tabindex="-1"></a>Overall, the figure highlights that estimated risk premia in the Vietnamese market are highly time varying and sensitive to specific macro and market regimes, reinforcing the need for caution when drawing conclusions from short samples.</span>
+<span id="cb13-280"><a href="#cb13-280" aria-hidden="true" tabindex="-1"></a>Nhìn chung, hình cho thấy các phần bù rủi ro ước lượng trên thị trường Việt Nam biến thiên rất mạnh theo thời gian và nhạy với các chế độ vĩ mô và thị trường cụ thể, củng cố sự cần thiết phải thận trọng khi rút ra kết luận từ các mẫu ngắn.</span>
 <span id="cb13-281"><a href="#cb13-281" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-282"><a href="#cb13-282" aria-hidden="true" tabindex="-1"></a><span class="fu">## Sanity Checks</span></span>
+<span id="cb13-282"><a href="#cb13-282" aria-hidden="true" tabindex="-1"></a><span class="fu">## Kiểm tra tính hợp lý</span></span>
 <span id="cb13-283"><a href="#cb13-283" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-284"><a href="#cb13-284" aria-hidden="true" tabindex="-1"></a><span class="fu">### Time-Series Volatility Check</span></span>
+<span id="cb13-284"><a href="#cb13-284" aria-hidden="true" tabindex="-1"></a><span class="fu">### Kiểm tra biến động theo chuỗi thời gian</span></span>
 <span id="cb13-285"><a href="#cb13-285" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-286"><a href="#cb13-286" aria-hidden="true" tabindex="-1"></a>Fama-MacBeth relies on the assumption that the risk premium varies over time. If your <span class="in">`bm`</span> premium is truly near zero every month, the method fails.</span>
+<span id="cb13-286"><a href="#cb13-286" aria-hidden="true" tabindex="-1"></a>Fama-MacBeth dựa trên giả định rằng phần bù rủi ro thay đổi theo thời gian. Nếu phần bù <span class="in">`bm`</span> của bạn thực sự gần bằng không trong mọi tháng, phương pháp sẽ thất bại.</span>
 <span id="cb13-287"><a href="#cb13-287" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-288"><a href="#cb13-288" aria-hidden="true" tabindex="-1"></a>**Action:** Plot the time series of the estimated coefficients . You want to see "noise" around a mean. If you see a flat line or a single massive spike, your data is corrupted.</span>
+<span id="cb13-288"><a href="#cb13-288" aria-hidden="true" tabindex="-1"></a>**Hành động:** Vẽ chuỗi thời gian của các hệ số ước lượng. Bạn muốn thấy "nhiễu" quanh một giá trị trung bình. Nếu thấy một đường phẳng hoặc một đỉnh nhọn khổng lồ duy nhất, dữ liệu của bạn đã bị hỏng.</span>
 <span id="cb13-289"><a href="#cb13-289" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-292"><a href="#cb13-292" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-293"><a href="#cb13-293" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -2002,11 +2042,11 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-301"><a href="#cb13-301" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-302"><a href="#cb13-302" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-303"><a href="#cb13-303" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-304"><a href="#cb13-304" aria-hidden="true" tabindex="-1"></a><span class="fu">### Correlation of Characteristics (Multicollinearity)</span></span>
+<span id="cb13-304"><a href="#cb13-304" aria-hidden="true" tabindex="-1"></a><span class="fu">### Tương quan giữa các đặc điểm (đa cộng tuyến)</span></span>
 <span id="cb13-305"><a href="#cb13-305" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-306"><a href="#cb13-306" aria-hidden="true" tabindex="-1"></a>In Vietnam, large-cap stocks (high <span class="in">`log_mktcap`</span>) are often the ones with high Book-to-Market ratios (banks/utilities) or specific Betas. If your factors are highly correlated, the Fama-MacBeth coefficients will be unstable and insignificant (low t-stats), even if the factors actually matter.</span>
+<span id="cb13-306"><a href="#cb13-306" aria-hidden="true" tabindex="-1"></a>Ở Việt Nam, các cổ phiếu vốn hóa lớn (<span class="in">`log_mktcap`</span> cao) thường là những cổ phiếu có tỷ số giá trị sổ sách trên giá trị thị trường cao (ngân hàng/công ty tiện ích) hoặc có beta đặc thù. Nếu các nhân tố của bạn có tương quan cao, các hệ số Fama-MacBeth sẽ không ổn định và không có ý nghĩa thống kê (thống kê t thấp), ngay cả khi các nhân tố đó thực sự quan trọng.</span>
 <span id="cb13-307"><a href="#cb13-307" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-308"><a href="#cb13-308" aria-hidden="true" tabindex="-1"></a>**Action:** Check the cross-sectional correlation.</span>
+<span id="cb13-308"><a href="#cb13-308" aria-hidden="true" tabindex="-1"></a>**Hành động:** Kiểm tra tương quan chéo.</span>
 <span id="cb13-309"><a href="#cb13-309" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-312"><a href="#cb13-312" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
 <span id="cb13-313"><a href="#cb13-313" aria-hidden="true" tabindex="-1"></a><span class="co"># Check correlation of the characteristics</span></span>
@@ -2015,11 +2055,11 @@ document.addEventListener("DOMContentLoaded", function () {
 <span id="cb13-316"><a href="#cb13-316" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-317"><a href="#cb13-317" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-318"><a href="#cb13-318" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-319"><a href="#cb13-319" aria-hidden="true" tabindex="-1"></a>**Interpretation:**</span>
+<span id="cb13-319"><a href="#cb13-319" aria-hidden="true" tabindex="-1"></a>**Diễn giải:**</span>
 <span id="cb13-320"><a href="#cb13-320" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-321"><a href="#cb13-321" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>If correlation <span class="sc">\&gt;</span> 0.7 (absolute value), the regression struggles to distinguish between the two factors.</span>
-<span id="cb13-322"><a href="#cb13-322" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>For example, if <span class="in">`Size`</span> and <span class="in">`Liquidity`</span> are -0.8 correlated, the model cannot tell which one is driving the return, often resulting in both having insignificant t-stats.</span>
-</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb13-321"><a href="#cb13-321" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Nếu tương quan <span class="sc">\&gt;</span> 0.7 (theo giá trị tuyệt đối), hồi quy khó phân biệt giữa hai nhân tố.</span>
+<span id="cb13-322"><a href="#cb13-322" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Chẳng hạn, nếu <span class="in">`Size`</span> và <span class="in">`Liquidity`</span> có tương quan -0.8, mô hình không thể biết nhân tố nào đang thúc đẩy lợi nhuận, thường dẫn đến việc cả hai đều có thống kê t không có ý nghĩa.</span>
+</code><button title="Sao chép vào bộ nhớ tạm" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
@@ -2029,7 +2069,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/24_fama_macbeth.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/edit/main/24_fama_macbeth.qmd" class="toc-action"><i class="bi bi-github"></i>Chỉnh sửa trang này</a></li><li><a href="https://github.com/mikenguyen13/tidy_finance_vn_vi/issues/new" class="toc-action"><i class="bi empty"></i>Báo lỗi</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>
