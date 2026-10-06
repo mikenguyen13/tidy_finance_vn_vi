@@ -1,12 +1,12 @@
 # Xây dựng và phân tích chuỗi lợi nhuận cổ phiếu
 
-Chương này phát triển một khuôn khổ thực tiễn để chuyển đổi các bản ghi giá cổ phiếu thô thành chuỗi lợi nhuận phù hợp cho phân tích tài chính thực nghiệm. Trọng tâm là tính rõ ràng về phương pháp luận và khả năng tái tạo, đặc biệt chú trọng đến các vấn đề dữ liệu phổ biến ở các thị trường chứng khoán mới nổi như Việt Nam.
+Chương này phát triển một khuôn khổ thực hành để chuyển đổi các bản ghi giá cổ phiếu thô thành chuỗi lợi nhuận phù hợp cho phân tích tài chính thực nghiệm. Trọng tâm là sự rõ ràng về phương pháp luận và khả năng tái lập, với sự chú ý đặc biệt đến các vấn đề dữ liệu phổ biến ở các thị trường cổ phiếu mới nổi như Việt Nam.
 
-Cuộc thảo luận bắt đầu từ các cổ phiếu riêng lẻ đến phạm vi thị trường rộng lớn hơn, sử dụng các thành phần của chỉ số VN30 làm cơ sở thực nghiệm chính.
+Phần thảo luận đi từ từng cổ phiếu riêng lẻ đến một mặt cắt ngang thị trường rộng hơn, sử dụng các cổ phiếu thành phần của chỉ số VN30 làm bối cảnh thực nghiệm chính.
 
 ## Truy cập và chuẩn bị dữ liệu
 
-Chúng ta bắt đầu bằng cách tải các thư viện xử lý dữ liệu và số liệu cốt lõi. Các thư viện này cung cấp tất cả chức năng cần thiết để xây dựng lợi nhuận mà không cần dựa vào các thư viện tài chính chuyên biệt.
+Chúng ta bắt đầu bằng việc nạp các thư viện cốt lõi về tính toán số và xử lý dữ liệu. Các thư viện này cung cấp đầy đủ chức năng cần thiết để xây dựng lợi nhuận mà không phụ thuộc vào các thư viện bao bọc (wrapper) chuyên biệt về tài chính.
 
 
 ```{python}
@@ -14,19 +14,19 @@ import pandas as pd
 import numpy as np
 ```
 
-Đối với dự án này, chúng tôi thu thập dữ liệu giá lịch sử bằng cách sử dụng API của DataCore. Nếu bạn muốn tái tạo phân tích này hoặc sử dụng bộ dữ liệu cho công việc của riêng mình, bạn sẽ cần truy cập dữ liệu thông qua nền tảng của họ.
+Trong dự án này, chúng ta lấy dữ liệu giá lịch sử bằng DataCore API. Nếu bạn muốn tái lập phân tích này hoặc dùng bộ dữ liệu cho công việc của riêng mình, bạn sẽ cần truy cập dữ liệu thông qua nền tảng của họ.
 
 ### Điều kiện tiên quyết để truy cập API
 
-Để chạy đoạn mã bên dưới, trước tiên bạn cần cấu hình một vài thứ:
+Để chạy đoạn mã bên dưới, trước hết bạn cần cấu hình một số thứ:
 
-1. **Lấy mã API:** Bạn phải đăng ký bộ dữ liệu liên quan trên nền tảng [DataCore](https://datacore.vn/) để nhận mã API duy nhất.
-2. **Thêm địa chỉ IP của bạn vào danh sách trắng:** API yêu cầu địa chỉ IP của bạn phải được thêm vào danh sách trắng vì lý do bảo mật.
-* **Máy cục bộ:** Nếu bạn đang chạy mã này trên máy tính cá nhân, bạn thường cần thêm địa chỉ IP công cộng của mình vào danh sách trắng.
-* **Phiên làm việc trên đám mây hoặc từ xa (ví dụ: HPC Open OnDemand):** Nếu bạn đang sử dụng máy chủ từ xa như những máy chủ do DataCore cung cấp, địa chỉ IP của máy chủ sẽ thay đổi với mỗi phiên làm việc mới. Bạn phải lấy địa chỉ IP riêng/công cộng của máy chủ cho phiên làm việc cụ thể đó và thêm nó vào danh sách trắng trong cài đặt tài khoản DataCore của bạn trước khi chạy tập lệnh.
-3. **Thiết lập biến môi trường:** Để bảo mật thông tin đăng nhập của bạn, không nên mã hóa cứng khóa API vào các tập lệnh. Thay vào đó, hãy lưu nó dưới dạng biến môi trường có tên `datacore_api` trên máy tính của bạn.
+1.  **Lấy khóa API:** Bạn phải đăng ký bộ dữ liệu liên quan trên nền tảng [DataCore](https://datacore.vn/) để nhận một khóa API riêng.
+2.  **Đưa địa chỉ IP của bạn vào danh sách cho phép (whitelist):** API yêu cầu địa chỉ IP của bạn nằm trong danh sách cho phép vì lý do bảo mật.
+    * **Máy cục bộ:** Nếu bạn chạy mã này trên máy tính cá nhân, nhìn chung bạn cần đưa địa chỉ IP công cộng của mình vào danh sách cho phép.
+    * **Phiên làm việc trên đám mây hoặc từ xa (ví dụ: HPC Open OnDemand):** Nếu bạn dùng một máy chủ từ xa như máy chủ do DataCore cung cấp, địa chỉ IP của máy chủ sẽ thay đổi ở mỗi phiên mới. Bạn phải lấy địa chỉ IP riêng/công cộng của máy chủ cho phiên cụ thể đó và đưa vào danh sách cho phép trong phần cài đặt tài khoản DataCore trước khi chạy đoạn mã.
+3.  **Đặt biến môi trường:** Để giữ an toàn cho thông tin xác thực, đừng ghi cứng khóa API vào mã. Thay vào đó, hãy lưu khóa này dưới dạng biến môi trường có tên `datacore_api` trên máy của bạn.
 
-*Lưu ý: Nếu bạn chỉ muốn kiểm tra hiệu năng của mã, DataCore cung cấp một điểm cuối xem trước không yêu cầu khóa API, tuy nhiên dữ liệu trả về bị hạn chế.*
+*Lưu ý: Nếu bạn chỉ muốn thử hiệu năng của mã, DataCore cung cấp một điểm cuối xem trước (preview endpoint) không cần khóa API, dù dữ liệu trả về bị giới hạn.*
 
 
 ```{python}
@@ -60,9 +60,9 @@ print("Total rows:", len(df))
 
 ### Kiểm tra địa chỉ IP của bạn
 
-Nếu bạn cần xác minh địa chỉ IP của máy đang chạy mã của mình (để đưa nó vào danh sách trắng), bạn có thể sử dụng các đoạn mã Python sau.
+Nếu bạn cần xác minh địa chỉ IP của máy đang chạy mã (để đưa vào danh sách cho phép), bạn có thể dùng các đoạn mã Python sau.
 
-**Để tìm địa chỉ IP công cộng của bạn:**
+**Để tìm IP công cộng của bạn:**
 ```{python}
 #| eval: false
 import requests
@@ -75,7 +75,7 @@ except requests.exceptions.RequestException as e:
 
 ```
 
-**Để tìm địa chỉ IP riêng của bạn (hữu ích cho các thiết lập máy chủ từ xa cụ thể):**
+**Để tìm IP riêng của bạn (hữu ích cho một số cấu hình máy chủ từ xa):**
 
 ```{python}
 #| eval: false
@@ -95,9 +95,9 @@ print(f"Private IP: {get_private_ip()}")
 
 ```
 
-### Tải tập dữ liệu
+### Lấy bộ dữ liệu
 
-Đoạn mã sau đây minh họa cách xác thực và phân trang một cách an toàn thông qua API của DataCore để truy xuất toàn bộ tập dữ liệu `dataset_historical_price`.
+Đoạn mã sau minh họa cách xác thực an toàn và phân trang qua DataCore API để lấy toàn bộ bộ dữ liệu `dataset_historical_price`.
 
 ```{python}
 #| eval: false
@@ -170,7 +170,7 @@ df.head()
 ```
 
 
-<!-- Dữ liệu giá lịch sử được lưu trong hệ thống lưu trữ đối tượng tương thích S3. Thông tin truy cập được cung cấp qua các biến môi trường, giúp tách thông tin nhạy cảm khỏi phần phân tích và hỗ trợ khả năng tái lập khi làm việc cộng tác. -->
+<!-- Dữ liệu giá lịch sử được lưu trong hệ thống lưu trữ đối tượng tương thích S3. Thông tin truy cập được cung cấp qua biến môi trường, giúp tách thông tin nhạy cảm khỏi phân tích và hỗ trợ khả năng tái lập khi cộng tác. -->
 
 ```{python}
 #| include: false
@@ -195,7 +195,7 @@ storage = ObjectStorage()
 bucket = os.environ["MINIO_BUCKET"]
 ```
 
-<!-- Tệp giá hằng ngày được đọc trực tiếp vào bộ nhớ. Chúng ta phân tích cú pháp ngày tháng một cách tường minh và chuẩn hóa tên biến để tránh nhầm lẫn ở các bước sau. -->
+<!-- Tệp giá hằng ngày được đọc trực tiếp vào bộ nhớ. Chúng ta phân tích cú pháp ngày một cách tường minh và hài hòa tên biến để tránh nhầm lẫn ở các bước sau. -->
 
 ```{python}
 #| include: false
@@ -264,13 +264,11 @@ prices = prices.sort_values(["symbol", "date"])
 ```
 
 
-Giá đóng cửa đã điều chỉnh kết hợp những thay đổi cơ học do các hành động của công ty như cổ tức tiền mặt và chia tách cổ phiếu. Sử dụng giá điều chỉnh đảm bảo rằng các tính toán lợi nhuận tiếp theo phản ánh hiệu quả đầu tư thực tế đối với nhà đầu tư hơn là các yếu tố nhiễu do kế toán.
+Giá đóng cửa điều chỉnh bao hàm các thay đổi mang tính cơ học do các sự kiện doanh nghiệp như cổ tức tiền mặt và chia tách cổ phiếu. Việc dùng giá điều chỉnh bảo đảm các phép tính lợi nhuận về sau phản ánh hiệu quả đầu tư mà nhà đầu tư thực sự quan tâm, thay vì các sai lệch do kế toán.
 
+## Khảo sát một cổ phiếu riêng lẻ
 
-## Kiểm tra một cổ phiếu duy nhất
-
-
-Để làm nền tảng cho cuộc thảo luận, chúng tôi tách biệt lịch sử giao dịch của một cổ phiếu vốn hóa lớn duy nhất, FPT, trong một giai đoạn mẫu dài.
+Để minh họa cụ thể, chúng ta tách lịch sử giao dịch của một cổ phiếu vốn hóa lớn là FPT trong một giai đoạn mẫu dài.
 
 ```{python}
 import datetime as dt
@@ -288,7 +286,7 @@ fpt = prices.loc[
 ```
 
 
-Tập hợp con này chứa các biến thị trường hàng ngày tiêu chuẩn cần thiết cho hầu hết các nghiên cứu thực nghiệm. Trước khi tính toán lợi nhuận, nên kiểm tra trực quan chuỗi giá.
+Tập con này chứa các biến thị trường hằng ngày chuẩn cần cho hầu hết các nghiên cứu thực nghiệm. Trước khi tính lợi nhuận, nên kiểm tra trực quan chuỗi giá.
 
 ```{python}
 from plotnine import ggplot, aes, geom_line, labs
@@ -305,24 +303,24 @@ from plotnine import ggplot, aes, geom_line, labs
 )
 ```
 
-## Từ Giá Cả đến Lợi Nhuận
+## Từ giá đến lợi nhuận
 
-Hầu hết các mô hình định giá tài sản thực nghiệm đều được xây dựng dựa trên lợi nhuận thay vì mức giá. Lợi nhuận hàng ngày đơn giản được định nghĩa là
+Hầu hết các mô hình định giá tài sản thực nghiệm được xây dựng theo lợi nhuận chứ không theo mức giá. Lợi nhuận đơn giản hằng ngày được định nghĩa là
 
 $$
-r_t = \frac{p_t}{p_{t-1}} - 1, 
+r_t = \frac{p_t}{p_t - 1} - 1, 
 $$
 
 
-trong đó $p_t$ biểu thị giá đóng cửa đã điều chỉnh vào cuối ngày giao dịch $t$.
+trong đó $p_t$ là giá đóng cửa điều chỉnh vào cuối ngày giao dịch $t$.
 
-Trước khi tính toán lợi nhuận, chúng ta phải giải quyết các quan sát giá không hợp lệ. Trong dữ liệu chứng khoán Việt Nam, giá điều chỉnh đôi khi lấy giá trị bằng không. Các mục này thường phát sinh từ các giá trị giữ chỗ cho đợt IPO, tạm ngưng giao dịch hoặc quy ước điền ngược dữ liệu lịch sử và không thể được sử dụng để tính toán lợi nhuận có ý nghĩa.
+Trước khi tính lợi nhuận, chúng ta phải xử lý các quan sát giá không hợp lệ. Trong dữ liệu cổ phiếu Việt Nam, giá điều chỉnh đôi khi nhận giá trị bằng 0. Các dòng này thường phát sinh từ giá giữ chỗ khi IPO, các đợt tạm ngừng giao dịch hoặc quy ước điền ngược dữ liệu lịch sử, và không thể dùng để tính lợi nhuận có ý nghĩa.
 
 ```{python}
 prices.loc[prices["adjusted_close"] <= 0, ["symbol", "date", "adjusted_close"]].head()
 ```
 
-Do đó, chúng tôi loại trừ các mức giá điều chỉnh không dương và tính toán lợi nhuận theo từng cổ phiếu. Việc sắp xếp theo thứ tự thời gian chính xác là rất quan trọng.
+Do đó, chúng ta loại bỏ các giá điều chỉnh không dương và tính lợi nhuận theo từng cổ phiếu. Thứ tự thời gian đúng là điều thiết yếu.
 
 ```{python}
 returns = (
@@ -335,11 +333,11 @@ returns = (
 returns = returns.dropna(subset=["ret"])
 ```
 
-Theo thiết kế, lợi nhuận ban đầu của mỗi cổ phiếu bị thiếu do không có giá trễ. Những quan sát này mang tính kỹ thuật và có thể được loại bỏ một cách an toàn trong hầu hết các ứng dụng.
+Lợi nhuận đầu tiên của mỗi cổ phiếu bị thiếu do chính cách tính, vì không có giá trễ. Các quan sát này mang tính cơ học và trong hầu hết ứng dụng có thể loại bỏ một cách an toàn.
 
 ## Hạn chế ảnh hưởng của lợi nhuận cực đoan
 
-Chuỗi lợi nhuận hàng ngày thường chứa các quan sát cực đoan do lỗi dữ liệu, khối lượng giao dịch thấp hoặc điều chỉnh giá đột ngột. Một phương pháp phổ biến là winsorize lợi nhuận bằng cách sử dụng các ngưỡng phân vị theo mặt cắt ngang.
+Chuỗi lợi nhuận hằng ngày thường chứa các quan sát cực đoan do lỗi dữ liệu, giao dịch mỏng hoặc điều chỉnh giá đột ngột. Một cách tiếp cận phổ biến là winsorize (chặn giá trị cực đoan tại ngưỡng phân vị) lợi nhuận bằng các ngưỡng phân vị theo mặt cắt ngang.
 
 ```{python}
 def winsorize_cs(df, column="ret", lower_q=0.01, upper_q=0.99):
@@ -352,13 +350,11 @@ def winsorize_cs(df, column="ret", lower_q=0.01, upper_q=0.99):
 returns = winsorize_cs(returns)
 ```
 
-Việc áp dụng phương pháp winsorization trên toàn bộ mặt cắt ngang giúp hạn chế tác động của các quan sát cực đoan trên toàn thị trường trong khi vẫn bảo toàn sự khác biệt tương đối giữa các công ty. Phương pháp winsorization riêng lẻ cho từng cổ phiếu hiếm khi phù hợp trong các nghiên cứu dữ liệu bảng và có thể làm sai lệch nghiêm trọng dữ liệu của các chứng khoán kém thanh khoản.
+Việc áp dụng winsorization trên toàn bộ mặt cắt ngang hạn chế tác động của các quan sát cực đoan trên toàn thị trường, đồng thời bảo toàn những khác biệt tương đối giữa các doanh nghiệp. Winsorize trong từng cổ phiếu hiếm khi phù hợp với dữ liệu bảng và có thể làm méo nghiêm trọng dữ liệu của các chứng khoán kém thanh khoản.
 
+## Đặc điểm phân phối của lợi nhuận
 
-## Đặc điểm phân bố lợi nhuận
-
-
-Tiếp theo, chúng ta sẽ xem xét phân bố thực nghiệm của lợi nhuận hàng ngày đối với FPT. Hình dưới đây cũng đánh dấu phân vị 5 phần trăm trong lịch sử, cung cấp một thước đo đơn giản, phi tham số về rủi ro sụt giảm (downside risk).
+Tiếp theo, chúng ta xem xét phân phối thực nghiệm của lợi nhuận hằng ngày của FPT. Hình dưới đây cũng đánh dấu phân vị 5 phần trăm lịch sử, một thước đo phi tham số đơn giản về rủi ro giảm giá.
 
 ```{python}
 from mizani.formatters import percent_format
@@ -372,8 +368,8 @@ q05 = fpt_ret["ret"].quantile(0.05)
 
 ```{python}
 #| label: fig-101 
-#| fig-alt: "Tiêu đề: Phân phối lợi nhuận hằng ngày của cổ phiếu FPT theo phần trăm. Hình là biểu đồ histogram của lợi nhuận hằng ngày. Đường thẳng đứng cho thấy phân vị năm phần trăm lịch sử của lợi nhuận hằng ngày vào khoảng âm ba phần trăm."
-#| fig-cap: "Đường chấm thẳng đứng thể hiện phân vị năm phần trăm lịch sử."
+#| fig-alt: "Tiêu đề: Phân phối lợi nhuận hằng ngày của cổ phiếu FPT theo phần trăm. Hình thể hiện biểu đồ tần suất của lợi nhuận hằng ngày. Đường thẳng đứng cho thấy phân vị năm phần trăm lịch sử của lợi nhuận hằng ngày vào khoảng âm ba phần trăm."
+#| fig-cap: "Đường chấm thẳng đứng chỉ phân vị năm phần trăm lịch sử."
 #| 
 (
     ggplot(fpt_ret, aes(x="ret"))
@@ -384,13 +380,13 @@ q05 = fpt_ret["ret"].quantile(0.05)
 )
 ```
 
-Thống kê tóm tắt cung cấp một mô tả ngắn gọn về hành vi của lợi nhuận và phải luôn được kiểm tra trước khi lập mô hình chính thức.
+Thống kê tóm tắt cung cấp mô tả gọn về hành vi của lợi nhuận và luôn nên được kiểm tra trước khi mô hình hóa chính thức.
 
 ```{python}
 returns["ret"].describe().round(3)
 ```
 
-Việc tính toán các số liệu thống kê này theo năm dương lịch có thể cho thấy các giai đoạn biến động cao hoặc thay đổi cấu trúc.
+Việc tính các thống kê này theo năm dương lịch có thể cho thấy những giai đoạn biến động gia tăng hoặc thay đổi cấu trúc.
 
 ```{python}
 (
@@ -402,9 +398,9 @@ Việc tính toán các số liệu thống kê này theo năm dương lịch c�
 )
 ```
 
-## Mở rộng sang mặt cắt ngang của thị trường
+## Mở rộng sang mặt cắt ngang thị trường
 
-Các thủ tục tương tự cũng áp dụng một cách tự nhiên cho một phạm vi cổ phiếu rộng lớn hơn. Giờ đây, chúng ta chỉ tập trung vào các cổ phiếu cấu thành chỉ số VN30.
+Các quy trình tương tự áp dụng một cách tự nhiên cho một tập cổ phiếu lớn hơn. Bây giờ chúng ta giới hạn sự chú ý vào các cổ phiếu thành phần của chỉ số VN30.
 
 ```{python}
 vn30 = [
@@ -422,7 +418,7 @@ from plotnine import theme
 ```{python}
 #| label: fig-102
 #| fig-cap: "Giá tính bằng VND, đã điều chỉnh theo cổ tức và chia tách cổ phiếu."
-#| fig-alt: "Tiêu đề: Giá cổ phiếu của các thành phần chỉ số VN30."
+#| fig-alt: "Tiêu đề: Giá cổ phiếu của các cổ phiếu thành phần chỉ số VN30."
 (
     ggplot(prices_vn30, aes(x="date", y="adjusted_close", color="symbol"))
     + geom_line()
@@ -431,7 +427,7 @@ from plotnine import theme
 )
 ```
 
-Lợi nhuận cho nhóm cổ phiếu VN30 được tính toán tương tự.
+Lợi nhuận của tập cổ phiếu VN30 được tính theo cách tương tự.
 
 ```{python}
 returns_vn30 = (
@@ -448,7 +444,7 @@ returns_vn30.groupby("symbol")["ret"].describe().round(3)
 
 ## Tổng hợp lợi nhuận theo thời gian
 
-Các biến số tài chính được quan sát ở các tần suất khác nhau. Trong khi giá cổ phiếu được ghi nhận hàng ngày, nhiều câu hỏi thực nghiệm yêu cầu lợi nhuận hàng tháng hoặc hàng năm. Lợi nhuận ở tần suất thấp hơn được xây dựng bằng cách tổng hợp các quan sát ở tần suất cao hơn.
+Các biến tài chính được quan sát ở những tần suất khác nhau. Trong khi giá cổ phiếu được ghi nhận hằng ngày, nhiều câu hỏi thực nghiệm đòi hỏi lợi nhuận theo tháng hoặc theo năm. Lợi nhuận tần suất thấp hơn được xây dựng bằng cách ghép lãi các quan sát tần suất cao hơn.
 
 ```{python}
 returns_monthly = (
@@ -459,7 +455,7 @@ returns_monthly = (
 )
 ```
 
-Việc so sánh phân bố lợi nhuận hàng ngày và hàng tháng cho thấy cách thức tổng hợp làm giảm sự biến động và thay đổi hành vi ở phần đuôi phân bố.
+So sánh phân phối lợi nhuận hằng ngày và hằng tháng cho thấy việc tổng hợp làm giảm biến động và thay đổi hành vi đuôi như thế nào.
 
 ```{python}
 from plotnine import facet_wrap
@@ -477,7 +473,7 @@ fpt_both = pd.concat([
 ```{python}
 #| label: fig-103
 #| fig-cap: "Lợi nhuận được tính dựa trên giá đã điều chỉnh theo cổ tức và chia tách cổ phiếu."
-#| fig-alt: "Tiêu đề: Phân phối lợi nhuận của FPT theo các tần suất khác nhau. Hình thể hiện phân phối của lợi nhuận hằng ngày và hằng tháng trong hai ô riêng biệt."
+#| fig-alt: "Tiêu đề: Phân phối lợi nhuận của FPT ở các tần suất khác nhau. Hình thể hiện phân phối lợi nhuận hằng ngày và hằng tháng trong hai khung riêng biệt."
 (
     ggplot(fpt_both, aes(x="ret"))
     + geom_histogram(bins=50)
@@ -487,9 +483,9 @@ fpt_both = pd.concat([
 )
 ```
 
-## Tổng hợp dữ liệu giữa các công ty: Hoạt động giao dịch
+## Tổng hợp giữa các doanh nghiệp: Hoạt động giao dịch
 
-Việc tổng hợp không chỉ giới hạn ở thời gian. Trong một số trường hợp, việc tổng hợp các biến số trên nhiều công ty sẽ mang lại thông tin hữu ích. Ví dụ, chúng tôi tính tổng giá trị giao dịch hàng ngày của cổ phiếu VN30 bằng cách nhân khối lượng giao dịch với giá điều chỉnh và cộng tổng trên tất cả các công ty.
+Việc tổng hợp không chỉ giới hạn theo thời gian. Trong một số bối cảnh, việc tổng hợp các biến giữa các doanh nghiệp mang lại nhiều thông tin. Để minh họa, chúng ta tính tổng giá trị giao dịch hằng ngày của các cổ phiếu VN30 bằng cách nhân khối lượng cổ phiếu với giá điều chỉnh rồi cộng gộp giữa các doanh nghiệp.
 
 ```{python}
 trading_value = (
@@ -507,7 +503,7 @@ trading_value = (
 )
 ```
 
-Cuối cùng, chúng tôi đánh giá tính dai dẳng của hoạt động giao dịch bằng cách so sánh giá trị giao dịch trong những ngày liên tiếp.
+Cuối cùng, chúng ta đánh giá tính dai dẳng của hoạt động giao dịch bằng cách so sánh giá trị giao dịch của các ngày liên tiếp.
 
 ```{python}
 from plotnine import geom_point, geom_abline
@@ -516,7 +512,7 @@ from plotnine import geom_point, geom_abline
 ```{python}
 #| label: fig-104
 #| fig-cap: "Tổng khối lượng giao dịch hằng ngày."
-#| fig-alt: "Tiêu đề: Tổng khối lượng giao dịch hằng ngày của các thành phần chỉ số VN30. Hình thể hiện một chuỗi thời gian biến động mạnh của khối lượng giao dịch hằng ngày."
+#| fig-alt: "Tiêu đề: Tổng khối lượng giao dịch hằng ngày của các cổ phiếu thành phần chỉ số VN30. Hình thể hiện một chuỗi thời gian biến động mạnh của khối lượng giao dịch hằng ngày."
 (
     ggplot(trading_value, aes(x="value_lag", y="value"))
     + geom_point()
@@ -530,8 +526,8 @@ from plotnine import geom_point, geom_abline
 ```
 
 
-Việc các điểm dữ liệu nằm sát dọc theo đường 45 độ cho thấy những ngày giao dịch sôi động thường được tiếp nối bởi những ngày có hoạt động tương tự, một quy luật thực nghiệm phổ biến trên thị trường chứng khoán.
+Sự phân bố bám sát đường chéo 45 độ cho thấy các ngày giao dịch sôi động thường được tiếp nối bởi những ngày sôi động tương tự, một quy luật thực nghiệm phổ biến trên thị trường cổ phiếu.
 
 ## Tóm tắt
 
-Chương này đã thiết lập một quy trình làm việc có thể tái tạo để chuyển đổi dữ liệu giá thô thành chuỗi lợi nhuận, chẩn đoán các vấn đề dữ liệu thường gặp và tổng hợp thông tin theo thời gian và theo công ty. Các bước này cung cấp nền tảng thực nghiệm cho các phân tích tiếp theo về rủi ro, khả năng dự báo lợi nhuận và động lực thị trường trên thị trường chứng khoán Việt Nam.
+Chương này thiết lập một quy trình có thể tái lập để chuyển dữ liệu giá thô thành chuỗi lợi nhuận, chẩn đoán các vấn đề dữ liệu thường gặp và tổng hợp thông tin theo thời gian và giữa các doanh nghiệp. Những bước này tạo nền tảng thực nghiệm cho các phân tích tiếp theo về rủi ro, khả năng dự báo lợi nhuận và động thái thị trường trên thị trường cổ phiếu Việt Nam.

@@ -1,29 +1,40 @@
-# Lý thuyết danh mục đầu tư hiện đại
+---
+title: Modern Portfolio Theory
+format:
+  html:
+    toc: true
+    number-sections: true
+jupyter: python3
+execute:
+  echo: true
+  warning: false
+  message: false
+---
 
-Trong chương trước, chúng ta đã trình bày cách tải xuống và phân tích dữ liệu thị trường chứng khoán với các số liệu và thống kê tóm tắt. Giờ đây, chúng ta chuyển sang một trong những câu hỏi cơ bản nhất trong lĩnh vực tài chính: Làm thế nào một nhà đầu tư nên phân bổ tài sản của mình vào các loại tài sản khác nhau về lợi nhuận kỳ vọng, phương sai và tương quan để tối ưu hóa hiệu suất danh mục đầu tư?
+Trong chương trước, chúng ta đã trình bày cách tải và phân tích dữ liệu thị trường chứng khoán bằng các hình vẽ và thống kê mô tả. Bây giờ, chúng ta chuyển sang một trong những câu hỏi cơ bản nhất của tài chính: Nhà đầu tư nên phân bổ của cải của mình như thế nào giữa các tài sản có lợi nhuận kỳ vọng, phương sai và tương quan khác nhau để tối ưu hóa hiệu quả danh mục đầu tư?
 
-Thoạt nhìn, câu hỏi này có vẻ đơn giản. Tại sao không đầu tư tất cả vào loại tài sản có tỷ suất lợi nhuận kỳ vọng cao nhất? Câu trả lời nằm ở một nhận định sâu sắc đã làm thay đổi ngành kinh tế học tài chính: **rủi ro rất quan trọng, và nó có thể được quản lý thông qua đa dạng hóa**.
+Thoạt nhìn, câu hỏi này có vẻ đơn giản. Tại sao không đầu tư toàn bộ vào tài sản có lợi nhuận kỳ vọng cao nhất? Câu trả lời nằm ở một nhận định sâu sắc đã làm thay đổi kinh tế học tài chính: **rủi ro là quan trọng, và có thể quản lý rủi ro thông qua đa dạng hóa**.
 
-Lý thuyết danh mục đầu tư hiện đại (MPT), được giới thiệu bởi Markowitz năm 1952, đã cách mạng hóa việc ra quyết định đầu tư bằng cách chính thức hóa sự đánh đổi giữa rủi ro và lợi nhuận kỳ vọng. Trước Markowitz, các nhà đầu tư chủ yếu nghĩ về rủi ro trên cơ sở từng chứng khoán riêng lẻ. Thiên tài của Markowitz là nhận ra rằng điều quan trọng không phải là rủi ro của từng chứng khoán riêng lẻ, mà là cách chúng đóng góp vào rủi ro của *toàn bộ danh mục đầu tư*. Nhận định này có tầm ảnh hưởng lớn đến mức đã giúp ông giành được Giải thưởng Khoa học Kinh tế của Ngân hàng Trung ương Thụy Điển năm 1990 và đặt nền móng cho phần lớn ngành tài chính hiện đại.
+Lý thuyết danh mục đầu tư hiện đại (Modern Portfolio Theory, MPT), do @Markowitz1952 đề xuất, đã tạo ra cuộc cách mạng trong việc ra quyết định đầu tư bằng cách chính thức hóa sự đánh đổi giữa rủi ro và lợi nhuận kỳ vọng. Trước Markowitz, các nhà đầu tư chủ yếu nghĩ về rủi ro theo từng chứng khoán riêng lẻ. Thiên tài của Markowitz là nhận ra rằng điều quan trọng không phải là rủi ro của từng chứng khoán một cách tách biệt, mà là cách chúng đóng góp vào rủi ro của *toàn bộ danh mục*. Nhận định này có ảnh hưởng lớn đến mức giúp ông giành Giải Sveriges Riksbank về Khoa học Kinh tế năm 1990 và đặt nền móng cho phần lớn tài chính hiện đại.
 
 ### Nhận định cốt lõi: Đa dạng hóa như một bữa trưa miễn phí
 
-Lý thuyết danh mục đầu tư hiện đại (MPT) dựa trên một sự thật toán học quan trọng: rủi ro danh mục đầu tư không chỉ phụ thuộc vào sự biến động của từng tài sản riêng lẻ mà còn phụ thuộc vào *mối tương quan* giữa lợi nhuận của các tài sản đó. Hiểu biết này cho thấy sức mạnh của việc đa dạng hóa – kết hợp các tài sản có lợi nhuận không biến động hoàn toàn đồng bộ có thể giảm rủi ro danh mục đầu tư tổng thể mà không nhất thiết phải hy sinh lợi nhuận kỳ vọng.
+MPT dựa trên một sự thật toán học quan trọng: rủi ro của danh mục không chỉ phụ thuộc vào độ biến động của từng tài sản mà còn phụ thuộc vào *tương quan* giữa lợi nhuận của các tài sản. Nhận định này cho thấy sức mạnh của đa dạng hóa: kết hợp các tài sản có lợi nhuận không biến động hoàn toàn đồng pha có thể làm giảm rủi ro chung của danh mục mà không nhất thiết phải hy sinh lợi nhuận kỳ vọng.
 
-Hãy xem xét một ví dụ đơn giản: Giả sử bạn điều hành một doanh nghiệp bán cả kem chống nắng và ô dù. Vào những ngày nắng, doanh số bán kem chống nắng tăng mạnh nhưng doanh số bán ô dù lại giảm; vào những ngày mưa, điều ngược lại xảy ra. Bằng cách bán cả hai sản phẩm, tổng doanh thu của bạn trở nên ổn định hơn so với việc chỉ bán một sản phẩm. "Mối tương quan" giữa doanh số bán kem chống nắng và ô dù là âm, và việc kết hợp chúng làm giảm sự biến động của tổng thu nhập. Đây chính xác là logic đằng sau việc đa dạng hóa danh mục đầu tư.
+Hãy xét một phép so sánh đơn giản: Giả sử bạn kinh doanh cả kem chống nắng và ô. Vào những ngày nắng, doanh số kem chống nắng tăng mạnh nhưng doanh số ô sụt giảm; vào những ngày mưa thì ngược lại. Nhờ bán cả hai sản phẩm, tổng doanh thu của bạn ổn định hơn so với khi chỉ bán một loại. "Tương quan" giữa doanh số kem chống nắng và doanh số ô là âm, và việc kết hợp chúng làm giảm phương sai của thu nhập chung. Đây chính xác là logic đằng sau đa dạng hóa danh mục đầu tư.
 
-Ví dụ về giỏ trái cây mang đến một góc nhìn khác: Nếu bạn chỉ có táo và chúng bị hỏng, bạn sẽ mất tất cả. Với nhiều loại trái cây khác nhau, một số có thể bị hỏng, nhưng những loại khác sẽ vẫn tươi ngon. Đa dạng hóa cung cấp sự bảo hiểm chống lại những rủi ro đặc thù của từng loại tài sản riêng lẻ.
+Phép so sánh giỏ trái cây đưa ra một góc nhìn khác: Nếu bạn chỉ có táo và chúng bị hỏng, bạn mất tất cả. Với nhiều loại trái cây, một số có thể hỏng nhưng những loại khác vẫn tươi. Đa dạng hóa đóng vai trò như bảo hiểm trước các rủi ro đặc thù của từng tài sản.
 
-### Khung trung bình-phương sai
+### Khung trung bình–phương sai
 
-Cốt lõi của MPT là **phân tích trung bình-phương sai**, đánh giá danh mục đầu tư dựa trên hai khía cạnh:
+Trọng tâm của MPT là **phân tích trung bình–phương sai**, đánh giá các danh mục đầu tư dựa trên hai chiều:
 
-1. **Lợi nhuận kỳ vọng (trung bình)**: Lợi nhuận trung bình dự kiến thu được từ việc nắm giữ danh mục đầu tư.
-2. **Rủi ro (phương sai)**: Sự phân tán của các khoản lợi nhuận có thể có xung quanh giá trị kỳ vọng.
+1. **Lợi nhuận kỳ vọng (trung bình)**: Mức lợi nhuận trung bình dự kiến khi nắm giữ danh mục
+2. **Rủi ro (phương sai)**: Mức độ phân tán của các lợi nhuận có thể xảy ra quanh giá trị kỳ vọng
 
-Giả định chính là các nhà đầu tư chỉ quan tâm đến hai mô-men này của phân phối lợi nhuận. Giả định này hoàn toàn chính xác nếu lợi nhuận được phân phối chuẩn, hoặc nếu các nhà đầu tư có hàm tiện ích bậc hai. Ngay cả khi các điều kiện này không hoàn toàn đúng, phân tích trung bình-phương sai thường cung cấp một phép xấp xỉ tốt cho việc lựa chọn danh mục đầu tư tối ưu.
+Giả định then chốt là nhà đầu tư chỉ quan tâm đến hai mô-men này của phân phối lợi nhuận. Giả định này hoàn toàn đúng nếu lợi nhuận tuân theo phân phối chuẩn, hoặc nếu nhà đầu tư có hàm thỏa dụng bậc hai. Ngay cả khi các điều kiện này không được thỏa mãn một cách chính xác, phân tích trung bình–phương sai thường vẫn cho một xấp xỉ tốt về lựa chọn danh mục tối ưu.
 
-Bằng cách cân bằng giữa lợi nhuận kỳ vọng và rủi ro, nhà đầu tư có thể xây dựng danh mục đầu tư nhằm tối đa hóa lợi nhuận kỳ vọng ở mức rủi ro nhất định, hoặc giảm thiểu rủi ro ở mức lợi nhuận kỳ vọng mong muốn. Trong chương này, chúng ta sẽ suy ra các quyết định danh mục đầu tư tối ưu này bằng phương pháp giải tích, đồng thời triển khai phương pháp trung bình-phương sai bằng tính toán số.
+Bằng cách cân bằng giữa lợi nhuận kỳ vọng và rủi ro, nhà đầu tư có thể xây dựng các danh mục hoặc tối đa hóa lợi nhuận kỳ vọng ở một mức rủi ro cho trước, hoặc tối thiểu hóa rủi ro ở một mức lợi nhuận kỳ vọng mong muốn. Trong chương này, chúng ta suy ra các quyết định danh mục tối ưu này bằng phương pháp giải tích và triển khai cách tiếp cận trung bình–phương sai bằng tính toán.
 
 ```{python}
 import pandas as pd
@@ -37,42 +48,34 @@ from adjustText import adjust_text
 
 ## Tập hợp tài sản: Thiết lập bài toán
 
-Giả sử $N$ các tài sản rủi ro khác nhau có sẵn cho nhà đầu tư. Mỗi tài sản $i$ được đặc trưng bởi:
+Giả sử nhà đầu tư có $N$ tài sản rủi ro khác nhau để lựa chọn. Mỗi tài sản $i$ được đặc trưng bởi:
 
-- **Lợi nhuận kỳ vọng** $\mu_i$: Lợi nhuận dự kiến từ việc nắm giữ tài sản trong một khoảng thời gian
-- **Phương sai** $\sigma_i^2$: Sự phân tán của lợi nhuận xung quanh giá trị trung bình
-- **Hiệp phương sai** $\sigma_{ij}$: Mức độ lợi nhuận của tài sản $i$ di chuyển cùng với lợi nhuận của tài sản $j$
+- **Lợi nhuận kỳ vọng** $\mu_i$: Mức lợi nhuận dự kiến khi nắm giữ tài sản trong một kỳ
+- **Phương sai** $\sigma_i^2$: Mức độ phân tán của lợi nhuận quanh giá trị trung bình
+- **Hiệp phương sai** $\sigma_{ij}$: Mức độ mà lợi nhuận của tài sản $i$ biến động cùng với lợi nhuận của tài sản $j$
 
-Nhà đầu tư chọn **trọng số danh mục đầu tư** $\omega_i$ cho mỗi tài sản $i$. Những trọng số này đại diện cho phần của tổng tài sản được đầu tư vào mỗi tài sản. Chúng ta áp đặt ràng buộc rằng tổng các trọng số bằng một:
+Nhà đầu tư chọn **trọng số danh mục** $\omega_i$ cho mỗi tài sản $i$. Các trọng số này biểu thị tỷ trọng tổng tài sản được đầu tư vào từng tài sản. Chúng ta áp đặt ràng buộc rằng tổng các trọng số bằng một:
 
 $$
 \sum_{i=1}^N \omega_i = 1
 $$
 
-"Ràng buộc ngân sách" này đảm bảo rằng nhà đầu tư được đầu tư đầy đủ — không có lựa chọn bên ngoài như giữ tiền dưới nệm. Lưu ý rằng chúng tôi cho phép trọng số âm (bán khống) hoặc lớn hơn một (đòn bẩy), mặc dù trên thực tế, các vị thế này có thể gặp phải những hạn chế.
+"Ràng buộc ngân sách" này bảo đảm nhà đầu tư đầu tư toàn bộ vốn, tức là không có lựa chọn bên ngoài như cất tiền dưới đệm. Lưu ý rằng chúng ta cho phép trọng số âm (vị thế bán khống) hoặc lớn hơn một (đòn bẩy), dù trong thực tế các vị thế này có thể bị hạn chế.
 
+### Hai giai đoạn của việc lựa chọn danh mục
 
-### Hai giai đoạn lựa chọn danh mục đầu tư
+Theo @Markowitz1952, việc lựa chọn danh mục gồm hai giai đoạn riêng biệt:
 
+1. **Ước lượng**: Hình thành kỳ vọng về hiệu quả của chứng khoán trong tương lai dựa trên quan sát, kinh nghiệm và lập luận kinh tế
+2. **Tối ưu hóa**: Sử dụng các kỳ vọng này để chọn danh mục tối ưu
 
-Theo @Markowitz1952, lựa chọn danh mục đầu tư bao gồm hai giai đoạn riêng biệt:
+Trong thực tế, hai giai đoạn này không thể tách rời hoàn toàn. Giai đoạn ước lượng xác định các đầu vào ($\mu$, $\Sigma$) cung cấp cho giai đoạn tối ưu hóa. Ước lượng kém dẫn đến lựa chọn danh mục kém, bất kể quy trình tối ưu hóa tinh vi đến đâu.
 
-
-1. **Ước tính**: Hình thành kỳ vọng về hiệu suất chứng khoán trong tương lai dựa trên quan sát, kinh nghiệm và lý luận kinh tế
-
-2. **Tối ưu hóa**: Sử dụng những kỳ vọng này để chọn danh mục đầu tư tối ưu
-
-
-Trong thực tế, các giai đoạn này không thể tách rời hoàn toàn. Giai đoạn ước tính xác định các đầu vào ($\mu$, $\Sigma$) đưa vào giai đoạn tối ưu hóa. Ước tính kém dẫn đến lựa chọn danh mục đầu tư kém, bất kể quy trình tối ưu hóa phức tạp như thế nào.
-
-
-Để giữ cho mọi thứ rõ ràng về mặt khái niệm, chúng tôi tập trung chủ yếu vào giai đoạn tối ưu hóa trong chương này. Chúng tôi xử lý lợi nhuận dự kiến và ma trận phương sai-hiệp phương sai như đã biết, sử dụng dữ liệu lịch sử để tính các đại lượng thay thế hợp lý. Trong các chương sau, chúng tôi đề cập đến những thách thức đáng kể phát sinh từ sự không chắc chắn của ước tính.
-
+Để giữ cho mạch khái niệm rõ ràng, trong chương này chúng ta chủ yếu tập trung vào giai đoạn tối ưu hóa. Chúng ta coi lợi nhuận kỳ vọng và ma trận phương sai–hiệp phương sai là đã biết, và dùng dữ liệu lịch sử để tính các giá trị xấp xỉ hợp lý. Trong các chương sau, chúng ta sẽ đề cập những thách thức đáng kể phát sinh từ sự bất định trong ước lượng.
 
 ### Tải và chuẩn bị dữ liệu
 
-
-Chúng tôi làm việc với các thành phần của chỉ số VN30 – 30 cổ phiếu lớn nhất và có tính thanh khoản cao nhất trên Sở Giao dịch Chứng khoán Thành phố Hồ Chí Minh Việt Nam. Điều này cung cấp một tập hợp tài sản thực tế cho một nhà đầu tư Việt Nam trong nước.
+Chúng ta làm việc với các cổ phiếu thành phần của chỉ số VN30, gồm 30 cổ phiếu lớn nhất và có tính thanh khoản cao nhất trên Sở Giao dịch Chứng khoán TP. Hồ Chí Minh của Việt Nam. Điều này tạo ra một tập hợp tài sản thực tế cho nhà đầu tư trong nước tại Việt Nam.
 
 ```{python}
 vn30_symbols = [
@@ -142,16 +145,16 @@ prices = prices.rename(columns={
 prices = prices.sort_values(["symbol", "date"])
 ```
 
-Chúng ta lọc để chỉ giữ lại các thành phần của VN30:
+Chúng ta lọc để chỉ giữ lại các cổ phiếu thành phần của VN30:
 
 ```{python}
 prices_daily = prices[prices["symbol"].isin(vn30_symbols)]
 prices_daily[["date", "symbol", "adjusted_close"]].head(3)
 ```
 
-### Tính toán lợi nhuận kỳ vọng
+### Tính lợi nhuận kỳ vọng
 
-Lợi nhuận trung bình mẫu được dùng làm thước đo gần đúng cho lợi nhuận kỳ vọng. Đối với mỗi tài sản $i$, chúng ta tính toán như sau:
+Lợi nhuận trung bình mẫu đóng vai trò là giá trị xấp xỉ cho lợi nhuận kỳ vọng. Với mỗi tài sản $i$, chúng ta tính:
 
 $$
 \hat{\mu}_i = \frac{1}{T} \sum_{t=1}^{T} r_{i,t}
@@ -159,8 +162,7 @@ $$
 
 trong đó $r_{i,t}$ là lợi nhuận của tài sản $i$ trong kỳ $t$, và $T$ là tổng số kỳ.
 
-
-**Tại sao nên sử dụng lợi nhuận hàng tháng?** Mặc dù dữ liệu hàng ngày cung cấp nhiều quan sát hơn, nhưng lợi nhuận hàng tháng mang lại một số lợi thế cho việc tối ưu hóa danh mục đầu tư. Thứ nhất, lợi nhuận hàng tháng ít biến động hơn và thể hiện mối tương quan chuỗi yếu hơn. Thứ hai, việc tái cân bằng hàng tháng thực tế hơn đối với hầu hết các nhà đầu tư, tránh được chi phí giao dịch quá mức. Thứ ba, sai số ước tính trong lợi nhuận trung bình đã khá lớn — việc sử dụng dữ liệu hàng ngày không cải thiện đáng kể độ chính xác của ước tính trung bình vì lợi nhuận trung bình tỷ lệ thuận với thời gian đầu tư trong khi sai số ước tính tỷ lệ thuận với căn bậc hai của số lượng quan sát.
+**Tại sao dùng lợi nhuận hàng tháng?** Mặc dù dữ liệu hàng ngày cung cấp nhiều quan sát hơn, lợi nhuận hàng tháng mang lại một số lợi thế cho tối ưu hóa danh mục. Thứ nhất, lợi nhuận hàng tháng ít nhiễu hơn và có tự tương quan chuỗi yếu hơn. Thứ hai, tái cân bằng hàng tháng thực tế hơn đối với hầu hết nhà đầu tư, tránh chi phí giao dịch quá mức. Thứ ba, sai số ước lượng của lợi nhuận trung bình vốn đã đáng kể: dùng dữ liệu hàng ngày không cải thiện đáng kể độ chính xác của ước lượng trung bình vì lợi nhuận trung bình tăng tỷ lệ thuận với khoảng thời gian, trong khi sai số ước lượng tăng theo căn bậc hai của số quan sát.
 
 ```{python}
 returns_monthly = (prices_daily
@@ -175,15 +177,15 @@ returns_monthly = (prices_daily
 )
 ```
 
-### Tính toán độ biến động
+### Tính độ biến động
 
-Rủi ro của từng tài sản riêng lẻ trong MPT được định lượng bằng phương sai ($\sigma^2_i$) hoặc căn bậc hai của nó, tức là độ lệch chuẩn hoặc độ biến động ($\sigma_i$). Chúng tôi sử dụng độ lệch chuẩn mẫu làm thước đo gần đúng:
+Rủi ro của từng tài sản trong MPT được đo bằng phương sai ($\sigma^2_i$) hoặc căn bậc hai của nó, tức là độ lệch chuẩn hay độ biến động ($\sigma_i$). Chúng ta dùng độ lệch chuẩn mẫu làm giá trị xấp xỉ:
 
 $$
 \hat{\sigma}_i = \sqrt{\frac{1}{T-1} \sum_{t=1}^{T} (r_{i,t} - \hat{\mu}_i)^2}
 $$
 
-Các thước đo rủi ro thay thế cũng tồn tại, bao gồm Giá trị rủi ro, Thiếu hụt dự kiến và các mô-men bậc cao hơn như độ lệch và độ nhọn. Tuy nhiên, phương sai vẫn là thước đo chủ lực trong lý thuyết danh mục đầu tư vì khả năng xử lý toán học của nó và vai trò trung tâm của phân phối chuẩn trong tài chính.
+Có những thước đo rủi ro thay thế, bao gồm Value-at-Risk, Expected Shortfall và các mô-men bậc cao như độ bất đối xứng (skewness) và độ nhọn. Tuy nhiên, phương sai vẫn là thước đo chủ lực trong lý thuyết danh mục nhờ tính dễ xử lý về mặt toán học và vai trò trung tâm của phân phối chuẩn trong tài chính.
 
 ```{python}
 assets = (returns_monthly
@@ -195,14 +197,14 @@ assets = (returns_monthly
 )
 ```
 
-### Hình dung sự đánh đổi giữa rủi ro và lợi nhuận
+### Trực quan hóa sự đánh đổi giữa rủi ro và lợi nhuận
 
-@fig-201 hiển thị lợi nhuận kỳ vọng của mỗi tài sản (trục dọc) so với độ biến động của nó (trục ngang). Không gian "trung bình - độ lệch chuẩn" này là nền tảng của lý thuyết danh mục đầu tư.
+@fig-201 hiển thị lợi nhuận kỳ vọng của từng tài sản (trục tung) so với độ biến động của nó (trục hoành). Không gian "trung bình–độ lệch chuẩn" này là nền tảng của lý thuyết danh mục.
 
 ```{python}
 #| label: fig-201
-#| fig-cap: "Lợi nhuận kỳ vọng và độ biến động dựa trên lợi nhuận hằng tháng đã điều chỉnh theo cổ tức và chia tách cổ phiếu."
-#| fig-alt: "Tiêu đề: Lợi nhuận kỳ vọng và độ biến động của các thành phần chỉ số VN30. Hình là biểu đồ phân tán với độ biến động trên trục hoành và lợi nhuận kỳ vọng trên trục tung."
+#| fig-cap: "Lợi nhuận kỳ vọng và độ biến động dựa trên lợi nhuận hàng tháng đã điều chỉnh theo chi trả cổ tức và chia tách cổ phiếu."
+#| fig-alt: "Tiêu đề: Lợi nhuận kỳ vọng và độ biến động của các cổ phiếu thành phần chỉ số VN30. Hình là biểu đồ phân tán với độ biến động trên trục hoành và lợi nhuận kỳ vọng trên trục tung."
 assets_figure = (
   ggplot(
     assets, 
@@ -221,28 +223,27 @@ assets_figure = (
 assets_figure.show()
 ```
 
-Từ hình ảnh này, ta có thể rút ra một vài nhận xét. Thứ nhất, có sự khác biệt đáng kể về cả lợi nhuận kỳ vọng và độ biến động giữa các cổ phiếu. Thứ hai, mối quan hệ giữa rủi ro và lợi nhuận không hề tuyến tính. Một số cổ phiếu có độ biến động cao lại có lợi nhuận kỳ vọng thấp hoặc thậm chí âm. Thứ ba, hầu hết các cổ phiếu riêng lẻ dường như mang lại sự cân bằng rủi ro-lợi nhuận kém. Như chúng ta sẽ thấy, danh mục đầu tư có thể cải thiện đáng kể những vị thế riêng lẻ này.
+Một số nhận xét rút ra từ hình này. Thứ nhất, có sự không đồng nhất đáng kể về cả lợi nhuận kỳ vọng và độ biến động giữa các cổ phiếu. Thứ hai, mối quan hệ giữa rủi ro và lợi nhuận khác xa tuyến tính. Một số cổ phiếu có độ biến động cao nhưng lợi nhuận kỳ vọng thấp, thậm chí âm. Thứ ba, hầu hết các cổ phiếu riêng lẻ dường như đem lại sự đánh đổi rủi ro–lợi nhuận kém. Như chúng ta sẽ thấy, các danh mục có thể cải thiện đáng kể so với những vị thế riêng lẻ này.
 
-## Ma trận hiệp phương sai: Nắm bắt tương tác giữa các tài sản
+## Ma trận phương sai–hiệp phương sai: Nắm bắt tương tác giữa các tài sản
 
-### Tại sao mối tương quan lại quan trọng
+### Tại sao tương quan quan trọng
 
-Một cải tiến quan trọng của MPT là nhận ra rằng rủi ro danh mục đầu tư phụ thuộc rất nhiều vào cách các tài sản biến động cùng nhau. Ma trận hiệp phương sai $\Sigma$ thể hiện tất cả các tương tác từng cặp giữa lợi nhuận của các tài sản.
+Một đổi mới then chốt của MPT là nhận ra rằng rủi ro danh mục phụ thuộc rất lớn vào cách các tài sản biến động cùng nhau. **Ma trận phương sai–hiệp phương sai** $\Sigma$ nắm bắt mọi tương tác theo từng cặp giữa lợi nhuận của các tài sản.
 
-Để hiểu tại sao hệ số tương quan lại quan trọng, hãy xem xét phương sai của danh mục đầu tư gồm hai tài sản:
-
+Để hiểu vì sao tương quan quan trọng, hãy xét phương sai của một danh mục gồm hai tài sản:
 $$\sigma_p^2 = \omega_1^2\sigma_1^2 + \omega_2^2\sigma_2^2 + 2\omega_1\omega_2\sigma_{12}$$
 
-Số hạng thứ ba liên quan đến hiệp phương sai $\sigma_{12} = \rho_{12}\sigma_1\sigma_2$, trong đó $\rho_{12}$ là hệ số tương quan. Khi $\rho_{12} < 1$, phương sai của danh mục đầu tư *nhỏ hơn* mức trung bình có trọng số của các phương sai riêng lẻ. Khi $\rho_{12} < 0$, lợi ích đa dạng hóa thậm chí còn rõ rệt hơn.
+Số hạng thứ ba chứa hiệp phương sai $\sigma_{12} = \rho_{12}\sigma_1\sigma_2$, trong đó $\rho_{12}$ là hệ số tương quan. Khi $\rho_{12} < 1$, phương sai danh mục *nhỏ hơn* trung bình có trọng số của các phương sai riêng lẻ. Khi $\rho_{12} < 0$, lợi ích đa dạng hóa còn rõ rệt hơn nữa.
 
-Sự thật toán học này có ý nghĩa sâu sắc: **Bạn có thể giảm rủi ro mà không làm giảm lợi nhuận kỳ vọng** bằng cách kết hợp các tài sản không hoàn toàn biến động cùng chiều. Điều này đôi khi được gọi là "bữa trưa miễn phí duy nhất trong lĩnh vực tài chính".
+Sự thật toán học này có hàm ý sâu sắc: **Bạn có thể giảm rủi ro mà không làm giảm lợi nhuận kỳ vọng** bằng cách kết hợp các tài sản không biến động hoàn toàn cùng nhau. Điều này đôi khi được gọi là "bữa trưa miễn phí duy nhất trong tài chính".
 
-### Tính toán ma trận hiệp phương sai
+### Tính ma trận phương sai–hiệp phương sai
 
 Chúng ta tính ma trận hiệp phương sai mẫu như sau:
 $$\hat{\sigma}_{ij} = \frac{1}{T-1} \sum_{t=1}^{T} (r_{i,t} - \hat{\mu}_i)(r_{j,t} - \hat{\mu}_j)$$
 
-Đầu tiên, chúng ta chuyển dữ liệu lợi nhuận sang định dạng rộng (wide) với tài sản được thể hiện dưới dạng các cột:
+Trước tiên, chúng ta chuyển dữ liệu lợi nhuận sang dạng rộng với các tài sản làm cột:
 
 ```{python}
 returns_wide = (returns_monthly
@@ -256,21 +257,21 @@ sigma = (returns_wide
 )
 ```
 
-### Giải thích ma trận phương sai-hiệp phương sai
+### Diễn giải ma trận phương sai–hiệp phương sai
 
-Các phần tử trên đường chéo chính của ma trận $\Sigma$ là phương sai của từng tài sản riêng lẻ. Các phần tử ngoài đường chéo chính là hiệp phương sai, có thể dương (các tài sản có xu hướng biến động cùng chiều), âm (các tài sản có xu hướng biến động ngược chiều) hoặc bằng không (không có mối quan hệ tuyến tính).
+Các phần tử trên đường chéo của $\Sigma$ là phương sai của từng tài sản. Các phần tử ngoài đường chéo là hiệp phương sai, có thể dương (các tài sản có xu hướng biến động cùng chiều), âm (các tài sản có xu hướng biến động ngược chiều) hoặc bằng không (không có quan hệ tuyến tính).
 
-Để dễ hiểu hơn, chúng ta thường chuyển đổi hiệp phương sai thành hệ số tương quan:
+Để dễ diễn giải hơn, chúng ta thường chuyển hiệp phương sai thành tương quan:
 $$\rho_{ij} = \frac{\sigma_{ij}}{\sigma_i \sigma_j}$$
 
-Hệ số tương quan nằm trong khoảng từ -1 đến +1, giúp việc so sánh giữa các cặp tài sản trở nên dễ dàng hơn.
+Tương quan bị chặn trong khoảng từ -1 đến +1, nên dễ so sánh giữa các cặp tài sản hơn.
 
-@fig-203 minh họa ma trận hiệp phương sai dưới dạng bản đồ nhiệt.
+@fig-203 trực quan hóa ma trận phương sai–hiệp phương sai dưới dạng bản đồ nhiệt.
 
 ```{python}
 #| label: fig-203
-#| fig-cap: "Phương sai và hiệp phương sai dựa trên lợi nhuận hằng tháng đã điều chỉnh theo cổ tức và chia tách cổ phiếu."
-#| fig-alt: "Tiêu đề: Ma trận phương sai–hiệp phương sai của các thành phần chỉ số VN30."
+#| fig-cap: "Phương sai và hiệp phương sai dựa trên lợi nhuận hàng tháng đã điều chỉnh theo chi trả cổ tức và chia tách cổ phiếu."
+#| fig-alt: "Tiêu đề: Ma trận phương sai–hiệp phương sai của các cổ phiếu thành phần chỉ số VN30."
 sigma_long = (sigma
   .reset_index()
   .melt(id_vars="symbol", var_name="symbol_b", value_name="value")
@@ -298,60 +299,60 @@ sigma_figure = (
 sigma_figure.show()
 ```
 
-Biểu đồ nhiệt cho thấy các khuôn mẫu quan trọng. Đường chéo (phương sai) cho thấy cổ phiếu nào biến động mạnh nhất. Các khuôn mẫu ngoài đường chéo cho thấy cặp cổ phiếu nào có xu hướng biến động cùng chiều. Nhìn chung, cổ phiếu trong cùng một ngành có xu hướng tương quan với nhau cao hơn so với cổ phiếu từ các ngành khác.
+Bản đồ nhiệt cho thấy những mẫu hình quan trọng. Đường chéo (phương sai) cho biết cổ phiếu nào biến động mạnh nhất. Các mẫu hình ngoài đường chéo cho biết những cặp cổ phiếu nào có xu hướng biến động cùng nhau. Nhìn chung, các cổ phiếu trong cùng một ngành có xu hướng tương quan với nhau cao hơn so với các cổ phiếu thuộc ngành khác.
 
-## Danh mục đầu tư có phương sai tối thiểu
+## Danh mục phương sai tối thiểu
 
-### Động lực: Giảm thiểu rủi ro như một tiêu chuẩn
+### Động lực: Tối thiểu hóa rủi ro làm mốc so sánh
 
-Trước khi xem xét lợi nhuận kỳ vọng, hãy tìm danh mục đầu tư có rủi ro thấp nhất. Danh mục đầu tư có phương sai tối thiểu (MVP) này đóng vai trò là chuẩn mực và điểm tham chiếu quan trọng. Nó thể hiện sự lựa chọn của một nhà đầu tư cực kỳ ngại rủi ro—người chỉ quan tâm đến việc giảm thiểu biến động.
+Trước khi xét đến lợi nhuận kỳ vọng, hãy tìm danh mục chỉ nhằm tối thiểu hóa rủi ro. **Danh mục phương sai tối thiểu (minimum-variance portfolio, MVP)** này đóng vai trò là mốc so sánh và điểm tham chiếu quan trọng. Nó thể hiện lựa chọn của một nhà đầu tư cực kỳ ngại rủi ro, tức là người chỉ quan tâm đến việc tối thiểu hóa độ biến động.
 
 ### Bài toán tối ưu hóa
 
-Nhà đầu tư theo phương án biến động tối thiểu giải quyết vấn đề:
+Nhà đầu tư theo phương sai tối thiểu giải bài toán:
 $$
 \min_{\omega} \omega^{\prime}\Sigma\omega
 $$
 
-với điều kiện tổng các trọng số bằng một:
+với ràng buộc tổng các trọng số bằng một:
 
 $$
 \omega^{\prime}\iota = 1
 $$
 
-trong đó $\iota$ là một vectơ $N \times 1$ gồm toàn số 1.
+trong đó $\iota$ là vectơ cột $N \times 1$ gồm toàn số một.
 
-Nói cách khác: giảm thiểu sự biến động của danh mục đầu tư, với điều kiện là toàn bộ danh mục đã được đầu tư.
+Nói bằng lời: tối thiểu hóa phương sai danh mục, với điều kiện đầu tư toàn bộ vốn.
 
-### Lời giải giải tích
+### Nghiệm giải tích
 
-Đây là một bài toán tối ưu hóa có ràng buộc kinh điển có thể giải được bằng phương pháp nhân tử Lagrange. Hàm Lagrange là:
+Đây là một bài toán tối ưu hóa có ràng buộc kinh điển, có thể giải bằng nhân tử Lagrange. Hàm Lagrange là:
 
 $$
 \mathcal{L} = \omega^{\prime}\Sigma\omega - \lambda(\omega^{\prime}\iota - 1)
 $$
 
-Lấy điều kiện bậc nhất đối với $\omega$:
+Lấy điều kiện bậc nhất theo $\omega$:
 $$
 \frac{\partial \mathcal{L}}{\partial \omega} = 2\Sigma\omega - \lambda\iota = 0
 $$
 
-Giải phương trình tìm $\omega$:
+Giải theo $\omega$:
 $$
 \omega = \frac{\lambda}{2}\Sigma^{-1}\iota
 $$
 
-Sử dụng ràng buộc $\omega^{\prime}\iota = 1$ để giải tìm $\lambda$:
+Dùng ràng buộc $\omega^{\prime}\iota = 1$ để giải theo $\lambda$:
 $$
 \frac{\lambda}{2}\iota^{\prime}\Sigma^{-1}\iota = 1 \implies \frac{\lambda}{2} = \frac{1}{\iota^{\prime}\Sigma^{-1}\iota}
 $$
 
-Thay thế trở lại:
+Thay ngược trở lại:
 $$
 \omega_{\text{mvp}} = \frac{\Sigma^{-1}\iota}{\iota^{\prime}\Sigma^{-1}\iota}
 $$
 
-Công thức thanh lịch này cho thấy rằng trọng số phương sai tối thiểu chỉ phụ thuộc vào ma trận hiệp phương sai — lợi nhuận kỳ vọng không đóng vai trò gì. Ma trận hiệp phương sai nghịch đảo $\Sigma^{-1}$ xác định số tiền đầu tư vào mỗi tài sản dựa trên phương sai của nó và các hiệp phương sai của nó với tất cả các tài sản khác.
+Công thức gọn gàng này cho thấy các trọng số phương sai tối thiểu chỉ phụ thuộc vào ma trận hiệp phương sai, còn lợi nhuận kỳ vọng không đóng vai trò gì. Ma trận hiệp phương sai nghịch đảo $\Sigma^{-1}$ xác định lượng đầu tư vào mỗi tài sản dựa trên phương sai của nó và hiệp phương sai của nó với mọi tài sản khác.
 
 ### Triển khai
 
@@ -363,12 +364,12 @@ omega_mvp = (sigma_inv @ iota) / (iota @ sigma_inv @ iota)
 
 ### Trực quan hóa các trọng số phương sai tối thiểu
 
-@fig-204 hiển thị trọng số danh mục đầu tư của danh mục đầu tư có phương sai tối thiểu.
+@fig-204 hiển thị các trọng số danh mục của danh mục phương sai tối thiểu.
 
 ```{python}
 #| label: fig-204
-#| fig-cap: "Tỷ trọng dựa trên các mô-men lịch sử của lợi nhuận hằng tháng đã điều chỉnh theo cổ tức và chia tách cổ phiếu."
-#| fig-alt: "Tiêu đề: Tỷ trọng của danh mục phương sai tối thiểu. Hình là biểu đồ cột thể hiện tỷ trọng danh mục của từng thành phần chỉ số VN30."
+#| fig-cap: "Các trọng số dựa trên các mô-men lịch sử của lợi nhuận hàng tháng đã điều chỉnh theo chi trả cổ tức và chia tách cổ phiếu."
+#| fig-alt: "Tiêu đề: Trọng số danh mục phương sai tối thiểu. Hình là biểu đồ cột thể hiện trọng số danh mục của từng cổ phiếu thành phần chỉ số VN30."
 assets = assets.assign(omega_mvp=omega_mvp)
 
 assets["symbol"] = pd.Categorical(
@@ -395,11 +396,11 @@ omega_figure = (
 omega_figure.show()
 ```
 
-Một số đặc điểm của danh mục đầu tư có phương sai tối thiểu đáng chú ý. Thứ nhất, nhiều cổ phiếu nhận được trọng số bằng không hoặc gần bằng không. Thứ hai, một số cổ phiếu nhận được trọng số âm (vị thế bán khống). Những vị thế bán khống này không phải là sai sót tính toán, mà phản ánh nỗ lực của thuật toán tối ưu hóa nhằm khai thác các mối tương quan để giảm rủi ro. Thứ ba, trọng số khá cực đoan (cả dương lớn và âm lớn), điều này thường cho thấy sự khuếch đại lỗi ước lượng, một chủ đề mà chúng ta sẽ đề cập trong các chương sau.
+Một số đặc điểm của danh mục phương sai tối thiểu đáng chú ý. Thứ nhất, nhiều cổ phiếu nhận trọng số bằng không hoặc gần bằng không. Thứ hai, một số cổ phiếu nhận trọng số âm (vị thế bán khống). Các vị thế bán khống này không phải do sai lệch tính toán, mà phản ánh nỗ lực của bộ tối ưu hóa nhằm khai thác tương quan để giảm rủi ro. Thứ ba, các trọng số khá cực đoan (cả dương lớn và âm lớn), điều này thường cho thấy sự khuếch đại sai số ước lượng, một chủ đề chúng ta sẽ đề cập trong các chương sau.
 
-### Hiệu suất danh mục đầu tư
+### Hiệu quả của danh mục
 
-Hãy tính toán lợi nhuận kỳ vọng và độ biến động của danh mục đầu tư có phương sai tối thiểu:
+Hãy tính lợi nhuận kỳ vọng và độ biến động của danh mục phương sai tối thiểu:
 
 ```{python}
 mu = assets["mu"].values
@@ -422,53 +423,53 @@ print(f"The MVP return is {mu_mvp_fmt} and volatility is {sigma_mvp_fmt}.")
 ```
 
 
-Nếu lợi nhuận kỳ vọng là âm, đây không phải là lỗi tính toán. Danh mục đầu tư có phương sai tối thiểu sẽ giảm thiểu rủi ro mà không cần quan tâm đến lợi nhuận kỳ vọng. Vì một số tài sản trong mẫu có lợi nhuận trung bình âm, nên sự kết hợp giảm thiểu rủi ro có thể kế thừa lợi nhuận kỳ vọng âm. Điều này làm nổi bật một hạn chế cơ bản của việc sử dụng giá trị trung bình mẫu trong quá khứ làm ước tính lợi nhuận kỳ vọng: chúng cực kỳ nhiễu và có thể dẫn đến kết quả không trực quan về mặt kinh tế ngay cả khi các phép toán tối ưu hóa hoạt động chính xác.
+Nếu lợi nhuận kỳ vọng âm, đó không phải là lỗi tính toán. Danh mục phương sai tối thiểu tối thiểu hóa rủi ro mà không quan tâm đến lợi nhuận kỳ vọng. Vì một số tài sản trong mẫu có lợi nhuận trung bình âm, tổ hợp tối thiểu hóa rủi ro có thể thừa hưởng lợi nhuận kỳ vọng âm. Điều này làm nổi bật một hạn chế cơ bản của việc dùng trung bình mẫu lịch sử làm ước lượng của lợi nhuận kỳ vọng: chúng cực kỳ nhiễu và có thể dẫn đến những kết quả trái với trực giác kinh tế ngay cả khi toán học tối ưu hóa vận hành đúng.
 
-## Danh mục đầu tư hiệu quả: Cân bằng rủi ro và lợi nhuận
+## Danh mục hiệu quả: Cân bằng giữa rủi ro và lợi nhuận
 
 ### Sự đánh đổi của nhà đầu tư
 
-Trong hầu hết các trường hợp, việc giảm thiểu biến động không phải là mục tiêu duy nhất của nhà đầu tư. Một cách tiếp cận thực tế hơn cho phép nhà đầu tư cân nhắc giữa rủi ro và lợi nhuận kỳ vọng. Nhà đầu tư có thể sẵn sàng chấp nhận biến động danh mục đầu tư cao hơn để đổi lấy lợi nhuận kỳ vọng cao hơn.
+Trong hầu hết các trường hợp, tối thiểu hóa phương sai không phải là mục tiêu duy nhất của nhà đầu tư. Một cách phát biểu thực tế hơn cho phép nhà đầu tư đánh đổi giữa rủi ro và lợi nhuận kỳ vọng. Nhà đầu tư có thể sẵn sàng chấp nhận phương sai danh mục cao hơn để đổi lấy lợi nhuận kỳ vọng cao hơn.
 
-Một **danh mục đầu tư hiệu quả** giảm thiểu phương sai với điều kiện đạt được ít nhất một tỷ suất lợi nhuận kỳ vọng mục tiêu $\bar{\mu}$. Nói một cách chính thức:
+Một **danh mục hiệu quả** tối thiểu hóa phương sai với điều kiện đạt được ít nhất một mức lợi nhuận kỳ vọng mục tiêu $\bar{\mu}$. Một cách hình thức:
 
 $$\min_{\omega} \omega^{\prime}\Sigma\omega$$
 
-tuân theo:
+với các ràng buộc:
 $$\omega^{\prime}\iota = 1 \quad \text{(fully invested)}$$
 $$\omega^{\prime}\mu \geq \bar{\mu} \quad \text{(minimum return)}$$
 
-Khi $\bar{\mu}$ vượt quá lợi nhuận kỳ vọng của danh mục đầu tư có phương sai tối thiểu, nhà đầu tư chấp nhận rủi ro cao hơn để kiếm được lợi nhuận cao hơn.
+Khi $\bar{\mu}$ vượt quá lợi nhuận kỳ vọng của danh mục phương sai tối thiểu, nhà đầu tư chấp nhận nhiều rủi ro hơn để có thêm lợi nhuận.
 
-### Thiết lập mức lợi nhuận mục tiêu
+### Đặt lợi nhuận mục tiêu
 
-Ví dụ, giả sử nhà đầu tư muốn kiếm được ít nhất mức lợi nhuận trung bình trong quá khứ của cổ phiếu có hiệu suất tốt nhất:
+Để minh họa, giả sử nhà đầu tư muốn đạt ít nhất mức lợi nhuận trung bình lịch sử của cổ phiếu có hiệu quả tốt nhất:
 
 ```{python}
 mu_bar = assets["mu"].max()
 print(f"Target expected return: {mu_bar:.5f}")
 ```
 
-Đây là một mục tiêu đầy tham vọng—nó có nghĩa là đạt được lợi nhuận tương đương với cổ phiếu có lợi nhuận cao nhất, đồng thời tận dụng lợi thế đa dạng hóa để giảm thiểu rủi ro.
+Đây là một mục tiêu đầy tham vọng: nó có nghĩa là đạt mức lợi nhuận của cổ phiếu duy nhất có lợi nhuận cao nhất, đồng thời hưởng lợi từ đa dạng hóa để giảm rủi ro.
 
-### Lời giải giải tích
+### Nghiệm giải tích
 
-Bài toán tối ưu hóa có ràng buộc với bất đẳng thức về lợi nhuận kỳ vọng có thể được giải quyết bằng cách sử dụng điều kiện Karush-Kuhn-Tucker (KKT). Tại điểm tối ưu (giả sử ràng buộc lợi nhuận có hiệu lực), lời giải là:
+Bài toán tối ưu hóa có ràng buộc với một ràng buộc bất đẳng thức đối với lợi nhuận kỳ vọng có thể được giải bằng các điều kiện Karush-Kuhn-Tucker (KKT). Tại điểm tối ưu (giả sử ràng buộc lợi nhuận là ràng buộc chặt), nghiệm là:
 
 $$\omega_{\text{efp}} = \frac{\lambda^*}{2}\left(\Sigma^{-1}\mu - \frac{D}{C}\Sigma^{-1}\iota\right)$$
 
-Trong đó:
+trong đó:
 
-- $C = \iota^{\prime}\Sigma^{-1}\iota$ (một vô hướng đo "kích thước" của ma trận hiệp phương sai nghịch đảo)
-- $D = \iota^{\prime}\Sigma^{-1}\mu$ (nắm bắt sự tương tác giữa lợi nhuận kỳ vọng và ma trận hiệp phương sai nghịch đảo)
-- $E = \mu^{\prime}\Sigma^{-1}\mu$ (đo "tín hiệu" trong lợi nhuận dự kiến có trọng số bởi hiệp phương sai nghịch đảo)
-- $\lambda^* = 2\frac{\bar{\mu} - D/C}{E - D^2/C}$ (giá ẩn của ràng buộc lợi nhuận)
+- $C = \iota^{\prime}\Sigma^{-1}\iota$ (một đại lượng vô hướng đo "độ lớn" của ma trận hiệp phương sai nghịch đảo)
+- $D = \iota^{\prime}\Sigma^{-1}\mu$ (phản ánh tương tác giữa lợi nhuận kỳ vọng và ma trận hiệp phương sai nghịch đảo)
+- $E = \mu^{\prime}\Sigma^{-1}\mu$ (đo "tín hiệu" trong lợi nhuận kỳ vọng được gia quyền bằng các hiệp phương sai nghịch đảo)
+- $\lambda^* = 2\frac{\bar{\mu} - D/C}{E - D^2/C}$ (giá bóng (shadow price) của ràng buộc lợi nhuận)
 
-Ngoài ra, chúng ta có thể biểu thị danh mục đầu tư hiệu quả dưới dạng sự kết hợp tuyến tính giữa danh mục đầu tư phương sai tối thiểu và danh mục đầu tư "lợi nhuận vượt mức":
+Cách khác, chúng ta có thể biểu diễn danh mục hiệu quả như một tổ hợp tuyến tính của danh mục phương sai tối thiểu và một danh mục "lợi nhuận vượt mức":
 
 $$\omega_{\text{efp}} = \omega_{\text{mvp}} + \frac{\lambda^*}{2}\left(\Sigma^{-1}\mu - D \cdot \omega_{\text{mvp}}\right)$$
 
-Cách biểu diễn này cho thấy một trực giác quan trọng: danh mục đầu tư hiệu quả bắt đầu từ danh mục đầu tư có phương sai tối thiểu và nghiêng về các tài sản có lợi nhuận kỳ vọng cao hơn, với độ nghiêng được xác định bởi $\lambda^*$.
+Cách biểu diễn này cho thấy trực giác quan trọng: danh mục hiệu quả xuất phát từ danh mục phương sai tối thiểu và nghiêng về các tài sản có lợi nhuận kỳ vọng cao hơn, với mức độ nghiêng được xác định bởi $\lambda^*$.
 
 ### Triển khai
 
@@ -489,14 +490,14 @@ summary_efp = pd.DataFrame({
 })
 ```
 
-### So sánh các danh mục đầu tư
+### So sánh các danh mục
 
-@fig-205 thể hiện cả hai danh mục đầu tư cùng với các tài sản riêng lẻ.
+@fig-205 vẽ cả hai danh mục cùng với các tài sản riêng lẻ.
 
 ```{python}
 #| label: fig-205
-#| fig-cap: "Các chấm lớn lần lượt chỉ vị trí của danh mục phương sai tối thiểu và danh mục hiệu quả mang lại lợi nhuận kỳ vọng bằng lợi nhuận của cổ phiếu có lợi nhuận cao nhất. Các chấm nhỏ chỉ vị trí của từng cổ phiếu thành phần."
-#| fig-alt: "Tiêu đề: Danh mục hiệu quả và danh mục phương sai tối thiểu. Hình có các chấm lớn lần lượt chỉ vị trí của danh mục phương sai tối thiểu và danh mục hiệu quả mang lại lợi nhuận kỳ vọng bằng lợi nhuận của cổ phiếu có lợi nhuận cao nhất. Các chấm nhỏ chỉ vị trí của từng cổ phiếu thành phần."
+#| fig-cap: "Các chấm lớn lần lượt chỉ vị trí của danh mục phương sai tối thiểu và danh mục hiệu quả đem lại lợi nhuận kỳ vọng của cổ phiếu có lợi nhuận cao nhất. Các chấm nhỏ chỉ vị trí của từng cổ phiếu thành phần."
+#| fig-alt: "Tiêu đề: Danh mục hiệu quả và danh mục phương sai tối thiểu. Hình cho thấy các chấm lớn lần lượt chỉ vị trí của danh mục phương sai tối thiểu và danh mục hiệu quả đem lại lợi nhuận kỳ vọng của cổ phiếu có lợi nhuận cao nhất. Các chấm nhỏ chỉ vị trí của từng cổ phiếu thành phần."
 #| warning: false
 summaries = pd.concat(
   [assets, summary_mvp, summary_efp], ignore_index=True
@@ -521,50 +522,47 @@ summaries_figure = (
 summaries_figure.show()
 ```
 
-Hình minh họa cho thấy lợi ích đa dạng hóa đáng kể của việc tối ưu hóa danh mục đầu tư. Danh mục đầu tư hiệu quả đạt được tỷ suất lợi nhuận kỳ vọng tương đương với cổ phiếu riêng lẻ có tỷ suất lợi nhuận cao nhất nhưng với độ biến động thấp hơn đáng kể. "Bữa trưa miễn phí" từ đa dạng hóa này là nhận định cốt lõi của Lý thuyết Danh mục Đầu tư Hiện đại.
+Hình này cho thấy những lợi ích đa dạng hóa đáng kể của tối ưu hóa danh mục. Danh mục hiệu quả đạt cùng mức lợi nhuận kỳ vọng với cổ phiếu riêng lẻ có lợi nhuận cao nhất nhưng với độ biến động thấp hơn đáng kể. "Bữa trưa miễn phí" từ đa dạng hóa này là nhận định trung tâm của Lý thuyết danh mục đầu tư hiện đại.
 
-### Vai trò của mức ngại rủi ro
+### Vai trò của mức độ ngại rủi ro
 
-Mức lợi nhuận mục tiêu $\bar{\mu}$ phản ánh một cách ngầm định mức độ chấp nhận rủi ro của nhà đầu tư. Những nhà đầu tư ít ngại rủi ro hơn sẽ chọn $\bar{\mu}$ cao hơn, chấp nhận mức độ biến động lớn hơn để kiếm được lợi nhuận kỳ vọng cao hơn. Những nhà đầu tư ngại rủi ro hơn sẽ chọn $\bar{\mu}$ gần với mức lợi nhuận kỳ vọng của danh mục đầu tư có mức biến động tối thiểu.
+Lợi nhuận mục tiêu $\bar{\mu}$ ngầm phản ánh mức độ ngại rủi ro của nhà đầu tư. Các nhà đầu tư ít ngại rủi ro hơn chọn $\bar{\mu}$ cao hơn, chấp nhận nhiều phương sai hơn để có thêm lợi nhuận kỳ vọng. Các nhà đầu tư ngại rủi ro hơn chọn $\bar{\mu}$ gần với lợi nhuận kỳ vọng của danh mục phương sai tối thiểu.
 
-Tương đương, khung lý thuyết trung bình-phương sai có thể được suy ra từ các quyết định tối ưu của nhà đầu tư với hàm tiện ích trung bình-phương sai:
+Tương đương, khung trung bình–phương sai có thể được suy ra từ các quyết định tối ưu của nhà đầu tư có hàm thỏa dụng trung bình–phương sai:
+$$U(\omega) = \omega^{\prime}\mu - \frac{\gamma}{2}\omega^{\prime}\Sigma\omega$$
 
-$$
-U(\omega) = \omega^{\prime}\mu - \frac{\gamma}{2}\omega^{\prime}\Sigma\omega
-$$
+trong đó $\gamma$ là hệ số ngại rủi ro tương đối. Phần Phụ lục chỉ ra rằng có một ánh xạ một–một giữa $\gamma$ và $\bar{\mu}$, nên cả hai cách phát biểu đều cho ra các danh mục hiệu quả giống nhau.
 
-trong đó $\gamma$ là hệ số ngại rủi ro tương đối. Phụ lục cho thấy có mối quan hệ một-một giữa $\gamma$ và $\bar{\mu}$, do đó cả hai công thức đều cho ra danh mục đầu tư hiệu quả giống hệt nhau.
+## Đường biên hiệu quả: Thực đơn các danh mục tối ưu
 
-## Đường biên hiệu quả: Thực đơn các danh mục đầu tư tối ưu
+**Đường biên hiệu quả** là tập hợp tất cả các danh mục mà không có danh mục nào khác đem lại lợi nhuận kỳ vọng cao hơn với cùng mức phương sai hoặc thấp hơn. Về mặt hình học, nó vạch ra biên trên của các tổ hợp (độ biến động, lợi nhuận kỳ vọng) có thể đạt được.
 
-**Đường biên hiệu quả** là tập hợp tất cả các danh mục đầu tư mà không có danh mục đầu tư nào khác mang lại lợi nhuận kỳ vọng cao hơn với cùng mức độ biến động hoặc thấp hơn. Về mặt hình học, nó vạch ra ranh giới trên của các tổ hợp (biến động, lợi nhuận kỳ vọng) có thể đạt được.
-
-Mỗi nhà đầu tư lý trí theo khung trung bình-phương sai nên nắm giữ danh mục đầu tư trên đường biên hiệu quả. Các danh mục đầu tư nằm dưới đường biên hiệu quả bị "lấn át", nghĩa là tồn tại một danh mục đầu tư khác có lợi nhuận cao hơn với cùng mức rủi ro, hoặc rủi ro thấp hơn với cùng mức lợi nhuận.
+Mọi nhà đầu tư trung bình–phương sai duy lý đều nên nắm giữ một danh mục nằm trên đường biên hiệu quả. Các danh mục nằm dưới đường biên là danh mục bị trội (kém hiệu quả): tồn tại một danh mục khác có lợi nhuận cao hơn với cùng mức rủi ro, hoặc rủi ro thấp hơn với cùng mức lợi nhuận.
 
 ### Định lý phân tách quỹ tương hỗ
 
-Một kết quả đáng chú ý đã đơn giản hóa việc xây dựng đường biên hiệu quả. Định lý phân tách quỹ tương hỗ (đôi khi được gọi là định lý hai quỹ) phát biểu rằng bất kỳ danh mục đầu tư hiệu quả nào cũng có thể được biểu diễn dưới dạng tổ hợp tuyến tính của bất kỳ hai danh mục đầu tư hiệu quả khác nhau nào.
+Một kết quả đáng chú ý giúp đơn giản hóa việc xây dựng đường biên hiệu quả. **Định lý phân tách quỹ tương hỗ** (đôi khi gọi là định lý hai quỹ) phát biểu rằng bất kỳ danh mục hiệu quả nào cũng có thể được biểu diễn như một tổ hợp tuyến tính của hai danh mục hiệu quả khác nhau bất kỳ.
 
-Về mặt hình thức, nếu $\omega_{\mu_1}$ và $\omega_{\mu_2}$ là các danh mục đầu tư hiệu quả có tỷ suất sinh lời kỳ vọng lần lượt là $\mu_1$ và $\mu_2$, thì danh mục đầu tư đó là:
+Một cách hình thức, nếu $\omega_{\mu_1}$ và $\omega_{\mu_2}$ là các danh mục hiệu quả lần lượt đem lại lợi nhuận kỳ vọng $\mu_1$ và $\mu_2$, thì danh mục:
 $$\omega_{a\mu_1 + (1-a)\mu_2} = a \cdot \omega_{\mu_1} + (1-a) \cdot \omega_{\mu_2}$$
 
-cũng hiệu quả và mang lại lợi nhuận kỳ vọng là $a\mu_1 + (1-a)\mu_2$.
+cũng là danh mục hiệu quả và đem lại lợi nhuận kỳ vọng $a\mu_1 + (1-a)\mu_2$.
 
-Kết quả này có ý nghĩa thực tiễn sâu sắc: nhà đầu tư chỉ cần tiếp cận hai "quỹ tương hỗ" hiệu quả để xây dựng bất kỳ danh mục đầu tư nào trên đường biên hiệu quả. Các quỹ cụ thể không quan trọng—bất kỳ hai danh mục đầu tư hiệu quả khác nhau nào cũng có thể sinh ra (span) toàn bộ đường biên hiệu quả.
+Kết quả này có hàm ý thực tiễn sâu sắc: nhà đầu tư chỉ cần tiếp cận hai "quỹ tương hỗ" hiệu quả là có thể xây dựng bất kỳ danh mục nào nằm trên đường biên hiệu quả. Việc chọn quỹ cụ thể nào không quan trọng: hai danh mục hiệu quả khác nhau bất kỳ đều sinh ra toàn bộ đường biên.
 
-### Chứng minh Định lý phân tách
+### Chứng minh định lý phân tách
 
-Chứng minh này xuất phát trực tiếp từ lời giải phân tích cho các danh mục đầu tư hiệu quả. Hãy xem xét:
+Chứng minh suy ra trực tiếp từ nghiệm giải tích của các danh mục hiệu quả. Xét:
 
 $$
 a \cdot \omega_{\mu_1} + (1-a) \cdot \omega_{\mu_2} = \left(\frac{a\mu_1 + (1-a)\mu_2 - D/C}{E - D^2/C}\right)\left(\Sigma^{-1}\mu - \frac{D}{C}\Sigma^{-1}\iota\right)
 $$
 
-Biểu thức này có dạng chính xác như danh mục đầu tư hiệu quả mang lại lợi nhuận kỳ vọng $a\mu_1 + (1-a)\mu_2$, chứng minh định lý.
+Biểu thức này có đúng dạng của danh mục hiệu quả đem lại lợi nhuận kỳ vọng $a\mu_1 + (1-a)\mu_2$, qua đó chứng minh định lý.
 
-### Tính toán đường biên hiệu quả
+### Tính đường biên hiệu quả
 
-Sử dụng danh mục đầu tư có phương sai tối thiểu và danh mục đầu tư hiệu quả của chúng ta làm hai "quỹ", ta có thể vạch ra toàn bộ đường biên hiệu quả:
+Dùng danh mục phương sai tối thiểu và danh mục hiệu quả của chúng ta làm hai "quỹ", chúng ta có thể vạch ra toàn bộ đường biên hiệu quả:
 
 ```{python}
 efficient_frontier = (
@@ -581,16 +579,16 @@ efficient_frontier = (
 )
 ```
 
-Lưu ý rằng chúng ta cho phép $a$ nằm trong khoảng từ -1 đến 2, điều này có nghĩa là một số danh mục đầu tư bao gồm việc bán khống một trong hai quỹ cơ sở và sử dụng đòn bẩy vào quỹ còn lại. Điều này vạch ra cả phần trên và phần dưới của đường hyperbol biên.
+Lưu ý rằng chúng ta cho phép $a$ nằm trong khoảng từ -1 đến 2, nghĩa là một số danh mục liên quan đến việc bán khống một trong hai quỹ cơ sở và vay đòn bẩy để đầu tư vào quỹ còn lại. Điều này vạch ra cả phần trên lẫn phần dưới của hyperbol biên.
 
 ### Trực quan hóa đường biên hiệu quả
 
-@fig-206 hiển thị đường biên hiệu quả cùng với các tài sản riêng lẻ và danh mục đầu tư chuẩn.
+@fig-206 hiển thị đường biên hiệu quả cùng với các tài sản riêng lẻ và các danh mục chuẩn.
 
 ```{python}
 #| label: fig-206
 #| fig-cap: "Các chấm lớn chỉ vị trí của danh mục phương sai tối thiểu và danh mục hiệu quả. Các chấm nhỏ chỉ vị trí của từng cổ phiếu thành phần."
-#| fig-alt: "Tiêu đề: Đường biên hiệu quả được xây dựng từ dữ liệu lịch sử của các thành phần chỉ số VN30. Hình thể hiện các thành phần chỉ số VN30 trong biểu đồ trung bình–phương sai. Một đường hyperbol biểu diễn đường biên hiệu quả của các danh mục vượt trội so với từng khoản nắm giữ riêng lẻ, theo nghĩa mang lại lợi nhuận kỳ vọng cao hơn ở cùng mức biến động."
+#| fig-alt: "Tiêu đề: Đường biên hiệu quả được xây dựng từ dữ liệu lịch sử của các cổ phiếu thành phần chỉ số VN30. Hình cho thấy các cổ phiếu thành phần chỉ số VN30 trong biểu đồ trung bình–phương sai. Một đường hyperbol biểu thị đường biên hiệu quả của các danh mục trội hơn các khoản nắm giữ riêng lẻ, theo nghĩa chúng đem lại lợi nhuận kỳ vọng cao hơn với cùng mức độ biến động."
 #| warning: false
 summaries = pd.concat(
   [summaries, efficient_frontier], ignore_index=True
@@ -616,24 +614,24 @@ summaries_figure = (
 summaries_figure.show()
 ```
 
-Đường biên hiệu quả có hình dạng hyperbol đặc trưng. Điểm bên trái nhất là danh mục đầu tư có phương sai tối thiểu. Di chuyển lên và sang phải dọc theo đường biên, lợi nhuận kỳ vọng tăng lên nhưng độ biến động cũng tăng theo. Phần trên của đường hyperbol (phía trên danh mục đầu tư có phương sai tối thiểu) là phần "hiệu quả" - các danh mục đầu tư này mang lại lợi nhuận cao nhất cho mỗi mức độ rủi ro. Phần dưới là phần "không hiệu quả" - các danh mục đầu tư này bị lấn át bởi hình ảnh phản chiếu của chúng ở phần trên.
+Đường biên hiệu quả có dạng hyperbol đặc trưng. Điểm ngoài cùng bên trái là danh mục phương sai tối thiểu. Khi đi lên và sang phải dọc theo đường biên, lợi nhuận kỳ vọng tăng nhưng độ biến động cũng tăng. Phần trên của hyperbol (phía trên danh mục phương sai tối thiểu) là phần "hiệu quả": các danh mục này đem lại lợi nhuận cao nhất ở mỗi mức rủi ro. Phần dưới là phần "phi hiệu quả": các danh mục này bị trội bởi các danh mục đối xứng của chúng trên phần trên.
 
-Biểu đồ cũng cho thấy sự cải thiện đáng kể của việc đa dạng hóa so với việc nắm giữ cổ phiếu riêng lẻ. Gần như tất cả các cổ phiếu riêng lẻ đều nằm sâu bên trong đường biên hiệu quả, có nghĩa là các nhà đầu tư có thể đạt được cùng mức lợi nhuận kỳ vọng với rủi ro thấp hơn nhiều, hoặc lợi nhuận kỳ vọng cao hơn nhiều với cùng mức rủi ro, chỉ đơn giản bằng cách đa dạng hóa.
+Hình cũng cho thấy đa dạng hóa cải thiện đáng kể như thế nào so với các vị thế cổ phiếu riêng lẻ. Gần như tất cả các cổ phiếu riêng lẻ đều nằm sâu bên trong đường biên hiệu quả, nghĩa là nhà đầu tư có thể đạt cùng mức lợi nhuận kỳ vọng với rủi ro thấp hơn nhiều, hoặc lợi nhuận kỳ vọng cao hơn nhiều với cùng mức rủi ro, chỉ đơn giản bằng cách đa dạng hóa.
 
-## Những điểm chính cần ghi nhớ
+## Những điểm chính
 
-Chương này giới thiệu các khái niệm của Lý thuyết Danh mục Đầu tư Hiện đại. Những điểm chính cần lưu ý là:
+Chương này đã giới thiệu các khái niệm của Lý thuyết danh mục đầu tư hiện đại. Các nhận định chính là:
 
-1. **Rủi ro danh mục đầu tư phụ thuộc vào mối tương quan**: Phương sai của danh mục đầu tư không chỉ đơn thuần là trung bình có trọng số của các phương sai riêng lẻ. Hiệp phương sai giữa các tài sản đóng vai trò quan trọng, tạo ra cơ hội đa dạng hóa.
+1. **Rủi ro danh mục phụ thuộc vào tương quan**: Phương sai của một danh mục không đơn giản là trung bình có trọng số của các phương sai riêng lẻ. Hiệp phương sai giữa các tài sản đóng vai trò quan trọng, tạo ra cơ hội đa dạng hóa.
 
-2. **Đa dạng hóa là "bữa trưa miễn phí duy nhất" trong tài chính**: Bằng cách kết hợp các tài sản không biến động hoàn toàn cùng chiều, nhà đầu tư có thể giảm rủi ro mà không làm giảm lợi nhuận kỳ vọng. Nhận thức này là nền tảng của thực tiễn đầu tư hiện đại.
+2. **Đa dạng hóa là "bữa trưa miễn phí duy nhất" trong tài chính**: Bằng cách kết hợp các tài sản không biến động hoàn toàn cùng nhau, nhà đầu tư có thể giảm rủi ro mà không hy sinh lợi nhuận kỳ vọng. Nhận định này là nền tảng của thực hành đầu tư hiện đại.
 
-3. **Danh mục đầu tư có phương sai tối thiểu giúp giảm thiểu rủi ro**: Danh mục đầu tư này chỉ phụ thuộc vào ma trận hiệp phương sai và đóng vai trò là một chuẩn mực quan trọng. Nó thể hiện cách đầu tư ít rủi ro nhất vào các tài sản rủi ro.
+3. **Danh mục phương sai tối thiểu tối thiểu hóa rủi ro**: Danh mục này chỉ phụ thuộc vào ma trận hiệp phương sai và đóng vai trò là mốc so sánh quan trọng. Nó thể hiện cách ít rủi ro nhất để đầu tư toàn bộ vốn vào các tài sản rủi ro.
 
-4. **Danh mục đầu tư hiệu quả cân bằng giữa rủi ro và lợi nhuận**: Bằng cách chấp nhận rủi ro biến động lớn hơn, nhà đầu tư có thể kiếm được lợi nhuận kỳ vọng cao hơn. Danh mục đầu tư hiệu quả là những danh mục mang lại sự cân bằng tốt nhất có thể.
+4. **Danh mục hiệu quả cân bằng giữa rủi ro và lợi nhuận**: Bằng cách chấp nhận nhiều phương sai hơn, nhà đầu tư có thể đạt lợi nhuận kỳ vọng cao hơn. Danh mục hiệu quả là những danh mục đem lại sự đánh đổi tốt nhất có thể.
 
-5. **Đường biên hiệu quả đặc trưng cho các danh mục đầu tư tối ưu**: Đường ranh giới này trong không gian trung bình-độ lệch chuẩn thể hiện danh sách các lựa chọn tối ưu dành cho các nhà đầu tư theo phương pháp trung bình-phương sai.
+5. **Đường biên hiệu quả đặc trưng cho các danh mục tối ưu**: Đường biên này trong không gian trung bình–độ lệch chuẩn thể hiện thực đơn các lựa chọn tối ưu dành cho nhà đầu tư trung bình–phương sai.
 
-6. **Định lý hai quỹ giúp đơn giản hóa quá trình triển khai**: Bất kỳ danh mục đầu tư hiệu quả nào cũng có thể được xây dựng từ hai danh mục đầu tư hiệu quả bất kỳ khác nhau, giảm bớt gánh nặng tính toán trong việc tối ưu hóa danh mục đầu tư.
+6. **Phân tách hai quỹ giúp đơn giản hóa việc triển khai**: Bất kỳ danh mục hiệu quả nào cũng có thể được xây dựng từ hai danh mục hiệu quả khác nhau bất kỳ, giảm gánh nặng tính toán của tối ưu hóa danh mục.
 
-Nhìn về phía trước, một số khó khăn quan trọng phát sinh trong thực tiễn. Thứ nhất, các yếu tố đầu vào cho việc tối ưu hóa danh mục đầu tư (lợi nhuận kỳ vọng và hiệp phương sai) phải được ước tính từ dữ liệu, và sai số ước tính có thể ảnh hưởng đáng kể đến hiệu suất của danh mục đầu tư. Thứ hai, các ràng buộc thực tế như chi phí giao dịch, hạn chế bán khống và giới hạn vị thế làm thay đổi bài toán tối ưu hóa. Thứ ba, giả định rằng nhà đầu tư chỉ quan tâm đến giá trị trung bình và phương sai có thể quá hạn chế khi lợi nhuận không tuân theo phân phối chuẩn hoặc khi nhà đầu tư có sở thích phức tạp hơn. Chúng ta sẽ đề cập đến những mở rộng này trong các chương tiếp theo.
+Nhìn về phía trước, nhiều vấn đề phức tạp quan trọng phát sinh trong thực tế. Thứ nhất, các đầu vào của tối ưu hóa danh mục (lợi nhuận kỳ vọng và hiệp phương sai) phải được ước lượng từ dữ liệu, và sai số ước lượng có thể ảnh hưởng mạnh đến hiệu quả danh mục. Thứ hai, các ràng buộc thực tế như chi phí giao dịch, hạn chế bán khống và giới hạn vị thế làm thay đổi bài toán tối ưu hóa. Thứ ba, giả định rằng nhà đầu tư chỉ quan tâm đến trung bình và phương sai có thể quá hạn chế khi lợi nhuận không tuân theo phân phối chuẩn hoặc khi nhà đầu tư có sở thích phức tạp hơn. Chúng ta sẽ đề cập các phần mở rộng này trong các chương tiếp theo.
